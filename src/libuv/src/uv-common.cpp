@@ -701,7 +701,7 @@ void uv__fs_readdir_cleanup(uv_fs_t* req) {
   }
 }
 
-/* arvind
+
 int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...) {
   va_list ap;
   int err;
@@ -713,7 +713,7 @@ int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...) {
 
   return err;
 }
-*/
+
 
 static uv_loop_t default_loop_struct;
 static uv_loop_t* default_loop_ptr;
