@@ -48,9 +48,9 @@ Base_API void expectImpl(bool passed, const char* assert, const char* file, long
 
 // Shamelessly define macros to aesthetic name :)
 #ifdef NDEBUG
-#define expect(x) test::expectImpl(true, "", "", 0)
+#define expects(x) test::expectImpl(true, "", "", 0)
 #else
-#define expect(x) test::expectImpl(x, #x, __FILE__, __LINE__)
+#define expects(x) test::expectImpl(x, #x, __FILE__, __LINE__)
 #endif
 
 

@@ -66,15 +66,15 @@ int main(int argc, char** argv) {
 
 
         t1.join();
-        //expect(ran == true);
-        expect(t1.running() == false);
+        //expects(ran == true);
+        expects(t1.running() == false);
 
         // Reuse the same thread container
         ran = false;
         t1.start(fn, &ran);
         t1.join();
-        //expect(ran == true);
-        expect(t1.running() == false);
+        //expects(ran == true);
+        expects(t1.running() == false);
 
         Thread2 th;
         th.start();
@@ -115,25 +115,25 @@ int main(int argc, char** argv) {
     {
         std::string path(base::getExePath());
         // cout << "executable path: " << path << endl;
-        expect(fs::exists(path));
+        expects(fs::exists(path));
 
         std::string junkPath(path + "junkname.huh");
         // cout << "junk path: " << junkPath << endl;
-        expect(!fs::exists(junkPath));
+        expects(!fs::exists(junkPath));
 
         std::string dir(fs::dirname(path));
         // cout << "dir name: " << dir << endl;
-        expect(fs::exists(dir));
-        expect(fs::exists(dir + "/"));
-        expect(fs::exists(dir + "\\"));
-        expect(fs::dirname("file.a") == ".");
-        expect(fs::dirname("/some/file.a") == "/some");
-        expect(fs::dirname("/some/dir") == "/some");
-        expect(fs::dirname("/some/dir/") == "/some/dir");
+        expects(fs::exists(dir));
+        expects(fs::exists(dir + "/"));
+        expects(fs::exists(dir + "\\"));
+        expects(fs::dirname("file.a") == ".");
+        expects(fs::dirname("/some/file.a") == "/some");
+        expects(fs::dirname("/some/dir") == "/some");
+        expects(fs::dirname("/some/dir/") == "/some/dir");
 
         std::string test(fs::dirname(dir));
         fs::addnode(test, "tests");
-        expect(test == dir);
+        expects(test == dir);
     });
 
     // =========================================================================
