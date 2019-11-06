@@ -1,13 +1,3 @@
-///
-//
-// LibSourcey
-// Copyright (c) 2005, Sourcey <https://sourcey.com>
-//
-// SPDX-License-Identifier: LGPL-2.1+
-//
-/// @addtogroup base
-/// @{
-
 
 #ifndef base_Application_H
 #define base_Application_H
@@ -15,7 +5,8 @@
 
 #include "base/base.h"
 #include "base/util.h"
-#include "base/loop.h"
+//#include "base/loop.h"
+#include "uv.h"
 
 #include <functional>
 #include <map>
@@ -25,7 +16,6 @@
 namespace base {
 
 
-/// Main LibSourcey application class.
 ///
 /// This class exposes basic features required by most applications:
 ///
@@ -38,7 +28,7 @@ class Base_API Application
 {
 public:
     /// Constructor.
-    Application(uv::Loop* loop = uv::defaultLoop());
+    Application();
 
     /// Destructor.
     ~Application();
@@ -51,8 +41,16 @@ public:
     ///
     /// The event loop may be assigned on construction, otherwise the default
     /// event loop will be used.
-    uv::Loop* loop;
-
+    static uv_loop_t* loop;
+    
+    void uvInit();
+    void uvDestroy();
+    
+    static uv_loop_t* uvGetLoop(    )
+    {
+        return loop;
+    }
+    
     //
     // Event Loop
     //
@@ -134,7 +132,7 @@ struct ShutdownCmd
 
 
 inline void onShutdownSignal(std::function<void(void*)> callback = nullptr,
-                             void* opaque = nullptr, uv::Loop* loop = uv::defaultLoop())
+                             void* opaque = nullptr, uv_loop_t* loop = uv_default_loop())
 {
     auto cmd = new ShutdownCmd;
     cmd->opaque = opaque;
@@ -154,7 +152,7 @@ inline void onShutdownSignal(std::function<void(void*)> callback = nullptr,
 
 
 inline void waitForShutdown(std::function<void(void*)> callback = nullptr,
-                            void* opaque = nullptr, uv::Loop* loop = uv::defaultLoop())
+                            void* opaque = nullptr, uv_loop_t* loop = uv_default_loop())
 {
     onShutdownSignal(callback, opaque, loop);
     uv_run(loop, UV_RUN_DEFAULT);
@@ -167,4 +165,3 @@ inline void waitForShutdown(std::function<void(void*)> callback = nullptr,
 #endif // base_Application_H
 
 
-/// @\}

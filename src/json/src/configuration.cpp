@@ -23,14 +23,14 @@ Configuration::~Configuration()
 }
 
 
-void Configuration::load(const std::string& path, bool create)
+void Configuration::load(const std::string path, bool create)
 {
     _path = path;
-    load(create);
+    loadIt(create);
 }
 
 
-void Configuration::load(bool /* create */)
+void Configuration::loadIt(bool create)
 {
     std::lock_guard<std::mutex> guard(_mutex);
 
@@ -39,6 +39,11 @@ void Configuration::load(bool /* create */)
             "Cannot load configuration: File path not set.");
 
     LDebug("Load: ", _path)
+            
+    if(create)
+    {
+        // touche or greate the file;
+    }
 
     try {
         // if (create && !fs::exists(_path))

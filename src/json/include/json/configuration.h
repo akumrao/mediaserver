@@ -22,8 +22,8 @@ public:
     Configuration();
     virtual ~Configuration();
 
-    virtual void load(const std::string& path, bool create = false);
-    virtual void load(bool create = false);
+    virtual void load(const std::string path, bool create = false);
+   
     virtual void save();
 
     virtual bool remove(const std::string& key);
@@ -37,9 +37,12 @@ public:
 
     json root;
 
-protected:
+
     virtual bool getRaw(const std::string& key, std::string& value) const ;
     virtual void setRaw(const std::string& key, const std::string& value) ;
+
+private:
+     virtual void loadIt(bool create);
 
     bool _loaded;
     std::string _path;
