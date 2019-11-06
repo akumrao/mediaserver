@@ -1,5 +1,5 @@
-#ifndef MS_UDP_SOCKET_HPP
-#define MS_UDP_SOCKET_HPP
+#ifndef UDP_SOCKET_H
+#define UDP_SOCKET_H
 
 
 #include <uv.h>
@@ -138,4 +138,4 @@ namespace base
 
     } // namespace net
 } // namespace base
-#endif
+#endif //UDP_SOCKET_H

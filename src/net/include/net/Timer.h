@@ -1,7 +1,6 @@
-#ifndef MS_TIMER_HPP
-#define MS_TIMER_HPP
+#ifndef TIMER_H
+#define TIMER_H
 
-//#include "common.hpp"
 #include <uv.h>
 namespace base
 {
@@ -55,4 +54,4 @@ namespace base
     }
 
 } // namespace base
-#endif
+#endif //TIMER_H

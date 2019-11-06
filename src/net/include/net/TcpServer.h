@@ -1,0 +1,122 @@
+#ifndef TCP_SERVER_H
+#define TCP_SERVER_H
+
+
+#include "net/TcpConnection.h"
+#include <uv.h>
+#include <string>
+#include <unordered_set>
+
+namespace base
+{
+    namespace net
+    {
+
+        class TcpServerBase : public TcpConnectionBase::Listener
+        {
+        public:
+            /**
+             * uvHandle must be an already initialized and binded uv_tcp_t pointer.
+             */
+            TcpServerBase(uv_tcp_t* uvHandle, int backlog);
+            virtual ~TcpServerBase() override;
+
+        public:
+            void Close();
+            virtual void Dump() const;
+            const struct sockaddr* GetLocalAddress() const;
+            int GetLocalFamily() const;
+            const std::string& GetLocalIp() const;
+            uint16_t GetLocalPort() const;
+            size_t GetNumConnections() const;
+
+        private:
+            bool SetLocalAddress();
+
+            /* Pure virtual methods that must be implemented by the subclass. */
+        protected:
+            virtual void UserOnTcpConnectionAlloc(TcpConnectionBase** connection) = 0;
+            virtual bool UserOnNewTcpConnection(TcpConnectionBase* connection) = 0;
+            virtual void UserOnTcpConnectionClosed(TcpConnectionBase* connection) = 0;
+
+            /* Callbacks fired by UV events. */
+        public:
+            void OnUvConnection(int status);
+
+            /* Methods inherited from TcpConnectionBase::Listener. */
+        public:
+            void OnTcpConnectionClosed(TcpConnectionBase* connection) override;
+
+        protected:
+            struct sockaddr_storage localAddr;
+            std::string localIp;
+            uint16_t localPort{ 0};
+
+        private:
+            // Allocated by this (may be passed by argument).
+            uv_tcp_t* uvHandle{ nullptr};
+            // Others.
+            std::unordered_set<TcpConnectionBase*> connections;
+            bool closed{ false};
+        };
+
+        /* Inline methods. */
+
+        inline size_t TcpServerBase::GetNumConnections() const {
+            return this->connections.size();
+        }
+
+        inline const struct sockaddr* TcpServerBase::GetLocalAddress() const {
+            return reinterpret_cast<const struct sockaddr*> (&this->localAddr);
+        }
+
+        inline int TcpServerBase::GetLocalFamily() const {
+            return reinterpret_cast<const struct sockaddr*> (&this->localAddr)->sa_family;
+        }
+
+        inline const std::string& TcpServerBase::GetLocalIp() const {
+            return this->localIp;
+        }
+
+        inline uint16_t TcpServerBase::GetLocalPort() const {
+            return this->localPort;
+        }
+
+                /**********************************************************************************************************/
+        class TcpServer : public TcpServerBase
+        {
+        public:
+
+            class Listener
+            {
+            public:
+                virtual void OnRtcTcpConnectionClosed(
+                        TcpServer* tcpServer, TcpConnection* connection) = 0;
+            };
+
+        public:
+            TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port);
+            uv_tcp_t* BindTcp(std::string &ip, int port);
+            ~TcpServer() override;
+
+            /* Pure virtual methods inherited from ::TcpServer. */
+        public:
+            void UserOnTcpConnectionAlloc(TcpConnectionBase** connection) override;
+            bool UserOnNewTcpConnection(TcpConnectionBase* connection) override;
+            void UserOnTcpConnectionClosed(TcpConnectionBase* connection) override;
+
+        private:
+            // Passed by argument.
+            Listener* listener{ nullptr};
+            uv_tcp_t* uvHandle{ nullptr};
+            TcpConnection::Listener* connListener{ nullptr};
+        };
+
+
+
+
+
+    } // namespace net
+} // namespace base
+
+#endif //TCP_SERVER_H
