@@ -4,6 +4,7 @@
 
 #include <uv.h>
 #include <string>
+#include "net/IP.h"
 
 namespace base
 {
@@ -33,6 +34,27 @@ namespace base
         public:
             void Close();
             virtual void Dump() const;
+
+
+            bool setBroadcast(bool enable)
+            {
+                return uv_udp_set_broadcast(uvHandle, enable ? 1 : 0) == 0;
+            }
+
+
+            bool setMulticastLoop(bool enable)
+            {
+                return uv_udp_set_multicast_loop(uvHandle, enable ? 1 : 0) == 0;
+            }
+
+
+            bool setMulticastTTL(int ttl)
+            {
+                ASSERT(ttl > 0 && ttl <= 255) ;
+                return uv_udp_set_multicast_ttl(uvHandle, ttl) == 0;
+            }
+
+
             void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
             void Send(const std::string& data, const struct sockaddr* addr);
             void Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port);

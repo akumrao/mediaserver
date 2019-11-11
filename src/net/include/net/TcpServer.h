@@ -30,6 +30,31 @@ namespace base
             uint16_t GetLocalPort() const;
             size_t GetNumConnections() const;
 
+
+            bool setNoDelay(bool enable)
+            {
+                return uv_tcp_nodelay(uvHandle, enable ? 1 : 0) == 0;
+            }
+
+
+            bool setKeepAlive(bool enable, int delay)
+            {
+                return uv_tcp_keepalive(uvHandle, enable ? 1 : 0, delay) == 0;
+            }
+
+
+            bool setSimultaneousAccepts(bool enable)
+            {
+
+                #ifdef base_WIN
+                    return uv_tcp_simultaneous_accepts(uvHandle, enable ? 1 : 0) == 0;
+                #else
+                    return false;
+                #endif
+            }
+
+
+
         private:
             bool SetLocalAddress();
 

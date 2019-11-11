@@ -158,7 +158,7 @@ int uv_inet_pton(int af, const char* src, void* dst) {
     int len;
     char tmp[UV__INET6_ADDRSTRLEN], *s, *p;
     s = (char*) src;
-    p = strchr(src, '%');
+    p = (char*)strchr(src, '%');
     if (p != NULL) {
       s = tmp;
       len = p - src;

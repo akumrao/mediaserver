@@ -3,6 +3,7 @@
 
 #include <uv.h>
 #include <string>
+ #include <stdlib.h>
 
 #define ASSERT(expr)                                      \
  do {                                                     \
