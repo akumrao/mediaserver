@@ -216,6 +216,7 @@ namespace base
             struct sockaddr_in6 addr6;
             struct sockaddr_in addr;
 
+         
             int r;
 
             r = uv_tcp_init(Application::uvGetLoop(), uvHandle);
@@ -234,6 +235,8 @@ namespace base
                 ASSERT(r == 0);
 
             }
+            
+            LTrace("Binded to port ", ip , ":", port);
 
             return uvHandle;
         }
@@ -260,7 +263,7 @@ namespace base
 
         void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            this->listener->OnRtcTcpConnectionClosed(this, static_cast<TcpConnection*> (connection));
+            this->listener->OnTcpConnectionClosed(this, static_cast<TcpConnection*> (connection));
         }
 
     } // namespace net

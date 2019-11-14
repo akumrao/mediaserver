@@ -115,7 +115,7 @@ namespace base
             class Listener
             {
             public:
-                virtual void OnRtcTcpConnectionClosed(
+                virtual void OnTcpConnectionClosed(
                         TcpServer* tcpServer, TcpConnection* connection) = 0;
             };
 

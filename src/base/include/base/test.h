@@ -5,7 +5,7 @@
 
 
 #include "base/base.h"
-//#include "base/interface.h"
+#include "base/thread.h"
 #include <mutex>
 #include <iostream>
 #include <list>
@@ -64,7 +64,7 @@ Base_API void expectImpl(bool passed, const char* assert, const char* file, long
 /// This class is for implementing any kind of unit
 /// test that can be executed by a `TestRunner`.
 ///
-class Base_API Test
+class Base_API Test:public Thread
 {
 public:
     Test(const std::string& name = "Unnamed Test");
@@ -78,6 +78,7 @@ public:
     /// Return true when the test passed without errors.
     bool passed();
 
+    bool stop();
     /// The name of the test.
     std::string name;
 

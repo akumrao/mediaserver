@@ -8,10 +8,9 @@
 #include <cstring> // std::memcpy()
 
 
-namespace base
-{
-    namespace net
-    {
+namespace base {
+    namespace net {
+
         /* Static methods for UV callbacks. */
         inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf) {
             auto* connection = static_cast<TcpConnectionBase*> (handle->data);
@@ -102,8 +101,7 @@ namespace base
                 LError("uv_read_stop() failed: %s", uv_strerror(err));
 
             // If there is no error and the peer didn't close its connection side then close gracefully.
-            if (!this->hasError && !this->isClosedByPeer)
-            {
+            if (!this->hasError && !this->isClosedByPeer) {
                 // Use uv_shutdown() so pending data to be written will be sent to the peer
                 // before closing.
                 auto req = new uv_shutdown_t;
@@ -114,8 +112,7 @@ namespace base
                 if (err != 0)
                     LError("uv_shutdown() failed: %s", uv_strerror(err));
             }// Otherwise directly close the socket.
-            else
-            {
+            else {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
             }
         }
@@ -139,8 +136,7 @@ namespace base
             // Set the UV handle.
             int err = uv_tcp_init(Application::uvGetLoop(), this->uvHandle);
 
-            if (err != 0)
-            {
+            if (err != 0) {
                 delete this->uvHandle;
                 this->uvHandle = nullptr;
 
@@ -154,6 +150,75 @@ namespace base
             this->localAddr = localAddr;
             this->localIp = localIp;
             this->localPort = localPort;
+        }
+
+        inline void on_connect(uv_connect_t* req, int /*status*/) {
+
+
+
+            delete req;
+        }
+
+        void TcpConnectionBase::Connect(std::string ip, int port) { //for client
+
+
+            struct sockaddr_in6 addr6;
+            struct sockaddr_in addr;
+          
+            
+            /////////////////////////////////////////////////////////////
+            int err = uv_tcp_init(Application::uvGetLoop(), this->uvHandle);
+
+            if (err != 0) {
+                delete this->uvHandle;
+                this->uvHandle = nullptr;
+
+                LError("uv_tcp_init() failed: %s", uv_strerror(err));
+            }
+
+            // Set the listener.
+            this->listener = listener;
+
+            // Set the local address.
+     
+            this->localIp = localIp;
+            this->localPort = localPort;
+            
+            
+            int r;
+            
+            auto req = new uv_connect_t();
+            req->data = this;
+
+            if (IP::GetFamily(ip) == AF_INET6) {
+                ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
+
+               // this->localAddr = (sockaddr_storage *) addr6;
+                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (on_connect));
+
+
+            } else {
+                ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
+                
+                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (on_connect));
+
+            }
+            
+            
+            if (err != 0)
+            {
+                uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
+
+                LError("uv_tcp_connect() failed: %s", uv_strerror(err));
+                
+                LError("uv_tcp_connect() failed for ip:port ", ip, ":", port);
+            }
+            ////////////////////////////////////////////
+
+           Start();
+
+           
+         
         }
 
         void TcpConnectionBase::Start() {
@@ -191,17 +256,14 @@ namespace base
             int written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), &buffer, 1);
 
             // All the data was written. Done.
-            if (written == static_cast<int> (len))
-            {
+            if (written == static_cast<int> (len)) {
                 return;
             }// Cannot write any data at first time. Use uv_write().
-            else if (written == UV_EAGAIN || written == UV_ENOSYS)
-            {
+            else if (written == UV_EAGAIN || written == UV_ENOSYS) {
                 // Set written to 0 so pendingLen can be properly calculated.
                 written = 0;
             }// Error. Should not happen.
-            else if (written < 0)
-            {
+            else if (written < 0) {
                 LDebug("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
                 Close();
@@ -257,17 +319,14 @@ namespace base
             written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), buffers, 2);
 
             // All the data was written. Done.
-            if (written == static_cast<int> (totalLen))
-            {
+            if (written == static_cast<int> (totalLen)) {
                 return;
             }// Cannot write any data at first time. Use uv_write().
-            else if (written == UV_EAGAIN || written == UV_ENOSYS)
-            {
+            else if (written == UV_EAGAIN || written == UV_ENOSYS) {
                 // Set written to 0 so pendingLen can be properly calculated.
                 written = 0;
             }// Error. Should not happen.
-            else if (written < 0)
-            {
+            else if (written < 0) {
                 LDebug("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
                 Close();
@@ -284,14 +343,12 @@ namespace base
             auto* writeData = static_cast<UvWriteData*> (std::malloc(sizeof (UvWriteData) + pendingLen));
 
             // If the first buffer was not entirely written then splice it.
-            if (static_cast<size_t> (written) < len1)
-            {
+            if (static_cast<size_t> (written) < len1) {
                 std::memcpy(
                         writeData->store, data1 + static_cast<size_t> (written), len1 - static_cast<size_t> (written));
                 std::memcpy(writeData->store + (len1 - static_cast<size_t> (written)), data2, len2);
             }// Otherwise just take the pending data in the second buffer.
-            else
-            {
+            else {
                 std::memcpy(
                         writeData->store,
                         data2 + (static_cast<size_t> (written) - len1),
@@ -329,8 +386,7 @@ namespace base
 
             err = uv_tcp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*> (&this->peerAddr), &len);
 
-            if (err != 0)
-            {
+            if (err != 0) {
                 LError("uv_tcp_getpeername() failed: %s", uv_strerror(err));
 
                 return false;
@@ -358,18 +414,16 @@ namespace base
             buf->base = reinterpret_cast<char*> (this->buffer + this->bufferDataLen);
 
             // Give UV all the remaining space in the buffer.
-            if (this->bufferSize > this->bufferDataLen)
-            {
+            if (this->bufferSize > this->bufferDataLen) {
                 buf->len = this->bufferSize - this->bufferDataLen;
-            } else
-            {
+            } else {
                 buf->len = 0;
 
                 LDebug("no available space in the buffer");
             }
         }
 
-        inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/) {
+        inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
 
 
             if (this->closed)
@@ -379,16 +433,14 @@ namespace base
                 return;
 
             // Data received.
-            if (nread > 0)
-            {
+            if (nread > 0) {
                 // Update the buffer data length.
                 this->bufferDataLen += static_cast<size_t> (nread);
 
                 // Notify the subclass.
-                UserOnTcpConnectionRead();
+                UserOnTcpConnectionRead((const uint8_t*) buf->base, nread);
             }// Client disconneted.
-            else if (nread == UV_EOF || nread == UV_ECONNRESET)
-            {
+            else if (nread == UV_EOF || nread == UV_ECONNRESET) {
                 LDebug("connection closed by peer, closing server side");
 
                 this->isClosedByPeer = true;
@@ -399,8 +451,7 @@ namespace base
                 // Notify the listener.
                 this->listener->OnTcpConnectionClosed(this);
             }// Some error.
-            else
-            {
+            else {
                 LDebug("read error, closing the connection: %s", uv_strerror(nread));
 
                 this->hasError = true;
@@ -432,8 +483,8 @@ namespace base
 
         /*************************************************************************************************************/
 
-        static constexpr size_t ReadBufferSize{ 65536};
-        static uint8_t ReadBuffer[ReadBufferSize];
+        // static constexpr size_t ReadBufferSize{ 65536};
+        //   static uint8_t ReadBuffer[ReadBufferSize];
 
         /* Instance methods. */
 
@@ -446,11 +497,9 @@ namespace base
 
         }
 
-        void TcpConnection::UserOnTcpConnectionRead() {
+        void TcpConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
 
-
-            this->listener->OnTcpConnectionPacketReceived(this, ReadBuffer, 100);
-
+            this->listener->OnTcpConnectionPacketReceived(this, data, len);
         }
 
         void TcpConnection::Send(const uint8_t* data, size_t len) {
@@ -461,11 +510,19 @@ namespace base
 
             // Write according to Framing RFC 4571.
 
-            uint8_t frameLen[2];
+            //       uint8_t frameLen[2];
 
-           // Utils::Byte::Set2Bytes(frameLen, 0, len);
-            TcpConnectionBase::Write(frameLen, 2, data, len);
+            // Utils::Byte::Set2Bytes(frameLen, 0, len);
+            // TcpConnectionBase::Write(frameLen, 2, data, len);
+            TcpConnectionBase::Write(data, len);
         }
+
+
+
+        /*************************************************************************************************************/
+
+
+        /**************************************************************************************************************/
 
     } // namespace net
 } // namespace base
