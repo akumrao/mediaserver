@@ -47,6 +47,7 @@ namespace base
 
         public:
             void Close();
+            void Connect( std::string ip, int port);
             virtual void Dump() const;
             void Setup(
                     Listener* listener,
@@ -79,7 +80,7 @@ namespace base
 
             /* Pure virtual methods that must be implemented by the subclass. */
         protected:
-            virtual void UserOnTcpConnectionRead() = 0;
+            virtual void UserOnTcpConnectionRead(const uint8_t* data, size_t len) = 0;
 
         protected:
             // Passed by argument.
@@ -166,7 +167,7 @@ namespace base
             };
 
         public:
-            TcpConnection(Listener* listener, size_t bufferSize);
+            TcpConnection(Listener* listener, size_t bufferSize=65536);
             ~TcpConnection() override;
 
         public:
@@ -176,7 +177,7 @@ namespace base
 
             /* Pure virtual methods inherited from ::TcpConnection. */
         public:
-            void UserOnTcpConnectionRead() override;
+            void UserOnTcpConnectionRead( const uint8_t* data, size_t len) override;
 
         private:
             // Passed by argument.
@@ -195,7 +196,20 @@ namespace base
             return this->sentBytes;
         }
 
+        
+                    /*******************************************************************************************************************************************************/
+/*
+        class TcpClient : public TcpConnectionBase
+        {
+        public:
 
+     
+        public:
+            TcpClient(Listener* listener, size_t bufferSize);
+     
+            
+        };
+*/
 
     } // namespace net
 } // namespace base

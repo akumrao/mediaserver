@@ -483,10 +483,6 @@ namespace base {
 
         /*************************************************************************************************************/
 
-        // static constexpr size_t ReadBufferSize{ 65536};
-        //   static uint8_t ReadBuffer[ReadBufferSize];
-
-        /* Instance methods. */
 
         TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
         : TcpConnectionBase(bufferSize), listener(listener) {
@@ -519,8 +515,7 @@ namespace base {
 
 
 
-        /*************************************************************************************************************/
-
+      
 
         /**************************************************************************************************************/
 
