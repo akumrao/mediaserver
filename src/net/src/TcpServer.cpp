@@ -192,30 +192,12 @@ namespace base
             // Delete it.
             delete connection;
         }
-        /******************************************************************************************************************/
-        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
-
-        /* Instance methods. */
-
-        TcpServer::TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port)
-        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),
-        connListener(connListener) {
-
-        }
-
-        TcpServer::~TcpServer() {
-
-            if (uvHandle)
-                delete uvHandle;
-            //UnbindTcp(this->localIp, this->localPort);
-        }
-
-        uv_tcp_t* TcpServer::BindTcp(std::string &ip, int port) {
+        
+        uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int port) {
             int bind_flags = 0;
             uvHandle = new uv_tcp_t;
             struct sockaddr_in6 addr6;
             struct sockaddr_in addr;
-
          
             int r;
 
@@ -241,6 +223,25 @@ namespace base
             return uvHandle;
         }
 
+        /******************************************************************************************************************/
+        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
+
+        /* Instance methods. */
+
+        TcpServer::TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port)
+        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),
+        connListener(connListener) {
+
+        }
+
+        TcpServer::~TcpServer() {
+
+            if (uvHandle)
+                delete uvHandle;
+            //UnbindTcp(this->localIp, this->localPort);
+        }
+
+  
         void TcpServer::UserOnTcpConnectionAlloc(TcpConnectionBase** connection) {
 
 

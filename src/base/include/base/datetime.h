@@ -1659,9 +1659,11 @@ inline std::string DateTimeFormatter::format(const DateTime& dateTime,
                                              const std::string& fmt,
                                              int timeZoneDifferential)
 {
+    
+    abort();
     std::string result;
     result.reserve(64);
-    append(result, dateTime, fmt, timeZoneDifferential);
+    //append(result, dateTime, fmt, timeZoneDifferential); //arvind
     return result;
 }
 
@@ -1689,7 +1691,10 @@ inline void DateTimeFormatter::append(std::string& str,
                                       int timeZoneDifferential)
 {
     DateTime dateTime(timestamp);
-    append(str, dateTime, fmt, timeZoneDifferential);
+    //append(str, dateTime, fmt, timeZoneDifferential); // arvind
+    abort();
+    exit(0);
+    
 }
 
 
