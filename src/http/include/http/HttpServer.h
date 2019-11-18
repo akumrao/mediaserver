@@ -66,7 +66,7 @@ namespace base {
             Request _request;
             Response _response;
             Parser _parser;
-             ServerResponder* _responder;
+            ServerResponder* _responder;
 
         };
 
@@ -108,7 +108,7 @@ namespace base {
             TcpHTTPConnection::Listener* connListener{ nullptr};
 
         protected:
-           
+
         };
 
         /**********************************************************************************************************************/
@@ -184,8 +184,8 @@ namespace base {
         class HttpServer : public TcpHTTPServer::Listener, public TcpHTTPConnection::Listener {
         public:
 
-            HttpServer(ServerConnectionFactory *factory= nullptr);
-            
+            HttpServer(std::string ip, int port, ServerConnectionFactory *factory = nullptr);
+
             ServerResponder* createResponder(TcpHTTPConnection* conn);
 
             void start();
@@ -205,7 +205,10 @@ namespace base {
 
             TcpHTTPServer *tcpHTTPServer;
 
-              ServerConnectionFactory* _factory;
+            ServerConnectionFactory* _factory;
+            
+        protected:
+            std::string ip; int port;
 
         };
 
