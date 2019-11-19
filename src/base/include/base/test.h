@@ -10,7 +10,7 @@
 #include <iostream>
 #include <list>
 #include <map>
-
+#include <functional>
 
 namespace base {
 

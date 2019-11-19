@@ -206,7 +206,7 @@ AsyncLogWriter::AsyncLogWriter()
 AsyncLogWriter::~AsyncLogWriter()
 {
     // Cancel and wait for the thread
-    cancel();
+    stop();
 
     // Note: Not using join here as it is causing a deadlock
     // when unloading shared libraries when the logger is not
@@ -249,7 +249,7 @@ void AsyncLogWriter::flush()
 
 void AsyncLogWriter::run()
 {
-    while (!cancelled()) {
+    while (!stopped()) {
         base::sleep(writeNext() ? 1 : 50);
     }
 }

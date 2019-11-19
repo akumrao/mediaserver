@@ -22,6 +22,10 @@ public:
 ///		DebugL << "Creating" << endl;
 	}
 
+        virtual void onClose(){;
+           LDebug("On close")
+         
+        }
 	void onRequest(net::Request& request, net::Response& response) 
 	{
 		//DebugL << "On complete" << endl;
@@ -37,7 +41,7 @@ public:
 class StreamingResponderFactory : public ServerConnectionFactory
 {
 public:
-    ServerResponder* createResponder(net::TcpHTTPConnection* conn)
+    ServerResponder* createResponder(TcpHTTPConnection* conn)
     {
         return new BasicResponder(conn);
     }
@@ -50,7 +54,7 @@ int main(int argc, char** argv) {
     //test::init();
 
     Application app;
-    net::HttpServer socket(new StreamingResponderFactory );
+    net::HttpServer socket("0.0.0.0", 7000,new StreamingResponderFactory );
     socket.start();
 
     app.waitForShutdown([&](void*) {

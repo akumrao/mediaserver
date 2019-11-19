@@ -19,7 +19,7 @@ namespace base
         : _observer(nullptr)
         , _request(nullptr)
         , _response(response)
-        , _type(HTTP_RESPONSE){LOG_CALL;
+        , _type(HTTP_RESPONSE){
             init();
             reset();
         }
@@ -28,7 +28,7 @@ namespace base
         : _observer(nullptr)
         , _request(request)
         , _response(nullptr)
-        , _type(HTTP_REQUEST){LOG_CALL;
+        , _type(HTTP_REQUEST){
             init();
             reset();
         }
@@ -37,15 +37,15 @@ namespace base
         : _observer(nullptr)
         , _request(nullptr)
         , _response(nullptr)
-        , _type(type){LOG_CALL;
+        , _type(type){
             init();
             reset();
         }
 
-        Parser::~Parser(){LOG_CALL;
+        Parser::~Parser(){
         }
 
-        void Parser::init(){LOG_CALL;
+        void Parser::init(){
             // LTrace("Init: ", _type)
 
             ::http_parser_init(&_parser, _type);
@@ -62,7 +62,7 @@ namespace base
             reset();
         }
 
-        size_t Parser::parse(const char* data, size_t len){LOG_CALL;
+        size_t Parser::parse(const char* data, size_t len){
             // LTrace("Parse: ", len)
 
             if (_complete)
@@ -88,32 +88,32 @@ namespace base
             return nparsed;
         }
 
-        void Parser::reset(){LOG_CALL;
+        void Parser::reset(){
             _complete = false;
             _upgrade = false;
             //_shouldKeepAlive = false;
             _error.reset();
         }
 
-        void Parser::setRequest(Request* request){LOG_CALL;
+        void Parser::setRequest(Request* request){
             assert(!_request);
             assert(!_response);
             assert(_type == HTTP_REQUEST);
             _request = request;
         }
 
-        void Parser::setResponse(Response* response){LOG_CALL;
+        void Parser::setResponse(Response* response){
             assert(!_request);
             assert(!_response);
             assert(_type == HTTP_RESPONSE);
             _response = response;
         }
 
-        void Parser::setObserver(ParserObserver* observer){LOG_CALL;
+        void Parser::setObserver(ParserObserver* observer){
             _observer = observer;
         }
 
-        Message* Parser::message(){LOG_CALL;
+        Message* Parser::message(){
             return _request ? reinterpret_cast<Message*> (_request)
                     : _response ? reinterpret_cast<Message*> (_response)
                     : nullptr;
@@ -135,14 +135,14 @@ namespace base
         //
         // Callbacks
 
-        void Parser::onURL(const std::string& value){LOG_CALL;
+        void Parser::onURL(const std::string& value){
             // LTrace("onURL: ", value)
 
             if (_request)
                 _request->setURI(value);
         }
 
-        void Parser::onHeader(const std::string& name, const std::string& value){LOG_CALL;
+        void Parser::onHeader(const std::string& name, const std::string& value){
             // LTrace("On header: ",  name,  ":", value)
 
             if (message())
@@ -151,27 +151,27 @@ namespace base
                 _observer->onParserHeader(name, value);
         }
 
-        void Parser::onHeadersEnd(){LOG_CALL;
+        void Parser::onHeadersEnd(){
             _upgrade = _parser.upgrade > 0;
 
             if (_observer)
                 _observer->onParserHeadersEnd(_upgrade);
         }
 
-        void Parser::onBody(const char* buf, size_t len){LOG_CALL;
+        void Parser::onBody(const char* buf, size_t len){
             // LTrace("On body")
             if (_observer)
                 _observer->onParserChunk(buf, len);
         }
 
-        void Parser::onMessageEnd(){LOG_CALL;
+        void Parser::onMessageEnd(){
             // LTrace("On message end")
             _complete = true;
             if (_observer)
                 _observer->onParserEnd();
         }
 
-        void Parser::onError(unsigned errorno, const std::string& message){LOG_CALL;
+        void Parser::onError(unsigned errorno, const std::string& message){
             assert(errorno != HPE_OK);
             SDebug << "Parse error: "
                     << ::http_errno_name((::http_errno)errorno) << ": "
@@ -189,7 +189,7 @@ namespace base
         // http_parser callbacks
         //
 
-        int Parser::on_message_begin(http_parser* parser){LOG_CALL;
+        int Parser::on_message_begin(http_parser* parser){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -197,7 +197,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_url(http_parser* parser, const char* at, size_t len){LOG_CALL;
+        int Parser::on_url(http_parser* parser, const char* at, size_t len){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
             assert(at && len);
@@ -206,7 +206,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_status(http_parser* parser, const char* at, size_t length){LOG_CALL;
+        int Parser::on_status(http_parser* parser, const char* at, size_t length){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -217,7 +217,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_header_field(http_parser* parser, const char* at, size_t len){LOG_CALL;
+        int Parser::on_header_field(http_parser* parser, const char* at, size_t len){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -238,7 +238,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_header_value(http_parser* parser, const char* at, size_t len){LOG_CALL;
+        int Parser::on_header_value(http_parser* parser, const char* at, size_t len){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -254,7 +254,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_headers_complete(http_parser* parser){LOG_CALL;
+        int Parser::on_headers_complete(http_parser* parser){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -279,7 +279,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_body(http_parser* parser, const char* at, size_t len){LOG_CALL;
+        int Parser::on_body(http_parser* parser, const char* at, size_t len){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 
@@ -287,7 +287,7 @@ namespace base
             return 0;
         }
 
-        int Parser::on_message_complete(http_parser* parser){LOG_CALL;
+        int Parser::on_message_complete(http_parser* parser){
             auto self = reinterpret_cast<Parser*> (parser->data);
             assert(self);
 

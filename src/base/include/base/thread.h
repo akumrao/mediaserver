@@ -86,24 +86,22 @@ namespace base
             return uv_thread_id();
         }
 
-        virtual void cancel(bool flag = true) {
+        virtual void stop(bool flag = true) {
             exit = flag;
         }
 
         /// Returns true when the task has been cancelled.
 
-        virtual bool cancelled() const {
+        virtual bool stopped() const {
             return exit.load();
         };
 
     protected:
         std::atomic<bool> exit;
-
+        std::atomic<bool> isrunning_;
 
     private:
         uv_thread_t thread_;
-
-        std::atomic<bool> isrunning_;
 
     };
 

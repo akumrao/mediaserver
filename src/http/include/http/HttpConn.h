@@ -17,12 +17,13 @@
 #include "net/TcpConnection.h"
 #include "http/parser.h"
 
-class ServerResponder;
+
 
 namespace base {
     namespace net {
 
-
+        class ServerResponder;
+        
         class TcpHTTPConnection : public TcpConnectionBase, public ParserObserver {
         public:
 
@@ -32,12 +33,7 @@ namespace base {
                         TcpHTTPConnection* connection, const uint8_t* data, size_t len) = 0;
 
                 virtual void onHeaders(TcpHTTPConnection* connection) = 0;
-                virtual void onPayload(TcpHTTPConnection* connection, const std::string& buffer) = 0;
-                virtual void onComplete(TcpHTTPConnection* connection) = 0;
-                virtual void onClose(TcpHTTPConnection* connection) = 0;
 
-                virtual Message* incomingHeader(TcpHTTPConnection* connection) = 0;
-                virtual Message* outgoingHeader(TcpHTTPConnection* connection) = 0;
 
             protected:
 
@@ -63,6 +59,24 @@ namespace base {
             virtual void onParserError(const base::Error& err);
             virtual void onParserEnd();
 
+            /// HTTP connection and server interface
+            virtual void onHeaders() ;
+            virtual void onPayload(const std::string& buffer) ;
+            virtual void onComplete() ;
+           // virtual void onClose() ;
+
+            Message* incomingHeader() ;
+            Message* outgoingHeader() ;
+            
+            /// Send the outdoing HTTP header.
+            virtual long sendHeader();
+            
+             /// Return true if headers should be automatically sent.
+            bool shouldSendHeader() const;
+
+            /// Set true to prevent auto-sending HTTP headers.
+            void shouldSendHeader(bool flag);
+    
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
@@ -76,6 +90,8 @@ namespace base {
             Response _response;
             Parser _parser;
             ServerResponder* _responder;
+        protected:    
+            bool _shouldSendHeader;
 
         };
 

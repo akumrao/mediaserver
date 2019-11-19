@@ -92,8 +92,13 @@ namespace base {
 
         void HttpServer::OnTcpConnectionClosed(TcpHTTPServer* /*TcpHTTPServer*/, TcpHTTPConnection* connection) {
 
-            std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+             std::cout << "HttpServer server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
+            if (connection && connection->_responder)
+            {
+                connection->_responder->onClose();
+            }
+           
         }
 
         void HttpServer::OnTcpConnectionPacketReceived(TcpHTTPConnection* connection, const uint8_t* data, size_t len) {
@@ -106,73 +111,13 @@ namespace base {
 
         void HttpServer::onHeaders(TcpHTTPConnection* connection) {
 
-
-            bool _upgrade = connection->_parser.upgrade();
-            if (_upgrade && util::icompare(connection->_request.get("Upgrade", ""), "websocket") == 0) {
-                // if (util::icompare(request().get("Connection", ""), "upgrade") == 0 &&
-                //     util::icompare(request().get("Upgrade", ""), "websocket") == 0){LOG_CALL;
-                LTrace("Upgrading to WebSocket: ", connection->_request)
-
-                        // Note: To upgrade the connection we need to replace the
-                        // underlying SocketAdapter instance. Since we are currently
-                        // inside the default ConnectionAdapter's HTTP parser callback
-                        // scope we just swap the SocketAdapter instance pointers and do
-                        // a deferred delete on the old adapter. No more callbacks will be
-                        // received from the old adapter after replaceAdapter is called.
-                        /*  auto wsAdapter = new ws::ConnectionAdapter(this, ws::ServerSide);
-                           replaceAdapter(wsAdapter);
-
-                           // Send the handshake request to the WS adapter for handling.
-                           // If the request fails the underlying socket will be closed
-                           // resulting in the destruction of the current connection.
-
-                           // std::ostringstream oss;
-                           // request().write(oss);
-                           // request().clear();
-                           // std::string buffer(oss.str());
-
-                           std::string buffer;
-                           buffer.reserve(256);
-                           request().write(buffer);
-                           request().clear();
-
-                           wsAdapter->onSocketRecv(*socket().get(), mutableBuffer(buffer), socket()->peerAddress()); */
-            }
-
-            // Notify the server the connection is ready for data flow
-            //   _server.onConnectionReady(*this);
-
             // Instantiate the responder now that request headers have been parsed
             connection->_responder = createResponder(connection);
 
-            // Upgraded connections don't receive the onHeaders callback
-            if (connection->_responder && !_upgrade)
-                connection->_responder->onHeaders(connection->_request);
+          
         }
 
-        void HttpServer::onPayload(TcpHTTPConnection* connection, const std::string& buffer) {
-        }
-
-        void HttpServer::onComplete(TcpHTTPConnection* connection) {
-
-            if (connection->_responder)
-                connection->_responder->onRequest(connection->_request, connection->_response);
-        }
-
-        void HttpServer::onClose(TcpHTTPConnection* connection) {
-
-            if (connection->_responder)
-                connection->_responder->onClose();
-        }
-
-        Message* HttpServer::incomingHeader(TcpHTTPConnection* connection) {
-            return reinterpret_cast<Message*> (&connection->_request);
-        }
-
-        Message* HttpServer::outgoingHeader(TcpHTTPConnection* connection) {
-
-            return reinterpret_cast<Message*> (&connection->_response);
-        }
+       
 
 
     } // namespace net

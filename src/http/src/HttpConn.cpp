@@ -19,9 +19,9 @@
 
 namespace base {
     namespace net {
-        
- TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener), _parser(type) {
+
+        TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, size_t bufferSize)
+        : TcpConnectionBase(bufferSize), listener(listener), _parser(type), _shouldSendHeader(true) {
 
 
             _parser.setObserver(this);
@@ -40,9 +40,42 @@ namespace base {
 
             this->listener->OnTcpConnectionPacketReceived(this, data, len);
         }
+        long TcpHTTPConnection::sendHeader() {
+            if (!_shouldSendHeader)
+                return 0 ;
+            _shouldSendHeader = false;
+            assert(outgoingHeader());
 
+             LTrace("TcpHTTPConnection::sendHeader()")
+                     
+            // std::ostringstream os;
+            // outgoingHeader()->write(os);
+            // std::string head(os.str().c_str(), os.str().length());
+
+            std::string head;
+            head.reserve(256);
+            outgoingHeader()->write(head);
+
+            // Send headers directly to the Socket,
+            // bypassing the ConnectionAdapter
+
+             STrace << head;
+             TcpConnectionBase::Write((const uint8_t*)head.c_str(), head.length());
+             return head.length();
+        }
+        
         void TcpHTTPConnection::Send(const uint8_t* data, size_t len) {
 
+             LTrace("TcpHTTPConnection::send()")
+            
+             if (shouldSendHeader())
+            {
+                long res = sendHeader();
+
+                // The initial packet may be empty to push the headers through
+                if (len == 0)
+                    return ;
+            }
 
             // Update sent bytes.
             this->sentBytes += len;
@@ -74,6 +107,7 @@ namespace base {
 
         void TcpHTTPConnection::onParserChunk(const char* buf, size_t len) {
             LTrace("On parser chunk: ", len)
+            abort();
 
                     // Dispatch the payload
                     /* if (_connection)
@@ -87,7 +121,7 @@ namespace base {
         void TcpHTTPConnection::onParserEnd() {
             LTrace("On parser end")
 
-                    this->listener->onComplete(this);
+            onComplete();
         }
 
         void TcpHTTPConnection::onParserError(const base::Error& err) {
@@ -113,6 +147,87 @@ namespace base {
             // _connection->setError(err.message);
 
             Close(); // do we want to force this?
+        }
+
+        void TcpHTTPConnection::onHeaders() {
+
+
+            bool _upgrade = _parser.upgrade();
+            if (_upgrade && util::icompare(_request.get("Upgrade", ""), "websocket") == 0) {
+                // if (util::icompare(request().get("Connection", ""), "upgrade") == 0 &&
+                //     util::icompare(request().get("Upgrade", ""), "websocket") == 0){LOG_CALL;
+                LTrace("Upgrading to WebSocket: ", _request)
+
+                        // Note: To upgrade the connection we need to replace the
+                        // underlying SocketAdapter instance. Since we are currently
+                        // inside the default ConnectionAdapter's HTTP parser callback
+                        // scope we just swap the SocketAdapter instance pointers and do
+                        // a deferred delete on the old adapter. No more callbacks will be
+                        // received from the old adapter after replaceAdapter is called.
+                        /*  auto wsAdapter = new ws::ConnectionAdapter(this, ws::ServerSide);
+                           replaceAdapter(wsAdapter);
+
+                           // Send the handshake request to the WS adapter for handling.
+                           // If the request fails the underlying socket will be closed
+                           // resulting in the destruction of the current connection.
+
+                           // std::ostringstream oss;
+                           // request().write(oss);
+                           // request().clear();
+                           // std::string buffer(oss.str());
+
+                           std::string buffer;
+                           buffer.reserve(256);
+                           request().write(buffer);
+                           request().clear();
+
+                           wsAdapter->onSocketRecv(*socket().get(), mutableBuffer(buffer), socket()->peerAddress()); */
+            }
+
+            // Notify the server the connection is ready for data flow
+            //   _server.onConnectionReady(*this);
+
+            // Instantiate the responder now that request headers have been parsed
+            this->listener->onHeaders(this);
+
+            // Upgraded connections don't receive the onHeaders callback
+            if (_responder && !_upgrade)
+                _responder->onHeaders(_request);
+        }
+
+ 
+
+        bool TcpHTTPConnection::shouldSendHeader() const {
+            return _shouldSendHeader;
+        }
+
+        void TcpHTTPConnection::shouldSendHeader(bool flag) {
+            _shouldSendHeader = flag;
+        }
+
+        void TcpHTTPConnection::onPayload(const std::string& buffer) {
+
+        }
+
+        void TcpHTTPConnection::onComplete() {
+
+            if (_responder)
+                _responder->onRequest(_request, _response);
+        }
+
+     //   void TcpHTTPConnection::onClose() {
+
+         //   if (_responder)
+             //   _responder->onClose();
+       // }
+
+        Message* TcpHTTPConnection::incomingHeader() {
+            return reinterpret_cast<Message*> (&_request);
+        }
+
+        Message* TcpHTTPConnection::outgoingHeader() {
+
+            return reinterpret_cast<Message*> (&_response);
         }
 
     } // namespace net
