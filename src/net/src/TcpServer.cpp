@@ -181,7 +181,7 @@ namespace base
         inline void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
 
-            LDebug("TCP connection closed");
+            LDebug("TcpServerBase connection closed");
 
             // Remove the TcpConnectionBase from the set.
             this->connections.erase(connection);

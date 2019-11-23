@@ -1181,9 +1181,9 @@ int uv__getpwuid_r(uv_passwd_t* pwd) {
   long initsize;
   int r;
 #if defined(__ANDROID_API__) && __ANDROID_API__ < 21
-  int (*getpwuid_r)(uid_t, struct passwd*, char*, size_t, struct passwd**);
+  typedef int (*func_t)(uid_t, struct passwd*, char*, size_t, struct passwd**); // Arvind added typedef
 
-  getpwuid_r = dlsym(RTLD_DEFAULT, "getpwuid_r");
+  func_t getpwuid_r = (func_t)dlsym(RTLD_DEFAULT, "getpwuid_r");
   if (getpwuid_r == NULL)
     return UV_ENOSYS;
 #endif

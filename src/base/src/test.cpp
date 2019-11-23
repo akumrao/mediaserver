@@ -169,14 +169,14 @@ namespace base {
                     
             for (auto it = tests.begin(); it != tests.end(); ++it) {
 
-                if ((*it)->stop()) {
+             //   if ((*it)->stop()) {
 
                     if ((*it)->passed()) {
                         cout << (*it)->name << " passed" << endl;
                     } else {
                         cout << (*it)->name << " failed" << endl;
                     }
-                }
+               // }
             }
         }
 

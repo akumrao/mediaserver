@@ -173,6 +173,7 @@ void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
      */
     memset(&dummy, 0, sizeof(dummy));
     epoll_ctl(loop->backend_fd, EPOLL_CTL_DEL, fd, &dummy);
+    printf("EPOLL_CTL_DEL %d \n", fd );
   }
 }
 
@@ -186,13 +187,17 @@ int uv__io_check_fd(uv_loop_t* loop, int fd) {
   e.data.fd = -1;
 
   rc = 0;
+  printf("EPOLL_CTL_ADD %d \n", fd );
   if (epoll_ctl(loop->backend_fd, EPOLL_CTL_ADD, fd, &e))
     if (errno != EEXIST)
       rc = UV__ERR(errno);
 
   if (rc == 0)
+  {
+      printf("EPOLL_CTL_DEL %d \n", fd );
     if (epoll_ctl(loop->backend_fd, EPOLL_CTL_DEL, fd, &e))
       abort();
+  }
 
   return rc;
 }
@@ -255,6 +260,11 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     /* XXX Future optimization: do EPOLL_CTL_MOD lazily if we stop watching
      * events, skip the syscall and squelch the events after epoll_wait().
      */
+    if( op ==  EPOLL_CTL_ADD )
+    printf("EPOLL_CTL_ADD %d \n", w->fd );
+    else
+    printf("EPOLL_CTL_MOD %d \n", w->fd );
+      
     if (epoll_ctl(loop->backend_fd, op, w->fd, &e)) {
       if (errno != EEXIST)
         abort();
@@ -262,6 +272,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       assert(op == EPOLL_CTL_ADD);
 
       /* We've reactivated a file descriptor that's been watched before. */
+      printf("EPOLL_CTL_MOD   %d\n", w->fd );
       if (epoll_ctl(loop->backend_fd, EPOLL_CTL_MOD, w->fd, &e))
         abort();
     }
@@ -313,6 +324,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (nfds == -1 && errno == ENOSYS)
         no_epoll_wait = 1;
     }
+
+    printf( "epoll_wait %d \n", nfds);
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))
@@ -381,6 +394,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
          * Ignore all errors because we may be racing with another thread
          * when the file descriptor is closed.
          */
+        printf("EPOLL_CTL_DEL %d\n", fd );
         epoll_ctl(loop->backend_fd, EPOLL_CTL_DEL, fd, pe);
         continue;
       }

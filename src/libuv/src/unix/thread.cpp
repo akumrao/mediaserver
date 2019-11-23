@@ -59,7 +59,7 @@ int uv_barrier_init(uv_barrier_t* barrier, unsigned int count) {
   if (barrier == NULL || count == 0)
     return UV_EINVAL;
 
-  b = uv__malloc(sizeof(*b));
+  b =  (_uv_barrier*)uv__malloc(sizeof(*b));
   if (b == NULL)
     return UV_ENOMEM;
 

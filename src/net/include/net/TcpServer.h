@@ -73,6 +73,8 @@ namespace base
             void OnTcpConnectionClosed(TcpConnectionBase* connection) override;
 
         protected:
+               uv_tcp_t* BindTcp(std::string &ip, int port);
+        protected:
             struct sockaddr_storage localAddr;
             std::string localIp;
             uint16_t localPort{ 0};
@@ -107,7 +109,7 @@ namespace base
             return this->localPort;
         }
 
-                /**********************************************************************************************************/
+        /**********************************************************************************************************/
         class TcpServer : public TcpServerBase
         {
         public:
@@ -121,7 +123,7 @@ namespace base
 
         public:
             TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port);
-            uv_tcp_t* BindTcp(std::string &ip, int port);
+
             ~TcpServer() override;
 
             /* Pure virtual methods inherited from ::TcpServer. */

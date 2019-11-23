@@ -9,6 +9,8 @@ int dump_vfprintf( const char *format, va_list arg )
 {
     vfprintf(fpDump, format, arg);
     //vfprintf(stderr, format, arg);
+
+    return 0;
 }
 
 
