@@ -75,7 +75,7 @@ namespace base {
         
         if(nread == UV_EOF)
         {
-            ptr->onstdout(std::string("Ping EOF"));
+            ptr->onstdout(std::string("Ping end ..."));
 //            uv_close((uv_handle_t*)tcp, close_cb);
         }
 
