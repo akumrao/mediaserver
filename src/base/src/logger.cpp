@@ -355,17 +355,25 @@ void LogChannel::format(const LogStream& stream, std::ostream& ost)
 {
 #ifdef base_ENABLE_LOGGING
     if (!_timeFormat.empty())
+    {
         ost << time::print(time::toLocal(stream.ts), _timeFormat.c_str());
-    ost << " [" << getStringFromLevel(stream.level) << "] ";
-    if (!stream.realm.empty()) { // || !stream.address.empty()
-        ost << "[";
-        if (!stream.realm.empty())
-            ost << stream.realm;
-        if (stream.line > 0)
-            ost << "(" << stream.line << ")";
-        // if (!stream.address.empty())
-        //     ost << ":" << stream.address;
-        ost << "] ";
+        ost << " [" << getStringFromLevel(stream.level) << "] ";
+    
+        if (!stream.realm.empty()) { // || !stream.address.empty()
+            ost << "[";
+            if (!stream.realm.empty())
+                ost << stream.realm;
+            if (stream.line > 0)
+                ost << "(" << stream.line << ")";
+            // if (!stream.address.empty())
+            //     ost << ":" << stream.address;
+            ost << "] ";
+        }
+    }
+    else
+    {
+        
+        ost << time::print(time::toLocal(stream.ts), "%Y-%m-%d %H:%M:%S ");  
     }
     ost << stream.message.str();
     ost.flush();
@@ -384,6 +392,9 @@ ConsoleChannel::ConsoleChannel(std::string name, Level level,
 {
 }
 
+#if defined(__ANDROID__)
+#include <android/log.h>
+#endif
 
 void ConsoleChannel::write(const LogStream& stream)
 {
@@ -396,15 +407,32 @@ void ConsoleChannel::write(const LogStream& stream)
 
     std::ostringstream ss;
     format(stream, ss);
-#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
-    std::cout << ss.str() << std::flush;
-#endif
+
 //#if defined(_MSC_VER) && defined(_DEBUG)
 //    std::string s(ss.str());
 //    std::wstring temp(s.length(), L' ');
 //    std::copy(s.begin(), s.end(), temp.begin());
 //    OutputSDebugtring(temp.c_str());
 //#endif
+
+#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
+    std::cout << ss.str() << std::flush;
+#endif
+
+# if defined(__ANDROID__)
+
+// Android log function wrappers
+static const char* kTAG = "hello-jniCallback";
+
+__android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
+
+#else
+#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
+    std::cout << ss.str() << std::flush;
+#endif
+#endif /* __ANDROID__ */
+
+
 #endif
 }
 

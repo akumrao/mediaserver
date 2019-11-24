@@ -4,6 +4,7 @@
 #include  <iostream>
 #include  <string>
 #include "base/logger.h"
+#include <sstream>
 
 using std::cout;
 using std::cerr;
@@ -46,28 +47,67 @@ public:
     }
 };
 
+class PingThread : public Thread {
+public:
+
+    PingThread(std::string host)  {
+
+        proc.args = {"ping", "-W",  "4", "-c", "15 ", host};
+    }
+    // virtual ~Thread2(void);
+
+    void run() {
+
+        proc.onstdout = [&](std::string line) {
+         
+            
+            std::stringstream X(line); 
+            std::string T; 
+  
+            while (std::getline(X, T, '\n')) { 
+                LTrace(T);
+            } 
+           
+            
+        };
+        proc.onexit = [&](int64_t status) {
+            LTrace( "ravind", status);
+        };
+        proc.spawn();
+        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+
+    }
+
+    void stop() {
+        proc.kill();
+    }
+
+    Process proc;
+
+};
+
 int main(int argc, char** argv) {
 
     //Logger::instance().add(new RotatingFileChannel("test", "/tmp/test", Level::Trace, "log", 10));
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Trace, "" ));
 
     bool gotStdout = false, gotExit = false;
     //Process proc{ "ping", "-c 29", "8.8.8.8"};
 
-     Process proc{ "ls", "-a"};
-    proc.onstdout = [&](std::string line) {
-        std::cout << "process stdout: " << line << std::endl;
-        gotStdout = true;
-        //proc.kill();
-    };
-    proc.onexit = [&](int64_t status) {
-        std::cout << "process exit: " << status << std::endl;
-        gotExit = true;
-    };
-    proc.spawn();
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    // Process proc{ "ls", "-a"};
+    std::string host = "www.google.com";
 
+    PingThread pingThread(host);
 
+    pingThread.start();
+    
+    sleep(20);
+    LTrace( "stop");
+    
+    pingThread.stop();
+    
+   LTrace( "stop1");
+    
     return 0;
 
 
