@@ -26,7 +26,8 @@ namespace base {
     }
 
     Process::~Process() {
-        kill();
+        //kill();
+        uv_thread_sleep(1000);
     }
 
     void Process::init() {
