@@ -66,8 +66,10 @@ int uv__random_sysctl(void* buf, size_t buflen) {
      * only called when neither getrandom(2) nor /dev/urandom are available.
      * Fails with ENOSYS on kernels configured without CONFIG_SYSCTL_SYSCALL.
      */
-    if (syscall(SYS__sysctl, &args) == -1)
-      return UV__ERR(errno);
+   // if (syscall(SYS__sysctl, &args) == -1)
+    //  return UV__ERR(errno);
+
+    abort(); //arvind
 
     if (n != sizeof(uuid))
       return UV_EIO;  /* Can't happen. */
