@@ -75,7 +75,7 @@ namespace base {
         
         if(nread == UV_EOF)
         {
-            ptr->onstdout(std::string("Ping end ..."));
+            //ptr->onstdout(std::string("Ping end ..."));
 //            uv_close((uv_handle_t*)tcp, close_cb);
         }
 
@@ -148,6 +148,12 @@ namespace base {
         out.data = this;
         r = uv_read_start((uv_stream_t*) & out, on_alloc, on_read);
         ASSERT(r == 0);
+         in.data = this;
+        r = uv_read_start((uv_stream_t*) & in, on_alloc, on_read);
+        //ASSERT(r == 0);
+        err.data = this;
+        r = uv_read_start((uv_stream_t*) & err, on_alloc, on_read);
+        //ASSERT(r == 0);
        
     }
 

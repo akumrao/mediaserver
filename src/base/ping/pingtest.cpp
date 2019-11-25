@@ -52,7 +52,7 @@ public:
 
     PingThread(std::string host)  {
 
-        proc.args = {"ping", "-W",  "4", "-c", "15 ", host};
+        proc.args = {"ping", "-W",  "4", "-c", "300 ", host};
     }
     // virtual ~Thread2(void);
 
@@ -79,7 +79,7 @@ public:
     }
 
     void stop() {
-        proc.kill();
+        proc.kill(SIGINT);
     }
 
     Process proc;
@@ -96,18 +96,19 @@ int main(int argc, char** argv) {
 
     // Process proc{ "ls", "-a"};
     std::string host = "www.google.com";
-
+    //std::string host = "8.8.8.8";
+     
     PingThread pingThread(host);
 
     pingThread.start();
     
-    sleep(20);
+    sleep(3);
     LTrace( "stop");
     
     pingThread.stop();
     
    LTrace( "stop1");
-    
+   sleep(100);
     return 0;
 
 
