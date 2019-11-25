@@ -1,5 +1,5 @@
 #include "httpClientTest.h"
-#include "http/HttpServer.h"
+#include "http/client.h"
 #include "base/test.h"
 #include "base/logger.h"
 #include "base/application.h"
@@ -7,11 +7,12 @@
 #include "http/url.h"
 #include "http/util.h"
 #include "base/filesystem.h"
- #include "http/client.h"
+#include "http/client.h"
 
 using namespace base;
 using namespace base::net;
 using namespace base::test;
+
 /*
 class BasicResponder : public net::ServerResponder
 /// Basic server responder (make echo?)
@@ -46,37 +47,45 @@ public:
         return new BasicResponder(conn);
     }
 };
-*/
+ */
 
 int main(int argc, char** argv) {
- 
+
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     test::init();
 
+    Application app;
+    std::string path("/var/tmp/");
+    fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-   std::string path("/var/tmp/");
-   fs::addnode(path, "zlib-1.2.8.tar.gz");
+    Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+    conn->start();
+    conn->clientConn->fnComplete = [&](const Response & response) {
+        std::cout << "Lerver response:";
+    };
+    conn->clientConn->_request.setMethod("GET");
+    conn->clientConn->_request.setKeepAlive(false);
+    conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+    conn->clientConn->Send();
 
-   Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
-   conn->fnComplete = [&](const Response& response) {
-       std::cout << "Lerver response:";
-   };
-   conn->_request.setMethod("GET");
-   conn->_request.setKeepAlive(false);
-   conn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-   conn->Send();
 
-   //uv::runLoop();
+    app.waitForShutdown([&](void*) {
 
-   //expect(fs::exists(path));
-  // expect(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-   //fs::unlink(path);
-  
-   return 0;
-   
-    
+        conn->shutdown();
+
+    });
+
+    //uv::runLoop();
+
+    //expect(fs::exists(path));
+    // expect(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    //fs::unlink(path);
+
+    return 0;
+
+
     describe("url parser", []() {
-        
+
         URL url;
         expects(url.scheme().empty());
         expects(url.authority().empty());
@@ -139,7 +148,7 @@ int main(int argc, char** argv) {
 
 
 
-       
+
 
     test::runAll();
 
