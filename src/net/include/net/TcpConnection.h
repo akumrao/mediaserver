@@ -48,6 +48,8 @@ namespace base
         public:
             void Close();
             void Connect( std::string ip, int port);
+            virtual void on_connect() { }
+            virtual void on_close(){}
             virtual void Dump() const;
             void Setup(
                     Listener* listener,

@@ -47,14 +47,18 @@ namespace base {
         }
 
         inline static void onClose(uv_handle_t* handle) {
+           TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
+            
+            obj->on_close();
             delete handle;
         }
 
         inline static void onShutdown(uv_shutdown_t* req, int /*status*/) {
             auto* handle = req->handle;
+            handle->data = req->data;
 
             delete req;
-
+           
             // Now do close the handle.
             uv_close(reinterpret_cast<uv_handle_t*> (handle), static_cast<uv_close_cb> (onClose));
         }
@@ -96,6 +100,7 @@ namespace base {
 
             // Don't read more.
             err = uv_read_stop(reinterpret_cast<uv_stream_t*> (this->uvHandle));
+            this->uvHandle->data = this;
 
             if (err != 0)
                 LError("uv_read_stop() failed: %s", uv_strerror(err));
@@ -152,9 +157,9 @@ namespace base {
             this->localPort = localPort;
         }
 
-        inline void on_connect(uv_connect_t* req, int /*status*/) {
-
-
+        inline void onconnect(uv_connect_t* req, int /*status*/) {
+            TcpConnectionBase *obj=  (TcpConnectionBase *)req->data;
+            obj->on_connect();
 
             delete req;
         }
@@ -177,12 +182,12 @@ namespace base {
             }
 
             // Set the listener.
-            this->listener = listener;
+           // this->listener = listener;
 
             // Set the local address.
      
-            this->localIp = localIp;
-            this->localPort = localPort;
+            this->localIp = ip;
+            this->localPort = port;
             
             
             int r;
@@ -194,13 +199,13 @@ namespace base {
                 ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
 
                // this->localAddr = (sockaddr_storage *) addr6;
-                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (on_connect));
+                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
 
 
             } else {
                 ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
                 
-                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (on_connect));
+                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
 
             }
             
