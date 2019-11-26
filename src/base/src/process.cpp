@@ -2,7 +2,7 @@
 #include "base/process.h"
 #include "base/logger.h"
 #include <iostream>
-
+#include <cassert>
 
 namespace base {
 
