@@ -47,8 +47,13 @@ namespace base {
         }
 
         inline static void onClose(uv_handle_t* handle) {
+            
+            LTrace("onClose");
            TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
             
+            if(obj->listener)
+            obj->listener->OnTcpConnectionClosed(obj);
+           
             obj->on_close();
             delete handle;
         }
@@ -87,7 +92,7 @@ namespace base {
 
         void TcpConnectionBase::Close() {
 
-
+            LTrace("Close")
             if (this->closed)
                 return;
 
@@ -164,7 +169,7 @@ namespace base {
             delete req;
         }
 
-        void TcpConnectionBase::Connect(std::string ip, int port) { //for client
+        void TcpConnectionBase::Connect(std::string ip, int port,  addrinfo *addrs) { //for client
 
 
             struct sockaddr_in6 addr6;
@@ -195,18 +200,44 @@ namespace base {
             auto req = new uv_connect_t();
             req->data = this;
 
-            if (IP::GetFamily(ip) == AF_INET6) {
-                ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
+            if( !addrs)
+            {
+                if (IP::GetFamily(ip) == AF_INET6) {
+                    ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
 
-               // this->localAddr = (sockaddr_storage *) addr6;
-                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
+                   // this->localAddr = (sockaddr_storage *) addr6;
+                    err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
 
 
-            } else {
-                ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
+                } else {
+                    ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
+
+                    err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
+
+                }
+            }
+            else
+            {
                 
-                err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
-
+                for (addrinfo* ai = addrs; ai != NULL; ai = ai->ai_next) {
+                    if (ai->ai_family != AF_INET && ai->ai_family != AF_INET6) {
+                      continue;
+                    }
+                    if (ai->ai_family == AF_INET6) {
+                      addr6 = *(const struct sockaddr_in6 *) ai->ai_addr;
+                      addr6.sin6_port = htons(port);
+                      err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
+                      if( !err) break;
+                      //addrv = &s.addr4.sin_addr;
+                    } else if (ai->ai_family == AF_INET) {
+                      addr = *(const struct sockaddr_in *) ai->ai_addr;
+                      addr.sin_port = htons(port);
+                      err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
+                      if( !err) break;
+                     // addrv = &s.addr6.sin6_addr;
+                    }
+                }
+                
             }
             
             
@@ -247,7 +278,7 @@ namespace base {
 
         void TcpConnectionBase::Write(const uint8_t* data, size_t len) {
 
-
+            LTrace("TcpConnectionBase::Write" );
             if (this->closed)
                 return;
 
@@ -273,8 +304,7 @@ namespace base {
 
                 Close();
 
-                // Notify the listener.
-                this->listener->OnTcpConnectionClosed(this);
+
 
                 return;
             }
@@ -336,8 +366,7 @@ namespace base {
 
                 Close();
 
-                // Notify the listener.
-                this->listener->OnTcpConnectionClosed(this);
+
 
                 return;
             }
@@ -380,7 +409,6 @@ namespace base {
 
             Close();
 
-            this->listener->OnTcpConnectionClosed(this);
         }
 
         bool TcpConnectionBase::SetPeerAddress() {
@@ -453,8 +481,6 @@ namespace base {
                 // Close server side of the connection.
                 Close();
 
-                // Notify the listener.
-                this->listener->OnTcpConnectionClosed(this);
             }// Some error.
             else {
                 LDebug("read error, closing the connection: %s", uv_strerror(nread));
@@ -464,8 +490,6 @@ namespace base {
                 // Close server side of the connection.
                 Close();
 
-                // Notify the listener.
-                this->listener->OnTcpConnectionClosed(this);
             }
         }
 
@@ -482,8 +506,7 @@ namespace base {
 
             Close();
 
-            // Notify the listener.
-            this->listener->OnTcpConnectionClosed(this);
+
         }
 
         /*************************************************************************************************************/

@@ -415,9 +415,6 @@ void ConsoleChannel::write(const LogStream& stream)
 //    OutputSDebugtring(temp.c_str());
 //#endif
 
-#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
-    std::cout << ss.str() << std::flush;
-#endif
 
 # if defined(__ANDROID__)
 

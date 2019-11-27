@@ -26,43 +26,43 @@ namespace base
 
         Request::Request()
         : _method(Method::Get)
-        , _uri("/"){LOG_CALL;
+        , _uri("/"){
         }
 
         Request::Request(const std::string& version)
         : Message(version)
         , _method(Method::Get)
-        , _uri("/"){LOG_CALL;
+        , _uri("/"){
         }
 
         Request::Request(const std::string& method, const std::string& uri)
         : _method(method)
-        , _uri(uri){LOG_CALL;
+        , _uri(uri){
         }
 
         Request::Request(const std::string& method, const std::string& uri,
                 const std::string& version)
         : Message(version)
         , _method(method)
-        , _uri(uri){LOG_CALL;
+        , _uri(uri){
         }
 
-        Request::~Request(){LOG_CALL;
+        Request::~Request(){
         }
 
-        void Request::setMethod(const std::string& method){LOG_CALL;
+        void Request::setMethod(const std::string& method){
             _method = method;
         }
 
-        void Request::setURI(const std::string& uri){LOG_CALL;
+        void Request::setURI(const std::string& uri){
             _uri = uri;
         }
 
-        void Request::setHost(const std::string& host){LOG_CALL;
+        void Request::setHost(const std::string& host){
             set("Host", host);
         }
 
-        void Request::setHost(const std::string& host, uint16_t port){LOG_CALL;
+        void Request::setHost(const std::string& host, uint16_t port){
             std::string value(host);
             if (port != 80 && port != 443)
             {
@@ -84,7 +84,7 @@ namespace base
             return _uri;
         }
 
-        void Request::setCookies(const NVCollection& cookies){LOG_CALL;
+        void Request::setCookies(const NVCollection& cookies){
             std::string cookie;
             for (NVCollection::ConstIterator it = cookies.begin(); it != cookies.end();
                     ++it)
@@ -120,7 +120,7 @@ namespace base
         }
 
         void Request::setCredentials(const std::string& scheme,
-                const std::string& authInfo){LOG_CALL;
+                const std::string& authInfo){
             setCredentials("Authorization", scheme, authInfo);
         }
 
@@ -134,7 +134,7 @@ namespace base
         }
 
         void Request::setProxyCredentials(const std::string& scheme,
-                const std::string& authInfo){LOG_CALL;
+                const std::string& authInfo){
             setCredentials("Proxy-Authorization", scheme, authInfo);
         }
 
@@ -180,7 +180,7 @@ namespace base
 
         void Request::setCredentials(const std::string& header,
                 const std::string& scheme,
-                const std::string& authInfo){LOG_CALL;
+                const std::string& authInfo){
             std::string auth(scheme);
             auth.append(" ");
             auth.append(authInfo);

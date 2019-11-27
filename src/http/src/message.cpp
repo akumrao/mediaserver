@@ -21,21 +21,21 @@ namespace base
         const std::string Message::EMPTY;
 
         Message::Message()
-        : _version(HTTP_1_1){LOG_CALL;
+        : _version(HTTP_1_1){
         }
 
         Message::Message(const std::string& version)
-        : _version(version){LOG_CALL;
+        : _version(version){
         }
 
-        Message::~Message(){LOG_CALL;
+        Message::~Message(){
         }
 
-        void Message::setVersion(const std::string& version){LOG_CALL;
+        void Message::setVersion(const std::string& version){
             _version = version;
         }
 
-        void Message::setContentLength(uint64_t length){LOG_CALL;
+        void Message::setContentLength(uint64_t length){
             if (int(length) != UNKNOWN_CONTENT_LENGTH)
                 set(CONTENT_LENGTH, util::itostr<uint64_t>(length));
             else
@@ -51,7 +51,7 @@ namespace base
                 return uint64_t(UNKNOWN_CONTENT_LENGTH);
         }
 
-        void Message::setTransferEncoding(const std::string& transferEncoding){LOG_CALL;
+        void Message::setTransferEncoding(const std::string& transferEncoding){
             if (util::icompare(transferEncoding, IDENTITY_TRANSFER_ENCODING) == 0)
                 erase(TRANSFER_ENCODING);
             else
@@ -62,7 +62,7 @@ namespace base
             return get(TRANSFER_ENCODING, IDENTITY_TRANSFER_ENCODING);
         }
 
-        void Message::setChunkedTransferEncoding(bool flag){LOG_CALL;
+        void Message::setChunkedTransferEncoding(bool flag){
             if (flag)
                 setTransferEncoding(CHUNKED_TRANSFER_ENCODING);
             else
@@ -73,7 +73,7 @@ namespace base
             return util::icompare(getTransferEncoding(), CHUNKED_TRANSFER_ENCODING) == 0;
         }
 
-        void Message::setContentType(const std::string& contentType){LOG_CALL;
+        void Message::setContentType(const std::string& contentType){
             if (contentType.empty())
                 erase(CONTENT_TYPE);
             else
@@ -84,7 +84,7 @@ namespace base
             return get(CONTENT_TYPE, UNKNOWN_CONTENT_TYPE);
         }
 
-        void Message::setKeepAlive(bool keepAlive){LOG_CALL;
+        void Message::setKeepAlive(bool keepAlive){
             if (keepAlive)
                 set(CONNECTION, CONNECTION_KEEP_ALIVE);
             else

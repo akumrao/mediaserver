@@ -1,26 +1,8 @@
-#ifndef SCY_HTTP_Tests_H
-#define SCY_HTTP_Tests_H
+#ifndef HTTP_Tests_H
+#define HTTP_Tests_H
 
 /*
-#include "scy/interface.h"
-#include "scy/base.h"
-#include "scy/crypto/hash.h"
-#include "scy/filesystem.h"
-#include "scy/http/client.h"
-#include "scy/http/connection.h"
-#include "scy/http/form.h"
-#include "scy/http/packetizers.h"
-#include "scy/http/server.h"
-#include "scy/http/url.h"
-#include "scy/http/util.h"
-#include "scy/http/websocket.h"
-#include "scy/idler.h"
-#include "scy/net/sslcontext.h"
-#include "scy/net/sslmanager.h"
-#include "scy/test.h"
-#include "scy/timer.h"
 
-#include "../samples/httpechoserver/httpechoserver.h"
 
 
 using std::cout;
@@ -138,7 +120,4 @@ struct HTTPEchoTest
 } // namespace scy
 
 */
-#endif // SCY_HTTP_Tests_H
-
-
-/// @\}
+#endif 

@@ -49,8 +49,24 @@ public:
 };
  */
 
+
+
+
+
+
+
 int main(int argc, char** argv) {
 
+    GetAddrInfoReq infoReq;
+    
+    
+    infoReq.resolve("zlib.net", 80);
+    
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    
+    
+    
+    
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     test::init();
 
@@ -68,6 +84,7 @@ int main(int argc, char** argv) {
     conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
     conn->clientConn->Send();
 
+    
 
     app.waitForShutdown([&](void*) {
 

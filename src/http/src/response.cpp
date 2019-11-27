@@ -14,50 +14,50 @@ namespace base
 
         Response::Response()
         : _status(StatusCode::OK)
-        , _reason(getStatusCodeReason(StatusCode::OK)){LOG_CALL;
+        , _reason(getStatusCodeReason(StatusCode::OK)){
         }
 
         Response::Response(StatusCode status, const std::string& reason)
         : _status(status)
-        , _reason(reason){LOG_CALL;
+        , _reason(reason){
         }
 
         Response::Response(const std::string& version, StatusCode status,
                 const std::string& reason)
         : Message(version)
         , _status(status)
-        , _reason(reason){LOG_CALL;
+        , _reason(reason){
         }
 
         Response::Response(StatusCode status)
         : _status(status)
-        , _reason(getStatusCodeReason(status)){LOG_CALL;
+        , _reason(getStatusCodeReason(status)){
         }
 
         Response::Response(const std::string& version, StatusCode status)
         : Message(version)
         , _status(status)
-        , _reason(getStatusCodeReason(status)){LOG_CALL;
+        , _reason(getStatusCodeReason(status)){
         }
 
-        Response::~Response(){LOG_CALL;
+        Response::~Response(){
         }
 
-        void Response::setStatus(StatusCode status){LOG_CALL;
+        void Response::setStatus(StatusCode status){
             _status = status;
             _reason = getStatusCodeReason(status);
         }
 
-        void Response::setReason(const std::string& reason){LOG_CALL;
+        void Response::setReason(const std::string& reason){
             _reason = reason;
         }
 
-        void Response::setStatusAndReason(StatusCode status, const std::string& reason){LOG_CALL;
+        void Response::setStatusAndReason(StatusCode status, const std::string& reason){
             _status = status;
             _reason = reason;
         }
 
-        void Response::setDate(const Timestamp& dateTime){LOG_CALL;
+        void Response::setDate(const Timestamp& dateTime){
             set("Date", DateTimeFormatter::format(dateTime, DateTimeFormat::HTTP_FORMAT));
         }
 
@@ -67,7 +67,7 @@ namespace base
             return DateTimeParser::parse(dateTime, tzd).timestamp();
         }
 
-        void Response::addCookie(const Cookie& cookie){LOG_CALL;
+        void Response::addCookie(const Cookie& cookie){
             add("Set-Cookie", cookie.toString());
         }
 
@@ -112,7 +112,7 @@ namespace base
             return _reason;
         }
 
-        const char* getStatusCodeReason(StatusCode status){LOG_CALL;
+        const char* getStatusCodeReason(StatusCode status){
             switch (status)
             {
                 case StatusCode::Continue:

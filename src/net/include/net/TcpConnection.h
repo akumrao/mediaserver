@@ -47,7 +47,7 @@ namespace base
 
         public:
             void Close();
-            void Connect( std::string ip, int port);
+            void Connect( std::string ip, int port,  addrinfo *addrs = nullptr);
             virtual void on_connect() { }
             virtual void on_close(){}
             virtual void Dump() const;
@@ -97,9 +97,11 @@ namespace base
             std::string peerIp;
             uint16_t peerPort{ 0};
 
-        private:
+        public:
             // Passed by argument.
             Listener* listener{ nullptr};
+        private:
+
             // Allocated by this.
             uv_tcp_t* uvHandle{ nullptr};
             // Others.

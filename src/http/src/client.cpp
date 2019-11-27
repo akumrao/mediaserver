@@ -1,37 +1,25 @@
-///
-//
-// LibSourcey
-// Copyright (c) 2005, Sourcey <https://sourcey.com>
-//
-// SPDX-License-Identifier: LGPL-2.1+
-//
-/// @addtogroup http
-/// @{
 
 
 #include "http/client.h"
-#include "base/logger.h"
-#include "base/util.h"
 
+#include "base/util.h"
+#include "base/application.h"
 
 using std::endl;
 
 
 namespace base {
     namespace net {
-
-
         //
         // Client Connection
         //
 
         ClientConnection::ClientConnection(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener), _parser(type)
+        : TcpConnectionBase(bufferSize), listener(listener), _parser(type), _shouldSendHeader(true)
         , _url(url)
         , _connect(false)
         , _active(false)
-        , _complete(false)
- {
+        , _complete(false) {
 
             auto uri = url.pathEtc();
             if (!uri.empty())
@@ -39,7 +27,7 @@ namespace base {
             _request.setHost(url.host(), url.port());
 
             // Set default error status
-            _response.setStatus( StatusCode::BadGateway);
+            _response.setStatus(StatusCode::BadGateway);
 
 
             _parser.setObserver(this);
@@ -56,7 +44,7 @@ namespace base {
             // LTrace("Destroy")
         }
 
-       void ClientConnection::Send() {
+        void ClientConnection::Send() {
             connect();
         }
 
@@ -71,18 +59,25 @@ namespace base {
 
             if (_active)
                 // Raw data will be pushed onto the Outgoing packet stream
-                 TcpConnectionBase::Write(data, len);
+                TcpConnectionBase::Write(data, len);
             else
-                _outgoingBuffer.push_back(std::string((char*)data, len));
+                _outgoingBuffer.push_back(std::string((char*) data, len));
             return;
         }
 
-        void ClientConnection::connect() {
+        void ClientConnection::cbDnsResolve(addrinfo* res) {
+
             if (!_connect) {
                 _connect = true;
-                // LTrace("Connecting")
-                Connect(_url.host(), _url.port());
+                LTrace("Connecting")
+                Connect(_url.host(), _url.port(), res);
             }
+
+        }
+
+        void ClientConnection::connect() {
+            LTrace("Resolve DNS ", _url.host());
+            resolve(_url.host(), _url.port(), Application::uvGetLoop());
         }
 
         void ClientConnection::setReadStream(std::ostream* os) {
@@ -105,20 +100,20 @@ namespace base {
         // Socket Callbacks
 
         void ClientConnection::on_connect() {
-            // LTrace("On connect")
+            LTrace("On_connect")
 
             // Set the connection to active
             _active = true;
 
             // Emit the connect signal so raw connections like
             // websockets can kick off the data flow
-         //   Connect.emit();
+            //   Connect.emit();
 
             // Flush queued packets
             if (!_outgoingBuffer.empty()) {
                 // LTrace("Sending buffered: ", _outgoingBuffer.size())
                 for (const auto& packet : _outgoingBuffer) {
-                    TcpConnectionBase::Write((const uint8_t*)packet.c_str(), packet.length());
+                    TcpConnectionBase::Write((const uint8_t*) packet.c_str(), packet.length());
                 }
                 _outgoingBuffer.clear();
             } else {
@@ -136,7 +131,6 @@ namespace base {
             //    sendHeader();
             //}
         }
-
 
         void ClientConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
 
@@ -167,7 +161,7 @@ namespace base {
             // Write to the STL read stream if available
             if (_readStream) {
                 // LTrace("Writing to stream: ", buffer.size())
-                  _readStream->write( buffer.c_str(), buffer.size());
+                _readStream->write(buffer.c_str(), buffer.size());
                 _readStream->flush();
             }
 
@@ -189,7 +183,7 @@ namespace base {
                 }
             }
 
-         //   Complete.emit(_response);
+            //   Complete.emit(_response);
         }
 
         void ClientConnection::on_close() {
@@ -200,15 +194,17 @@ namespace base {
             //Close.emit(*this);
         }
 
-        
-          long ClientConnection::sendHeader() {
+        long ClientConnection::sendHeader() {
+
+            LTrace("TcpHTTPConnection::sendHeader()")
+
             if (!_shouldSendHeader)
-                return 0 ;
+                return 0;
             _shouldSendHeader = false;
             assert(outgoingHeader());
 
-             LTrace("TcpHTTPConnection::sendHeader()")
-                     
+
+
             // std::ostringstream os;
             // outgoingHeader()->write(os);
             // std::string head(os.str().c_str(), os.str().length());
@@ -220,12 +216,12 @@ namespace base {
             // Send headers directly to the Socket,
             // bypassing the ConnectionAdapter
 
-             STrace << head;
-             TcpConnectionBase::Write((const uint8_t*)head.c_str(), head.length());
-             return head.length();
+            LTrace("TcpHTTPConnection::sendHeader:head")
+
+            STrace << head;
+            TcpConnectionBase::Write((const uint8_t*) head.c_str(), head.length());
+            return head.length();
         }
-        
-    
 
         void ClientConnection::onParserHeader(const std::string& /* name */,
                 const std::string& /* value */) {
@@ -235,25 +231,25 @@ namespace base {
             LTrace("On headers end: ", _parser.upgrade())
 
 
-                   // this->listener->onHeaders(this);
+                    // this->listener->onHeaders(this);
 
-            // Set the position to the end of the headers once
-            // they have been handled. Subsequent body chunks will
-            // now start at the correct position.
-            // _connection.incomingBuffer().position(_parser._parser.nread);
+                    // Set the position to the end of the headers once
+                    // they have been handled. Subsequent body chunks will
+                    // now start at the correct position.
+                    // _connection.incomingBuffer().position(_parser._parser.nread);
         }
 
         void ClientConnection::onParserChunk(const char* buf, size_t len) {
             LTrace("On parser chunk: ", len)
             abort();
 
-                    // Dispatch the payload
-                    /* if (_connection)
-                     {
-                         net::SocketAdapter::onSocketRecv(*_connection->socket().get(),
-                                 mutableBuffer(const_cast<char*> (buf), len),
-                                 _connection->socket()->peerAddress());
-                     }*/
+            // Dispatch the payload
+            /* if (_connection)
+             {
+                 net::SocketAdapter::onSocketRecv(*_connection->socket().get(),
+                         mutableBuffer(const_cast<char*> (buf), len),
+                         _connection->socket()->peerAddress());
+             }*/
         }
 
         void ClientConnection::onParserEnd() {
@@ -287,8 +283,6 @@ namespace base {
             Close(); // do we want to force this?
         }
 
-       
-
         bool ClientConnection::shouldSendHeader() const {
             return _shouldSendHeader;
         }
@@ -297,14 +291,15 @@ namespace base {
             _shouldSendHeader = flag;
         }
 
-      
 
-      
+
+
         //
         // HTTP Client
         //
-/************************************************************************************************************************/
-        Client::Client(URL url ):_url(url) {
+
+        /************************************************************************************************************************/
+        Client::Client(URL url) : _url(url) {
             // LTrace("Create")
         }
 
@@ -314,20 +309,18 @@ namespace base {
         }
 
         void Client::shutdown() {
-            if(clientConn)
-            {
+            if (clientConn) {
                 delete clientConn;
                 clientConn = nullptr;
             }
         }
+
         void Client::start() {
             clientConn = new ClientConnection(this, _url);
         }
-         
 
-        void Client::OnTcpConnectionPacketReceived(ClientConnection* connection, const uint8_t* data, size_t len)
-        {
-            
+        void Client::OnTcpConnectionPacketReceived(ClientConnection* connection, const uint8_t* data, size_t len) {
+
         }
 
     } // namespace net

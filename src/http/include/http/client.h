@@ -1,26 +1,19 @@
-///
-//
-// LibSourcey
-// Copyright (c) 2005, Sourcey <https://sourcey.com>
-//
-// SPDX-License-Identifier: LGPL-2.1+
-//
-/// @addtogroup http
-/// @{
 
 
-#ifndef SCY_HTTP_Client_H
-#define SCY_HTTP_Client_H
+#ifndef HTTP_Client_H
+#define HTTP_Client_H
 
 
 #include "net/TcpConnection.h"
 #include "http/parser.h"
 #include "http/url.h"
+#include "base/logger.h"
+#include "net/dns.h"
 
 namespace base {
     namespace net {
 
-        class ClientConnection : public TcpConnectionBase, public ParserObserver {
+        class ClientConnection : public TcpConnectionBase, public ParserObserver , public GetAddrInfoReq {
         public:
 
             class Listener {
@@ -51,6 +44,7 @@ namespace base {
             void on_connect();
             void on_close();
 
+            virtual void cbDnsResolve(addrinfo* res);
 
             /* Pure virtual methods inherited from ::TcpHTTPConnection. */
         public:
@@ -111,61 +105,13 @@ namespace base {
 
         protected:
             bool _shouldSendHeader;
+            
+             //GetAddrInfoReq infoReq;
 
         };
 
 
 
-
-
-
-
-
-
-        //
-        // HTTP Connection Helpers
-        //
-
-        /*
-        template <class ConnectionT>
-        inline ClientConnection::Ptr createConnectionT(const URL& url, uv::Loop* loop = uv::defaultLoop())
-        {
-            ClientConnection::Ptr conn;
-
-            if (url.scheme() == "http") {
-                conn = std::make_shared<ConnectionT>(url, std::make_shared<net::TCPSocket>(loop));
-                // conn->replaceAdapter(new ConnectionAdapter(conn, HTTP_RESPONSE));
-                // conn = std::shared_ptr<ConnectionT>(
-                //     new ConnectionT(url, std::make_shared<net::TCPSocket>(loop)),
-                //     deleter::Deferred<ConnectionT>());
-            } else if (url.scheme() == "https") {
-                conn = std::make_shared<ConnectionT>(url, std::make_shared<net::SSLSocket>(loop));
-                // conn->replaceAdapter(new ConnectionAdapter(conn, HTTP_RESPONSE));
-                // conn = std::shared_ptr<ConnectionT>(
-                //    new ConnectionT(url, std::make_shared<net::SSLSocket>(loop)),
-                //     deleter::Deferred<ConnectionT>());
-            } else if (url.scheme() == "ws") {
-                conn = std::make_shared<ConnectionT>(url, std::make_shared<net::TCPSocket>(loop));
-                conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
-                // conn = std::shared_ptr<ConnectionT>(
-                //     new ConnectionT(url, std::make_shared<net::TCPSocket>(loop)),
-                //    deleter::Deferred<ConnectionT>());
-            } else if (url.scheme() == "wss") {
-                conn = std::make_shared<ConnectionT>(url, std::make_shared<net::SSLSocket>(loop));
-                conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
-                // conn = std::shared_ptr<ConnectionT>(
-                //     new ConnectionT(url, std::make_shared<net::SSLSocket>(loop)),
-                //     deleter::Deferred<ConnectionT>());
-            } else
-                throw std::runtime_error("Unknown connection type for URL: " + url.str());
-
-            return conn;
-        }
-         */
-
-        //
-        // HTTP Client
-        //
 
         class Client : public ClientConnection::Listener {
         public:
