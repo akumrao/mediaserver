@@ -7,10 +7,8 @@
 #include "base/application.h"
 #include <cstring> // std::memcpy()
 
-namespace base
-{
-    namespace net
-    {
+namespace base {
+    namespace net {
         /* Static. */
 
         static constexpr size_t ReadBufferSize{ 65536};
@@ -70,16 +68,14 @@ namespace base
             err = uv_udp_recv_start(
                     this->uvHandle, static_cast<uv_alloc_cb> (onAlloc), static_cast<uv_udp_recv_cb> (onRecv));
 
-            if (err != 0)
-            {
+            if (err != 0) {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
                 LError("uv_udp_recv_start() failed: %s", uv_strerror(err));
             }
 
             // Set local address.
-            if (!SetLocalAddress())
-            {
+            if (!SetLocalAddress()) {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
                 LError("error setting local IP and port");
@@ -137,15 +133,13 @@ namespace base
             int sent = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
             // Entire datagram was sent. Done.
-            if (sent == static_cast<int> (len))
-            {
+            if (sent == static_cast<int> (len)) {
                 // Update sent bytes.
                 this->sentBytes += sent;
 
                 return;
             }
-            if (sent >= 0)
-            {
+            if (sent >= 0) {
                 LWarn("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
                 // Update sent bytes.
@@ -154,8 +148,7 @@ namespace base
                 return;
             }
             // Error,
-            if (sent != UV_EAGAIN)
-            {
+            if (sent != UV_EAGAIN) {
                 LWarn("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
                 return;
@@ -175,19 +168,39 @@ namespace base
             int err = uv_udp_send(
                     &sendData->req, this->uvHandle, &buffer, 1, addr, static_cast<uv_udp_send_cb> (onSend));
 
-            if (err != 0)
-            {
+            if (err != 0) {
                 // NOTE: uv_udp_send() returns error if a wrong INET family is given
                 // (IPv6 destination on a IPv4 binded socket), so be ready.
                 LWarn("uv_udp_send() failed: %s", uv_strerror(err));
 
                 // Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
                 std::free(sendData);
-            } else
-            {
+            } else {
                 // Update sent bytes.
                 this->sentBytes += len;
             }
+        }
+
+        bool UdpSocket::SetPeerAddress() {
+
+
+            int err;
+            int len = sizeof (this->peerAddr);
+
+            err = uv_udp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*> (&this->peerAddr), &len);
+
+            if (err != 0) {
+                LError("uv_tcp_getpeername() failed: %s", uv_strerror(err));
+
+                return false;
+            }
+
+            int family;
+
+            IP::GetAddressInfo(
+                    reinterpret_cast<struct sockaddr*> (&this->peerAddr), family, this->peerIp, this->peerPort);
+
+            return true;
         }
 
         void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port) {
@@ -202,8 +215,7 @@ namespace base
 
             struct sockaddr_storage addr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-            switch (IP::GetFamily(ip))
-            {
+            switch (IP::GetFamily(ip)) {
                 case AF_INET:
                 {
                     err = uv_ip4_addr(
@@ -246,8 +258,7 @@ namespace base
             err =
                     uv_udp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*> (&this->localAddr), &len);
 
-            if (err != 0)
-            {
+            if (err != 0) {
                 LError("uv_udp_getsockname() failed: %s", uv_strerror(err));
 
                 return false;
@@ -283,24 +294,21 @@ namespace base
                 return;
 
             // Check flags.
-            if ((flags & UV_UDP_PARTIAL) != 0u)
-            {
+            if ((flags & UV_UDP_PARTIAL) != 0u) {
                 LError("received datagram was truncated due to insufficient buffer, ignoring it");
 
                 return;
             }
 
             // Data received.
-            if (nread > 0)
-            {
+            if (nread > 0) {
                 // Update received bytes.
                 this->recvBytes += nread;
 
                 // Notify the subclass.
                 UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*> (buf->base), nread, addr);
-            }                // Some error.
-            else
-            {
+            }// Some error.
+            else {
                 LTrace("read error: %s", uv_strerror(nread));
             }
         }
@@ -332,14 +340,12 @@ namespace base
             r = uv_udp_init(Application::uvGetLoop(), uvHandle);
             ASSERT(r == 0);
 
-            if (IP::GetFamily(ip) == AF_INET6)
-            {
+            if (IP::GetFamily(ip) == AF_INET6) {
                 bind_flags = UV_UDP_IPV6ONLY;
                 ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
                 r = uv_udp_bind(uvHandle, (const struct sockaddr*) &addr6, bind_flags);
                 ASSERT(r == 0);
-            } else
-            {
+            } else {
                 ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
                 r = uv_udp_bind(uvHandle, (const struct sockaddr*) &addr, bind_flags);
                 ASSERT(r == 0);
@@ -350,30 +356,67 @@ namespace base
         }
 
         UdpServer::~UdpServer() {
-            
-         if (uvHandle)
-            delete uvHandle;
 
-        //UnbindUdp(this->localIp, this->localPort);
-    }
+            if (uvHandle)
+                delete uvHandle;
 
-    void UdpServer::UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) {
-
-
-        if (this->listener == nullptr)
-        {
-            LError("no listener set");
-
-            return;
+            //UnbindUdp(this->localIp, this->localPort);
         }
 
-        // Notify the reader.
-        this->listener->OnUdpSocketPacketReceived(this, data, len, addr);
-    }
+        void UdpServer::UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) {
 
 
+            if (this->listener == nullptr) {
+                LError("no listener set");
 
-} // namespace net
+                return;
+            }
+
+            // Notify the reader.
+            this->listener->OnUdpSocketPacketReceived(this, data, len, addr);
+        }
+
+        /**********************************************************************************************************/
+        UdpClient::UdpClient(std::string ip, int port)
+        : UdpSocket(ConnectUdp(ip, port)) {
+
+        }
+
+        uv_udp_t* UdpClient::ConnectUdp(std::string &ip, int port) {
+
+            uvHandle = new uv_udp_t;
+            struct sockaddr_in6 addr6;
+            struct sockaddr_in addr;
+
+            int r;
+
+            r = uv_udp_init(Application::uvGetLoop(), uvHandle);
+            ASSERT(r == 0);
+
+            if (IP::GetFamily(ip) == AF_INET6) {
+                ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
+                r = uv_udp_connect(uvHandle, (const struct sockaddr*) &addr6);
+                ASSERT(r == 0);
+            } else {
+                ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
+                r = uv_udp_connect(uvHandle, (const struct sockaddr*) &addr);
+                ASSERT(r == 0);
+
+            }
+
+            return uvHandle;
+        }
+
+        UdpClient::~UdpClient() {
+
+            if (uvHandle)
+                delete uvHandle;
+
+            //UnbindUdp(this->localIp, this->localPort);
+        }
+
+
+    } // namespace net
 
 
 } // namespace base

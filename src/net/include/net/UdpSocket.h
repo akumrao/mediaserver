@@ -6,18 +6,14 @@
 #include <string>
 #include "net/IP.h"
 
-namespace base
-{
-    namespace net
-    {
+namespace base {
+    namespace net {
 
-        class UdpSocket
-        {
+        class UdpSocket {
         public:
 
             /* Struct for the data field of uv_req_t when sending a datagram. */
-            struct UvSendData
-            {
+            struct UvSendData {
                 uv_udp_send_t req;
                 uint8_t store[1];
             };
@@ -35,22 +31,16 @@ namespace base
             void Close();
             virtual void Dump() const;
 
-
-            bool setBroadcast(bool enable)
-            {
+            bool setBroadcast(bool enable) {
                 return uv_udp_set_broadcast(uvHandle, enable ? 1 : 0) == 0;
             }
 
-
-            bool setMulticastLoop(bool enable)
-            {
+            bool setMulticastLoop(bool enable) {
                 return uv_udp_set_multicast_loop(uvHandle, enable ? 1 : 0) == 0;
             }
 
-
-            bool setMulticastTTL(int ttl)
-            {
-                ASSERT(ttl > 0 && ttl <= 255) ;
+            bool setMulticastTTL(int ttl) {
+                ASSERT(ttl > 0 && ttl <= 255);
                 return uv_udp_set_multicast_ttl(uvHandle, ttl) == 0;
             }
 
@@ -65,6 +55,16 @@ namespace base
             uint16_t GetLocalPort() const;
             size_t GetRecvBytes() const;
             size_t GetSentBytes() const;
+
+            //////////////////////
+            const struct sockaddr* GetPeerAddress() const;
+            const std::string& GetPeerIp() const;
+            uint16_t GetPeerPort() const;
+            struct sockaddr_storage peerAddr;
+            std::string peerIp;
+            uint16_t peerPort{ 0};
+            bool SetPeerAddress();
+            /////////////////////
 
         private:
             bool SetLocalAddress();
@@ -129,12 +129,10 @@ namespace base
         }
 
         /***********************************************************************************************************************/
-        class UdpServer : public UdpSocket
-        {
+        class UdpServer : public UdpSocket {
         public:
 
-            class Listener
-            {
+            class Listener {
             public:
                 virtual void OnUdpSocketPacketReceived(
                         net::UdpServer* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
@@ -156,6 +154,24 @@ namespace base
             uv_udp_t* uvHandle{ nullptr};
         };
 
+        /************************************************************************************************************************/
+        class UdpClient : public UdpSocket {
+        public:
+
+
+
+        public:
+
+            uv_udp_t* ConnectUdp(std::string &ip, int port);
+            UdpClient(std::string ip, int port);
+            ~UdpClient() override;
+
+            void UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) {
+            };
+        private:
+
+            uv_udp_t* uvHandle{ nullptr};
+        };
 
 
     } // namespace net
