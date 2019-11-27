@@ -134,7 +134,27 @@ namespace base {
 
         void ClientConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
 
-            this->listener->OnTcpConnectionPacketReceived(this, data, len);
+            LTrace("On socket recv: ", len);
+            if (this->listener)
+                this->listener->OnTcpConnectionPacketReceived(this, data, len);
+            else {
+
+
+
+                if (_parser.complete()) {
+                    // Buggy HTTP servers might send late data or multiple responses,
+                    // in which case the parser state might already be HPE_OK.
+                    // In this case we discard the late message and log the error here,
+                    // rather than complicate the app with this error handling logic.
+                    // This issue was noted using Webrick with Ruby 1.9.
+                    LWarn("Dropping late HTTP response: ", data)
+                    return;
+                }
+
+                // Parse incoming HTTP messages
+                _parser.parse((const char*) data, len);
+                // onPayload( data, len);
+            }
         }
         // Connection Callbacks
 
@@ -145,7 +165,7 @@ namespace base {
             // Headers.emit(_response);
         }
 
-        void ClientConnection::onPayload(const std::string& buffer) {
+        void ClientConnection::onPayload(const uint8_t* data, size_t len) {
             // LTrace("On payload: ", buffer.size())
 
             //// Update download progress
@@ -161,7 +181,7 @@ namespace base {
             // Write to the STL read stream if available
             if (_readStream) {
                 // LTrace("Writing to stream: ", buffer.size())
-                _readStream->write(buffer.c_str(), buffer.size());
+               _readStream->write((const char*) data, len);
                 _readStream->flush();
             }
 
@@ -231,25 +251,19 @@ namespace base {
             LTrace("On headers end: ", _parser.upgrade())
 
 
-                    // this->listener->onHeaders(this);
+            onHeaders();
 
-                    // Set the position to the end of the headers once
-                    // they have been handled. Subsequent body chunks will
-                    // now start at the correct position.
-                    // _connection.incomingBuffer().position(_parser._parser.nread);
+            // Set the position to the end of the headers once
+            // they have been handled. Subsequent body chunks will
+            // now start at the correct position.
+            // _connection.incomingBuffer().position(_parser._parser.nread);
         }
 
-        void ClientConnection::onParserChunk(const char* buf, size_t len) {
+        void ClientConnection::onParserChunk(const char* data, size_t len) {
             LTrace("On parser chunk: ", len)
-            abort();
-
-            // Dispatch the payload
-            /* if (_connection)
-             {
-                 net::SocketAdapter::onSocketRecv(*_connection->socket().get(),
-                         mutableBuffer(const_cast<char*> (buf), len),
-                         _connection->socket()->peerAddress());
-             }*/
+              //  UserOnTcpConnectionRead((const uint8_t*) buf , len);
+                     onPayload((const uint8_t*) data, len);
+            
         }
 
         void ClientConnection::onParserEnd() {
@@ -316,7 +330,7 @@ namespace base {
         }
 
         void Client::start() {
-            clientConn = new ClientConnection(this, _url);
+            clientConn = new ClientConnection(nullptr, _url, HTTP_RESPONSE, 6553688);
         }
 
         void Client::OnTcpConnectionPacketReceived(ClientConnection* connection, const uint8_t* data, size_t len) {

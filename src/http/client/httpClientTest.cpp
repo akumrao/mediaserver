@@ -13,92 +13,12 @@ using namespace base;
 using namespace base::net;
 using namespace base::test;
 
-/*
-class BasicResponder : public net::ServerResponder
-/// Basic server responder (make echo?)
-{
-public:
-
-    BasicResponder(net::TcpHTTPConnection* conn) :
-    ServerResponder(conn) {
-        ///		DebugL << "Creating" << endl;
-    }
-
-    virtual void onClose() {
-        ;
-        LDebug("On close")
-
-    }
-
-    void onRequest(net::Request& request, net::Response& response) {
-        //DebugL << "On complete" << endl;
-
-        response.setContentLength(14); // headers will be auto flushed
-
-        connection()->Send((const uint8_t *) "hello universe", 14);
-        connection()->Close();
-    }
-};
-
-class StreamingResponderFactory : public ServerConnectionFactory {
-public:
-
-    ServerResponder* createResponder(TcpHTTPConnection* conn) {
-        return new BasicResponder(conn);
-    }
-};
- */
-
-
-
-
-
-
-
 int main(int argc, char** argv) {
 
-    GetAddrInfoReq infoReq;
-    
-    
-    infoReq.resolve("zlib.net", 80);
-    
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-    
-    
-    
-    
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     test::init();
 
-    Application app;
-    std::string path("/var/tmp/");
-    fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-    Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
-    conn->start();
-    conn->clientConn->fnComplete = [&](const Response & response) {
-        std::cout << "Lerver response:";
-    };
-    conn->clientConn->_request.setMethod("GET");
-    conn->clientConn->_request.setKeepAlive(false);
-    conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-    conn->clientConn->Send();
-
-    
-
-    app.waitForShutdown([&](void*) {
-
-        conn->shutdown();
-
-    });
-
-    //uv::runLoop();
-
-    //expect(fs::exists(path));
-    // expect(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-    //fs::unlink(path);
-
-    return 0;
 
 
     describe("url parser", []() {
@@ -164,7 +84,35 @@ int main(int argc, char** argv) {
     });
 
 
+    describe("DNS Resolve", []() {
+        GetAddrInfoReq infoReq;
+        infoReq.resolve("zlib.net", 80);
 
+        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+
+    });
+
+
+    describe("http download", []() {
+        Application app;
+        std::string path("/var/tmp/");
+        fs::addnode(path, "zlib-1.2.8.tar.gz");
+
+        Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+        //Client *conn = new Client("http://zlib.net/index.html");
+        conn->start();
+        conn->clientConn->fnComplete = [&](const Response & response) {
+            std::cout << "Lerver response:";
+        };
+        conn->clientConn->_request.setMethod("GET");
+        conn->clientConn->_request.setKeepAlive(false);
+        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        conn->clientConn->Send();
+
+        app.run();
+
+
+    });
 
 
     test::runAll();

@@ -59,7 +59,7 @@ namespace base {
 
             /// HTTP connection and server interface
             virtual void onHeaders();
-            virtual void onPayload(const std::string& buffer);
+            virtual void onPayload(const uint8_t* data, size_t len);
             virtual void onComplete();
             std::function<void(const std::string&)> fnPayload; ///< Signals when raw data is received
             std::function<void(const Response&)> fnComplete;     ///< Signals when the HTTP transaction is complete

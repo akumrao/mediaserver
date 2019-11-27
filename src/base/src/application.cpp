@@ -32,7 +32,7 @@ namespace base
         uvInit();
     }
 
-    uv_loop_t* Application::loop{ nullptr};
+    uv_loop_t* Application::loop = uv_default_loop();
 
     void Application::uvInit() {
         LDebug("init")
