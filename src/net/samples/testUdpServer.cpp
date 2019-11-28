@@ -23,12 +23,12 @@ public:
     void start() {
         // socket.Send("Arvind", "127.0.0.1", 7331);
         udpServer = new UdpServer( this, IP, port);
-
+        udpServer->bind();
     }
 
     void send( std::string txt, std::string ip, int port )
     {
-         udpServer->Send(txt, ip , port);
+         udpServer->Send( (char*) txt.c_str(), txt.length() , ip , port);
     }
 
     void shutdown() {
@@ -58,9 +58,10 @@ int main(int argc, char** argv) {
  
         Application app;
 
-        testUdpServer socket("0:0:0:0", 6000);
+        testUdpServer socket("0.0.0.0", 6000);
         socket.start();
-        //socket.send("arvind testing");
+        
+        socket.send("arvind", "127.0.0.1" , 6000);
 
         app.waitForShutdown([&](void*) {
 

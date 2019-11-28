@@ -392,11 +392,60 @@ ConsoleChannel::ConsoleChannel(std::string name, Level level,
 {
 }
 
-#if defined(__ANDROID__)
-#include <android/log.h>
-#endif
 
 void ConsoleChannel::write(const LogStream& stream)
+{
+#ifdef base_ENABLE_LOGGING
+    if (_level > stream.level)
+        return;
+
+    if (!_filter.empty() && !util::matchNodes(stream.realm, _filter, "::"))
+        return;
+
+    std::ostringstream ss;
+    format(stream, ss);
+
+//#if defined(_MSC_VER) && defined(_DEBUG)
+//    std::string s(ss.str());
+//    std::wstring temp(s.length(), L' ');
+//    std::copy(s.begin(), s.end(), temp.begin());
+//    OutputSDebugtring(temp.c_str());
+//#endif
+
+
+#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
+    std::cout << ss.str() << std::flush;
+#endif
+
+
+#endif
+}
+
+
+
+
+//
+// RemoteChannel Channel
+//
+
+#if defined(__ANDROID__)   || defined(_REMOTELOG) 
+RemoteChannel::RemoteChannel(std::string name, Level level, std::string ip, int port, 
+                               std::string timeFormat)
+    : ConsoleChannel(std::move(name), level, std::move(timeFormat))
+{
+   
+     udpClient = new net::UdpSocket(ip, port);
+     udpClient->connect();
+}
+
+RemoteChannel:: ~RemoteChannel()
+{
+    delete udpClient;
+    udpClient = nullptr;
+}
+
+
+void RemoteChannel::write(const LogStream& stream)
 {
 #ifdef base_ENABLE_LOGGING
     if (_level > stream.level)
@@ -423,9 +472,12 @@ static const char* kTAG = "hello-jniCallback";
 
 __android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
 
+udpClient->Send((char*) ss.str().c_str(), ss.str().length());
+
 #else
 #if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
     std::cout << ss.str() << std::flush;
+    udpClient->Send((char*) ss.str().c_str(), ss.str().length());
 #endif
 #endif /* __ANDROID__ */
 
@@ -433,7 +485,7 @@ __android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
 #endif
 }
 
-
+#endif
 //
 // File Channel
 //

@@ -11,21 +11,21 @@ using namespace base;
 using namespace net;
 using namespace base::test;
 
-class testUdpClient{
+class testUdpClient {
 public:
 
-    testUdpClient(std::string IP, int port):IP(IP), port(port) {
+    testUdpClient(std::string IP, int port) : IP(IP), port(port) {
     }
 
     void start() {
         // socket.Send("Arvind", "127.0.0.1", 7331);
-        udpClient = new UdpClient(IP, port );
+        udpClient = new UdpSocket(IP, port);
+        udpClient->connect();
 
     }
 
-    void send( std::string txt  )
-    {
-         udpClient->Send(txt);
+    void send(std::string txt) {
+        udpClient->Send((char*) txt.c_str(), txt.length());
     }
 
     void shutdown() {
@@ -35,28 +35,30 @@ public:
     }
 
 
-    
 
-    UdpClient *udpClient;
+
+    UdpSocket *udpClient;
 
     std::string IP;
     int port;
 
 };
 
-
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
- 
+    Application app;
 
-        Application app;
+    testUdpClient socket("127.0.0.1", 6000);
+    socket.start();
+    socket.send("arvind testing");
+    socket.send("arvind testing1");
+    socket.send("arvind testing2");
+    socket.send("arvind testing3");
+    socket.send("arvind testing4");
+    socket.send("arvind testing5");
 
-        testUdpClient socket("127.0. 0.1" , 6000);
-        socket.start();
-        socket.send("arvind testing");
-
-       app.run();
+    app.run();
 
 
 

@@ -22,7 +22,7 @@ namespace base {
             /**
              * uvHandle must be an already initialized and binded uv_udp_t pointer.
              */
-            explicit UdpSocket(uv_udp_t* uvHandle);
+            UdpSocket(std::string ip, int port);
             UdpSocket& operator=(const UdpSocket&) = delete;
             UdpSocket(const UdpSocket&) = delete;
             virtual ~UdpSocket();
@@ -45,10 +45,10 @@ namespace base {
             }
 
 
-            void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
-            void Send(const std::string& data, const struct sockaddr* addr);
-            void Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port);
-            void Send(const std::string& data, const std::string& ip, uint16_t port);
+            void Send(char* data, unsigned int len, const struct sockaddr* add=nullptr);
+           // void Send(const std::string& data, const struct sockaddr* addr);
+            void Send(char* data, unsigned int len, const std::string ip, int port);
+          //  void Send(const std::string& data, const std::string& ip, uint16_t port);
             const struct sockaddr* GetLocalAddress() const;
             int GetLocalFamily() const;
             const std::string& GetLocalIp() const;
@@ -74,11 +74,16 @@ namespace base {
             void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
             void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
             void OnUvSendError(int error);
+            void bind();
+            void connect();
 
             /* Pure virtual methods that must be implemented by the subclass. */
         protected:
             virtual void UserOnUdpDatagramReceived(
-                    const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+                    const uint8_t* data, size_t len, const struct sockaddr* addr){};
+            
+         void startRead();
+ 
 
         protected:
             struct sockaddr_storage localAddr;
@@ -93,17 +98,12 @@ namespace base {
             size_t recvBytes{ 0};
             size_t sentBytes{ 0};
         };
+        
+
 
         /* Inline methods. */
 
-        inline void UdpSocket::Send(const std::string& data, const struct sockaddr* addr) {
-            Send(reinterpret_cast<const uint8_t*> (data.c_str()), data.size(), addr);
-        }
-
-        inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port) {
-            Send(reinterpret_cast<const uint8_t*> (data.c_str()), data.size(), ip, port);
-        }
-
+     
         inline const struct sockaddr* UdpSocket::GetLocalAddress() const {
             return reinterpret_cast<const struct sockaddr*> (&this->localAddr);
         }
@@ -140,7 +140,7 @@ namespace base {
 
         public:
 
-            uv_udp_t* BindUdp(std::string &ip, int port);
+      
             UdpServer(Listener* listener, std::string ip, int port);
             ~UdpServer() override;
 
@@ -151,28 +151,10 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-            uv_udp_t* uvHandle{ nullptr};
+      
         };
 
-        /************************************************************************************************************************/
-        class UdpClient : public UdpSocket {
-        public:
-
-
-
-        public:
-
-            uv_udp_t* ConnectUdp(std::string &ip, int port);
-            UdpClient(std::string ip, int port);
-            ~UdpClient() override;
-
-            void UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) {
-            };
-        private:
-
-            uv_udp_t* uvHandle{ nullptr};
-        };
-
+        
 
     } // namespace net
 } // namespace base

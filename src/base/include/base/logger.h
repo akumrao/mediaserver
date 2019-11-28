@@ -18,6 +18,16 @@
 #include <mutex>
 #include <string.h>
 
+//#define _REMOTELOG
+#if defined(__ANDROID__)    
+#include <android/log.h>
+#include "net/UdpSocket.h"
+#endif
+
+#if defined(_REMOTELOG) 
+#include "net/UdpSocket.h"
+#endif
+
 
 namespace base {
 
@@ -358,13 +368,31 @@ class Base_API ConsoleChannel : public LogChannel
 {
 public:
     ConsoleChannel(std::string name, Level level = Level::Debug,
-                   std::string timeFormat = "%H:%M:%S");
-    virtual ~ConsoleChannel() = default;
-
+                   std::string timeFormat = "%Y-%m-%d %H:%M:%S");
+    virtual ~ConsoleChannel()= default;
+    
     virtual void write(const LogStream& stream) override;
+
 };
 
 
+
+#if defined(__ANDROID__)   || defined(_REMOTELOG) 
+
+class Base_API RemoteChannel : public ConsoleChannel
+{
+public:
+    RemoteChannel(std::string name, Level level = Level::Debug, std::string ip="127.0.0.1", int port=6000,  
+                   std::string timeFormat = "%Y-%m-%d %H:%M:%S");
+    virtual ~RemoteChannel();
+    
+    virtual void write(const LogStream& stream) override;
+    
+    net::UdpSocket *udpClient;
+};
+
+
+#endif
 //
 // File Channel
 //
