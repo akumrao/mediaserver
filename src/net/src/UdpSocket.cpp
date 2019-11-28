@@ -152,8 +152,8 @@ namespace base {
                 return;
             }
             if (sent >= 0) {
-                LWarn("datagram truncated (just %d of %zu bytes were sent)", sent, len);
-
+             //   LWarn("datagram truncated (just %d of %zu bytes were sent)", sent, len); // will cause recursion lock
+                  printf("datagram truncated (just %d of %zu bytes were sent)", sent, len);
                 // Update sent bytes.
                 this->sentBytes += sent;
 
@@ -161,8 +161,8 @@ namespace base {
             }
             // Error,
             if (sent != UV_EAGAIN) {
-                LWarn("uv_udp_try_send() failed: %s", uv_strerror(sent));
-
+              //  LWarn("uv_udp_try_send() failed: %s", uv_strerror(sent)); // will cause recursion lock
+                printf("uv_udp_try_send() failed: %s", uv_strerror(sent ));
                 return;
             }
             // Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
@@ -183,7 +183,8 @@ namespace base {
             if (err != 0) {
                 // NOTE: uv_udp_send() returns error if a wrong INET family is given
                 // (IPv6 destination on a IPv4 binded socket), so be ready.
-                LWarn("uv_udp_send() failed: %s", uv_strerror(err));
+               // LWarn("uv_udp_send() failed: %s", uv_strerror(err));// will cause recursion lock
+                printf("uv_udp_send() failed: %s", uv_strerror(err));
 
                 // Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
                 std::free(sendData);
