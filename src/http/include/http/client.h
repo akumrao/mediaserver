@@ -9,7 +9,7 @@
 #include "http/url.h"
 #include "base/logger.h"
 #include "net/dns.h"
-
+#include <functional> 
 namespace base {
     namespace net {
 

@@ -57,6 +57,7 @@ namespace base {
             size_t GetSentBytes() const;
 
             //////////////////////
+            /*
             const struct sockaddr* GetPeerAddress() const;
             const std::string& GetPeerIp() const;
             uint16_t GetPeerPort() const;
@@ -64,15 +65,16 @@ namespace base {
             std::string peerIp;
             uint16_t peerPort{ 0};
             bool SetPeerAddress();
+             */
             /////////////////////
 
         private:
-            bool SetLocalAddress();
+           
 
             /* Callbacks fired by UV events. */
         public:
             void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
-            void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
+            void OnUvRecv(ssize_t nread, const uv_buf_t* buf,  struct sockaddr* addr, unsigned int flags);
             void OnUvSendError(int error);
             void bind();
             void connect();
@@ -80,12 +82,14 @@ namespace base {
             /* Pure virtual methods that must be implemented by the subclass. */
         protected:
             virtual void UserOnUdpDatagramReceived(
-                    const uint8_t* data, size_t len, const struct sockaddr* addr){};
+                    const uint8_t* data, size_t len,  struct sockaddr* addr){};
             
          void startRead();
  
 
         protected:
+            //bool SetLocalAddress();
+            
             struct sockaddr_storage localAddr;
             std::string localIp;
             uint16_t localPort{ 0};
@@ -135,7 +139,7 @@ namespace base {
             class Listener {
             public:
                 virtual void OnUdpSocketPacketReceived(
-                        net::UdpServer* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
+                        net::UdpServer* socket, const uint8_t* data, size_t len,  struct sockaddr* remoteAddr) = 0;
             };
 
         public:
@@ -146,7 +150,7 @@ namespace base {
 
             /* Pure virtual methods inherited from ::UdpSocket. */
         public:
-            void UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+            void UserOnUdpDatagramReceived(const uint8_t* data, size_t len,  struct sockaddr* addr) override;
 
         private:
             // Passed by argument.

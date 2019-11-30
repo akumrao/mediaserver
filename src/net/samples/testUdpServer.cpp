@@ -39,9 +39,18 @@ public:
     }
 
 
-    void OnUdpSocketPacketReceived(UdpServer* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) {
+    void OnUdpSocketPacketReceived(UdpServer* socket, const uint8_t* data, size_t len,  struct sockaddr* remoteAddr) {
 
-        std::cout << data << std::endl << std::flush;
+        int family;
+        
+        std::string peerIp;
+        uint16_t peerPort;
+
+        IP::GetAddressInfo(
+                    remoteAddr, family, peerIp, peerPort);
+            
+        std::cout  << data << " ip " << peerIp << ":" << peerPort   << std::endl << std::flush;
+        
     }
 
     UdpServer *udpServer;

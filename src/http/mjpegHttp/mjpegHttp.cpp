@@ -33,7 +33,7 @@ public:
 
     void run() {
 
-        cap.open(0);
+       cap.open(0);
 
         if (!cap.isOpened()) {
             printf("no cam found ;(.\n");
@@ -41,14 +41,20 @@ public:
             abort();
         }
 
-        //cap >> frame;
-        //test.write(frame);
-        //frame.release();
-        //test.start();
 
         while (cap.isOpened() && !stopped()) {
-            cap >> frame;
+        // while ( !stopped()) {
+             
+           //std::ifstream f("/var/tmp/red.jpg", std::ios::binary | std::ifstream::in);
+          // std::vector<uint8_t> v{std::istreambuf_iterator<char>{f}, {}};
+          // std::cout << "Read complete, got " << v.size() << " bytes\n";
+           //std::string buf =  std::string(v.begin(), v.end()); 
+           
             std::vector<uchar> *outbuf = new std::vector<uchar>;
+            
+            
+            cap >> frame;
+            
             std::vector<int> params;
             params.push_back(CV_IMWRITE_JPEG_QUALITY);
             params.push_back(50);
@@ -61,12 +67,13 @@ public:
 
                 test1.push(outbuf);
             }
+     
 
-            base::sleep(1);
+          //  base::sleep(40);
 
             // std::vector<uchar> outbuf1 = test1.popNext();
 
-            frame.release();
+          frame.release();
 
         }
 
@@ -166,7 +173,7 @@ int main(int argc, char** argv) {
 
 
     Application app;
-    net::HttpServer socket("0.0.0.0", 7000, new StreamingResponderFactory);
+    net::HttpServer socket("0.0.0.0", 8888, new StreamingResponderFactory);
     socket.start();
 
     //base::sleep(45000);

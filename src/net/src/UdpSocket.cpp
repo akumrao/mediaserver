@@ -32,7 +32,7 @@ namespace base {
             if (socket == nullptr)
                 return;
 
-            socket->OnUvRecv(nread, buf, addr, flags);
+            socket->OnUvRecv(nread, buf, (struct sockaddr*)addr, flags);
         }
 
         inline static void onSend(uv_udp_send_t* req, int status) {
@@ -86,6 +86,8 @@ namespace base {
                 LError("error setting local IP and port");
             }
             */
+            
+           // SetPeerAddress();
         }
         
         
@@ -194,6 +196,7 @@ namespace base {
             }
         }
 
+        /*
         bool UdpSocket::SetPeerAddress() {
 
 
@@ -215,7 +218,7 @@ namespace base {
 
             return true;
         }
-
+        */ 
         void UdpSocket::Send(char* data, unsigned int len, const std::string ip, int port) {
 
             if (this->closed)
@@ -262,7 +265,8 @@ namespace base {
             Send(data, len, reinterpret_cast<struct sockaddr*> (&addr));
         }
 
-        bool UdpSocket::SetLocalAddress() {
+      /*
+       *   bool UdpSocket::SetLocalAddress() {
 
 
             int err;
@@ -284,6 +288,7 @@ namespace base {
 
             return true;
         }
+       */
 
         inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf) {
 
@@ -295,7 +300,7 @@ namespace base {
         }
 
         inline void UdpSocket::OnUvRecv(
-                ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags) {
+                ssize_t nread, const uv_buf_t* buf,  struct sockaddr* addr, unsigned int flags) {
 
 
             if (this->closed)
@@ -404,8 +409,7 @@ namespace base {
 
         }
 
-        void UdpServer::UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) {
-
+        void UdpServer::UserOnUdpDatagramReceived(const uint8_t* data, size_t len,  struct sockaddr* addr) {
 
             if (this->listener == nullptr) {
                 LError("no listener set");

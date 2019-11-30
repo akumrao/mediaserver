@@ -18,7 +18,7 @@ public:
     }
 
     void start() {
-        // socket.Send("Arvind", "127.0.0.1", 7331);
+        LTrace("start UDP client")
         udpClient = new UdpSocket(IP, port);
         udpClient->connect();
 
@@ -45,19 +45,21 @@ public:
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new RemoteChannel("debug", Level::Trace));
 
     Application app;
 
     testUdpClient socket("127.0.0.1", 6000);
     socket.start();
+    while (true)
+    {
     socket.send("arvind testing");
     socket.send("arvind testing1");
     socket.send("arvind testing2");
     socket.send("arvind testing3");
     socket.send("arvind testing4");
     socket.send("arvind testing5");
-
+    }
     app.run();
 
 

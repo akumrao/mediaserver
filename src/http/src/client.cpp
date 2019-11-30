@@ -69,7 +69,15 @@ namespace base {
 
             if (!_connect) {
                 _connect = true;
-                LTrace("Connecting")
+                
+            std::string servIp;
+            uint16_t servPort;
+            int family;
+            IP::GetAddressInfo(
+                    reinterpret_cast<struct sockaddr*> (res), family, servIp, servPort);
+
+                
+                LTrace("Connecting " , servIp, ":",servPort)
                 Connect(_url.host(), _url.port(), res);
             }
 
@@ -135,6 +143,7 @@ namespace base {
         void ClientConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
 
             LTrace("On socket recv: ", len);
+            LTrace("On socket recv: ", data);
             if (this->listener)
                 this->listener->OnTcpConnectionPacketReceived(this, data, len);
             else {
@@ -180,9 +189,11 @@ namespace base {
 
             // Write to the STL read stream if available
             if (_readStream) {
-                // LTrace("Writing to stream: ", buffer.size())
+                 LTrace("Stream len: ", len)
+                  LTrace("Stream data: ", data)       
                _readStream->write((const char*) data, len);
                 _readStream->flush();
+                //Close();
             }
 
             // Payload.emit(buffer);
@@ -222,8 +233,6 @@ namespace base {
                 return 0;
             _shouldSendHeader = false;
             assert(outgoingHeader());
-
-
 
             // std::ostringstream os;
             // outgoingHeader()->write(os);
