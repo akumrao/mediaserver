@@ -529,10 +529,9 @@ inline std::string _methodName(const std::string& fsig)
 // #define ErrorN(self) LogStream(Level::Error, self->className(), __LINE__, self)
 
 
-} // namespace scy
+} // namespace base
 
 
 #endif
 
 
-/// @\}

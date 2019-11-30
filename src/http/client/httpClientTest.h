@@ -8,14 +8,14 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-using scy::test::Test;
+using base::test::Test;
 
 
 #define TEST_HTTP_PORT 1337
 #define TEST_HTTPS_PORT 1338
 
 
-namespace scy {
+namespace base {
 
 
 //
@@ -117,7 +117,7 @@ struct HTTPEchoTest
 };
 
 
-} // namespace scy
+} // namespace base
 
 */
 #endif 

@@ -158,7 +158,7 @@ public:
             while (!stopped()) {
                 dispatchNext();
                 base::sleep(1);
-                // scy::sleep(dispatchNext() ? 1 : 50);
+                // base::sleep(dispatchNext() ? 1 : 50);
             }
         }
     }
@@ -171,7 +171,7 @@ public:
         Stopwatch sw;
         sw.start();
         do {
-            // scy::sleep(1);
+            // base::sleep(1);
         } while (!stopped() && sw.elapsedMilliseconds() < _timeout && dispatchNext());
     }
 
@@ -329,4 +329,3 @@ protected:
 #endif // base_Queue_H
 
 
-/// @\}

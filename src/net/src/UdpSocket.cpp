@@ -387,7 +387,7 @@ namespace base {
             } else {
                 ASSERT(0 == uv_ip4_addr(localIp.c_str(), localPort, &addr));
                 r = uv_udp_connect(uvHandle, (const struct sockaddr*) &addr);
-                ASSERT(r == 0);
+               // ASSERT(r == 0);
                   
                 memcpy(reinterpret_cast<char *>(&localAddr),  reinterpret_cast<char *>(&addr), sizeof(addr));
             }

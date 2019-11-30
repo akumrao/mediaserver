@@ -111,7 +111,6 @@ void NVCollection::clear()
 }
 
 
-} // namespace scy
+} // namespace base
 
 
-/// @\}

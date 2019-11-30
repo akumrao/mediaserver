@@ -1,16 +1,7 @@
-///
-//
-// LibSourcey
-// Copyright (c) 2005, Sourcey <https://sourcey.com>
-//
-// SPDX-License-Identifier: LGPL-2.1+
-//
-/// @addtogroup base
-/// @{
 
 
-#ifndef SCY_Containers_H
-#define SCY_Containers_H
+#ifndef Containers_H
+#define Containers_H
 
 
 #include "base/base.h"
@@ -425,10 +416,9 @@ typedef std::map<std::string, std::string> StringMap;
 typedef std::vector<std::string> StringVec;
 
 
-} // namespace scy
+} // namespace base
 
 
-#endif // SCY_Containers_H
+#endif // Containers_H
 
 
-/// @\}
