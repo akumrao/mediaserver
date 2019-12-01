@@ -16,7 +16,7 @@
 
 #include "net/TcpConnection.h"
 #include "http/parser.h"
-//#include "http/websocket.h"
+#include "http/websocket.h"
 
 
 
@@ -24,7 +24,7 @@ namespace base {
     namespace net {
 
         class ServerResponder;
-        class ConnectionAdapter;
+        //class WebSocketConnection;
         
         class TcpHTTPConnection : public TcpConnectionBase, public ParserObserver {
         public:
@@ -42,7 +42,7 @@ namespace base {
             };
 
         public:
-            TcpHTTPConnection(Listener* listener, http_parser_type type, size_t bufferSize = 65536);
+            TcpHTTPConnection(Listener* listener, http_parser_type type,  WebSocketConnection::Listener * wslis, size_t bufferSize = 65536);
             ~TcpHTTPConnection() override;
 
         public:
@@ -82,8 +82,11 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-            ConnectionAdapter *wsAdapter{ nullptr};
-           // ws::ConnectionAdapter *wsAdapter{ nullptr};
+            WebSocketConnection *wsAdapter{ nullptr};
+            
+            WebSocketConnection::Listener *wsListener{ nullptr};
+            
+           // ws::WebSocketConnection *wsAdapter{ nullptr};
             // Others.
             size_t frameStart{ 0}; // Where the latest frame starts.
             size_t recvBytes{ 0};

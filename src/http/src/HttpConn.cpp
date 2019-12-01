@@ -20,8 +20,9 @@
 namespace base {
     namespace net {
 
-        TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener), _parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
+        TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, WebSocketConnection::Listener * wslis, size_t bufferSize)
+        : TcpConnectionBase(bufferSize),
+           listener(listener), wsListener(wslis), _parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
 
 
             _parser.setObserver(this);
@@ -62,7 +63,7 @@ namespace base {
             outgoingHeader()->write(head);
 
             // Send headers directly to the Socket,
-            // bypassing the ConnectionAdapter
+            // bypassing the WebSocketConnection
 
              STrace << head;
              TcpConnectionBase::Write((const uint8_t*)head.c_str(), head.length());
@@ -162,11 +163,11 @@ namespace base {
 
                         // Note: To upgrade the connection we need to replace the
                         // underlying SocketAdapter instance. Since we are currently
-                        // inside the default ConnectionAdapter's HTTP parser callback
+                        // inside the default WebSocketConnection's HTTP parser callback
                         // scope we just swap the SocketAdapter instance pointers and do
                         // a deferred delete on the old adapter. No more callbacks will be
                         // received from the old adapter after replaceAdapter is called.
-                          wsAdapter = new ConnectionAdapter(this, ServerSide);
+                          wsAdapter = new WebSocketConnection(  wsListener, this, ServerSide);
                         //   replaceAdapter(wsAdapter);
 
                            // Send the handshake request to the WS adapter for handling.

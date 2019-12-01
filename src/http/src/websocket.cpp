@@ -5,7 +5,7 @@
 #include "base/base64.h"
 #include "crypto/hash.h"
 #include "http/client.h"
-//#include "http/server.h"
+#include "http/HttpConn.h"
 #include "base/logger.h"
 //#include "base/numeric.h"
 
@@ -19,16 +19,17 @@ using std::endl;
 namespace base {
     namespace net {
 
-        ConnectionAdapter::ConnectionAdapter(TcpHTTPConnection* connection, Mode mode) : 
+        WebSocketConnection::WebSocketConnection(Listener* lis, TcpHTTPConnection* connection, Mode mode) : 
         _request(connection->_request),
          _response(connection->_response), 
          _connection(connection),
+          listener(lis),
          framer(mode)
         {
             _connection->shouldSendHeader(false);
         }
 
-        bool ConnectionAdapter::shutdown(uint16_t statusCode, const std::string& statusMessage) {
+        bool WebSocketConnection::shutdown(uint16_t statusCode, const std::string& statusMessage) {
             char buffer[256];
             BitWriter writer(buffer, 256);
             writer.putU16(statusCode);
@@ -41,7 +42,7 @@ namespace base {
             return true;
         }
 
-        void ConnectionAdapter::send(const char* data, size_t len, int flags) {
+        void WebSocketConnection::send(const char* data, size_t len, int flags) {
             LTrace("Send: ", len, ": ", std::string(data, len))
             assert(framer.handshakeComplete());
 
@@ -61,7 +62,7 @@ namespace base {
             
         }
 
-        void ConnectionAdapter::sendClientRequest() {
+        void WebSocketConnection::sendClientRequest() {
             framer.createClientHandshakeRequest(_request);
 
             std::ostringstream oss;
@@ -73,15 +74,18 @@ namespace base {
         }
 
     
-        void ConnectionAdapter::onHandshakeComplete() {
+        void WebSocketConnection::onHandshakeComplete() {
             LTrace("onHandshakeComplete");
 
+            this->listener->OnConnect( this);
             // Call net::SocketEmitter::onSocketConnect to notify handlers that data may flow
             //net::SocketEmitter::onSocketConnect(*socket.get());
         }
 
         
-        void ConnectionAdapter::handleServerRequest(const std::string & buffer) {
+       
+        
+        void WebSocketConnection::handleServerRequest(const std::string & buffer) {
             LTrace("Server request: ", buffer)
 
             Parser parser(&_request);
@@ -115,7 +119,7 @@ namespace base {
             _connection->Send( (const uint8_t*) oss.str().c_str(), oss.str().length());
         }
 
-        void ConnectionAdapter::onSocketConnect() {
+        void WebSocketConnection::onSocketConnect() {
             LTrace("On connect")
 
 
@@ -125,7 +129,7 @@ namespace base {
             sendClientRequest();
         }
 
-        void ConnectionAdapter::onSocketRecv(const std::string& buffer) {
+        void WebSocketConnection::onSocketRecv(const std::string& buffer) {
             LTrace("On recv: ", buffer.size())
 
             if (framer.handshakeComplete()) {
@@ -183,6 +187,7 @@ namespace base {
                     // Emit the result packet
                     assert(payload);
                     assert(payloadLength);
+                    this->listener->OnTcpConnectionPacketReceived( this,(const uint8_t*) payload, payloadLength );
                     // net::SocketEmitter::onSocketRecv(*socket.get(),
                     //  mutableBuffer(payload, (size_t)payloadLength),
                     // peerAddress);
@@ -202,7 +207,7 @@ namespace base {
             }
         }
 
-        void ConnectionAdapter::onClose() {
+        void WebSocketConnection::onClose() {
             LTrace("On close")
 
             // Reset state so the connection can be reused
@@ -211,12 +216,13 @@ namespace base {
             framer._headerState = 0;
             framer._frameFlags = 0;
 
+            this->listener->OnClose( this);
             // Emit closed event
             //net::SocketEmitter::onSocketClose(*socket.get());
         }
 
         
-      void ConnectionAdapter::handleClientResponse(const std::string& buffer) {
+      void WebSocketConnection::handleClientResponse(const std::string& buffer) {
             LTrace("Client response: ", buffer)
 
             const char *data = buffer.c_str();
@@ -250,7 +256,7 @@ namespace base {
         // WebSocket Connection Adapter
         //
 
-        ConnectionAdapter::~ConnectionAdapter() {
+        WebSocketConnection::~WebSocketConnection() {
         }
 
     

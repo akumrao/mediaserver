@@ -15,7 +15,7 @@
 namespace base {
     namespace net {
 
-       
+
 
 
         /*************************************************************************************************************/
@@ -24,9 +24,9 @@ namespace base {
 
         /* Instance methods. */
 
-        TcpHTTPServer::TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, std::string ip, int port)
+        TcpHTTPServer::TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, WebSocketConnection::Listener *wslist, std::string ip, int port)
         : TcpServerBase(BindTcp(ip, port), 256), listener(listener),
-        connListener(connListener) {
+        connListener(connListener), wsConListener(wslist) {
 
         }
 
@@ -41,7 +41,7 @@ namespace base {
 
 
             // Allocate a new RTC::TcpHTTPConnection for the TcpHTTPServer to handle it.
-            *connection = new TcpHTTPConnection(this->connListener, HTTP_REQUEST, 65536);
+            *connection = new TcpHTTPConnection(this->connListener, HTTP_REQUEST, wsConListener, 65536);
         }
 
         bool TcpHTTPServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
@@ -61,18 +61,18 @@ namespace base {
             this->listener->OnTcpConnectionClosed(this, static_cast<TcpHTTPConnection*> (connection));
         }
 
- /*******************************************************************************************************************/
- 
-        
-        
-        
-        
-        HttpServer::HttpServer(std::string ip, int port, ServerConnectionFactory *factory):ip(ip), port(port), _factory(factory) {
+        /*******************************************************************************************************************/
+
+
+
+
+
+        HttpServer::HttpServer(std::string ip, int port, ServerConnectionFactory *factory) : ip(ip), port(port), _factory(factory) {
         }
 
         void HttpServer::start() {
 
-            tcpHTTPServer = new TcpHTTPServer(this, this, ip, port);
+            tcpHTTPServer = new TcpHTTPServer(this, this, this, ip, port);
 
         }
 
@@ -81,9 +81,9 @@ namespace base {
                     // The initial HTTP request headers have already
                     // been parsed at this point, but the request body may
                     // be incomplete (especially if chunked).
-            if(!_factory)
+            if (!_factory)
                 return nullptr;
-            
+
             return _factory->createResponder(connection);
         }
 
@@ -95,17 +95,33 @@ namespace base {
 
         void HttpServer::OnTcpConnectionClosed(TcpHTTPServer* /*TcpHTTPServer*/, TcpHTTPConnection* connection) {
 
-             std::cout << "HttpServer server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+            STrace << "HttpServer server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
-            if (connection && connection->_responder)
-            {
+            if (connection && connection->_responder) {
                 connection->_responder->onClose();
             }
-           
+
+        }
+
+        void HttpServer::OnTcpConnectionPacketReceived(WebSocketConnection* connection, const uint8_t* data, size_t len) {
+
+            LTrace("OnTcpConnectionPacketReceived:websocket")
+            LTrace(data)
+
+            connection->send((const char*) data, len);
+
+        }
+
+        void HttpServer::OnClose(WebSocketConnection* connection) {
+            LTrace("OnClose:websocket")
+        }
+
+        void HttpServer::OnConnect(WebSocketConnection* connection) {
+            LTrace("OnConnect:websocket")
         }
 
         void HttpServer::OnTcpConnectionPacketReceived(TcpHTTPConnection* connection, const uint8_t* data, size_t len) {
-            std::cout << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
+            STrace << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
             std::string send = RESPONSE;
             // connection->Send((const uint8_t*) send.c_str(), send.length());// Test hello world
             connection->_parser.parse((const char*) data, len);
@@ -117,10 +133,10 @@ namespace base {
             // Instantiate the responder now that request headers have been parsed
             connection->_responder = createResponder(connection);
 
-          
+
         }
 
-       
+
 
 
     } // namespace net

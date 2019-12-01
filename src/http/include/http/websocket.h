@@ -9,7 +9,7 @@
 #include "http/parser.h"
 #include "http/request.h"
 #include "http/response.h"
-#include "http/HttpConn.h"
+//#include "http/HttpConn.h"
 #include "base/random.h"
 
 
@@ -170,19 +170,34 @@ namespace base {
             Random _rnd;
             std::string _key; // client handshake key
 
-            friend class WebSocketAdapter;
+            //friend class WebSocketAdapter;
         };
 
 
 
 
         /// WebSocket class which belongs to a HTTP Connection.
-
-        class ConnectionAdapter {
+        class TcpHTTPConnection;
+        class WebSocketConnection {
         public:
-            ConnectionAdapter(TcpHTTPConnection* connection, Mode mode);
+            
+            
+               class Listener {
+            public:
+                virtual void OnTcpConnectionPacketReceived(
+                        WebSocketConnection* connection, const uint8_t* data, size_t len) = 0;
+                virtual void OnClose(WebSocketConnection* connection) = 0;
+                virtual void OnConnect(WebSocketConnection* connection) = 0;
 
-            virtual ~ConnectionAdapter() ;
+            protected:
+
+            };
+            
+            Listener* listener{ nullptr};
+            
+            WebSocketConnection(Listener* listener, TcpHTTPConnection* connection, Mode mode);
+
+            virtual ~WebSocketConnection() ;
 
             void onSocketRecv(const std::string& buffer);
 
@@ -214,6 +229,8 @@ namespace base {
 
 
             virtual void onHandshakeComplete();
+            
+            
 
         protected:
             TcpHTTPConnection* _connection;

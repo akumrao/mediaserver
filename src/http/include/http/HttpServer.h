@@ -7,6 +7,7 @@
 #include "net/TcpServer.h"
 #include "http/parser.h"
 #include "http/responder.h"
+#include "http/websocket.h"
 
 namespace base {
     namespace net {
@@ -26,7 +27,7 @@ namespace base {
             };
 
         public:
-            TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, std::string ip, int port);
+            TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, WebSocketConnection::Listener *wslist, std::string ip, int port );
 
             ~TcpHTTPServer() override;
 
@@ -41,6 +42,7 @@ namespace base {
             Listener* listener{ nullptr};
             uv_tcp_t* uvHandle{ nullptr};
             TcpHTTPConnection::Listener* connListener{ nullptr};
+            WebSocketConnection::Listener* wsConListener{ nullptr};
 
         protected:
 
@@ -51,7 +53,7 @@ namespace base {
         ///
 
         /*************************************************************************************************/
-        class HttpServer : public TcpHTTPServer::Listener, public TcpHTTPConnection::Listener {
+        class HttpServer : public TcpHTTPServer::Listener, public TcpHTTPConnection::Listener, public WebSocketConnection::Listener {
         public:
 
             HttpServer(std::string ip, int port, ServerConnectionFactory *factory = nullptr);
@@ -65,7 +67,11 @@ namespace base {
             void OnTcpConnectionClosed(TcpHTTPServer* /*TcpHTTPServer*/, TcpHTTPConnection* connection);
 
             void OnTcpConnectionPacketReceived(TcpHTTPConnection* connection, const uint8_t* data, size_t len);
-
+            void OnTcpConnectionPacketReceived(WebSocketConnection* connection, const uint8_t* data, size_t len);
+            
+            void OnClose(WebSocketConnection* connection);
+            void OnConnect(WebSocketConnection* connection);
+          
             void onHeaders(TcpHTTPConnection* connection);
       
 
