@@ -86,7 +86,7 @@ void testCipher(const std::string algorithm, int iterations)
 }
 
 
-} // namespace scy
+} // namespace base
 
 
 int main(int argc, char** argv)
