@@ -1,5 +1,7 @@
 
 #include "base/util.h"
+#include "base/random.h"
+#include "base/base64.h"
 #include <memory>
 
 #include <algorithm>
@@ -15,6 +17,38 @@ using std::endl;
 
 namespace base {
 namespace util {
+
+    
+    std::string randomBinaryString(int size, bool doBase64)
+{
+    std::string res;
+    Random rnd;
+    rnd.seed();
+    for (int i = 0; i < size; ++i)
+        res.push_back(rnd.nextChar());
+
+    if (doBase64) {
+        std::string out;
+        base64::Encoder enc;
+        enc.encode(res, out);
+        res = out;
+    }
+    return res;
+}
+
+
+std::string randomString(int size)
+{
+    return randomBinaryString(size, true).substr(0, size);
+}
+
+
+uint32_t randomNumber()
+{
+    Random rnd;
+    rnd.seed();
+    return rnd.next();
+}
 
 
 std::string string_vprintf(const char* fmt, va_list args)

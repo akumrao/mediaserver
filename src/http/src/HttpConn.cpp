@@ -14,14 +14,14 @@
 #include "http/HttpConn.h"
 #include "base/base.h"
 #include "base/logger.h"
-//#include "base/application.h"
+#include "http/websocket.h"
 #include "http/responder.h"
 
 namespace base {
     namespace net {
 
         TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener), _parser(type), _shouldSendHeader(true) {
+        : TcpConnectionBase(bufferSize), listener(listener), _parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
 
 
             _parser.setObserver(this);
@@ -38,6 +38,11 @@ namespace base {
 
         void TcpHTTPConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
 
+            if(wsAdapter)
+            {
+                wsAdapter->onSocketRecv( std::string((char*)data, len));
+                return;
+            }
             this->listener->OnTcpConnectionPacketReceived(this, data, len);
         }
         long TcpHTTPConnection::sendHeader() {
@@ -97,7 +102,8 @@ namespace base {
             LTrace("On headers end: ", _parser.upgrade())
 
 
-                    this->listener->onHeaders(this);
+                    //this->listener->onHeaders(this);
+            onHeaders();
 
             // Set the position to the end of the headers once
             // they have been handled. Subsequent body chunks will
@@ -107,15 +113,11 @@ namespace base {
 
         void TcpHTTPConnection::onParserChunk(const char* buf, size_t len) {
             LTrace("On parser chunk: ", len)
-            abort();
-
+            //abort();
+               
                     // Dispatch the payload
-                    /* if (_connection)
-                     {
-                         net::SocketAdapter::onSocketRecv(*_connection->socket().get(),
-                                 mutableBuffer(const_cast<char*> (buf), len),
-                                 _connection->socket()->peerAddress());
-                     }*/
+             onPayload((const uint8_t*) buf, len);
+                 
         }
 
         void TcpHTTPConnection::onParserEnd() {
@@ -164,8 +166,8 @@ namespace base {
                         // scope we just swap the SocketAdapter instance pointers and do
                         // a deferred delete on the old adapter. No more callbacks will be
                         // received from the old adapter after replaceAdapter is called.
-                        /*  auto wsAdapter = new ws::ConnectionAdapter(this, ws::ServerSide);
-                           replaceAdapter(wsAdapter);
+                          wsAdapter = new ConnectionAdapter(this, ServerSide);
+                        //   replaceAdapter(wsAdapter);
 
                            // Send the handshake request to the WS adapter for handling.
                            // If the request fails the underlying socket will be closed
@@ -178,10 +180,10 @@ namespace base {
 
                            std::string buffer;
                            buffer.reserve(256);
-                           request().write(buffer);
-                           request().clear();
+                           _request.write(buffer);
+                           _request.clear();
 
-                           wsAdapter->onSocketRecv(*socket().get(), mutableBuffer(buffer), socket()->peerAddress()); */
+                           wsAdapter->onSocketRecv( buffer);
             }
 
             // Notify the server the connection is ready for data flow
@@ -205,7 +207,7 @@ namespace base {
             _shouldSendHeader = flag;
         }
 
-        void TcpHTTPConnection::onPayload(const std::string& buffer) {
+        void TcpHTTPConnection::onPayload(const uint8_t* data, size_t len){
 
         }
 

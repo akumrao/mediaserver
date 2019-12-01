@@ -81,6 +81,9 @@ namespace base {
                     // The initial HTTP request headers have already
                     // been parsed at this point, but the request body may
                     // be incomplete (especially if chunked).
+            if(!_factory)
+                return nullptr;
+            
             return _factory->createResponder(connection);
         }
 

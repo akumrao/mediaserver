@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     //test::init();
 
     Application app;
-    net::HttpServer socket("0.0.0.0", 7000,new StreamingResponderFactory );
+    net::HttpServer socket("0.0.0.0", 7000 );
     socket.start();
 
     app.waitForShutdown([&](void*) {

@@ -16,6 +16,7 @@
 
 #include "net/TcpConnection.h"
 #include "http/parser.h"
+//#include "http/websocket.h"
 
 
 
@@ -23,6 +24,7 @@ namespace base {
     namespace net {
 
         class ServerResponder;
+        class ConnectionAdapter;
         
         class TcpHTTPConnection : public TcpConnectionBase, public ParserObserver {
         public:
@@ -61,7 +63,7 @@ namespace base {
 
             /// HTTP connection and server interface
             virtual void onHeaders() ;
-            virtual void onPayload(const std::string& buffer) ;
+            virtual void onPayload(const uint8_t* data, size_t len); ;
             virtual void onComplete() ;
            // virtual void onClose() ;
 
@@ -80,6 +82,8 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
+            ConnectionAdapter *wsAdapter{ nullptr};
+           // ws::ConnectionAdapter *wsAdapter{ nullptr};
             // Others.
             size_t frameStart{ 0}; // Where the latest frame starts.
             size_t recvBytes{ 0};
