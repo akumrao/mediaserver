@@ -1,7 +1,7 @@
 
 
 #include "http/client.h"
-
+#include "net/IP.h"
 #include "base/util.h"
 #include "base/application.h"
 
