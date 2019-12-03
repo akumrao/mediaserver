@@ -49,6 +49,7 @@ namespace base
             void Close();
             void Connect( std::string ip, int port,  addrinfo *addrs = nullptr);
             virtual void on_connect() { }
+            virtual void on_read(const char* data, size_t len) = 0;
             virtual void on_close(){}
             virtual void Dump() const;
             void Setup(
@@ -80,9 +81,7 @@ namespace base
             void OnUvRead(ssize_t nread, const uv_buf_t* buf);
             void OnUvWriteError(int error);
 
-            /* Pure virtual methods that must be implemented by the subclass. */
-        protected:
-            virtual void UserOnTcpConnectionRead(const char* data, size_t len) = 0;
+          
 
         protected:
             // Passed by argument.
@@ -181,7 +180,7 @@ namespace base
 
             /* Pure virtual methods inherited from ::TcpConnection. */
         public:
-            void UserOnTcpConnectionRead( const char* data, size_t len) override;
+            void on_read( const char* data, size_t len) override;
 
         private:
             // Passed by argument.

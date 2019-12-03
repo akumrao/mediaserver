@@ -471,7 +471,7 @@ namespace base {
                 this->bufferDataLen += static_cast<size_t> (nread);
 
                 // Notify the subclass.
-                UserOnTcpConnectionRead((const char*) buf->base, nread);
+                on_read((const char*) buf->base, nread);
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {
                 LDebug("connection closed by peer, closing server side");
@@ -521,7 +521,7 @@ namespace base {
 
         }
 
-        void TcpConnection::UserOnTcpConnectionRead(const char* data, size_t len) {
+        void TcpConnection::on_read(const char* data, size_t len) {
 
             this->listener->OnTcpConnectionPacketReceived(this, data, len);
         }
