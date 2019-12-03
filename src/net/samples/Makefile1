@@ -4,7 +4,7 @@
 CC	= clang
 CXX     = clang++
 TARGET=runtestTcpServer # define the name of the executable
-SOURCES=$(wildcard testTcpServer.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp )
+SOURCES=$(wildcard testTcpServer.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 

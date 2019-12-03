@@ -33,7 +33,7 @@ namespace base
             struct UvWriteData
             {
                 uv_write_t req;
-                uint8_t store[1];
+                char store[1];
             };
 
             // Let the TcpServerBase class directly call the destructor of TcpConnectionBase.
@@ -59,8 +59,8 @@ namespace base
             bool IsClosed() const;
             uv_tcp_t* GetUvHandle() const;
             void Start();
-            void Write(const uint8_t* data, size_t len);
-            void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
+            void Write(const char* data, size_t len);
+            void Write(const char* data1, size_t len1, const char* data2, size_t len2);
             void Write(const std::string& data);
             void ErrorReceiving();
             const struct sockaddr* GetLocalAddress() const;
@@ -82,13 +82,13 @@ namespace base
 
             /* Pure virtual methods that must be implemented by the subclass. */
         protected:
-            virtual void UserOnTcpConnectionRead(const uint8_t* data, size_t len) = 0;
+            virtual void UserOnTcpConnectionRead(const char* data, size_t len) = 0;
 
         protected:
             // Passed by argument.
             size_t bufferSize{ 0};
             // Allocated by this.
-            uint8_t* buffer{ nullptr};
+            char* buffer{ nullptr};
             // Others.
             size_t bufferDataLen{ 0};
             std::string localIp;
@@ -126,7 +126,7 @@ namespace base
         }
 
         inline void TcpConnectionBase::Write(const std::string& data) {
-            Write(reinterpret_cast<const uint8_t*> (data.c_str()), data.size());
+            Write(reinterpret_cast<const char*> (data.c_str()), data.size());
         }
 
         inline const struct sockaddr* TcpConnectionBase::GetLocalAddress() const {
@@ -167,7 +167,7 @@ namespace base
             {
             public:
                 virtual void OnTcpConnectionPacketReceived(
-                        TcpConnection* connection, const uint8_t* data, size_t len) = 0;
+                        TcpConnection* connection, const char* data, size_t len) = 0;
             };
 
         public:
@@ -175,13 +175,13 @@ namespace base
             ~TcpConnection() override;
 
         public:
-            void Send(const uint8_t* data, size_t len);
+            void Send(const char* data, size_t len);
             size_t GetRecvBytes() const;
             size_t GetSentBytes() const;
 
             /* Pure virtual methods inherited from ::TcpConnection. */
         public:
-            void UserOnTcpConnectionRead( const uint8_t* data, size_t len) override;
+            void UserOnTcpConnectionRead( const char* data, size_t len) override;
 
         private:
             // Passed by argument.

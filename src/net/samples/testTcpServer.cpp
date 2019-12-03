@@ -38,10 +38,10 @@ public:
 
     }
 
-    void OnTcpConnectionPacketReceived(TcpConnection* connection, const uint8_t* data, size_t len) {
+    void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
         std::cout << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
-        connection->Send((const uint8_t*) send.c_str(), 5);
+        connection->Send((const char*) send.c_str(), 5);
 
     }
     TcpServer *tcpServer;

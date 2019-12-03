@@ -15,7 +15,7 @@ namespace base {
             /* Struct for the data field of uv_req_t when sending a datagram. */
             struct UvSendData {
                 uv_udp_send_t req;
-                uint8_t store[1];
+                char store[1];
             };
 
         public:
@@ -45,10 +45,10 @@ namespace base {
             }
 
 
-            void Send(char* data, unsigned int len, const struct sockaddr* add=nullptr);
+            void Send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
            // void Send(const std::string& data, const struct sockaddr* addr);
-            void Send(char* data, unsigned int len, const std::string ip, int port);
-          //  void Send(const std::string& data, const std::string& ip, uint16_t port);
+            void Send(const char* data, unsigned int len, const std::string ip, int port);
+            void Send(const std::string& data, const std::string& ip, uint16_t port);
             const struct sockaddr* GetLocalAddress() const;
             int GetLocalFamily() const;
             const std::string& GetLocalIp() const;
@@ -82,7 +82,7 @@ namespace base {
             /* Pure virtual methods that must be implemented by the subclass. */
         protected:
             virtual void UserOnUdpDatagramReceived(
-                    const uint8_t* data, size_t len,  struct sockaddr* addr){};
+                    const char* data, size_t len,  struct sockaddr* addr){};
             
          void startRead();
  
@@ -108,6 +108,10 @@ namespace base {
         /* Inline methods. */
 
      
+      
+        inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port){
+            Send(data.c_str(), data.length(), ip, port );
+        }
         inline const struct sockaddr* UdpSocket::GetLocalAddress() const {
             return reinterpret_cast<const struct sockaddr*> (&this->localAddr);
         }
@@ -139,7 +143,7 @@ namespace base {
             class Listener {
             public:
                 virtual void OnUdpSocketPacketReceived(
-                        net::UdpServer* socket, const uint8_t* data, size_t len,  struct sockaddr* remoteAddr) = 0;
+                        net::UdpServer* socket, const char* data, size_t len,  struct sockaddr* remoteAddr) = 0;
             };
 
         public:
@@ -150,7 +154,7 @@ namespace base {
 
             /* Pure virtual methods inherited from ::UdpSocket. */
         public:
-            void UserOnUdpDatagramReceived(const uint8_t* data, size_t len,  struct sockaddr* addr) override;
+            void UserOnUdpDatagramReceived(const char* data, size_t len,  struct sockaddr* addr) override;
 
         private:
             // Passed by argument.

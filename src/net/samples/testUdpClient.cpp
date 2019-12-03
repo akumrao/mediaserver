@@ -45,7 +45,7 @@ public:
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new RemoteChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
     Application app;
 

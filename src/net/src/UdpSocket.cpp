@@ -12,7 +12,7 @@ namespace base {
         /* Static. */
 
         static constexpr size_t ReadBufferSize{ 65536};
-        static uint8_t ReadBuffer[ReadBufferSize];
+        static char ReadBuffer[ReadBufferSize];
 
         /* Static methods for UV callbacks. */
 
@@ -129,7 +129,7 @@ namespace base {
             LInfo("</UdpSocket>");
         }
 
-        void UdpSocket::Send( char* data, unsigned int len, const struct sockaddr* addr ) {
+        void UdpSocket::Send( const char* data, unsigned int len, const struct sockaddr* addr ) {
 
             if (this->closed)
                 return;
@@ -143,7 +143,7 @@ namespace base {
             // First try uv_udp_try_send(). In case it can not directly send the datagram
             // then build a uv_req_t and use uv_udp_send().
 
-            uv_buf_t buffer = uv_buf_init(data , len);
+            uv_buf_t buffer = uv_buf_init((char*)data , len);
             int sent = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
             // Entire datagram was sent. Done.
@@ -219,7 +219,7 @@ namespace base {
             return true;
         }
         */ 
-        void UdpSocket::Send(char* data, unsigned int len, const std::string ip, int port) {
+        void UdpSocket::Send(const char* data, unsigned int len, const std::string ip, int port) {
 
             if (this->closed)
                 return;
@@ -324,7 +324,7 @@ namespace base {
                 this->recvBytes += nread;
 
                 // Notify the subclass.
-                UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*> (buf->base), nread, addr);
+                UserOnUdpDatagramReceived(reinterpret_cast<char*> (buf->base), nread, addr);
             }// Some error.
             else {
                 LTrace("read error: %s", uv_strerror(nread));
@@ -409,7 +409,7 @@ namespace base {
 
         }
 
-        void UdpServer::UserOnUdpDatagramReceived(const uint8_t* data, size_t len,  struct sockaddr* addr) {
+        void UdpServer::UserOnUdpDatagramReceived(const char* data, size_t len,  struct sockaddr* addr) {
 
             if (this->listener == nullptr) {
                 LError("no listener set");

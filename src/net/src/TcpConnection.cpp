@@ -276,7 +276,7 @@ namespace base {
                 LError("error setting peer IP and port");
         }
 
-        void TcpConnectionBase::Write(const uint8_t* data, size_t len) {
+        void TcpConnectionBase::Write(const char* data, size_t len) {
 
             LTrace("TcpConnectionBase::Write" );
             if (this->closed)
@@ -288,7 +288,7 @@ namespace base {
             // First try uv_try_write(). In case it can not directly write all the given
             // data then build a uv_req_t and use uv_write().
 
-            uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*> (const_cast<uint8_t*> (data)), len);
+            uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data)), len);
             int written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), &buffer, 1);
 
             // All the data was written. Done.
@@ -333,7 +333,7 @@ namespace base {
                 LError("uv_write() failed: %s", uv_strerror(err));
         }
 
-        void TcpConnectionBase::Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2) {
+        void TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2) {
 
             if (this->closed)
                 return;
@@ -349,8 +349,8 @@ namespace base {
             // First try uv_try_write(). In case it can not directly write all the given
             // data then build a uv_req_t and use uv_write().
 
-            buffers[0] = uv_buf_init(reinterpret_cast<char*> (const_cast<uint8_t*> (data1)), len1);
-            buffers[1] = uv_buf_init(reinterpret_cast<char*> (const_cast<uint8_t*> (data2)), len2);
+            buffers[0] = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data1)), len1);
+            buffers[1] = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data2)), len2);
             written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), buffers, 2);
 
             // All the data was written. Done.
@@ -441,7 +441,7 @@ namespace base {
 
             // If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
             if (this->buffer == nullptr)
-                this->buffer = new uint8_t[this->bufferSize];
+                this->buffer = new char[this->bufferSize];
 
             // Tell UV to write after the last data byte in the buffer.
             buf->base = reinterpret_cast<char*> (this->buffer + this->bufferDataLen);
@@ -471,7 +471,7 @@ namespace base {
                 this->bufferDataLen += static_cast<size_t> (nread);
 
                 // Notify the subclass.
-                UserOnTcpConnectionRead((const uint8_t*) buf->base, nread);
+                UserOnTcpConnectionRead((const char*) buf->base, nread);
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {
                 LDebug("connection closed by peer, closing server side");
@@ -521,12 +521,12 @@ namespace base {
 
         }
 
-        void TcpConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
+        void TcpConnection::UserOnTcpConnectionRead(const char* data, size_t len) {
 
             this->listener->OnTcpConnectionPacketReceived(this, data, len);
         }
 
-        void TcpConnection::Send(const uint8_t* data, size_t len) {
+        void TcpConnection::Send(const char* data, size_t len) {
 
 
             // Update sent bytes.
@@ -534,7 +534,7 @@ namespace base {
 
             // Write according to Framing RFC 4571.
 
-            //       uint8_t frameLen[2];
+            //       char frameLen[2];
 
             // Utils::Byte::Set2Bytes(frameLen, 0, len);
             // TcpConnectionBase::Write(frameLen, 2, data, len);

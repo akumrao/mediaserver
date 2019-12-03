@@ -39,7 +39,7 @@ public:
     }
 
 
-    void OnUdpSocketPacketReceived(UdpServer* socket, const uint8_t* data, size_t len,  struct sockaddr* remoteAddr) {
+    void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len,  struct sockaddr* remoteAddr) {
 
         int family;
         

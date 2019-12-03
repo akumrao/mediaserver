@@ -25,7 +25,7 @@ public:
         tcpClient = new TcpConnection(this);
 
         tcpClient->Connect("0.0.0.0", 7000);
-        const unsigned char snd[6] = "12345";
+        const char snd[6] = "12345";
         std::cout << "TCP Client send data: " << snd << "len: " << strlen((const char*) snd) << std::endl << std::flush;
 
         tcpClient->Send(snd, 5);
@@ -45,10 +45,10 @@ public:
 
     }
 
-    void OnTcpConnectionPacketReceived(TcpConnection* connection, const uint8_t* data, size_t len) {
+    void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
         std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
-        connection->Send((const uint8_t*) send.c_str(), 5);
+        connection->Send((const char*) send.c_str(), 5);
 
     }
     TcpConnection *tcpClient;
