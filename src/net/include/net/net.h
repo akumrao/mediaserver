@@ -18,7 +18,7 @@ namespace base
         {
         public:
 
-          /*  class Listener
+            class Listener
             {
             public:
                 virtual ~Listener() = default;
@@ -26,7 +26,7 @@ namespace base
             public:
                 virtual void OnTcpConnectionClosed(TcpConnectionBase* connection) = 0;
             };
-         */
+
         public:
 
             /* Struct for the data field of uv_req_t when writing into the connection. */
@@ -53,7 +53,7 @@ namespace base
             virtual void on_close(){}
             virtual void Dump() const;
             void Setup(
-                  //  Listener* listener,
+                    Listener* listener,
                     struct sockaddr_storage* localAddr,
                     const std::string& localIp,
                     uint16_t localPort);
@@ -97,7 +97,8 @@ namespace base
             uint16_t peerPort{ 0};
 
         public:
-      
+            // Passed by argument.
+            Listener* listener{ nullptr};
         private:
 
             // Allocated by this.
@@ -155,31 +156,31 @@ namespace base
             return this->peerPort;
         }
 
-      /*******************************************************************************************************************************************************/
+                /*******************************************************************************************************************************************************/
 
-        class TcpConnection : public TcpConnectionBase, public Listener
+        class TcpConnection : public TcpConnectionBase
         {
         public:
 
+            class Listener
+            {
+            public:
+                virtual void OnTcpConnectionPacketReceived(
+                        TcpConnection* connection, const char* data, size_t len) = 0;
+            };
 
         public:
             TcpConnection(Listener* listener, size_t bufferSize=65536);
             ~TcpConnection() override;
 
         public:
-            void send(const char* data, size_t len);
+            void Send(const char* data, size_t len);
             size_t GetRecvBytes() const;
             size_t GetSentBytes() const;
 
             /* Pure virtual methods inherited from ::TcpConnection. */
         public:
             void on_read( const char* data, size_t len) override;
-            
-            
-            const std::string& GetLocalIp() const;
-            uint16_t GetLocalPort() const;
-             const std::string& GetPeerIp() const;
-            uint16_t GetPeerPort() const;
 
         private:
             // Passed by argument.
@@ -198,23 +199,6 @@ namespace base
             return this->sentBytes;
         }
 
-        
-         inline const std::string& TcpConnection::GetLocalIp() const {
-            return this->localIp;
-        }
-
-        inline uint16_t TcpConnection::GetLocalPort() const {
-            return this->localPort;
-        }
-
-    
-        inline const std::string& TcpConnection::GetPeerIp() const {
-            return this->peerIp;
-        }
-
-        inline uint16_t TcpConnection::GetPeerPort() const {
-            return this->peerPort;
-        }
         
                     /*******************************************************************************************************************************************************/
 /*

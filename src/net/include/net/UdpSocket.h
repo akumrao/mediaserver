@@ -45,10 +45,10 @@ namespace base {
             }
 
 
-            void Send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
-           // void Send(const std::string& data, const struct sockaddr* addr);
-            void Send(const char* data, unsigned int len, const std::string ip, int port);
-            void Send(const std::string& data, const std::string& ip, uint16_t port);
+            void send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
+           // void send(const std::string& data, const struct sockaddr* addr);
+            void send(const char* data, unsigned int len, const std::string ip, int port);
+            void send(const std::string& data, const std::string& ip, uint16_t port);
             const struct sockaddr* GetLocalAddress() const;
             int GetLocalFamily() const;
             const std::string& GetLocalIp() const;
@@ -109,8 +109,8 @@ namespace base {
 
      
       
-        inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port){
-            Send(data.c_str(), data.length(), ip, port );
+        inline void UdpSocket::send(const std::string& data, const std::string& ip, uint16_t port){
+            send(data.c_str(), data.length(), ip, port );
         }
         inline const struct sockaddr* UdpSocket::GetLocalAddress() const {
             return reinterpret_cast<const struct sockaddr*> (&this->localAddr);

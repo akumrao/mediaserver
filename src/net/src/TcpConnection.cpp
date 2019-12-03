@@ -1,4 +1,4 @@
-
+#include "net/netInterface.h"
 #include "net/TcpConnection.h"
 #include "base/logger.h"
 #include <inttypes.h>
@@ -17,7 +17,6 @@ namespace base {
 
             if (connection == nullptr)
                 return;
-
             connection->OnUvReadAlloc(suggestedSize, buf);
         }
 
@@ -50,10 +49,7 @@ namespace base {
             
             LTrace("onClose");
            TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
-            
-            if(obj->listener)
-            obj->listener->OnTcpConnectionClosed(obj);
-           
+         
             obj->on_close();
             delete handle;
         }
@@ -140,7 +136,7 @@ namespace base {
         }
 
         void TcpConnectionBase::Setup(
-                Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
+                 struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
 
 
             // Set the UV handle.
@@ -153,8 +149,6 @@ namespace base {
                 LError("uv_tcp_init() failed: %s", uv_strerror(err));
             }
 
-            // Set the listener.
-            this->listener = listener;
 
             // Set the local address.
             this->localAddr = localAddr;
@@ -523,10 +517,10 @@ namespace base {
 
         void TcpConnection::on_read(const char* data, size_t len) {
 
-            this->listener->OnTcpConnectionPacketReceived(this, data, len);
+            listener->on_read(this, data, len);
         }
 
-        void TcpConnection::Send(const char* data, size_t len) {
+        void TcpConnection::send(const char* data, size_t len) {
 
 
             // Update sent bytes.

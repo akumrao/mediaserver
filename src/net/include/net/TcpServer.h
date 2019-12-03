@@ -1,7 +1,7 @@
 #ifndef TCP_SERVER_H
 #define TCP_SERVER_H
 
-
+#include "net/netInterface.h"
 #include "net/TcpConnection.h"
 #include <uv.h>
 #include <string>
@@ -12,14 +12,14 @@ namespace base
     namespace net
     {
 
-        class TcpServerBase : public TcpConnectionBase::Listener
+        class TcpServerBase 
         {
         public:
             /**
              * uvHandle must be an already initialized and binded uv_tcp_t pointer.
              */
             TcpServerBase(uv_tcp_t* uvHandle, int backlog);
-            virtual ~TcpServerBase() override;
+            virtual ~TcpServerBase() ;
 
         public:
             void Close();
@@ -70,7 +70,7 @@ namespace base
 
             /* Methods inherited from TcpConnectionBase::Listener. */
         public:
-            void OnTcpConnectionClosed(TcpConnectionBase* connection) override;
+            void OnTcpConnectionClosed(TcpConnectionBase* connection) ;
 
         protected:
                uv_tcp_t* BindTcp(std::string &ip, int port);
@@ -114,15 +114,9 @@ namespace base
         {
         public:
 
-            class Listener
-            {
-            public:
-                virtual void OnTcpConnectionClosed(
-                        TcpServer* tcpServer, TcpConnection* connection) = 0;
-            };
-
+     
         public:
-            TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port);
+            TcpServer(Listener* listener, std::string ip, int port);
 
             ~TcpServer() override;
 
@@ -136,7 +130,6 @@ namespace base
             // Passed by argument.
             Listener* listener{ nullptr};
             uv_tcp_t* uvHandle{ nullptr};
-            TcpConnection::Listener* connListener{ nullptr};
         };
 
 

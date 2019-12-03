@@ -13,10 +13,11 @@ using namespace net;
 using namespace base::test;
 
 
-class tesTcpClient : public TcpConnection{
+class tesTcpClient : public Listener {
 public:
 
-    tesTcpClient(): TcpConnection(this) {}
+    tesTcpClient() {
+    }
 
     void start() {
 
@@ -40,13 +41,15 @@ public:
 
     void on_close(Listener* connection) {
 
-    
         std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
     }
 
     void on_read(Listener* connection, const char* data, size_t len) {
-        std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
+        
+      std::cout << " on_read " << connection->GetLocalIp() << " PeerIP " << connection->GetPeerIp() << std::endl << std::flush;
+
+        std::cout << "data: " << data << " len: " << len << std::endl << std::flush;
         std::string send = "12345";
         connection->send((const char*) send.c_str(), 5);
 

@@ -129,7 +129,7 @@ namespace base {
             LInfo("</UdpSocket>");
         }
 
-        void UdpSocket::Send( const char* data, unsigned int len, const struct sockaddr* addr ) {
+        void UdpSocket::send( const char* data, unsigned int len, const struct sockaddr* addr ) {
 
             if (this->closed)
                 return;
@@ -219,7 +219,7 @@ namespace base {
             return true;
         }
         */ 
-        void UdpSocket::Send(const char* data, unsigned int len, const std::string ip, int port) {
+        void UdpSocket::send(const char* data, unsigned int len, const std::string ip, int port) {
 
             if (this->closed)
                 return;
@@ -262,7 +262,7 @@ namespace base {
                 }
             }
 
-            Send(data, len, reinterpret_cast<struct sockaddr*> (&addr));
+            send(data, len, reinterpret_cast<struct sockaddr*> (&addr));
         }
 
       /*

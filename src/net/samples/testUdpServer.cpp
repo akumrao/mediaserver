@@ -21,14 +21,14 @@ public:
     }
 
     void start() {
-        // socket.Send("Arvind", "127.0.0.1", 7331);
+        // socket.send("Arvind", "127.0.0.1", 7331);
         udpServer = new UdpServer( this, IP, port);
         udpServer->bind();
     }
 
     void send( std::string txt, std::string ip, int port )
     {
-         udpServer->Send( (char*) txt.c_str(), txt.length() , ip , port);
+         udpServer->send( (char*) txt.c_str(), txt.length() , ip , port);
     }
 
     void shutdown() {

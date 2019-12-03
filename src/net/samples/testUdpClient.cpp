@@ -25,7 +25,7 @@ public:
     }
 
     void send(std::string txt) {
-        udpClient->Send((char*) txt.c_str(), txt.length());
+        udpClient->send((char*) txt.c_str(), txt.length());
     }
 
     void shutdown() {

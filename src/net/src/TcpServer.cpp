@@ -143,7 +143,7 @@ namespace base
 
             try
             {
-                connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
+                connection->Setup( &(this->localAddr), this->localIp, this->localPort);
             } catch (const std::exception& error)
             {
                 delete connection;
@@ -228,9 +228,8 @@ namespace base
 
         /* Instance methods. */
 
-        TcpServer::TcpServer(Listener* listener, TcpConnection::Listener* connListener, std::string ip, int port)
-        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),
-        connListener(connListener) {
+        TcpServer::TcpServer(Listener* listener, std::string ip, int port)
+        : TcpServerBase(BindTcp(ip, port), 256), listener(listener){
 
         }
 
@@ -246,7 +245,7 @@ namespace base
 
 
             // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-            *connection = new TcpConnection(this->connListener, 65536);
+            *connection = new TcpConnection(listener, 65536);
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
@@ -264,7 +263,7 @@ namespace base
 
         void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            this->listener->OnTcpConnectionClosed(this, static_cast<TcpConnection*> (connection));
+            //this->listener->on_close( (TcpConnection*)connection);
         }
 
     } // namespace net

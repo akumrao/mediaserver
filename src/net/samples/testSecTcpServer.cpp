@@ -4,7 +4,6 @@
 #include "net/TcpServer.h"
 #include "base/test.h"
 #include "base/time.h"
-#include "net/netInterface.h"
 
 using std::endl;
 using namespace base;
@@ -32,7 +31,7 @@ public:
 
     }
 
-    void on_close(Listener* connection) {
+    void on_close( Listener* connection) {
 
         std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
