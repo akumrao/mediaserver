@@ -6,11 +6,11 @@
 
 /* 
  * File:   HTTPConnection.cpp
- * Author: root
+ * Author: Arvind Umrao <akumrao@yahoo.com>
  * 
  * Created on November 18, 2019, 9:42 AM
  */
-
+#include "net/netInterface.h"
 #include "http/HttpConn.h"
 #include "base/base.h"
 #include "base/logger.h"
@@ -20,9 +20,9 @@
 namespace base {
     namespace net {
 
-        TcpHTTPConnection::TcpHTTPConnection(Listener* listener, http_parser_type type, WebSocketConnection::Listener * wslis, size_t bufferSize)
-        : TcpConnectionBase(bufferSize),
-           listener(listener), wsListener(wslis), _parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
+        HttpConnection::HttpConnection(Listener* listener, http_parser_type type, size_t bufferSize)
+        : TcpConnection(listener, bufferSize),
+           listener(listener),_parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
 
 
             _parser.setObserver(this);
@@ -33,26 +33,43 @@ namespace base {
 
         }
 
-        TcpHTTPConnection::~TcpHTTPConnection() {
-            LTrace("~TcpHTTPConnection()")
+        HttpConnection::~HttpConnection() {
+            LTrace("~HttpConnection()")
         }
 
-        void TcpHTTPConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
+        void HttpConnection::on_read(const char* data, size_t len) {
 
+            LTrace("on_read()")
+                    
             if(wsAdapter)
             {
                 wsAdapter->onSocketRecv( std::string((char*)data, len));
                 return;
             }
-            this->listener->OnTcpConnectionPacketReceived(this, data, len);
+            
+             _parser.parse((const char*) data, len);
+             
+            if(!wsAdapter)
+            this->listener->on_read(this, data, len);
         }
-        long TcpHTTPConnection::sendHeader() {
+        
+          void HttpConnection::on_close() {
+
+            LTrace("on_close()")
+                    
+            if (_responder) {
+                _responder->onClose();
+            }
+             
+            this->listener->on_close(this);
+        }
+        long HttpConnection::sendHeader() {
             if (!_shouldSendHeader)
                 return 0 ;
             _shouldSendHeader = false;
             assert(outgoingHeader());
 
-             LTrace("TcpHTTPConnection::sendHeader()")
+             LTrace("HttpConnection::sendHeader()")
                      
             // std::ostringstream os;
             // outgoingHeader()->write(os);
@@ -66,13 +83,13 @@ namespace base {
             // bypassing the WebSocketConnection
 
              STrace << head;
-             TcpConnectionBase::Write((const uint8_t*)head.c_str(), head.length());
+             Write(head.c_str(), head.length());
              return head.length();
         }
         
-        void TcpHTTPConnection::Send(const uint8_t* data, size_t len) {
+        void HttpConnection::send(const char* data, size_t len) {
 
-             LTrace("TcpHTTPConnection::send()")
+             LTrace("HttpConnection::send()")
             
              if (shouldSendHeader())
             {
@@ -92,14 +109,14 @@ namespace base {
 
             // Utils::Byte::Set2Bytes(frameLen, 0, len);
             // TcpConnectionBase::Write(frameLen, 2, data, len);
-            TcpConnectionBase::Write(data, len);
+            Write(data, len);
         }
 
-        void TcpHTTPConnection::onParserHeader(const std::string& /* name */,
+        void HttpConnection::onParserHeader(const std::string& /* name */,
                 const std::string& /* value */) {
         }
 
-        void TcpHTTPConnection::onParserHeadersEnd(bool upgrade) {
+        void HttpConnection::onParserHeadersEnd(bool upgrade) {
             LTrace("On headers end: ", _parser.upgrade())
 
 
@@ -112,22 +129,22 @@ namespace base {
             // _connection.incomingBuffer().position(_parser._parser.nread);
         }
 
-        void TcpHTTPConnection::onParserChunk(const char* buf, size_t len) {
+        void HttpConnection::onParserChunk(const char* buf, size_t len) {
             LTrace("On parser chunk: ", len)
             //abort();
                
                     // Dispatch the payload
-             onPayload((const uint8_t*) buf, len);
+             on_payload(buf, len);
                  
         }
 
-        void TcpHTTPConnection::onParserEnd() {
+        void HttpConnection::onParserEnd() {
             LTrace("On parser end")
 
             onComplete();
         }
 
-        void TcpHTTPConnection::onParserError(const base::Error& err) {
+        void HttpConnection::onParserError(const base::Error& err) {
             LWarn("On parser error: ", err.message)
 
 #if 0
@@ -152,7 +169,7 @@ namespace base {
             Close(); // do we want to force this?
         }
 
-        void TcpHTTPConnection::onHeaders() {
+        void HttpConnection::onHeaders() {
 
 
             bool _upgrade = _parser.upgrade();
@@ -167,7 +184,7 @@ namespace base {
                         // scope we just swap the SocketAdapter instance pointers and do
                         // a deferred delete on the old adapter. No more callbacks will be
                         // received from the old adapter after replaceAdapter is called.
-                          wsAdapter = new WebSocketConnection(  wsListener, this, ServerSide);
+                          wsAdapter = new WebSocketConnection( listener, this, ServerSide);
                         //   replaceAdapter(wsAdapter);
 
                            // Send the handshake request to the WS adapter for handling.
@@ -191,7 +208,7 @@ namespace base {
             //   _server.onConnectionReady(*this);
 
             // Instantiate the responder now that request headers have been parsed
-            this->listener->onHeaders(this);
+            this->listener->on_header(this);
 
             // Upgraded connections don't receive the onHeaders callback
             if (_responder && !_upgrade)
@@ -200,35 +217,35 @@ namespace base {
 
  
 
-        bool TcpHTTPConnection::shouldSendHeader() const {
+        bool HttpConnection::shouldSendHeader() const {
             return _shouldSendHeader;
         }
 
-        void TcpHTTPConnection::shouldSendHeader(bool flag) {
+        void HttpConnection::shouldSendHeader(bool flag) {
             _shouldSendHeader = flag;
         }
 
-        void TcpHTTPConnection::onPayload(const uint8_t* data, size_t len){
+        void HttpConnection::on_payload(const char* data, size_t len){
 
         }
 
-        void TcpHTTPConnection::onComplete() {
+        void HttpConnection::onComplete() {
 
             if (_responder)
                 _responder->onRequest(_request, _response);
         }
 
-     //   void TcpHTTPConnection::onClose() {
+     //   void HttpConnection::onClose() {
 
          //   if (_responder)
              //   _responder->onClose();
        // }
 
-        Message* TcpHTTPConnection::incomingHeader() {
+        Message* HttpConnection::incomingHeader() {
             return reinterpret_cast<Message*> (&_request);
         }
 
-        Message* TcpHTTPConnection::outgoingHeader() {
+        Message* HttpConnection::outgoingHeader() {
 
             return reinterpret_cast<Message*> (&_response);
         }

@@ -9,8 +9,8 @@
 #include "http/parser.h"
 #include "http/request.h"
 #include "http/response.h"
-//#include "http/HttpConn.h"
 #include "base/random.h"
+//#include "http/HttpConn.h"
 
 
 
@@ -177,36 +177,29 @@ namespace base {
 
 
         /// WebSocket class which belongs to a HTTP Connection.
-        class TcpHTTPConnection;
-        class WebSocketConnection {
+        //class HttpConnection;
+        class WebSocketConnection: public Listener{
         public:
             
             
-               class Listener {
-            public:
-                virtual void OnTcpConnectionPacketReceived(
-                        WebSocketConnection* connection, const uint8_t* data, size_t len) = 0;
-                virtual void OnClose(WebSocketConnection* connection) = 0;
-                virtual void OnConnect(WebSocketConnection* connection) = 0;
-
-            protected:
-
-            };
-            
+                   
             Listener* listener{ nullptr};
             
-            WebSocketConnection(Listener* listener, TcpHTTPConnection* connection, Mode mode);
+            WebSocketConnection(Listener* listener, HttpConnection* connection, Mode mode);
 
             virtual ~WebSocketConnection() ;
 
             void onSocketRecv(const std::string& buffer);
 
 
-            // virtual ssize_t sendHeader();
+            void send(const char* data, size_t len)
+            {
+                send(data, len,  0);
+            }
 
-            virtual void send(const char* data, size_t len, int flags = 0) ; // flags = Text || Binary
+            void send(const char* data, size_t len, int flags = 0) ; // flags = Text || Binary
 
-            virtual bool shutdown(uint16_t statusCode, const std::string& statusMessage);
+            bool shutdown(uint16_t statusCode, const std::string& statusMessage);
 
             //
             /// Client side
@@ -233,7 +226,7 @@ namespace base {
             
 
         protected:
-            TcpHTTPConnection* _connection;
+            HttpConnection* _connection;
 
             friend class WebSocketFramer;
 

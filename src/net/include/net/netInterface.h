@@ -16,13 +16,19 @@ namespace base
                 virtual void on_close(Listener* conn){};
                 virtual void send(const char* data, size_t len){};
 
-                virtual const std::string& GetLocalIp() const{ return std::string("");}
-                virtual const std::string& GetPeerIp() const{return std::string("");}
+                virtual const std::string& GetLocalIp() const{ return ip_port;}
+                virtual const std::string& GetPeerIp() const{return ip_port;}
+                
+                      /////////////////////////////////////////
+                virtual void on_header(Listener* conn) { };
+        
+                std::string ip_port="please overide it";
+
                 
             };
             
-        
-
+            
+                 
     } // namespace net
 } // namespace base
 

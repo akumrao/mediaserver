@@ -21,13 +21,13 @@ namespace net {
 class  ChunkedAdapter : public IPacketizer
 {
 public:
-    TcpHTTPConnection *connection;
+    HttpConnection *connection;
     std::string contentType;
     std::string frameSeparator;
     bool initial;
     bool nocopy;
 
-    ChunkedAdapter(TcpHTTPConnection *connection = nullptr, const std::string& frameSeparator = "", bool nocopy = true)
+    ChunkedAdapter(HttpConnection *connection = nullptr, const std::string& frameSeparator = "", bool nocopy = true)
         : PacketProcessor()
         , connection(connection)
         , contentType(connection->outgoingHeader()->getContentType())
@@ -68,12 +68,12 @@ public:
 class HTTP_API MultipartAdapter : public IPacketizer
 {
 public:
-    TcpHTTPConnection* connection;
+    HttpConnection* connection;
     std::string contentType;
     bool isBase64;
     bool initial;
 
-    MultipartAdapter(TcpHTTPConnection* con, bool base64 = false)
+    MultipartAdapter(HttpConnection* con, bool base64 = false)
         : IPacketizer()
         , connection(con)
         , contentType(con->outgoingHeader()->getContentType())
@@ -82,7 +82,7 @@ public:
     {
     }
 
-    MultipartAdapter(const std::string& contentType, TcpHTTPConnection* con, bool base64 = false)
+    MultipartAdapter(const std::string& contentType, HttpConnection* con, bool base64 = false)
         : IPacketizer()
         , connection(con)
         , contentType(contentType)
@@ -103,7 +103,7 @@ public:
     virtual void process(std::vector<unsigned char> & packet);
 
     
-      void  emit( const uint8_t * data, int len );
+      void  emit( const char * data, int len );
 
 //    PacketSignal emitter;
 };

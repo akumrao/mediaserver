@@ -1,5 +1,5 @@
 
-
+#include "net/netInterface.h"
 #include "http/packetizers.h"
 
 #include <string>
@@ -109,7 +109,7 @@ namespace base {
 
         void MultipartAdapter::emitHeader() {
             
-            emit( (const uint8_t*)HEADER.c_str(),  HEADER.size());
+            emit( (const char*)HEADER.c_str(),  HEADER.size());
         }
 
         /// Sets HTTP header for the current chunk.
@@ -160,17 +160,17 @@ namespace base {
              
         //     sleep(20);
             
-            emit( (const uint8_t *) buffer.c_str(), buffer.size() );
+            emit( (const char *) buffer.c_str(), buffer.size() );
 
         }
 
-        void MultipartAdapter::emit(const uint8_t * data, int len) {
+        void MultipartAdapter::emit(const char * data, int len) {
             SDebug << "emit packet: "
                     // assert(!connection().socket()->closed());
                     << len << ": " << "fpsCounter.fps" << std::endl;
 
             try {
-                connection->Send(data, len);
+                connection->send(data, len);
                 //fpsCounter.tick();
             } catch (std::exception& exc) {
                 LError(exc.what())

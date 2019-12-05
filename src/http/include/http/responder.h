@@ -11,7 +11,7 @@ namespace base {
   class ServerResponder {
         public:
 
-            ServerResponder(TcpHTTPConnection* connection) :
+            ServerResponder(HttpConnection* connection) :
             _connection(connection) {
             }
 
@@ -29,7 +29,7 @@ namespace base {
             virtual void onClose() {
             };
 
-            TcpHTTPConnection* connection() {
+            HttpConnection* connection() {
                 return _connection;
             }
 
@@ -42,7 +42,7 @@ namespace base {
             }
 
         protected:
-            TcpHTTPConnection* _connection;
+            HttpConnection* _connection;
 
         private:
             ServerResponder(const ServerResponder&) = delete;
@@ -68,7 +68,7 @@ namespace base {
             /// Factory method for instantiating the ServerResponder
             /// instance using the given ServerConnection.
 
-            virtual ServerResponder* createResponder(TcpHTTPConnection* connection) {
+            virtual ServerResponder* createResponder(HttpConnection* connection) {
                 return nullptr;
             }
         };

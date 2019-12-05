@@ -24,27 +24,27 @@ namespace base {
 
         /* Instance methods. */
 
-        TcpHTTPServer::TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, WebSocketConnection::Listener *wslist, std::string ip, int port)
-        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),
-        connListener(connListener), wsConListener(wslist) {
+        HttpServerBase::HttpServerBase(Listener *listener, std::string ip, int port)
+        : TcpServerBase( BindTcp(ip, port), 256),listener(listener)
+        {
 
         }
 
-        TcpHTTPServer::~TcpHTTPServer() {
+        HttpServerBase::~HttpServerBase() {
 
             if (uvHandle)
                 delete uvHandle;
             //UnbindTcp(this->localIp, this->localPort);
         }
 
-        void TcpHTTPServer::UserOnTcpConnectionAlloc(TcpConnectionBase** connection) {
+        void HttpServerBase::UserOnTcpConnectionAlloc(TcpConnectionBase** connection) {
 
-
-            // Allocate a new RTC::TcpHTTPConnection for the TcpHTTPServer to handle it.
-            *connection = new TcpHTTPConnection(this->connListener, HTTP_REQUEST, wsConListener, 65536);
+            LTrace(" On acccept-> UserOnTcpConnectionAlloc"  )
+            // Allocate a new RTC::HttpConnection for the HttpServerBase to handle it.
+            *connection = new HttpConnection(listener, HTTP_REQUEST,  65536);
         }
 
-        bool TcpHTTPServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
+        bool HttpServerBase::UserOnNewTcpConnection(TcpConnectionBase* connection) {
 
 
             if (GetNumConnections() >= MaxTcpConnectionsPerServer) {
@@ -56,27 +56,29 @@ namespace base {
             return true;
         }
 
-        void TcpHTTPServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
+        void HttpServerBase::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            this->listener->OnTcpConnectionClosed(this, static_cast<TcpHTTPConnection*> (connection));
+            //this->listener->on_close(connection);
         }
 
         /*******************************************************************************************************************/
 
 
 
-
-
-        HttpServer::HttpServer(std::string ip, int port, ServerConnectionFactory *factory) : ip(ip), port(port), _factory(factory) {
+        HttpServer::HttpServer( std::string ip, int port, ServerConnectionFactory *factory) 
+        : HttpServerBase( this,  ip, port )
+        ,ip(ip), port(port), _factory(factory)
+        {
+ 
         }
 
         void HttpServer::start() {
 
-            tcpHTTPServer = new TcpHTTPServer(this, this, this, ip, port);
+       //     tcpHTTPServer = new HttpServerBase(this,  ip, port);
 
         }
 
-        ServerResponder* HttpServer::createResponder(TcpHTTPConnection* connection) {
+        ServerResponder* HttpServer::createResponder(HttpConnection* connection) {
             LTrace("createResponder")
                     // The initial HTTP request headers have already
                     // been parsed at this point, but the request body may
@@ -89,49 +91,39 @@ namespace base {
 
         void HttpServer::shutdown() {
 
-            delete tcpHTTPServer;
-            tcpHTTPServer = nullptr;
+            //delete tcpHTTPServer;
+           // tcpHTTPServer = nullptr;
         }
 
-        void HttpServer::OnTcpConnectionClosed(TcpHTTPServer* /*TcpHTTPServer*/, TcpHTTPConnection* connection) {
+        void HttpServer::on_close(Listener* connection) {
 
-            STrace << "HttpServer server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+            STrace << "HttpServer::on_close, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
-            if (connection && connection->_responder) {
-                connection->_responder->onClose();
-            }
-
-        }
-
-        void HttpServer::OnTcpConnectionPacketReceived(WebSocketConnection* connection, const uint8_t* data, size_t len) {
-
-            LTrace("OnTcpConnectionPacketReceived:websocket")
-            LTrace(data)
-
-            connection->send((const char*) data, len);
+            
 
         }
 
-        void HttpServer::OnClose(WebSocketConnection* connection) {
-            LTrace("OnClose:websocket")
+       
+
+
+        void HttpServer::on_read(Listener* connection, const char* data, size_t len) {
+            STrace << "on_read:TCP server send data: " << data << "len: " << len << std::endl << std::flush;
+            
+             HttpConnection *con = (HttpConnection*)connection;
+             // WebSocketConnection *con = (WebSocketConnection*)connection;
+    
+             //if(con->wsAdapter)
+             connection->send( data , len);// Test hello world
+           
+
         }
 
-        void HttpServer::OnConnect(WebSocketConnection* connection) {
-            LTrace("OnConnect:websocket")
-        }
-
-        void HttpServer::OnTcpConnectionPacketReceived(TcpHTTPConnection* connection, const uint8_t* data, size_t len) {
-            STrace << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
-            std::string send = RESPONSE;
-            // connection->Send((const uint8_t*) send.c_str(), send.length());// Test hello world
-            connection->_parser.parse((const char*) data, len);
-
-        }
-
-        void HttpServer::onHeaders(TcpHTTPConnection* connection) {
-
+        void HttpServer::on_header(Listener* connection) {
+            
+            LTrace("HttpServer::on_header" )
+            HttpConnection *con = (HttpConnection*)connection;
             // Instantiate the responder now that request headers have been parsed
-            connection->_responder = createResponder(connection);
+            con->_responder = createResponder(con);
 
 
         }

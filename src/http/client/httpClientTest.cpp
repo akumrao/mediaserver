@@ -16,6 +16,26 @@ using namespace base::test;
 int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+
+    {
+        Application app;
+ 
+        Client *conn = new Client();
+        conn->createConnection("ws","arvindubuntu",7000,"websocket");
+        
+        //Client *conn = new Client("http://zlib.net/index.html");
+        conn->start();
+     //   conn->clientConn->fnComplete = [&](const Response & response) {
+       //     std::cout << "Lerver response:";
+        //};
+ //       conn->clientConn->_request.setMethod("GET");
+//        conn->clientConn->_request.setKeepAlive(false);
+//        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        conn->clientConn->Send("Ping");
+
+        app.run();
+    }
+
     test::init();
 
 

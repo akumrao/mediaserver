@@ -1,10 +1,11 @@
 
 
-
+#include "net/netInterface.h"
+#include "http/HttpConn.h"
 #include "http/websocket.h"
 #include "base/base64.h"
 #include "crypto/hash.h"
-#include "http/client.h"
+//#include "http/client.h"
 #include "http/HttpConn.h"
 #include "base/logger.h"
 //#include "base/numeric.h"
@@ -19,11 +20,11 @@ using std::endl;
 namespace base {
     namespace net {
 
-        WebSocketConnection::WebSocketConnection(Listener* lis, TcpHTTPConnection* connection, Mode mode) : 
-        _request(connection->_request),
+        WebSocketConnection::WebSocketConnection(Listener* listener,  HttpConnection* connection,  Mode mode)  
+         : _request(connection->_request),
          _response(connection->_response), 
          _connection(connection),
-          listener(lis),
+          listener(listener),
          framer(mode)
         {
             _connection->shouldSendHeader(false);
@@ -57,7 +58,7 @@ namespace base {
             framer.writeFrame(data, len, flags, writer);
 
             assert(socket);
-            _connection->Send((const uint8_t*) writer.begin(), writer.position());
+            _connection->send((const char*) writer.begin(), writer.position());
             
             
         }
@@ -70,14 +71,14 @@ namespace base {
             LTrace("Client request: ", oss.str())
 
             assert(socket);
-            _connection->Send((const uint8_t*) oss.str().c_str(), oss.str().length());
+            _connection->send((const char*) oss.str().c_str(), oss.str().length());
         }
 
     
         void WebSocketConnection::onHandshakeComplete() {
             LTrace("onHandshakeComplete");
 
-            this->listener->OnConnect( this);
+            listener->on_connect( this);
             // Call net::SocketEmitter::onSocketConnect to notify handlers that data may flow
             //net::SocketEmitter::onSocketConnect(*socket.get());
         }
@@ -116,7 +117,7 @@ namespace base {
 
             LTrace(oss.str());
             
-            _connection->Send( (const uint8_t*) oss.str().c_str(), oss.str().length());
+            _connection->send( (const char*) oss.str().c_str(), oss.str().length());
         }
 
         void WebSocketConnection::onSocketConnect() {
@@ -187,7 +188,7 @@ namespace base {
                     // Emit the result packet
                     assert(payload);
                     assert(payloadLength);
-                    this->listener->OnTcpConnectionPacketReceived( this,(const uint8_t*) payload, payloadLength );
+                    listener->on_read( this,(const char*) payload, payloadLength );
                     // net::SocketEmitter::onSocketRecv(*socket.get(),
                     //  mutableBuffer(payload, (size_t)payloadLength),
                     // peerAddress);
@@ -216,7 +217,7 @@ namespace base {
             framer._headerState = 0;
             framer._frameFlags = 0;
 
-            this->listener->OnClose( this);
+            this->listener->on_close( this);
             // Emit closed event
             //net::SocketEmitter::onSocketClose(*socket.get());
         }

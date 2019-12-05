@@ -1,7 +1,7 @@
 
 #ifndef HttpServer_H
 #define HttpServer_H
-
+#include "net/netInterface.h"
 #include "http/HttpServer.h"
 #include "http/HttpConn.h"
 #include "net/TcpServer.h"
@@ -17,21 +17,15 @@ namespace base {
         /*******************************************************************************************************************************************************/
 
 
-        class TcpHTTPServer : public TcpServerBase {
+        class HttpServerBase : public TcpServerBase, public Listener  {
         public:
 
-            class Listener {
-            public:
-                virtual void OnTcpConnectionClosed(
-                        TcpHTTPServer* tcphttpServer, TcpHTTPConnection* connection) = 0;
-            };
-
         public:
-            TcpHTTPServer(Listener* listener, TcpHTTPConnection::Listener* connListener, WebSocketConnection::Listener *wslist, std::string ip, int port );
+            HttpServerBase(Listener *listener, std::string ip, int port );
 
-            ~TcpHTTPServer() override;
+            ~HttpServerBase() override;
 
-            /* Pure virtual methods inherited from ::TcpHTTPServer. */
+            /* Pure virtual methods inherited from ::HttpServerBase. */
         public:
             void UserOnTcpConnectionAlloc(TcpConnectionBase** connection) override;
             bool UserOnNewTcpConnection(TcpConnectionBase* connection) override;
@@ -41,8 +35,8 @@ namespace base {
             // Passed by argument.
             Listener* listener{ nullptr};
             uv_tcp_t* uvHandle{ nullptr};
-            TcpHTTPConnection::Listener* connListener{ nullptr};
-            WebSocketConnection::Listener* wsConListener{ nullptr};
+            //HttpConnection::Listener* connListener{ nullptr};
+           // WebSocketConnection::Listener* wsConListener{ nullptr};
 
         protected:
 
@@ -53,34 +47,31 @@ namespace base {
         ///
 
         /*************************************************************************************************/
-        class HttpServer : public TcpHTTPServer::Listener, public TcpHTTPConnection::Listener, public WebSocketConnection::Listener {
+        class HttpServer : public HttpServerBase {
         public:
 
-            HttpServer(std::string ip, int port, ServerConnectionFactory *factory = nullptr);
+            HttpServer( std::string ip, int port, ServerConnectionFactory *factory = nullptr);
 
-            ServerResponder* createResponder(TcpHTTPConnection* conn);
+            ServerResponder* createResponder(HttpConnection* conn);
 
             void start();
 
             void shutdown();
 
-            void OnTcpConnectionClosed(TcpHTTPServer* /*TcpHTTPServer*/, TcpHTTPConnection* connection);
+            void on_close(Listener* connection);
 
-            void OnTcpConnectionPacketReceived(TcpHTTPConnection* connection, const uint8_t* data, size_t len);
-            void OnTcpConnectionPacketReceived(WebSocketConnection* connection, const uint8_t* data, size_t len);
-            
-            void OnClose(WebSocketConnection* connection);
-            void OnConnect(WebSocketConnection* connection);
-          
-            void onHeaders(TcpHTTPConnection* connection);
+            void on_read(Listener* connection, const char* data, size_t len);
+                     
+            void on_header(Listener* connection);
       
 
-            TcpHTTPServer *tcpHTTPServer;
+           // HttpServerBase *tcpHTTPServer;
 
             ServerConnectionFactory* _factory;
             
         protected:
             std::string ip; int port;
+            //Listener* listener{ nullptr};
 
         };
 
