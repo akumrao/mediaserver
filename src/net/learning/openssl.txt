@@ -1,0 +1,191 @@
+Ghttps://www.youtube.com/watch?v=LRMBZhdFjDI
+
+https://www.youtube.com/watch?v=4nGrOpo0Cuc
+
+https://www.youtube.com/watch?v=QjmHSVjmvGo
+https://gist.github.com/mtigas/952344
+https://en.wikipedia.org/wiki/Root_certificate
+http://tuttlem.github.io/2015/02/07/working-with-openssl.html
+
+Certificate Is college certifcate
+CA It varifies if certificate is issued by right issuer. ALso maintain trust of chain
+If CA is not right than Cetificate is invalid and client could not even hello
+
+
+
+https://en.wikipedia.org/wiki/Root_certificate
+Certificate having start (*) means  having both private and public keys.  In general we should prefer to distribute public key and keep private key at the issuer side 
+By default we have 2048 key length, but you are free to have key length of different size.
+
+
+
+
+
+what is certificate 
+used for identification and securtiy 
+
+it is file or doc 
+
+
+$ echo "Hello, world!" | openssl enc -base64
+SGVsbG8sIHdvcmxkIQo=
+
+
+
+Encrypt with a password
+echo "Hello, world" | openssl enc -bf > password_enc.dat
+enter bf-cbc encryption password:
+Verifying - enter bf-cbc encryption password:
+
+some binary data in dat file
+
+
+Encrypt with a key pair
+Stepping up the complexity, you can get OpenSSL to encrypt and decrypt your data using public-key cryptographyy.
+
+ openssl genrsa -out private_key.pem 4096
+Generating RSA private key, 4096 bit long modulus
+
+
+
+Now that the private key has been generated, we extract the public key from it:
+$ openssl rsa -pubout -in private_key.pem -out public_key.pem
+
+We encrypt the source information with the public key and perform the decryption using the private key.
+
+
+working with certificates
+
+You can use OpenSSL to generate a self-signed certificate.
+
+Generating a self-signed certificate is a fairly simple process. The following will generate a certificate and private key (in the one file) that’s valid for 1 year. This certificate’s key won’t be protected by a passphrase.
+
+$ openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout mycert.pem -out mycert.pem
+
+You can shorted the key generation process (make it ask less questions) by specifying all of the subject details in the generation command:
+
+$ openssl req -x509 -nodes -days 365 -subj '/C=AU/ST=Queensland/L=Brisbane/CN=localhost' -newkey rsa:4096 -keyout mycert2.pem -out mycert2.pem
+
+
+What is Physical Certificate or Electronic Certifcate
+Issuer  IIT or Microsoft ( from where it came from)
+To whome issued to Arvind (  user , compurter , device and webpage) 
+
+WE can make sure right person is using the certifcate, same person whose name there is using certifcate 
+
+Expire date .. It like after certificae is expire you need to pass more test to keep the Ceritface
+
+Public Key ( which is not availale in physical key) , public key is to encrypt the data and  which only  Microsoft can only decript it.
+
+Digital Signature is like Wax seal on Certificate, which proves that certifcate is not fake.
+Check sum like function, it use to check if certifate is altered 
+Hasvalue 
+Algorrihtm and key size
+
+HASHValue    -> private key -> Digitial Signautre( one way only, it means we can not geneate same Digital certicate with same Hash value)
+
+
+Hash value is mathematical value to represent certificate
+
+Certificate -> Mathematical funtion() -> Hash value
+
+
+Digitial Signautre     -> Public key ->  HASHValue ( mach hash value of orignial  hash, if does not match then it ceritcate is altered)
+
+
+
+
+
+ auto_prt
+ 
+ template < class T>
+ 
+class auto_ptr{
+
+T  *ptr;
+
+public:
+
+auto_ptr( ptr == null       ): ptr = new
+
+
+~auto_ptr()
+{
+  delete ptr;
+}
+ 
+
+
+}
+}
+
+******************************************************************************************************************************************************************************
+
+Handshake SSLv2, SSLv3,  Originally from netsscape
+
+Instead of SSLv4 they have renamed it to TLS 
+
+ TLS - Cryptography Stack Exchange
+
+SSLv2, SSLv3 is old by netsscape no more used
+
+TLS1.0 1.1 is also old used sha1.  TLS1.2 with SHA256 is used for tcp
+
+DTLS is used for UDP
+
+
+
+
+
+Running the program requires that a SSL certificate and private key are
+available to be loaded. These can be generated using the 'openssl' program using
+these steps:
+
+1. Generate the private key, this is what we normally keep secret:
+```console
+    openssl genrsa -des3 -passout pass:ABCD -out server.pass.key 2048
+    openssl rsa -passin pass:ABCD -in server.pass.key -out server.key
+    rm -f server.pass.key
+```
+2. Next generate the CSR.  We can leave the password empty when prompted
+   (because this is self-sign):
+```console
+    openssl req -new -key server.key -out server.csr
+```
+3. Next generate the self signed certificate:
+```console
+    openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+    rm -f server.csr
+```
+The openssl program can also be used to connect to this program as an SSL
+client. Here's an example command (assuming we're using port 55555):
+```console
+    openssl s_client -connect 127.0.0.1:55555 -msg -debug -state -showcerts
+```
+
+Flow of encrypted & unencrypted bytes
+-------------------------------------
+
+This diagram shows how the read and write memory BIO's (rbio & wbio) are
+associated with the socket read and write respectively.  On the inbound flow
+(data into the program) bytes are read from the socket and copied into the rbio
+via BIO_write.  This represents the the transfer of encrypted data into the SSL
+object. The unencrypted data is then obtained through calling SSL_read.  The
+reverse happens on the outbound flow to convey unencrypted user data into a
+socket write of encrypted data.
+
+```
+  +------+                                    +-----+
+  |......|--> read(fd) --> BIO_write(rbio) -->|.....|--> SSL_read(ssl)  --> IN
+  |......|                                    |.....|
+  |.sock.|                                    |.SSL.|( because during hadshake it if any buf lef to write to fd)
+  |......|                                    |.....|( handshake might be required anytime )
+  |......|<-- write(fd) <-- BIO_read(wbio) <--|.....|<-- SSL_write(ssl) <-- OUT 
+  +------+                                    +-----+
+                      write_enc_buf                                   write_unenc_buf
+          |                                  |       |                     |
+          |<-------------------------------->|       |<------------------->|
+          |         encrypted bytes          |       |  unencrypted bytes  |
+```
+
+
