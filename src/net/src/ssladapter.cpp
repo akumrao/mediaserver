@@ -1,11 +1,9 @@
 
-
-
 #include "net/ssladapter.h"
 #include "base/logger.h"
 #include "net/sslmanager.h"
 #include "net/netInterface.h"
-#include "net/sslsocket.h"
+#include "net/SslConnection.h"
 
 #include <algorithm>
 #include <iterator>
@@ -18,14 +16,99 @@ using namespace std;
 namespace base {
 namespace net {
 
+    
+     static SSL_CTX *ctx = nullptr;
+    
+  SSL_CTX* InitCTX(bool server) {
+    const SSL_METHOD *method;
+    SSL_CTX *ctx;
+    
+      char CertFile[] = "/var/tmp/key/certificate.crt";
+        char KeyFile[] = "/var/tmp/key/private_key.pem";
 
-SSLAdapter::SSLAdapter(net::SSLSocket* socket)
+        SSL_library_init();
+        
+
+    OpenSSL_add_all_algorithms(); /* load & register all cryptos, etc. */
+    SSL_load_error_strings(); /* load all error messages */
+
+    if(server)
+     method = TLSv1_2_server_method();
+    else
+     method = TLSv1_2_client_method();
+    ctx = SSL_CTX_new(method); /* create new context from method */
+    if (ctx == NULL) {
+        ERR_print_errors_fp(stderr);
+        abort();
+    }
+
+    SSL_CTX_set_cipher_list(ctx, "ALL:eNULL");
+
+   
+
+
+  if(server)
+  {
+    //New lines //for server side only 
+    
+    if (SSL_CTX_load_verify_locations(ctx, CertFile, KeyFile) != 1)
+        ERR_print_errors_fp(stderr);
+
+    if (SSL_CTX_set_default_verify_paths(ctx) != 1)
+        ERR_print_errors_fp(stderr);
+  }
+    //End new lines
+
+    /* set the local certificate from CertFile */
+    if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        abort();
+    }
+    /* set the private key from KeyFile (may be the same as CertFile) */
+    SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *)"12345678");
+    if (SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        abort();
+    }
+    /* verify private key */
+    if (!SSL_CTX_check_private_key(ctx)) {
+        fprintf(stderr, "Private key does not match the public certificate\n");
+        abort();
+    }
+
+    //New lines - Force the client-side have a certificate
+    //SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+    //SSL_CTX_set_verify_depth(ctx, 4);
+    //End new lines
+    
+     return ctx;
+}
+
+void ShowCerts(SSL* ssl) {
+    X509 *cert;
+    char *line;
+
+    cert = SSL_get_peer_certificate(ssl); /* Get certificates (if available) */
+    if (cert != NULL) {
+        printf("Server certificates:\n");
+        line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
+        printf("Subject: %s\n", line);
+        free(line);
+        line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
+        printf("Issuer: %s\n", line);
+        free(line);
+        X509_free(cert);
+    } else
+        printf("No certificates.\n");
+}  
+
+SSLAdapter::SSLAdapter(SslConnection* socket)
     : _socket(socket)
     , _ssl(nullptr)
     , _readBIO(nullptr)
     , _writeBIO(nullptr)
 {
-    // LTrace("Create")
+     LTrace("SSLAdapter")
 }
 
 
@@ -42,13 +125,20 @@ SSLAdapter::~SSLAdapter()
 
 void SSLAdapter::initClient()
 {
-    // LTrace("Init client")
-    assert(_socket);
+     LTrace("Init client")
+    /*assert(_socket);
     if (!_socket->context())
         _socket->useContext(SSLManager::instance().defaultClientContext());
     assert(!_socket->context()->isForServerUse());
-
-    _ssl = SSL_new(_socket->context()->sslContext());
+*/
+    
+     if(!ctx )
+    {
+        ctx = InitCTX(false); /* initialize SSL */
+    }
+     
+    
+    _ssl = SSL_new(ctx);
 
     // TODO: Improve automatic SSL session handling.
     // Maybe add a stored session to the network manager.
@@ -65,13 +155,20 @@ void SSLAdapter::initClient()
 
 void SSLAdapter::initServer() //(SSL* ssl)
 {
-    // LTrace("Init server")
-    assert(_socket);
+     LTrace("Init server")
+    /*assert(_socket);
     if (!_socket->context())
         _socket->useContext(SSLManager::instance().defaultServerContext());
-    assert(_socket->context()->isForServerUse());
+    assert(_socket->context()->isForServerUse());*/
+    
+    if(!ctx )
+    {
+        ctx = InitCTX(true); /* initialize SSL */
+ 
+    }
+    
 
-    _ssl = SSL_new(_socket->context()->sslContext());
+    _ssl = SSL_new(ctx);
     _readBIO = BIO_new(BIO_s_mem());
     _writeBIO = BIO_new(BIO_s_mem());
     SSL_set_bio(_ssl, _readBIO, _writeBIO);
@@ -82,7 +179,7 @@ void SSLAdapter::initServer() //(SSL* ssl)
 
 void SSLAdapter::shutdown()
 {
-    // LTrace("Shutdown")
+     LTrace("Shutdown")
     if (_ssl) {
         // LTrace("Shutdown SSL")
 
@@ -99,7 +196,7 @@ void SSLAdapter::shutdown()
             // flag by calling SSL_shutdown() once and be
             // done with it.
             int rc = SSL_shutdown(_ssl);
-            if (rc < 0)
+            if (rc <= 0)
                 handleError(rc);
         }
     }
@@ -149,7 +246,7 @@ void SSLAdapter::addOutgoingData(const char* data, size_t len)
 void SSLAdapter::handshake()
 {
     int r = SSL_do_handshake(_ssl);
-    if (r < 0)
+    if (r <= 0)
         handleError(r);
 }
 
@@ -168,7 +265,7 @@ void SSLAdapter::flush()
     // Write any local data to SSL for excryption
     if (_bufferOut.size() > 0) {
         int r = SSL_write(_ssl, &_bufferOut[0], (int)_bufferOut.size());
-        if (r < 0) {
+        if (r <= 0) {
             handleError(r);
         }
         _bufferOut.clear();
@@ -187,7 +284,8 @@ void SSLAdapter::flushReadBIO()
         int nread;
         char buffer[npending];
         while ((nread = SSL_read(_ssl, buffer, npending)) > 0) {
-           // _socket->onRecv(mutableBuffer(buffer, nread)); // arvind
+            LTrace("On Read " , buffer)
+            _socket->listener->on_read(_socket, buffer, nread); // arvind
         }
     }
 }
@@ -200,7 +298,7 @@ void SSLAdapter::flushWriteBIO()
         char buffer[npending];
         int nread = BIO_read(_writeBIO, buffer, npending);
         if (nread > 0) {
-           // _socket->write(buffer, nread);  // arvind
+            _socket->Write( buffer, nread);  // arvind
         }
     }
 }
@@ -208,19 +306,19 @@ void SSLAdapter::flushWriteBIO()
 
 void SSLAdapter::handleError(int rc)
 {
-    if (rc >= 0)
+    if (rc > 0)
         return;
     int error = SSL_get_error(_ssl, rc);
     switch (error) {
         case SSL_ERROR_ZERO_RETURN:
-            // LTrace("SSL_ERROR_ZERO_RETURN")
+             LTrace("SSL_ERROR_ZERO_RETURN")
             return;
         case SSL_ERROR_WANT_READ:
-            // LTrace("SSL_ERROR_WANT_READ")
+             LTrace("SSL_ERROR_WANT_READ")
             flushWriteBIO();
             break;
         case SSL_ERROR_WANT_WRITE:
-            // LTrace("SSL_ERROR_WANT_WRITE")
+             LTrace("SSL_ERROR_WANT_WRITE")
             assert(0 && "not implemented");
             break;
         case SSL_ERROR_WANT_CONNECT:
@@ -232,8 +330,9 @@ void SSLAdapter::handleError(int rc)
             char buffer[256];
             ERR_error_string_n(ERR_get_error(), buffer, sizeof(buffer));
             std::string msg(buffer);
-            // throw std::runtime_error("SSL connection failed: " + msg);
-           // _socket->setError("SSL connection failed: " + msg);  //arvind
+            LTrace(msg)
+             //throw std::runtime_error("SSL connection failed: " + msg);
+            //_socket->setError("SSL connection failed: " + msg);  //arvind
             break;
     }
 }

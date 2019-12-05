@@ -5,6 +5,7 @@
 #include "base/application.h"
 #include <inttypes.h>
 #include "net/IP.h"
+#include "net/SslConnection.h"
 
 namespace base
 {
@@ -228,8 +229,8 @@ namespace base
 
         /* Instance methods. */
 
-        TcpServer::TcpServer(Listener* listener, std::string ip, int port)
-        : TcpServerBase(BindTcp(ip, port), 256), listener(listener){
+        TcpServer::TcpServer(Listener* listener, std::string ip, int port, bool ssl)
+        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),ssl(ssl){
 
         }
 
@@ -243,9 +244,14 @@ namespace base
   
         void TcpServer::UserOnTcpConnectionAlloc(TcpConnectionBase** connection) {
 
-
+// condition
             // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
+            if(ssl)
+             *connection = new SslConnection(listener, true);
+            else
             *connection = new TcpConnection(listener, 65536);
+            
+            
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {

@@ -18,15 +18,7 @@ namespace base
         {
         public:
 
-          /*  class Listener
-            {
-            public:
-                virtual ~Listener() = default;
-
-            public:
-                virtual void OnTcpConnectionClosed(TcpConnectionBase* connection) = 0;
-            };
-         */
+        
         public:
 
             /* Struct for the data field of uv_req_t when writing into the connection. */
@@ -217,18 +209,7 @@ namespace base
         }
         
                     /*******************************************************************************************************************************************************/
-/*
-        class TcpClient : public TcpConnectionBase
-        {
-        public:
 
-     
-        public:
-            TcpClient(Listener* listener, size_t bufferSize);
-     
-            
-        };
-*/
 
     } // namespace net
 } // namespace base

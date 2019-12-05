@@ -24,11 +24,11 @@ namespace net {
 /// A wrapper for the OpenSSL SSL connection context
 ///
 /// TODO: Decouple from SSLSocket implementation
-class  SSLSocket;
+class  SslConnection;
 class  SSLAdapter
 {
 public:
-    SSLAdapter(net::SSLSocket* socket);
+    SSLAdapter(SslConnection* socket);
     ~SSLAdapter();
 
     /// Initializes the SSL context as a client.
@@ -67,9 +67,12 @@ protected:
     void flushWriteBIO();
 
 protected:
-    friend class net::SSLSocket;
+    friend class SslConnection;
 
-    net::SSLSocket* _socket;
+    SslConnection* _socket;
+    
+   
+     
     SSL* _ssl;
     BIO* _readBIO;  ///< The incoming buffer we write encrypted SSL data into
     BIO* _writeBIO; ///<  The outgoing buffer we write to the socket

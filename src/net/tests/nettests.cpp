@@ -16,7 +16,7 @@ class testUdpServer : public UdpServer::Listener {
 public:
 
     testUdpServer() : socket(this, "127.0.0.1", 7331) {
-        socket.Send("Arvind", "127.0.0.1", 7331);
+        socket.send("Arvind", "127.0.0.1", 7331);
     }
 
     void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, const struct sockaddr* remoteAddr) {
@@ -28,20 +28,20 @@ public:
 
 };
 
-class tesTcpServer : public TcpServer::Listener, public TcpConnection::Listener {
+class tesTcpServer : Listener {
 public:
 
     tesTcpServer() {
     }
 
     void start() {
-        // socket.Send("Arvind", "127.0.0.1", 7331);
-        tcpServer = new TcpServer(this, this, "0.0.0.0", 7000);
+        // socket.send("Arvind", "127.0.0.1", 7331);
+        tcpServer = new TcpServer(this, "0.0.0.0", 7000);
 
     }
 
     void shutdown() {
-        // socket.Send("Arvind", "127.0.0.1", 7331);
+        // socket.send("Arvind", "127.0.0.1", 7331);
         delete tcpServer;
         tcpServer = nullptr;
 
@@ -56,14 +56,14 @@ public:
     void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
         std::cout << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
-        connection->Send((const char*) send.c_str(), 5);
+        connection->send((const char*) send.c_str(), 5);
 
     }
     TcpServer *tcpServer;
 
 };
 
-class tesTcpClient : public TcpConnection::Listener {
+class tesTcpClient : public Listener {
 public:
 
     tesTcpClient() {
@@ -71,19 +71,19 @@ public:
 
     void start() {
 
-        // socket.Send("Arvind", "127.0.0.1", 7331);
+        // socket.send("Arvind", "127.0.0.1", 7331);
         tcpClient = new TcpConnection(this);
 
         tcpClient->Connect("0.0.0.0", 7000);
         const char snd[6] = "12345";
         std::cout << "TCP Client send data: " << snd << "len: " << strlen((const char*) snd) << std::endl << std::flush;
 
-        tcpClient->Send(snd, 5);
+        tcpClient->send(snd, 5);
 
     }
 
     void shutdown() {
-        // socket.Send("Arvind", "127.0.0.1", 7331);
+        // socket.send("Arvind", "127.0.0.1", 7331);
         delete tcpClient;
         tcpClient = nullptr;
 
@@ -98,7 +98,7 @@ public:
     void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
         std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
-        connection->Send((const char*) send.c_str(), 5);
+        connection->send((const char*) send.c_str(), 5);
 
     }
     TcpConnection *tcpClient;

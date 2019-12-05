@@ -5,6 +5,10 @@
 #include "base/test.h"
 #include "base/time.h"
 
+
+///ssl
+#include "net/sslmanager.h"
+
 using std::endl;
 using namespace base;
 using namespace net;
@@ -20,7 +24,7 @@ public:
 
     void start() {
         // socket.send("Arvind", "127.0.0.1", 7331);
-        tcpServer = new TcpServer(this, "0.0.0.0", 7000);
+        tcpServer = new TcpServer(this, "0.0.0.0", 5001, true);
 
     }
 
@@ -52,6 +56,7 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
  
+     //  net::SSLManager::initNoVerifyServer();
 
         Application app;
 

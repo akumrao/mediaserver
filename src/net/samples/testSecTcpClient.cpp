@@ -2,10 +2,11 @@
 #include "base/logger.h"
 #include "base/application.h"
 #include "net/netInterface.h"
-#include "net/TcpConnection.h"
+#include "net/SslConnection.h"
 #include "base/test.h"
 #include "base/time.h"
 
+#include "net/sslmanager.h"
 
 using std::endl;
 using namespace base;
@@ -22,13 +23,12 @@ public:
     void start() {
 
         // socket.send("Arvind", "127.0.0.1", 7331);
-        tcpClient = new TcpConnection(this);
-
-        tcpClient->Connect("0.0.0.0", 7000);
+        tcpClient = new SslConnection(this);
+        tcpClient->Connect("0.0.0.0", 5001);
         const char snd[6] = "12345";
         std::cout << "TCP Client send data: " << snd << "len: " << strlen((const char*) snd) << std::endl << std::flush;
 
-        tcpClient->send(snd, 5);
+       // tcpClient->send(snd, 5);
 
     }
 
@@ -51,27 +51,37 @@ public:
 
         std::cout << "data: " << data << " len: " << len << std::endl << std::flush;
         std::string send = "12345";
+       // connection->send((const char*) send.c_str(), 5);
+
+    }
+    
+    void on_connect(Listener* connection) {
+        
+       std::cout << " on_read " << connection->GetLocalIp() << " PeerIP " << connection->GetPeerIp() << std::endl << std::flush;
+
+     
+        std::string send = "12345";
         connection->send((const char*) send.c_str(), 5);
 
     }
-    TcpConnection *tcpClient;
+    
+    SslConnection *tcpClient;
 
 };
 
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
-
+      // net::SSLManager::initNoVerifyClient();
+       
         Application app;
 
         tesTcpClient socket;
         socket.start();
 
+        app.run();
 
-        app.waitForShutdown([&](void*) {
-            socket.shutdown();
-
-        });
+        
 
 
 

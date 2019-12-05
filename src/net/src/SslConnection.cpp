@@ -1,5 +1,5 @@
 #include "net/netInterface.h"
-#include "net/sslsocket.h"
+#include "net/SslConnection.h"
 #include "base/logger.h"
 #include "net/sslmanager.h"
 
@@ -10,56 +10,62 @@ using namespace std;
 namespace base {
 namespace net {
 
-/*
-SSLSocket::SSLSocket(uv::Loop* loop)
-    : TCPSocket(loop)
+
+SslConnection::SslConnection(Listener* listener)
+    : TcpConnection(listener)
     , _sslContext(nullptr)
     , _sslSession(nullptr)
     , _sslAdapter(this)
+    ,listener(listener)
 {
     LTrace("Create")
+    
+ 
 }
 
 
-SSLSocket::SSLSocket(SSLContext::Ptr context, uv::Loop* loop)
-    : TCPSocket(loop)
-    , _sslContext(context)
+SslConnection::SslConnection(Listener* listener, bool server)
+    : TcpConnection(listener)
     , _sslSession(nullptr)
     , _sslAdapter(this)
+    ,listener(listener),serverMode(server)
 {
+    if(server)
+        _sslAdapter.initServer();
     LTrace("Create")
 }
 
 
-SSLSocket::SSLSocket(SSLContext::Ptr context, SSLSession::Ptr session, uv::Loop* loop)
-    : TCPSocket(loop)
+SslConnection::SslConnection(Listener* listener, SSLContext::Ptr context, SSLSession::Ptr session)
+    :  TcpConnection(listener)
     , _sslContext(context)
     , _sslSession(session)
     , _sslAdapter(this)
+    ,listener(listener)
 {
     LTrace("Create")
 }
-*/
 
-SSLSocket::~SSLSocket()
+
+SslConnection::~SslConnection()
 {
     LTrace("Destroy")
 }
 
 
-int SSLSocket::available() const
+int SslConnection::available() const
 {
     return _sslAdapter.available();
 }
 
 /*
-void SSLSocket::close()
+void SslConnection::close()
 {
     TCPSocket::close();
 }
 
 
-bool SSLSocket::shutdown()
+bool SslConnection::shutdown()
 {
     LTrace("Shutdown")
     try {
@@ -69,79 +75,55 @@ bool SSLSocket::shutdown()
     }
     return TCPSocket::shutdown();
 }
+*/
 
+/*
 
-ssize_t SSLSocket::send(const char* data, size_t len, int flags)
-{
-    return send(data, len, peerAddress(), flags);
-}
-
-
-void SSLSocket::bind(const net::Address& address, unsigned flags)
+void SslConnection::bind(const net::Address& address, unsigned flags)
 {
     assert(_sslContext->isForServerUse());
     TCPSocket::bind(address, flags);
 }
 
 
-void SSLSocket::listen(int backlog)
+void SslConnection::listen(int backlog)
 {
     assert(_sslContext->isForServerUse());
     TCPSocket::listen(backlog);
 }
 
+*/
 
-ssize_t SSLSocket::send(const char* data, size_t len, const net::Address& , int )
+/*void SslConnection::acceptConnection()
 {
-    LTrace("send: ", len)
-    assert(Thread::currentID() == tid());
-    // assert(len <= net::MAX_TCP_PACKET_SIZE);
-
-    if (!active()) {
-        LWarn("send error")
-        return -1;
-    }
-
-    // send unencrypted data to the SSL context
-
-    assert(_sslAdapter._ssl);
-
-    _sslAdapter.addOutgoingData(data, len);
-    _sslAdapter.flush();
-    return len;
-}
-
-
-void SSLSocket::acceptConnection()
-{
-    assert(_sslContext->isForServerUse());
+   // assert(_sslContext->isForServerUse());
 
     // Create the shared socket pointer so the if the socket handle is not
     // incremented the accepted socket will be destroyed.
-    auto socket = std::make_shared<net::SSLSocket>(_sslContext, loop());
+   // auto socket = std::make_shared<net::SslConnection>(_sslContext, loop());
 
-    LTrace("Accept SSL connection: ")
+   // LTrace("Accept SSL connection: ")
     // invoke(&uv_tcp_init, loop(), socket->get()); // "Cannot initialize SSL socket"
 
-    if (uv_accept(get<uv_stream_t>(), socket->get<uv_stream_t>()) == 0) {
-        socket->readStart();
-        socket->_sslAdapter.initServer();
+   // if (uv_accept(get<uv_stream_t>(), socket->get<uv_stream_t>()) == 0) {
+      //  socket->readStart();
+      
 
-        AcceptConnection.emit(socket);
-    }
-    else {
-        assert(0 && "uv_accept should not fail");
-    }
-}
-*/
+       // AcceptConnection.emit(socket);
+    //}
+    //else {
+       // assert(0 && "uv_accept should not fail");
+   // }
+}*/
 
-void SSLSocket::useSession(SSLSession::Ptr session)
+
+void SslConnection::useSession(SSLSession::Ptr session)
 {
     _sslSession = session;
 }
 
 
-SSLSession::Ptr SSLSocket::currentSession()
+SSLSession::Ptr SslConnection::currentSession()
 {
     if (_sslAdapter._ssl) {
         SSL_SESSION* session = SSL_get1_session(_sslAdapter._ssl);
@@ -157,7 +139,7 @@ SSLSession::Ptr SSLSocket::currentSession()
 }
 
 
-void SSLSocket::useContext(SSLContext::Ptr context)
+void SslConnection::useContext(SSLContext::Ptr context)
 {
     if (_sslAdapter._ssl)
         throw std::runtime_error(
@@ -167,13 +149,13 @@ void SSLSocket::useContext(SSLContext::Ptr context)
 }
 
 
-SSLContext::Ptr SSLSocket::context() const
+SSLContext::Ptr SslConnection::context() const
 {
     return _sslContext;
 }
 
 
-bool SSLSocket::sessionWasReused()
+bool SslConnection::sessionWasReused()
 {
     if (_sslAdapter._ssl)
         return SSL_session_reused(_sslAdapter._ssl) != 0;
@@ -182,18 +164,41 @@ bool SSLSocket::sessionWasReused()
 }
 
 /*
-net::TransportType SSLSocket::transport() const
+net::TransportType SslConnection::transport() const
 {
     return net::SSLTCP;
 }
+*/
+void SslConnection::send(const char* data, size_t len)
+{
+ 
 
+    LTrace("send: ", len)
+    LTrace("send: ", data)
+   // assert(Thread::currentID() == tid());
+    // assert(len <= net::MAX_TCP_PACKET_SIZE);
+/*
+    if (!active()) {
+        LWarn("send error")
+        return -1;
+    }
+*/
+    // send unencrypted data to the SSL context
+
+    assert(_sslAdapter._ssl);
+
+    _sslAdapter.addOutgoingData(data, len);
+    _sslAdapter.flush();
+    return ;
+}
 
 //
 // Callbacks
 
-void SSLSocket::onRead(const char* data, size_t len)
+void SslConnection::on_read(const char* data, size_t len)
 {
     LTrace("On SSL read: ", len)
+    LTrace("On SSL read: ", data)
 
     // SSL encrypted data is sent to the SSL context
     _sslAdapter.addIncomingData(data, len);
@@ -201,16 +206,18 @@ void SSLSocket::onRead(const char* data, size_t len)
 }
 
 
-void SSLSocket::onConnect()
+void SslConnection::on_connect()
 {
     LTrace("On connect")
-    if (readStart()) {
+   // if (readStart()) {
         _sslAdapter.initClient();
         // _sslAdapter.start();
-        onSocketConnect(*this);
-    }
+    //emit
+    listener->on_connect( this);
+        
+   // }
 }
-*/
+
 
 } // namespace net
 } // namespace base

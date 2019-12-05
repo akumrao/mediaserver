@@ -1,5 +1,5 @@
-#ifndef Net_SSLSocket_H
-#define Net_SSLSocket_H
+#ifndef Net_SslConnection_H
+#define Net_SslConnection_H
 
 
 //#include "net/socket.h"
@@ -15,27 +15,27 @@ namespace net {
 
 
 /// SSL socket implementation.
-class  SSLSocket : public TcpConnection
+class  SslConnection : public TcpConnection
 {
 public:
-    typedef std::shared_ptr<SSLSocket> Ptr;
+    typedef std::shared_ptr<SslConnection> Ptr;
     typedef std::vector<Ptr> Vec;
 
-//    SSLSocket(uv::Loop* loop = uv::defaultLoop()); //, SocketMode mode = ClientSide
-   // SSLSocket(SSLContext::Ptr sslContext, uv::Loop* loop = uv::defaultLoop());
-   // SSLSocket(SSLContext::Ptr sslContext, SSLSession::Ptr session,
-   //           uv::Loop* loop = uv::defaultLoop());
+    SslConnection(Listener* listener); //, SocketMode mode = ClientSide
+    SslConnection(Listener* listener, bool serverMode);
+    SslConnection(Listener* listener, SSLContext::Ptr sslContext, SSLSession::Ptr session);
 
-    virtual ~SSLSocket();
+    virtual ~SslConnection();
 
-    /// Initialize the SSLSocket with the given SSLContext.
+    /// Initialize the SslConnection with the given SSLContext.
     // virtual void init(SSLContext::Ptr sslContext, SocketMode mode = ClientSide);
 
     /// Initializes the socket and establishes a secure connection to
     /// the TCP server at the given address.
     ///
     /// The SSL handshake is performed when the socket is connected.
-    // virtual void connect(const Address& peerAddress);
+    //virtual void Connect( std::string ip, int port,  addrinfo *addrs = nullptr);
+    
 
     //virtual void bind(const net::Address& address, unsigned flags = 0) override;
    // virtual void listen(int backlog = 64) override;
@@ -48,9 +48,8 @@ public:
     /// Closes the socket forcefully.
 //    virtual void close() override;
 
-//    virtual ssize_t send(const char* data, size_t len, int flags = 0) override;
- //   virtual ssize_t send(const char* data, size_t len,
- //                        const net::Address& peerAddress, int flags = 0) override;
+    void send(const char* data, size_t len);
+ 
 
     /// Use the given SSL context for this socket.
     void useContext(SSLContext::Ptr context);
@@ -90,17 +89,22 @@ public:
 
    // virtual void acceptConnection() override;
 
-   // virtual void onConnect() override;
+     void on_connect() override;
 
     /// Reads raw encrypted SSL data
-  //  virtual void onRead(const char* data, size_t len) override;
+      void on_read(const char* data, size_t len) override;
 
+      bool serverMode={false};
 protected:
     net::SSLContext::Ptr _sslContext;
     net::SSLSession::Ptr _sslSession;
     net::SSLAdapter _sslAdapter;
 
+    Listener* listener{ nullptr};
+    
     friend class net::SSLAdapter;
+    
+    
 };
 
 
@@ -108,6 +112,6 @@ protected:
 } // namespace base
 
 
-#endif // Net_SSLSocket_H
+#endif // Net_SslConnection_H
 
 

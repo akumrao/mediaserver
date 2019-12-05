@@ -110,13 +110,13 @@ namespace base
         }
 
         /**********************************************************************************************************/
-        class TcpServer : public TcpServerBase
+        class TcpServer : public TcpServerBase, public Listener
         {
         public:
 
      
         public:
-            TcpServer(Listener* listener, std::string ip, int port);
+            TcpServer(Listener* listener, std::string ip, int port, bool ssl=false);
 
             ~TcpServer() override;
 
@@ -130,6 +130,7 @@ namespace base
             // Passed by argument.
             Listener* listener{ nullptr};
             uv_tcp_t* uvHandle{ nullptr};
+            bool ssl;
         };
 
 
