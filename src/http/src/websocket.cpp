@@ -20,7 +20,7 @@ using std::endl;
 namespace base {
     namespace net {
 
-        WebSocketConnection::WebSocketConnection(Listener* listener,  HttpConnection* connection,  Mode mode)  
+        WebSocketConnection::WebSocketConnection(Listener* listener,  HttpBase* connection,  Mode mode)  
          : _request(connection->_request),
          _response(connection->_response), 
          _connection(connection),

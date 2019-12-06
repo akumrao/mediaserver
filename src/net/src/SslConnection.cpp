@@ -12,7 +12,7 @@ namespace net {
 
 
 SslConnection::SslConnection(Listener* listener)
-    : TcpConnection(listener)
+    : TcpConnection(listener,65536, true)
     , _sslContext(nullptr)
     , _sslSession(nullptr)
     , _sslAdapter(this)
@@ -25,7 +25,7 @@ SslConnection::SslConnection(Listener* listener)
 
 
 SslConnection::SslConnection(Listener* listener, bool server)
-    : TcpConnection(listener)
+    : TcpConnection(listener , 65536, true)
     , _sslSession(nullptr)
     , _sslAdapter(this)
     ,listener(listener),serverMode(server)
@@ -195,7 +195,7 @@ void SslConnection::send(const char* data, size_t len)
 //
 // Callbacks
 
-void SslConnection::on_read(const char* data, size_t len)
+void SslConnection::on_tls_read(const char* data, size_t len)
 {
     LTrace("On SSL read: ", len)
     LTrace("On SSL read: ", data)
@@ -205,6 +205,14 @@ void SslConnection::on_read(const char* data, size_t len)
     _sslAdapter.flush();
 }
 
+void SslConnection::on_read(const char* data, size_t len)
+{
+    LTrace("SslConnection::on_read ", len)
+    LTrace("SslConnection::on_read ", data)
+
+    listener->on_read(this,data,len );
+  
+}
 
 void SslConnection::on_connect()
 {

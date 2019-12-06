@@ -185,7 +185,7 @@ namespace base {
                    
             Listener* listener{ nullptr};
             
-            WebSocketConnection(Listener* listener, HttpConnection* connection, Mode mode);
+            WebSocketConnection(Listener* listener, HttpBase* connection, Mode mode);
 
             virtual ~WebSocketConnection() ;
 
@@ -226,7 +226,7 @@ namespace base {
             
 
         protected:
-            HttpConnection* _connection;
+            HttpBase* _connection;
 
             friend class WebSocketFramer;
 

@@ -285,7 +285,8 @@ void SSLAdapter::flushReadBIO()
         char buffer[npending];
         while ((nread = SSL_read(_ssl, buffer, npending)) > 0) {
             LTrace("On Read " , buffer)
-            _socket->listener->on_read(_socket, buffer, nread); // arvind
+          //  _socket->listener->on_read(_socket, buffer, nread); // arvind
+            _socket->on_read( buffer, nread); // arvind
         }
     }
 }

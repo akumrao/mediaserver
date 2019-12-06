@@ -49,7 +49,7 @@ namespace base {
                 connection->_response.set("Connection", "keep-alive");
                 connection->_response.set("Pragma", "no-cache");
                 connection->_response.set("Expires", "0");
-                connection->sendHeader();
+               // connection->sendHeader();
             }// Otherwise make up the response.
             else {
                 std::ostringstream hst;

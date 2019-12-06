@@ -24,8 +24,8 @@ namespace base {
 
         /* Instance methods. */
 
-        HttpServerBase::HttpServerBase(Listener *listener, std::string ip, int port)
-        : TcpServerBase( BindTcp(ip, port), 256),listener(listener)
+        HttpServerBase::HttpServerBase(Listener *listener, std::string ip, int port, bool ssl)
+        : TcpServerBase( BindTcp(ip, port), 256),listener(listener),ssl(ssl)
         {
 
         }
@@ -41,7 +41,12 @@ namespace base {
 
             LTrace(" On acccept-> UserOnTcpConnectionAlloc"  )
             // Allocate a new RTC::HttpConnection for the HttpServerBase to handle it.
+            if(ssl)
+            *connection = new HttpsConnection(listener, HTTP_REQUEST,  65536);
+            else
             *connection = new HttpConnection(listener, HTTP_REQUEST,  65536);
+               
+            
         }
 
         bool HttpServerBase::UserOnNewTcpConnection(TcpConnectionBase* connection) {
@@ -78,7 +83,7 @@ namespace base {
 
         }
 
-        ServerResponder* HttpServer::createResponder(HttpConnection* connection) {
+        ServerResponder* HttpServer::createResponder(HttpBase* connection) {
             LTrace("createResponder")
                     // The initial HTTP request headers have already
                     // been parsed at this point, but the request body may
@@ -99,8 +104,6 @@ namespace base {
 
             STrace << "HttpServer::on_close, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
-            
-
         }
 
        
@@ -119,17 +122,75 @@ namespace base {
         }
 
         void HttpServer::on_header(Listener* connection) {
-            
-            LTrace("HttpServer::on_header" )
-            HttpConnection *con = (HttpConnection*)connection;
-            // Instantiate the responder now that request headers have been parsed
+              HttpConnection *con = (HttpConnection*)connection;
+             // Instantiate the responder now that request headers have been parsed
             con->_responder = createResponder(con);
-
-
+         
+               LTrace("HttpServer::on_header" )
         }
 
 
+/***********************************************************************************************/
+        
 
+        HttpsServer::HttpsServer( std::string ip, int port, ServerConnectionFactory *factory) 
+        : HttpServerBase( this,  ip, port , true)
+        ,ip(ip), port(port), _factory(factory)
+        {
+ 
+        }
+
+        void HttpsServer::start() {
+
+       //     tcpHTTPServer = new HttpServerBase(this,  ip, port);
+
+        }
+
+        ServerResponder* HttpsServer::createResponder(HttpBase* connection) {
+            LTrace("createResponder")
+                    // The initial HTTP request headers have already
+                    // been parsed at this point, but the request body may
+                    // be incomplete (especially if chunked).
+            if (!_factory)
+                return nullptr;
+
+            return _factory->createResponder(connection);
+        }
+
+        void HttpsServer::shutdown() {
+
+            //delete tcpHTTPServer;
+           // tcpHTTPServer = nullptr;
+        }
+
+        void HttpsServer::on_close(Listener* connection) {
+
+            STrace << "HttpsServer::on_close, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+
+        }
+
+       
+
+
+        void HttpsServer::on_read(Listener* connection, const char* data, size_t len) {
+            STrace << "on_read:TCP server send data: " << data << "len: " << len << std::endl << std::flush;
+            
+             HttpsConnection *con = (HttpsConnection*)connection;
+             // WebSocketConnection *con = (WebSocketConnection*)connection;
+    
+             //if(con->wsAdapter)
+             connection->send( data , len);// Test hello world
+           
+
+        }
+
+        void HttpsServer::on_header(Listener* connection) {
+              HttpsConnection *con = (HttpsConnection*)connection;
+             // Instantiate the responder now that request headers have been parsed
+            con->_responder = createResponder(con);
+         
+               LTrace("HttpsServer::on_header" )
+        }
 
     } // namespace net
 } // base

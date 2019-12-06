@@ -4,6 +4,7 @@
 #include "net/netInterface.h"
 #include "http/HttpServer.h"
 #include "http/HttpConn.h"
+#include "http/HttpsConn.h"
 #include "net/TcpServer.h"
 #include "http/parser.h"
 #include "http/responder.h"
@@ -21,7 +22,7 @@ namespace base {
         public:
 
         public:
-            HttpServerBase(Listener *listener, std::string ip, int port );
+            HttpServerBase(Listener *listener, std::string ip, int port , bool ssl=false );
 
             ~HttpServerBase() override;
 
@@ -39,6 +40,8 @@ namespace base {
            // WebSocketConnection::Listener* wsConListener{ nullptr};
 
         protected:
+            
+            bool ssl;
 
         };
 
@@ -52,7 +55,7 @@ namespace base {
 
             HttpServer( std::string ip, int port, ServerConnectionFactory *factory = nullptr);
 
-            ServerResponder* createResponder(HttpConnection* conn);
+            ServerResponder* createResponder(HttpBase* conn);
 
             void start();
 
@@ -76,6 +79,34 @@ namespace base {
         };
 
 
+        /*************************************************************************************************/
+        class HttpsServer : public HttpServerBase {
+        public:
+
+            HttpsServer( std::string ip, int port, ServerConnectionFactory *factory = nullptr);
+
+            ServerResponder* createResponder(HttpBase* conn);
+
+            void start();
+
+            void shutdown();
+
+            void on_close(Listener* connection);
+
+            void on_read(Listener* connection, const char* data, size_t len);
+                     
+            void on_header(Listener* connection);
+      
+
+           // HttpServerBase *tcpHTTPServer;
+
+            ServerConnectionFactory* _factory;
+            
+        protected:
+            std::string ip; int port;
+            //Listener* listener{ nullptr};
+
+        };
     } // namespace net
 } // base
 

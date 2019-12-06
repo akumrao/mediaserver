@@ -22,14 +22,14 @@ namespace base {
 
         HttpConnection::HttpConnection(Listener* listener, http_parser_type type, size_t bufferSize)
         : TcpConnection(listener, bufferSize),
-           listener(listener),_parser(type),wsAdapter(nullptr), _shouldSendHeader(true) {
+           listener(listener),HttpBase(type),wsAdapter(nullptr) {
 
 
-            _parser.setObserver(this);
-            if (type == HTTP_REQUEST)
-                _parser.setRequest(&_request);
-            else
-                _parser.setResponse(&_response);
+        //    _parser.setObserver(this);
+          //  if (type == HTTP_REQUEST)
+          //      _parser.setRequest(&_request);
+          //  else
+           //     _parser.setResponse(&_response);
 
         }
 
@@ -87,6 +87,11 @@ namespace base {
              return head.length();
         }
         
+        void HttpConnection::Close()
+        {
+            TcpConnection::Close();
+        }
+          
         void HttpConnection::send(const char* data, size_t len) {
 
              LTrace("HttpConnection::send()")
@@ -101,7 +106,7 @@ namespace base {
             }
 
             // Update sent bytes.
-            this->sentBytes += len;
+         //   this->sentBytes += len;
 
             // Write according to Framing RFC 4571.
 
@@ -112,63 +117,7 @@ namespace base {
             Write(data, len);
         }
 
-        void HttpConnection::onParserHeader(const std::string& /* name */,
-                const std::string& /* value */) {
-        }
-
-        void HttpConnection::onParserHeadersEnd(bool upgrade) {
-            LTrace("On headers end: ", _parser.upgrade())
-
-
-                    //this->listener->onHeaders(this);
-            onHeaders();
-
-            // Set the position to the end of the headers once
-            // they have been handled. Subsequent body chunks will
-            // now start at the correct position.
-            // _connection.incomingBuffer().position(_parser._parser.nread);
-        }
-
-        void HttpConnection::onParserChunk(const char* buf, size_t len) {
-            LTrace("On parser chunk: ", len)
-            //abort();
-               
-                    // Dispatch the payload
-             on_payload(buf, len);
-                 
-        }
-
-        void HttpConnection::onParserEnd() {
-            LTrace("On parser end")
-
-            onComplete();
-        }
-
-        void HttpConnection::onParserError(const base::Error& err) {
-            LWarn("On parser error: ", err.message)
-
-#if 0
-                    // HACK: Handle those peski flash policy requests here
-                    auto base = dynamic_cast<net::TCPSocket*> (_connection.socket().get());
-            if (base && std::string(base->buffer().data(), 22) == "<policy-file-request/>") {
-
-                // Send an all access policy file by default
-                // TODO: User specified flash policy
-                std::string policy;
-
-                // Add the following headers for HTTP policy response
-                // policy += "HTTP/1.1 200 OK\r\nContent-Type: text/x-cross-domain-policy\r\nX-Permitted-Cross-Domain-Policies: all\r\n\r\n";
-                policy += "<?xml version=\"1.0\"?><cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\" /></cross-domain-policy>";
-                base->send(policy.c_str(), policy.length() + 1);
-            }
-#endif
-
-
-            // _connection->setError(err.message);
-
-            Close(); // do we want to force this?
-        }
-
+       
         void HttpConnection::onHeaders() {
 
 
@@ -217,14 +166,7 @@ namespace base {
 
  
 
-        bool HttpConnection::shouldSendHeader() const {
-            return _shouldSendHeader;
-        }
-
-        void HttpConnection::shouldSendHeader(bool flag) {
-            _shouldSendHeader = flag;
-        }
-
+    
         void HttpConnection::on_payload(const char* data, size_t len){
 
         }
@@ -235,20 +177,8 @@ namespace base {
                 _responder->onRequest(_request, _response);
         }
 
-     //   void HttpConnection::onClose() {
 
-         //   if (_responder)
-             //   _responder->onClose();
-       // }
-
-        Message* HttpConnection::incomingHeader() {
-            return reinterpret_cast<Message*> (&_request);
-        }
-
-        Message* HttpConnection::outgoingHeader() {
-
-            return reinterpret_cast<Message*> (&_response);
-        }
+ 
 
     } // namespace net
 } // base

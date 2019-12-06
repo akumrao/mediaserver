@@ -1,17 +1,17 @@
 #ifndef HTTPRESPONDER_H
 #define HTTPRESPONDER_H
 
-
+#include "http/parser.h"
 
 namespace base {
     namespace net {
 
 
-
+     
   class ServerResponder {
         public:
 
-            ServerResponder(HttpConnection* connection) :
+            ServerResponder(HttpBase* connection) :
             _connection(connection) {
             }
 
@@ -29,7 +29,7 @@ namespace base {
             virtual void onClose() {
             };
 
-            HttpConnection* connection() {
+            HttpBase* connection() {
                 return _connection;
             }
 
@@ -42,7 +42,7 @@ namespace base {
             }
 
         protected:
-            HttpConnection* _connection;
+            HttpBase* _connection;
 
         private:
             ServerResponder(const ServerResponder&) = delete;
@@ -68,7 +68,7 @@ namespace base {
             /// Factory method for instantiating the ServerResponder
             /// instance using the given ServerConnection.
 
-            virtual ServerResponder* createResponder(HttpConnection* connection) {
+            virtual ServerResponder* createResponder(HttpBase* connection) {
                 return nullptr;
             }
         };

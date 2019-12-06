@@ -8,65 +8,94 @@ using namespace base;
 using namespace base::net;
 using namespace base::test;
 
-
-
-
-
-class BasicResponder: public net::ServerResponder
-	/// Basic server responder (make echo?)
+class BasicResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
 {
 public:
-	BasicResponder(net::TcpHTTPConnection* conn) : 
-		ServerResponder(conn)
-	{
-///		DebugL << "Creating" << endl;
-	}
 
-        virtual void onClose(){;
-           LDebug("On close")
-         
-        }
-	void onRequest(net::Request& request, net::Response& response) 
-	{
-		//DebugL << "On complete" << endl;
+    BasicResponder(net::HttpBase* conn) :
+    ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
 
-		response.setContentLength(14);  // headers will be auto flushed
+    virtual void onClose() {
+        ;
+        LDebug("On close")
 
-		connection()->Send((const uint8_t *) "hello universe", 14); 
-		connection()->Close();
-	}
+    }
+
+    void onRequest(net::Request& request, net::Response& response) {
+        STrace << "On complete" << std::endl;
+
+        response.setContentLength(14); // headers will be auto flushed
+
+        connection()->send((const char *) "hello universe", 14);
+        connection()->Close();
+    }
 };
 
-
-class StreamingResponderFactory : public ServerConnectionFactory
-{
+class StreamingResponderFactory : public ServerConnectionFactory {
 public:
-    ServerResponder* createResponder(TcpHTTPConnection* conn)
-    {
+
+    ServerResponder* createResponder(HttpBase* conn) {
         return new BasicResponder(conn);
     }
 };
 
-
-
 int main(int argc, char** argv) {
+
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     //test::init();
+    /*
+        Application app;
+        net::HttpServer socket("0.0.0.0", 7000, new StreamingResponderFactory() );
+        socket.start();
+
+        app.waitForShutdown([&](void*) {
+
+            socket.shutdown();
+
+        });
+
+    
+    
+        //test::init();
+
+        Application app;
+        net::HttpsServer socket("0.0.0.0", 7000, new StreamingResponderFactory() );
+        socket.start();
+
+        app.waitForShutdown([&](void*) {
+
+            socket.shutdown();
+
+        });
+  
+    /// for websocket we do not need responder
+        Application app;
+        net::HttpServer websocket("0.0.0.0", 8000  );
+        websocket.start();
+
+        app.waitForShutdown([&](void*) {
+
+            websocket.shutdown();
+
+        });
+     */
 
     Application app;
-    net::HttpServer socket("0.0.0.0", 7000 );
-    socket.start();
+    net::HttpsServer websocket("0.0.0.0", 8000);
+    websocket.start();
 
     app.waitForShutdown([&](void*) {
 
-        socket.shutdown();
+        websocket.shutdown();
 
     });
 
-
     return 0;
-    
-  //  test::runAll();
 
-   // return test::finalize();
+    //  test::runAll();
+
+    // return test::finalize();
 }

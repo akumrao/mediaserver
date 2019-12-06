@@ -92,7 +92,8 @@ public:
      void on_connect() override;
 
     /// Reads raw encrypted SSL data
-      void on_read(const char* data, size_t len) override;
+      void on_tls_read(const char* data, size_t len) override;
+      void on_read(const char* data, size_t len)override;
 
       bool serverMode={false};
 protected:

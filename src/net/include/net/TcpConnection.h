@@ -32,7 +32,7 @@ namespace base
             friend class TcpServerBase;
 
         public:
-            explicit TcpConnectionBase(size_t bufferSize);
+            explicit TcpConnectionBase(size_t bufferSize, bool tls = false);
             TcpConnectionBase& operator=(const TcpConnectionBase&) = delete;
             TcpConnectionBase(const TcpConnectionBase&) = delete;
             virtual ~TcpConnectionBase();
@@ -42,6 +42,7 @@ namespace base
             void Connect( std::string ip, int port,  addrinfo *addrs = nullptr);
             virtual void on_connect() { }
             virtual void on_read(const char* data, size_t len) = 0;
+            virtual void on_tls_read(const char* data, size_t len){};
             virtual void on_close(){}
             virtual void Dump() const;
             void Setup(
@@ -103,6 +104,9 @@ namespace base
             bool closed{ false};
             bool isClosedByPeer{ false};
             bool hasError{ false};
+            
+            bool tls;
+            
         };
 
         /* Inline methods. */
@@ -155,7 +159,7 @@ namespace base
 
 
         public:
-            TcpConnection(Listener* listener, size_t bufferSize=65536);
+            TcpConnection(Listener* listener, size_t bufferSize=65536, bool tls=false);
             ~TcpConnection() override;
 
         public:

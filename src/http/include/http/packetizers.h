@@ -21,13 +21,13 @@ namespace net {
 class  ChunkedAdapter : public IPacketizer
 {
 public:
-    HttpConnection *connection;
+    HttpBase *connection;
     std::string contentType;
     std::string frameSeparator;
     bool initial;
     bool nocopy;
 
-    ChunkedAdapter(HttpConnection *connection = nullptr, const std::string& frameSeparator = "", bool nocopy = true)
+    ChunkedAdapter(HttpBase *connection = nullptr, const std::string& frameSeparator = "", bool nocopy = true)
         : PacketProcessor()
         , connection(connection)
         , contentType(connection->outgoingHeader()->getContentType())
@@ -68,12 +68,12 @@ public:
 class HTTP_API MultipartAdapter : public IPacketizer
 {
 public:
-    HttpConnection* connection;
+    HttpBase* connection;
     std::string contentType;
     bool isBase64;
     bool initial;
 
-    MultipartAdapter(HttpConnection* con, bool base64 = false)
+    MultipartAdapter(HttpBase* con, bool base64 = false)
         : IPacketizer()
         , connection(con)
         , contentType(con->outgoingHeader()->getContentType())
@@ -82,7 +82,7 @@ public:
     {
     }
 
-    MultipartAdapter(const std::string& contentType, HttpConnection* con, bool base64 = false)
+    MultipartAdapter(const std::string& contentType, HttpBase* con, bool base64 = false)
         : IPacketizer()
         , connection(con)
         , contentType(contentType)

@@ -68,8 +68,7 @@ namespace base {
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 
-        TcpConnectionBase::TcpConnectionBase(size_t bufferSize) : bufferSize(bufferSize) {
-
+        TcpConnectionBase::TcpConnectionBase(size_t bufferSize, bool tls) : bufferSize(bufferSize), tls(tls) {
 
             this->uvHandle = new uv_tcp_t;
             this->uvHandle->data = (void*) this;
@@ -451,7 +450,7 @@ namespace base {
         }
 
         inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
-
+            LTrace("OnUvRead" )
 
             if (this->closed)
                 return;
@@ -464,8 +463,13 @@ namespace base {
                 // Update the buffer data length.
                 this->bufferDataLen += static_cast<size_t> (nread);
 
+                
                 // Notify the subclass.
+                if(tls)
+                on_tls_read((const char*) buf->base, nread);
+                else
                 on_read((const char*) buf->base, nread);
+                
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {
                 LDebug("connection closed by peer, closing server side");
@@ -506,8 +510,8 @@ namespace base {
         /*************************************************************************************************************/
 
 
-        TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener) {
+        TcpConnection::TcpConnection(Listener* listener, size_t bufferSize, bool tls)
+        : TcpConnectionBase(bufferSize ,tls), listener(listener) {
 
         }
 
