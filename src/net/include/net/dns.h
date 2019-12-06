@@ -24,17 +24,31 @@ namespace base {
 
         struct GetAddrInfoReq {
 
-            virtual void cbDnsResolve(addrinfo* res) {
+            virtual void cbDnsResolve(addrinfo* res, std::string ip) {
                 LTrace("GetAddrInfoReq::cbDnsResolve");
             }
 
-            static void getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
+            
+              
+    
+            static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
                 struct getaddrinfo_req* req;
-
+                
+                if (status < 0) {
+                LTrace(  "getaddrinfo callback error ", uv_err_name(status));
                 assert(status == 0);
+                return;
+            }
+                
+                char addr[17] = {'\0'};
+                uv_ip4_name((struct sockaddr_in*) res->ai_addr, addr, 16);
+                LTrace("address ",  addr);
+                
+                // uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
+
 
                 GetAddrInfoReq *obj = (GetAddrInfoReq*) handle->data;
-                obj->cbDnsResolve(res);
+                obj->cbDnsResolve(res, addr);
 
                 uv_freeaddrinfo(res);
 
@@ -45,13 +59,22 @@ namespace base {
                 req.data = this;
                 int r;
 
+                struct addrinfo hints;
+                hints.ai_family = PF_INET;
+                hints.ai_socktype = SOCK_STREAM;
+                hints.ai_protocol = IPPROTO_TCP;
+                hints.ai_flags = 0;
+            
                 r = uv_getaddrinfo(loop,
                         &req,
-                        getaddrinfo_cb,
+                        on_resolved,
                         host.c_str(),
                         util::itostr(port).c_str(),
-                        NULL);
+                        &hints);
                 assert(r == 0);
+                
+                
+                
             }
 
             uv_getaddrinfo_t req;

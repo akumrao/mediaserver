@@ -157,6 +157,7 @@ namespace base {
 
         inline void onconnect(uv_connect_t* req, int /*status*/) {
             TcpConnectionBase *obj=  (TcpConnectionBase *)req->data;
+            obj->Start();
             obj->on_connect();
 
             delete req;
@@ -244,7 +245,7 @@ namespace base {
             }
             ////////////////////////////////////////////
 
-           Start();
+         
 
            
          
@@ -423,6 +424,7 @@ namespace base {
             IP::GetAddressInfo(
                     reinterpret_cast<struct sockaddr*> (&this->peerAddr), family, this->peerIp, this->peerPort);
 
+            LTrace("PeerIP ", this->peerIp,":", this->peerPort)
             return true;
         }
 

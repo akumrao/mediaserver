@@ -1,5 +1,6 @@
 
-
+#include "net/netInterface.h"
+#include "http/websocket.h"
 #include "http/client.h"
 #include "net/IP.h"
 #include "base/util.h"
@@ -15,7 +16,8 @@ namespace base {
         //
 
         ClientConnection::ClientConnection(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
-        : TcpConnectionBase(bufferSize), listener(listener), _parser(type), _shouldSendHeader(true)
+        : HttpConnection(listener, type, bufferSize)
+        , listener(listener)
         , _url(url)
         , _connect(false)
         , _active(false)
@@ -38,46 +40,57 @@ namespace base {
 
             // replaceAdapter(new ConnectionAdapter(this, HTTP_RESPONSE));
 
+            if (url.scheme() == "ws") {
+
+                //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
+                wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+            }
+
+
         }
 
         ClientConnection::~ClientConnection() {
             // LTrace("Destroy")
         }
 
-        void ClientConnection::Send() {
+        void ClientConnection::send() {
             connect();
         }
 
-        void ClientConnection::Send(Request& req) {
+        void ClientConnection::send(Request& req) {
             assert(!_connect);
             _request = req;
             connect();
         }
 
-        void ClientConnection::Send(const uint8_t* data, size_t len) {
+        void ClientConnection::send(const char* data, size_t len) {
             connect();
 
             if (_active)
                 // Raw data will be pushed onto the Outgoing packet stream
-                TcpConnectionBase::Write(data, len);
+                HttpConnection::send(data, len);
             else
                 _outgoingBuffer.push_back(std::string((char*) data, len));
             return;
         }
 
-        void ClientConnection::cbDnsResolve(addrinfo* res) {
+        void ClientConnection::send(const std::string &str) {
+            connect();
+
+            if (_active)
+                // Raw data will be pushed onto the Outgoing packet stream
+                //  TcpConnectionBase::Write(str.c_str(), str.length());
+                // else
+                _outgoingBuffer.push_back(str);
+            return;
+        }
+
+        void ClientConnection::cbDnsResolve(addrinfo* res, std::string ip) {
 
             if (!_connect) {
                 _connect = true;
-                
-            std::string servIp;
-            uint16_t servPort;
-            int family;
-            IP::GetAddressInfo(
-                    reinterpret_cast<struct sockaddr*> (res), family, servIp, servPort);
-
-                
-                LTrace("Connecting " , servIp, ":",servPort)
+       
+                LTrace("Connecting ", ip, ":", _url.port())
                 Connect(_url.host(), _url.port(), res);
             }
 
@@ -93,14 +106,6 @@ namespace base {
 
             //Incoming.attach(new StreamWriter(os), -1, true);
             _readStream.reset(os);
-        }
-
-        Message* ClientConnection::incomingHeader() {
-            return static_cast<Message*> (&_response);
-        }
-
-        Message* ClientConnection::outgoingHeader() {
-            return static_cast<Message*> (&_request);
         }
 
 
@@ -121,7 +126,7 @@ namespace base {
             if (!_outgoingBuffer.empty()) {
                 // LTrace("Sending buffered: ", _outgoingBuffer.size())
                 for (const auto& packet : _outgoingBuffer) {
-                    TcpConnectionBase::Write((const uint8_t*) packet.c_str(), packet.length());
+                    TcpConnection::send((const char*) packet.c_str(), packet.length());
                 }
                 _outgoingBuffer.clear();
             } else {
@@ -140,12 +145,15 @@ namespace base {
             //}
         }
 
-        void ClientConnection::UserOnTcpConnectionRead(const uint8_t* data, size_t len) {
+        void ClientConnection::on_read(const char* data, size_t len) {
 
             LTrace("On socket recv: ", len);
             LTrace("On socket recv: ", data);
-            if (this->listener)
-                this->listener->OnTcpConnectionPacketReceived(this, data, len);
+            
+            HttpConnection::on_read( data, len);
+            
+           /* if (this->listener)
+                this->listener->on_read(this, data, len);
             else {
 
 
@@ -163,7 +171,7 @@ namespace base {
                 // Parse incoming HTTP messages
                 _parser.parse((const char*) data, len);
                 // onPayload( data, len);
-            }
+            }*/
         }
         // Connection Callbacks
 
@@ -174,7 +182,7 @@ namespace base {
             // Headers.emit(_response);
         }
 
-        void ClientConnection::onPayload(const uint8_t* data, size_t len) {
+        void ClientConnection::on_payload(const uint8_t* data, size_t len) {
             // LTrace("On payload: ", buffer.size())
 
             //// Update download progress
@@ -189,9 +197,9 @@ namespace base {
 
             // Write to the STL read stream if available
             if (_readStream) {
-                 LTrace("Stream len: ", len)
-                  LTrace("Stream data: ", data)       
-               _readStream->write((const char*) data, len);
+                LTrace("Stream len: ", len)
+                LTrace("Stream data: ", data)
+                _readStream->write((const char*) data, len);
                 _readStream->flush();
                 //Close();
             }
@@ -248,74 +256,19 @@ namespace base {
             LTrace("TcpHTTPConnection::sendHeader:head")
 
             STrace << head;
-            TcpConnectionBase::Write((const uint8_t*) head.c_str(), head.length());
+            TcpConnection::send((const char*) head.c_str(), head.length());
             return head.length();
         }
 
-        void ClientConnection::onParserHeader(const std::string& /* name */,
-                const std::string& /* value */) {
+
+        Message * ClientConnection::incomingHeader() {
+            return reinterpret_cast<Message*> (&_response );
         }
 
-        void ClientConnection::onParserHeadersEnd(bool upgrade) {
-            LTrace("On headers end: ", _parser.upgrade())
+        Message * ClientConnection::outgoingHeader() {
 
-
-            onHeaders();
-
-            // Set the position to the end of the headers once
-            // they have been handled. Subsequent body chunks will
-            // now start at the correct position.
-            // _connection.incomingBuffer().position(_parser._parser.nread);
+            return reinterpret_cast<Message*> (&_request);
         }
-
-        void ClientConnection::onParserChunk(const char* data, size_t len) {
-            LTrace("On parser chunk: ", len)
-              //  UserOnTcpConnectionRead((const uint8_t*) buf , len);
-                     onPayload((const uint8_t*) data, len);
-            
-        }
-
-        void ClientConnection::onParserEnd() {
-            LTrace("On parser end")
-
-            onComplete();
-        }
-
-        void ClientConnection::onParserError(const base::Error& err) {
-            LWarn("On parser error: ", err.message)
-
-#if 0
-                    // HACK: Handle those peski flash policy requests here
-                    auto base = dynamic_cast<net::TCPSocket*> (_connection.socket().get());
-            if (base && std::string(base->buffer().data(), 22) == "<policy-file-request/>") {
-
-                // Send an all access policy file by default
-                // TODO: User specified flash policy
-                std::string policy;
-
-                // Add the following headers for HTTP policy response
-                // policy += "HTTP/1.1 200 OK\r\nContent-Type: text/x-cross-domain-policy\r\nX-Permitted-Cross-Domain-Policies: all\r\n\r\n";
-                policy += "<?xml version=\"1.0\"?><cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\" /></cross-domain-policy>";
-                base->send(policy.c_str(), policy.length() + 1);
-            }
-#endif
-
-
-            // _connection->setError(err.message);
-
-            Close(); // do we want to force this?
-        }
-
-        bool ClientConnection::shouldSendHeader() const {
-            return _shouldSendHeader;
-        }
-
-        void ClientConnection::shouldSendHeader(bool flag) {
-            _shouldSendHeader = flag;
-        }
-
-
-
 
         //
         // HTTP Client
@@ -324,6 +277,17 @@ namespace base {
         /************************************************************************************************************************/
         Client::Client(URL url) : _url(url) {
             // LTrace("Create")
+        }
+
+        Client::Client()
+        {
+            
+        }
+        void Client::createConnection(const std::string& protocol, const std::string &ip, int port, const std::string& query) {
+            std::ostringstream url;
+            url << protocol << "://" + ip << ":" << port << query << std::endl;
+            _url = url.str();
+
         }
 
         Client::~Client() {
@@ -342,7 +306,7 @@ namespace base {
             clientConn = new ClientConnection(nullptr, _url, HTTP_RESPONSE, 6553688);
         }
 
-        void Client::OnTcpConnectionPacketReceived(ClientConnection* connection, const uint8_t* data, size_t len) {
+        void Client::on_read(ClientConnection* connection, const uint8_t* data, size_t len) {
 
         }
 

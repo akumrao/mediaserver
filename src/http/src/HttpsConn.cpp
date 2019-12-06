@@ -11,7 +11,8 @@
  * Created on November 18, 2019, 9:42 AM
  */
 #include "net/netInterface.h"
-#include "http/HttpConn.h"
+#include "http/parser.h"
+#include "http/HttpsConn.h"
 #include "base/base.h"
 #include "base/logger.h"
 #include "http/websocket.h"
@@ -20,26 +21,28 @@
 namespace base {
     namespace net {
 
-        HttpConnection::HttpConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : TcpConnection(listener, bufferSize),
-           listener(listener),HttpBase(type),wsAdapter(nullptr) {
+        HttpsConnection::HttpsConnection(Listener* listener, http_parser_type type, size_t bufferSize)
+        : SslConnection(listener, bufferSize),
+           listener(listener),HttpBase(type),wsAdapter(nullptr){
 
 
-        //    _parser.setObserver(this);
-          //  if (type == HTTP_REQUEST)
-          //      _parser.setRequest(&_request);
-          //  else
-           //     _parser.setResponse(&_response);
+            //_parser.setObserver(this);
+            //if (type == HTTP_REQUEST)
+            //    _parser.setRequest(&_request);
+         //   else
+             //   _parser.setResponse(&_response);
 
         }
 
-        HttpConnection::~HttpConnection() {
-            LTrace("~HttpConnection()")
+        HttpsConnection::~HttpsConnection() {
+            LTrace("~HttpsConnection()")
         }
 
-        void HttpConnection::on_read(const char* data, size_t len) {
+        void HttpsConnection::on_read(const char* data, size_t len) {
 
-            LTrace("on_read()")
+            LTrace("on_read()" )
+                    
+             LTrace( data )
                     
             if(wsAdapter)
             {
@@ -49,11 +52,11 @@ namespace base {
             
              _parser.parse((const char*) data, len);
              
-          //  if(!wsAdapter)
-           // this->listener->on_read(this, data, len);
+            //if(!wsAdapter)
+            //this->listener->on_read(this, data, len);
         }
         
-          void HttpConnection::on_close() {
+          void HttpsConnection::on_close() {
 
             LTrace("on_close()")
                     
@@ -63,13 +66,13 @@ namespace base {
              
             this->listener->on_close(this);
         }
-        long HttpConnection::sendHeader() {
+        long HttpsConnection::sendHeader() {
             if (!_shouldSendHeader)
                 return 0 ;
             _shouldSendHeader = false;
             assert(outgoingHeader());
 
-             LTrace("HttpConnection::sendHeader()")
+             LTrace("HttpsConnection::sendHeader()")
                      
             // std::ostringstream os;
             // outgoingHeader()->write(os);
@@ -83,18 +86,18 @@ namespace base {
             // bypassing the WebSocketConnection
 
              STrace << head;
-             Write(head.c_str(), head.length());
+             SslConnection::send(head.c_str(), head.length());
              return head.length();
         }
         
-        void HttpConnection::Close()
+        void HttpsConnection::Close()
         {
             TcpConnection::Close();
         }
-          
-        void HttpConnection::send(const char* data, size_t len) {
+        
+        void HttpsConnection::send(const char* data, size_t len) {
 
-             LTrace("HttpConnection::send()")
+             LTrace("HttpsConnection::send()")
             
              if (shouldSendHeader())
             {
@@ -106,7 +109,7 @@ namespace base {
             }
 
             // Update sent bytes.
-         //   this->sentBytes += len;
+           // this->sentBytes += len;
 
             // Write according to Framing RFC 4571.
 
@@ -114,11 +117,12 @@ namespace base {
 
             // Utils::Byte::Set2Bytes(frameLen, 0, len);
             // TcpConnectionBase::Write(frameLen, 2, data, len);
-            Write(data, len);
+             SslConnection::send(data, len);
         }
 
-       
-        void HttpConnection::onHeaders() {
+     
+
+        void HttpsConnection::onHeaders() {
 
 
             bool _upgrade = _parser.upgrade();
@@ -164,21 +168,17 @@ namespace base {
                 _responder->onHeaders(_request);
         }
 
- 
 
-    
-        void HttpConnection::on_payload(const char* data, size_t len){
+        void HttpsConnection::on_payload(const char* data, size_t len){
 
         }
 
-        void HttpConnection::onComplete() {
+        void HttpsConnection::onComplete() {
 
             if (_responder)
                 _responder->onRequest(_request, _response);
         }
 
-
- 
 
     } // namespace net
 } // base

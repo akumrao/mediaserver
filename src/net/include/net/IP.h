@@ -27,7 +27,6 @@ namespace base
         class IP
         {
         public:
-
             static void GetAddressInfo(struct sockaddr* addr, int& family, std::string& ip, uint16_t& port);
             static int GetFamily(const std::string& ip);
 

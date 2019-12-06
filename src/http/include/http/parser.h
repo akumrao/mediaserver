@@ -126,8 +126,8 @@ namespace base {
             virtual void onComplete()=0;
 
 
-            Message* incomingHeader();
-            Message* outgoingHeader();
+            virtual Message* incomingHeader();
+            virtual Message* outgoingHeader();
 
 
         private:

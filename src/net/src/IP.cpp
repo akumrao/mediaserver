@@ -6,6 +6,8 @@ namespace base
 {
     namespace net
     {
+     
+        
 
         void IP::GetAddressInfo(struct sockaddr* addr, int& family, std::string& ip, uint16_t& port) {
 
@@ -13,6 +15,8 @@ namespace base
             char ipBuffer[INET6_ADDRSTRLEN + 1];
             int err;
 
+           
+            
             switch (addr->sa_family)
             {
                 case AF_INET:

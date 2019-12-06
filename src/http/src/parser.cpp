@@ -100,7 +100,7 @@ namespace base {
 
         void Parser::setResponse(Response* response) {
             assert(!_request);
-            assert(!_response);
+           // assert(!_response); // arvind
             assert(_type == HTTP_RESPONSE);
             _response = response;
         }

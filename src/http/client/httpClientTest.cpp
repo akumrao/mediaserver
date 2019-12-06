@@ -1,3 +1,4 @@
+#include "net/netInterface.h"
 #include "httpClientTest.h"
 #include "http/client.h"
 #include "base/test.h"
@@ -8,6 +9,7 @@
 #include "http/util.h"
 #include "base/filesystem.h"
 #include "http/client.h"
+#include "crypto/hash.h"
 
 using namespace base;
 using namespace base::net;
@@ -17,6 +19,7 @@ int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
+   /*
     {
         Application app;
  
@@ -31,12 +34,38 @@ int main(int argc, char** argv) {
  //       conn->clientConn->_request.setMethod("GET");
 //        conn->clientConn->_request.setKeepAlive(false);
 //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->Send("Ping");
+        conn->clientConn->send("Ping");
 
         app.run();
     }
+*/
+    
+    {
+            test::init();
+        Application app;
+        std::string path("/var/tmp/");
+        fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-    test::init();
+        Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+       // Client *conn = new Client("http://zlib.net/index.html");
+        conn->start();
+        conn->clientConn->fnComplete = [&](const Response & response) {
+            std::cout << "Lerver response:";
+        };
+        conn->clientConn->_request.setMethod("GET");
+        conn->clientConn->_request.setKeepAlive(false);
+        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        conn->clientConn->send();
+
+        app.run();
+        
+        expects(fs::exists(path));
+        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+        fs::unlink(path);
+    }
+
+    
+
 
 
     describe("url parser", []() {
@@ -125,7 +154,7 @@ int main(int argc, char** argv) {
         conn->clientConn->_request.setMethod("GET");
         conn->clientConn->_request.setKeepAlive(false);
         conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->Send();
+        conn->clientConn->send();
 
         app.run();
 
