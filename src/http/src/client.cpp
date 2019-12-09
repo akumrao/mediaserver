@@ -87,9 +87,14 @@ namespace base {
 
         void ClientConnection::cbDnsResolve(addrinfo* res, std::string ip) {
 
+             end_time = base::Application::GetTime();
+             
+             LInfo( "{Resolve time(ms) ",_url.host(), " : ", (end_time- start_time ), "}" )
+            
             if (!_connect) {
                 _connect = true;
        
+                start_time = base::Application::GetTime();
                 LTrace("Connecting ", ip, ":", _url.port())
                 Connect(_url.host(), _url.port(), res);
             }
@@ -98,6 +103,9 @@ namespace base {
 
         void ClientConnection::connect() {
             LTrace("Resolve DNS ", _url.host());
+            
+            start_time = base::Application::GetTime();
+            
             resolve(_url.host(), _url.port(), Application::uvGetLoop());
         }
 
@@ -115,6 +123,10 @@ namespace base {
         void ClientConnection::on_connect() {
             LTrace("On_connect")
 
+            end_time = base::Application::GetTime();
+            LInfo( "{Connect time(ms) ",_url.host(), " : ", (end_time- start_time ), "}" )         
+                    
+            start_time = base::Application::GetTime();
             // Set the connection to active
             _active = true;
 
@@ -148,9 +160,24 @@ namespace base {
         void ClientConnection::on_read(const char* data, size_t len) {
 
             LTrace("On socket recv: ", len);
-            LTrace("On socket recv: ", data);
+           // LTrace("On socket recv: ", data);
             
+             recvBytes+= len;            
             HttpConnection::on_read( data, len);
+            
+            //LInfo("On socket recv: ", len , " : " , recvBytes, " : ", end_time- start_time );
+            
+            static double latency = 0; 
+            
+            latency = latency + (double)((int64_t) (base::Application::GetTime()) - end_time);
+                    
+            latency =latency/2;
+         
+            LInfo( "{Latency(ms) ",_url.host(), " : ", latency , "}" )  
+
+            end_time = base::Application::GetTime();
+            LInfo( "{Dowloadspeed Bits/s ",_url.host(), " : ", double( double(recvBytes)*8.0*1000.00 / ((end_time- start_time )*1.00)), "}" )  
+                    
             
            /* if (this->listener)
                 this->listener->on_read(this, data, len);

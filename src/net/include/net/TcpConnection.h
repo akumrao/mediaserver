@@ -181,6 +181,7 @@ namespace base
             // Passed by argument.
             Listener* listener{ nullptr};
             // Others.
+        public:
             size_t frameStart{ 0}; // Where the latest frame starts.
             size_t recvBytes{ 0};
             size_t sentBytes{ 0};

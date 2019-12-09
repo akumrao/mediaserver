@@ -37,6 +37,9 @@ namespace base {
             /* Pure virtual methods inherited from ::TcpHTTPConnection. */
         public:
             void on_read(const char* data, size_t len);
+            
+            int64_t start_time;
+            int64_t end_time;
 
           /*  /// HTTP Parser interface
             virtual void onParserHeader(const std::string& name, const std::string& value);

@@ -17,7 +17,7 @@ using namespace base::test;
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("Info", Level::Info));
 
    /*
     {
@@ -43,10 +43,10 @@ int main(int argc, char** argv) {
     {
             test::init();
         Application app;
-        std::string path("/var/tmp/");
+        std::string path("./");
         fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-        Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+        Client *conn = new Client("http://ftp.debian.org/debian/dists/Debian8.11/main/Contents-armhf.gz");
        // Client *conn = new Client("http://zlib.net/index.html");
         conn->start();
         conn->clientConn->fnComplete = [&](const Response & response) {

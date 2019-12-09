@@ -523,6 +523,7 @@ namespace base {
 
         void TcpConnection::on_read(const char* data, size_t len) {
 
+            recvBytes+= len;
             listener->on_read(this, data, len);
         }
 
@@ -531,8 +532,8 @@ namespace base {
 
             // Update sent bytes.
             this->sentBytes += len;
-
-            // Write according to Framing RFC 4571.
+            
+           // Write according to Framing RFC 4571.
 
             //       char frameLen[2];
 
