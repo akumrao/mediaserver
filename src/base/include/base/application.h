@@ -51,7 +51,7 @@ public:
         return loop;
     }
     
-    static uint64_t GetTime()
+    static int64_t GetTime()
     {
          uv_update_time(loop);
          return uv_now(loop);

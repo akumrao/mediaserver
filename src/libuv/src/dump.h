@@ -7,7 +7,7 @@
 
 
 
-#define LOG_CALL  myPrintf("%s:%s\n", __FILE__, __func__)
+#define LOG_CALL   // myPrintf("%s:%s\n", __FILE__, __func__)
 
 int dump_vfprintf( const char *format, va_list arg );
 

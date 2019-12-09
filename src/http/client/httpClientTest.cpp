@@ -17,8 +17,11 @@ using namespace base::test;
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("Info", Level::Info));
+    Logger::instance().add(new ConsoleChannel("Info", Level::Trace));
 
+       test::init();
+     
+           
    /*
     {
         Application app;
@@ -39,12 +42,12 @@ int main(int argc, char** argv) {
         app.run();
     }
 */
-    
-    {
-            test::init();
-        Application app;
+        /*
+         {
+     
+       Application app;
         std::string path("./");
-        fs::addnode(path, "zlib-1.2.8.tar.gz");
+        fs::addnode(path, "testDel.gz");
 
         Client *conn = new Client("http://ftp.debian.org/debian/dists/Debian8.11/main/Contents-armhf.gz");
        // Client *conn = new Client("http://zlib.net/index.html");
@@ -63,10 +66,37 @@ int main(int argc, char** argv) {
         expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
         fs::unlink(path);
     }
+    
+    {
+     
+        Application app;
+        std::string path("./");
+        fs::addnode(path, "testdel.gz");
+
+        Client *conn = new Client("https://dl.google.com/dl/android/studio/ide-zips/3.5.2.0/android-studio-ide-191.5977832-linux.tar.gz");
+       // Client *conn = new Client("http://zlib.net/index.html");
+        conn->start();
+        conn->clientConn->fnComplete = [&](const Response & response) {
+            std::cout << "Lerver response:";
+        };
+        conn->clientConn->_request.setMethod("GET");
+        conn->clientConn->_request.setKeepAlive(false);
+        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        conn->clientConn->send();
+
+        app.run();
+        
+        expects(fs::exists(path));
+        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+        fs::unlink(path);
+    }
+
+    */
+
 
     
-
-
+    
+    
 
     describe("url parser", []() {
 
@@ -141,8 +171,9 @@ int main(int argc, char** argv) {
 
 
     describe("http download", []() {
+
         Application app;
-        std::string path("/var/tmp/");
+        std::string path("/tmp/tmp/");
         fs::addnode(path, "zlib-1.2.8.tar.gz");
 
         Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
@@ -158,6 +189,10 @@ int main(int argc, char** argv) {
 
         app.run();
 
+        expects(fs::exists(path));
+        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+        fs::unlink(path);
+        
 
     });
 
