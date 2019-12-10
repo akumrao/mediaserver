@@ -22,7 +22,7 @@ namespace base {
 
              
 
-            std::function<void(const std::string&) > fnPayload; ///< Signals when raw data is received
+            std::function<void(const std::string&) > fnLoad; ///< Signals when raw data is received
             std::function<void(const Response&) > fnComplete; ///< Signals when the HTTP transaction is complete
             std::function<void(ClientConnecton&) > fnClose;
 

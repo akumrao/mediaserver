@@ -103,7 +103,11 @@ namespace base {
             end_time = base::Application::GetTime();
 
             LInfo("{Resolve time(ms) ", _url.host(), " : ", double(end_time - start_time), "}")
-
+                    
+            std::ostringstream ss;
+            ss << "{Resolve time(ms) " <<  _url.host() << " : " << double(end_time - start_time)<< "}"; 
+            fnLoad( ss.str() );
+            
             if (!_connect) {
                 _connect = true;
 
@@ -138,6 +142,10 @@ namespace base {
 
             end_time = base::Application::GetTime();
             LInfo("{Connect time(ms) ", _url.host(), " : ", double(end_time - start_time), "}")
+                    
+           std::ostringstream ss;
+           ss << "{Connect time(ms) " <<  _url.host() << " : " << double(end_time - start_time)<< "}"; 
+           fnLoad( ss.str() );
 
             start_time = base::Application::GetTime();
             // Set the connection to active
@@ -189,7 +197,9 @@ namespace base {
             end_time = base::Application::GetTime();
             LInfo("{Dowloadspeed KbBits/s ", _url.host(), " : ", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", Latency(ms) ", _url.host(), " : ", latency, "}")
 
-
+            std::ostringstream ss;
+            ss << "{Dowloadspeed KbBits/s " <<  _url.host() << " : " <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) <<  ", Latency(ms) " <<  _url.host() <<  " : " <<  latency <<  "}"; 
+            fnLoad( ss.str() );
                     /* if (this->listener)
                          this->listener->on_read(this, data, len);
                      else {

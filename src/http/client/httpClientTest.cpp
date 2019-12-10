@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     describe("http download", []() {
 
         Application app;
-        std::string path("/tmp/tmp/");
+        std::string path("/tmp/");
         fs::addnode(path, "zlib-1.2.8.tar.gz");
 
         Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
@@ -182,6 +182,11 @@ int main(int argc, char** argv) {
         conn->clientConn->fnComplete = [&](const Response & response) {
             std::cout << "Lerver response:";
         };
+        
+        conn->clientConn->fnLoad = [&](const std::string str) {
+            std::cout << "final test" << str << std::endl << std::flush;
+        };
+        
         conn->clientConn->_request.setMethod("GET");
         conn->clientConn->_request.setKeepAlive(false);
         conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
