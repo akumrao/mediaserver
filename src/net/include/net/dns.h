@@ -60,17 +60,17 @@ namespace base {
                 int r;
 
                 struct addrinfo hints;
-                hints.ai_family = PF_INET;
-                hints.ai_socktype = SOCK_STREAM;
-                hints.ai_protocol = IPPROTO_TCP;
-                hints.ai_flags = 0;
-            
+                //hints.ai_family = PF_INET;
+                //hints.ai_socktype = SOCK_STREAM;
+                //hints.ai_protocol = IPPROTO_TCP;
+               // hints.ai_flags = 0;
+
                 r = uv_getaddrinfo(loop,
                         &req,
                         on_resolved,
                         host.c_str(),
                         util::itostr(port).c_str(),
-                        &hints);
+                                   nullptr);
                 assert(r == 0);
                 
                 
