@@ -472,7 +472,7 @@ static const char* kTAG = "hello-jniCallback";
 
 __android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
 
-udpClient->Send((char*) ss.str().c_str(), ss.str().length());
+udpClient->send((char*) ss.str().c_str(), ss.str().length());
 
 #else
 #if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)

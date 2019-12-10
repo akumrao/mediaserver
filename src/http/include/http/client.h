@@ -9,7 +9,7 @@
 #include "base/logger.h"
 #include "net/dns.h"
 #include <functional> 
-#include "http/HttpsConn.h"
+//#include "http/HttpsConn.h"
 #include "http/HttpConn.h"
 namespace base {
     namespace net {
@@ -94,7 +94,7 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-            WebSocketConnection *wsAdapter{ nullptr};
+           // WebSocketConnection *wsAdapter{ nullptr};
             //  WebSocketConnection::Listener *wsListener{ nullptr};
             // Others.
             // size_t frameStart{ 0}; // Where the latest frame starts.
@@ -121,40 +121,34 @@ namespace base {
         };
 
         /********************************************************************************************************************/
-        class HttpsClient : public SslConnection, public GetAddrInfoReq, public ClientConnecton {
-        public:
+        /*       class HttpsClient : public SslConnection, public GetAddrInfoReq, public ClientConnecton {
+               public:
 
-        public:
-            HttpsClient(Listener* listener, const URL& url, http_parser_type type = HTTP_RESPONSE, size_t bufferSize = 65536);
+               public:
+                   HttpsClient(Listener* listener, const URL& url, http_parser_type type = HTTP_RESPONSE, size_t bufferSize = 65536);
 
-            ~HttpsClient() override;
-            void connect();
+                   ~HttpsClient() override;
+                   void connect();
 
-        public:
-            virtual void send(const char* data, size_t len);
-            virtual void send();
-            virtual void send(Request& req);
-            virtual void send(const std::string &str);
+               public:
+                   virtual void send(const char* data, size_t len);
+                   virtual void send();
+                   virtual void send(Request& req);
+                   virtual void send(const std::string &str);
 
-            void on_connect();
-            void on_close();
+                   void on_connect();
+                   void on_close();
 
-            virtual void cbDnsResolve(addrinfo* res, std::string ip);
+                   virtual void cbDnsResolve(addrinfo* res, std::string ip);
 
-            /* Pure virtual methods inherited from ::TcpHTTPConnection. */
+
         public:
             void on_read(const char* data, size_t len);
 
             int64_t start_time;
             int64_t end_time;
 
-            /*  /// HTTP Parser interface
-              virtual void onParserHeader(const std::string& name, const std::string& value);
-              virtual void onParserHeadersEnd(bool upgrade);
-              virtual void onParserChunk(const char* buf, size_t len);
-              virtual void onParserError(const base::Error& err);
-              virtual void onParserEnd();
-             */
+
             /// HTTP connection and server interface
             virtual void onHeaders();
             void on_payload(const char* data, size_t len);
@@ -202,7 +196,7 @@ namespace base {
 
 
         };
-
+*/
         /*********************************************************************************************************************/
 
         class Client : public Listener {

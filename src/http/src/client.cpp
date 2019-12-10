@@ -1,6 +1,6 @@
 
 #include "net/netInterface.h"
-#include "http/websocket.h"
+//#include "http/websocket.h"
 #include "http/client.h"
 #include "net/IP.h"
 #include "base/util.h"
@@ -56,7 +56,7 @@ namespace base {
             if (url.scheme() == "ws") {
 
                 //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
-                wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+                //wsAdapter = new WebSocketConnection(listener, this, ClientSide);
             }
 
 
@@ -315,6 +315,7 @@ namespace base {
         //
 
                 /********************************************************************************************************************************/
+ /*
         HttpsClient::HttpsClient(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
         : SslConnection(listener, bufferSize), ClientConnecton(type), listener(listener)
         , _url(url)
@@ -478,26 +479,7 @@ namespace base {
             LInfo("{Dowloadspeed Bits/s ", _url.host(), " : ", double( double(recvBytes)*8.0 * 1000.00 / ((end_time - start_time)*1.00)), ", Latency(ms) ", _url.host(), " : ", latency, "}")
 
 
-                    /* if (this->listener)
-                         this->listener->on_read(this, data, len);
-                     else {
 
-
-
-                         if (_parser.complete()) {
-                             // Buggy HTTP servers might send late data or multiple responses,
-                             // in which case the parser state might already be HPE_OK.
-                             // In this case we discard the late message and log the error here,
-                             // rather than complicate the app with this error handling logic.
-                             // This issue was noted using Webrick with Ruby 1.9.
-                             LWarn("Dropping late HTTP response: ", data)
-                             return;
-                         }
-
-                         // Parse incoming HTTP messages
-                         _parser.parse((const char*) data, len);
-                         // onPayload( data, len);
-                     }*/
         }
         // Connection Callbacks
 
@@ -586,7 +568,7 @@ namespace base {
             return head.length();
         }
 
-        Message * HttpsClient::incomingHeader() {
+        Message * HttpsClient::incomingHeader() {"./mediaserver/src/http/src/w*.cpp
             return reinterpret_cast<Message*> (&_response);
         }
 
@@ -598,7 +580,7 @@ namespace base {
         //
         // HTTP Client
         //
-
+*/
         /************************************************************************************************************************/
         Client::Client(URL url) : _url(url) {
             // LTrace("Create")
@@ -631,7 +613,7 @@ namespace base {
             if (_url.scheme() == "http" || _url.scheme() == "ws") {
                 clientConn = new HttpClient(nullptr, _url, HTTP_RESPONSE, 6553688);
             } else if (_url.scheme() == "https" || _url.scheme() == "wss") {
-                clientConn = new HttpsClient(nullptr, _url, HTTP_RESPONSE, 6553688);
+                //clientConn = new HttpsClient(nullptr, _url, HTTP_RESPONSE, 6553688);
             }
         }
 
