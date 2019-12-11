@@ -51,6 +51,8 @@ namespace base {
             void send();
             void send(Request& req);
             void send(const std::string &str);
+            void Close();
+            
 
             void on_connect();
             void on_close();
@@ -94,6 +96,7 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
+            bool bClosing{false};
            // WebSocketConnection *wsAdapter{ nullptr};
             //  WebSocketConnection::Listener *wsListener{ nullptr};
             // Others.
@@ -129,6 +132,7 @@ namespace base {
 
                    ~HttpsClient() override;
                    void connect();
+                    void Close();
 
                public:
                    virtual void send(const char* data, size_t len);

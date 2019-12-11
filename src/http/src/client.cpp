@@ -5,7 +5,7 @@
 #include "net/IP.h"
 #include "base/util.h"
 #include "base/application.h"
-
+#include "base/platform.h"
 using std::endl;
 
 
@@ -63,7 +63,12 @@ namespace base {
         }
 
         HttpClient::~HttpClient() {
-            // LTrace("Destroy")
+            LTrace("~HttpClient()")
+            while(!_complete)
+            {
+                base::sleep(500);
+            }
+      
         }
 
         void HttpClient::send() {
@@ -76,6 +81,11 @@ namespace base {
             connect();
         }
 
+         void HttpClient::Close()
+         {
+             bClosing = true;
+             TcpConnection::Close();
+         }
         void HttpClient::send(const char* data, size_t len) {
             connect();
 
@@ -99,7 +109,8 @@ namespace base {
         }
 
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {
-
+            if(bClosing) return;
+            
             end_time = base::Application::GetTime();
 
             LInfo("{Resolve time(ms) ", _url.host(), " : ", double(end_time - start_time), "}")
@@ -119,6 +130,7 @@ namespace base {
         }
 
         void HttpClient::connect() {
+            if(bClosing) return;
             LTrace("Resolve DNS ", _url.host());
 
             start_time = base::Application::GetTime();
@@ -138,6 +150,7 @@ namespace base {
         // Socket Callbacks
 
         void HttpClient::on_connect() {
+            if(bClosing) return;
             LTrace("On_connect")
 
             end_time = base::Application::GetTime();
@@ -259,7 +272,7 @@ namespace base {
              LTrace("On complete")
 
             assert(!_complete);
-            _complete = true; // in case close() is called inside callback
+           
 
             // Release any file handles
             if (_readStream) {
@@ -269,16 +282,19 @@ namespace base {
                     fstream->close();
                 }
             }
+            _complete = true; // in case close() is called inside callback
 
             //   Complete.emit(_response);
         }
 
         void HttpClient::on_close() {
-            // LTrace("On close")
-
+            LTrace("On close")
+            
             if (!_complete)
                 onComplete();
             //Close.emit(*this);
+            
+            
         }
 
         long HttpClient::sendHeader() {
@@ -608,12 +624,13 @@ namespace base {
         }
 
         Client::~Client() {
-            // LTrace("Destroy")
+             LTrace("Destroy")
             shutdown();
         }
 
         void Client::shutdown() {
             if (clientConn) {
+                clientConn->Close();
                 delete clientConn;
                 clientConn = nullptr;
             }

@@ -4,23 +4,127 @@
 #include "base/test.h"
 #include "base/logger.h"
 #include "base/application.h"
+#include "base/platform.h"
 
 #include "http/url.h"
 #include "http/util.h"
 #include "base/filesystem.h"
 #include "http/client.h"
 #include "crypto/hash.h"
+#include "base/platform.h"
 
 using namespace base;
 using namespace base::net;
 using namespace base::test;
 
+
+
+class Download : public Thread {
+public:
+
+    Download(std::string url);
+
+    ~Download();
+
+    // Download(){};
+    // virtual ~Thread2(void);
+
+    void run();
+
+    void stop(bool flag = true);
+
+
+    std::string url;
+
+    Client *client{nullptr};
+
+};
+
+Download::Download(std::string url): url(url) {
+
+    if(!client)
+    client =  new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+}
+
+
+void Download::stop(bool flag ) {
+
+    LTrace(" Download::stop")
+
+    if(client ) {
+        client->clientConn->Close();
+       // delete conn;
+        //conn = nullptr;
+    }
+
+}
+
+
+Download::~Download()
+{
+    LTrace("~Download()")
+    if(client )
+    {
+        //conn->clientConn->Close();
+        delete client;
+        client = nullptr;
+    }
+}
+
+void Download::run() {
+
+    LTrace("Download OnRun");
+
+    ////////////////////////////////////
+
+    Application app;
+
+    std::string path("./");
+    fs::addnode(path, "zlib-1.2.8.tar.gz");
+
+
+    //Client *conn = new Client("http://zlib.net/index.html");
+    client->start();
+    client->clientConn->fnComplete = [&](const Response & response) {
+        std::cout << "Lerver response:";
+    };
+
+    client->clientConn->fnLoad = [&](const std::string &str) {
+          std::cout << "final test" << str << std::endl << std::flush;
+
+    };
+    client->clientConn->_request.setMethod("GET");
+    client->clientConn->_request.setKeepAlive(false);
+    client->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+
+    app.run();
+
+   LTrace("Download Run over");
+
+    //expect(fs::exists(path));
+    //expect(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    //fs::unlink(path);
+
+    stop();
+
+}
 int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("Info", Level::Trace));
 
        test::init();
      
+       Download download("df");
+       
+       download.start();
+       
+       base::sleep(111000);
+       
+       LTrace("exit")
+       
+       download.stop();
+       return 0;
+       
            
    /*
     {
@@ -75,7 +179,27 @@ int main(int argc, char** argv) {
 
         Client *conn = new Client("https://dl.google.com/dl/android/studio/ide-zips/3.5.2.0/android-studio-ide-191.5977832-linux.tar.gz");
        // Client *conn = new Client("http://zlib.net/index.html");
-        conn->start();
+        conn->start();class Download : public Thread {
+public:
+
+    Download(std::string url);
+
+    ~Download();
+
+    // Download(){};
+    // virtual ~Thread2(void);
+
+    void run();
+
+    void stop(bool flag = true);
+
+
+    std::string url;
+
+    Client *conn={nullptr};
+
+};
+
         conn->clientConn->fnComplete = [&](const Response & response) {
             std::cout << "Lerver response:";
         };
@@ -184,7 +308,7 @@ int main(int argc, char** argv) {
         };
         
         conn->clientConn->fnLoad = [&](const std::string str) {
-            std::cout << "final test" << str << std::endl << std::flush;
+            std::cout << "final test " << str << std::endl << std::flush;
         };
         
         conn->clientConn->_request.setMethod("GET");

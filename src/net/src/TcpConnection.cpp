@@ -57,7 +57,7 @@ namespace base {
         inline static void onShutdown(uv_shutdown_t* req, int /*status*/) {
             auto* handle = req->handle;
             handle->data = req->data;
-
+          //  delete handle;
             delete req;
            
             // Now do close the handle.
@@ -110,12 +110,14 @@ namespace base {
                 // Use uv_shutdown() so pending data to be written will be sent to the peer
                 // before closing.
                 auto req = new uv_shutdown_t;
+                uvHandle->type = UV_TCP;
                 req->data = (void*) this;
                 err = uv_shutdown(
                         req, reinterpret_cast<uv_stream_t*> (this->uvHandle), static_cast<uv_shutdown_cb> (onShutdown));
 
                 if (err != 0)
                     LError("uv_shutdown() failed: %s", uv_strerror(err));
+                on_close();
             }// Otherwise directly close the socket.
             else {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
