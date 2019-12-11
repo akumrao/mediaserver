@@ -26,35 +26,43 @@ public:
 
     ~Download();
 
-    // Download(){};
-    // virtual ~Thread2(void);
 
     void run();
 
     void stop(bool flag = true);
 
-
-    std::string url;
-
-    Client *client{nullptr};
+    URL _url;
+    ClientConnecton *client{nullptr};
+    
+    Application app;
 
 };
 
-Download::Download(std::string url): url(url) {
+Download::Download(std::string url): _url(url) {
 
     if(!client)
-    client =  new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+    {
+         if (_url.scheme() == "http" || _url.scheme() == "ws") {
+                client = new HttpClient(nullptr, _url, HTTP_RESPONSE, 6553688);
+         }
+         else
+         {
+             LTrace("Only Http download is supported")
+         }
+               
+    }
+  
 }
 
 
 void Download::stop(bool flag ) {
 
     LTrace(" Download::stop")
-
+        
+       
     if(client ) {
-        client->clientConn->Close();
-       // delete conn;
-        //conn = nullptr;
+         app.stop();
+       // client->Close();
     }
 
 }
@@ -65,10 +73,14 @@ Download::~Download()
     LTrace("~Download()")
     if(client )
     {
-        //conn->clientConn->Close();
-        delete client;
-        client = nullptr;
+        app.uvDestroy();
     }
+    
+    while( !stopped())
+     {
+        base::sleep(1000);
+     }
+    
 }
 
 void Download::run() {
@@ -76,53 +88,72 @@ void Download::run() {
     LTrace("Download OnRun");
 
     ////////////////////////////////////
+       
+        std::string path("/tmp/");
+        fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-    Application app;
+       
+        //Client *conn = new Client("http://zlib.net/index.html");
+       // client->start();
+        client->fnComplete = [&](const Response & response) {
+            std::cout << "client->fnComplete" <<  std::endl << std::flush;
+            client->Close();
+//            app.stop()
 
-    std::string path("./");
-    fs::addnode(path, "zlib-1.2.8.tar.gz");
+        };
+        
+        client->fnLoad = [&](const std::string str) {
+            std::cout << "final test " << str << std::endl << std::flush;
+        };
+        
+        client->_request.setMethod("GET");
+        client->_request.setKeepAlive(false);
+        client->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        client->send();
 
+        app.run();
 
-    //Client *conn = new Client("http://zlib.net/index.html");
-    client->start();
-    client->clientConn->fnComplete = [&](const Response & response) {
-        std::cout << "Lerver response:";
-    };
+        //expects(fs::exists(path));
+        //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+       // fs::unlink(path);
+    
+       // std::cout << "app.run() over " << std::endl << std::flush;
+        
+      //  stop();
 
-    client->clientConn->fnLoad = [&](const std::string &str) {
-          std::cout << "final test" << str << std::endl << std::flush;
-
-    };
-    client->clientConn->_request.setMethod("GET");
-    client->clientConn->_request.setKeepAlive(false);
-    client->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-
-    app.run();
-
-   LTrace("Download Run over");
-
-    //expect(fs::exists(path));
-    //expect(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-    //fs::unlink(path);
-
-    stop();
-
+        exit = true;
+        
+        delete client;
+        client = nullptr;
+        
+        LTrace("Download Over");
 }
 int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("Info", Level::Trace));
 
-       test::init();
-     
-       Download download("df");
-       
-       download.start();
-       
-       base::sleep(111000);
-       
-       LTrace("exit")
-       
-       download.stop();
+    test::init();
+    {
+        Download *download = new Download("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+
+        download->start();
+
+        base::sleep(900);
+
+    
+        //base::sleep(5000);
+           
+        LTrace("exit")
+
+        download->stop();
+        
+        delete download;
+        
+        LTrace("Download done");
+        
+        base::sleep(9000);
+        
+    }
        return 0;
        
            

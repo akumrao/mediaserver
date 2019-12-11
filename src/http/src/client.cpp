@@ -64,10 +64,7 @@ namespace base {
 
         HttpClient::~HttpClient() {
             LTrace("~HttpClient()")
-            while(!_complete)
-            {
-                base::sleep(500);
-            }
+                  
       
         }
 
@@ -284,7 +281,7 @@ namespace base {
             }
             _complete = true; // in case close() is called inside callback
 
-            //   Complete.emit(_response);
+            fnComplete(_response);
         }
 
         void HttpClient::on_close() {

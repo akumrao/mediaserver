@@ -117,7 +117,7 @@ namespace base {
 
                 if (err != 0)
                     LError("uv_shutdown() failed: %s", uv_strerror(err));
-                on_close();
+                //on_close();
             }// Otherwise directly close the socket.
             else {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));

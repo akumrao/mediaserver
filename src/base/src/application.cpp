@@ -38,18 +38,18 @@ namespace base
         LDebug("init")
 
 
-        Application::loop = new uv_loop_t;
-        int err = uv_loop_init(Application::loop);
+        loop = new uv_loop_t;
+        int err = uv_loop_init(loop);
         if (err != 0)
             LError("libuv initialization failed");
 
     }
 
     void Application::uvDestroy() {
-        if (Application::loop != nullptr)
+        if (loop != nullptr)
         {
-            uv_loop_close(Application::loop);
-            delete Application::loop;
+            uv_loop_close(loop);
+            delete loop;
         }
 
     }
