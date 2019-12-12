@@ -110,10 +110,10 @@ namespace base {
             
             end_time = base::Application::GetTime();
 
-            LInfo("{Resolve time(ms) ", _url.host(), " : ", double(end_time - start_time), "}")
+            LInfo("{resolve_time_ms", _url.host(), ":", double(end_time - start_time), "}")
                     
             std::ostringstream ss;
-            ss << "{Resolve time(ms) " <<  _url.host() << " : " << double(end_time - start_time)<< "}"; 
+            ss << "{resolve_time_ms" <<  _url.host() << ":" << double(end_time - start_time)<< "}";
             fnLoad( ss.str() );
             
             if (!_connect) {
@@ -151,10 +151,10 @@ namespace base {
             LTrace("On_connect")
 
             end_time = base::Application::GetTime();
-            LInfo("{Connect time(ms) ", _url.host(), " : ", double(end_time - start_time), "}")
+            LInfo("{connect_time_ms ", _url.host(), " : ", double(end_time - start_time), "}")
                     
            std::ostringstream ss;
-           ss << "{Connect time(ms) " <<  _url.host() << " : " << double(end_time - start_time)<< "}"; 
+           ss << "{connect_time_ms" <<  _url.host() << ":" << double(end_time - start_time)<< "}";
            fnLoad( ss.str() );
 
             start_time = base::Application::GetTime();
@@ -205,10 +205,10 @@ namespace base {
             latency = latency / 2;
 
             end_time = base::Application::GetTime();
-            LInfo("{Dowloadspeed KbBits/s ", _url.host(), " : ", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", Latency(ms) ", _url.host(), " : ", latency, "}")
+            LInfo("{dowloadspeed_kbps", _url.host(), " : ", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", latency_ms", _url.host(), " : ", latency, "}")
 
             std::ostringstream ss;
-            ss << "{Dowloadspeed KbBits/s " <<  _url.host() << " : " <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) <<  ", Latency(ms) " <<  _url.host() <<  " : " <<  latency <<  "}"; 
+            ss << "{dowloadspeed_kbps:" <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) <<  ", latency_ms:" <<  latency <<  "}";
             fnLoad( ss.str() );
                     /* if (this->listener)
                          this->listener->on_read(this, data, len);
