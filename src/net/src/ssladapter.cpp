@@ -1,10 +1,10 @@
 
 #include "net/ssladapter.h"
 #include "base/logger.h"
-#include "net/sslmanager.h"
+//#include "net/sslmanager.h"
 #include "net/netInterface.h"
 #include "net/SslConnection.h"
-
+#include <assert.h>
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
@@ -135,8 +135,8 @@ namespace base {
 
             // TODO: Improve automatic SSL session handling.
             // Maybe add a stored session to the network manager.
-            if (_socket->currentSession())
-                SSL_set_session(_ssl, _socket->currentSession()->sslSession());
+//            if (_socket->currentSession())
+ //               SSL_set_session(_ssl, _socket->currentSession()->sslSession());
 
             _readBIO = BIO_new(BIO_s_mem());
             _writeBIO = BIO_new(BIO_s_mem());

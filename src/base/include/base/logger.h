@@ -18,7 +18,7 @@
 #include <mutex>
 #include <string.h>
 
-//#define _REMOTELOG
+#define _REMOTELOG
 #if defined(__ANDROID__)    
 #include <android/log.h>
 #include "net/UdpSocket.h"
@@ -40,6 +40,7 @@ enum class Level
     Warn = 3,
     Error = 4,
     Fatal = 5,
+    Remote = 6,
 };
 
 
@@ -57,6 +58,8 @@ inline Level getLevelFromString(const char* level)
         return Level::Error;
     if (strcmp(level, "fatal") == 0)
         return Level::Fatal;
+     if (strcmp(level, "remote") == 0)
+        return Level::Remote;
     return Level::Trace;
 }
 
@@ -76,6 +79,8 @@ inline const char* getStringFromLevel(Level level)
             return "error";
         case Level::Fatal:
             return "fatal";
+        case Level::Remote:
+            return "remote";
     }
     return "debug";
 }
@@ -509,12 +514,15 @@ inline std::string _methodName(const std::string& fsig)
 #define SInfo  LogStream(Level::Info, _fileName(__FILE__), __LINE__)
 #define SWarn  LogStream(Level::Warn, _fileName(__FILE__), __LINE__)
 #define SError LogStream(Level::Error, _fileName(__FILE__), __LINE__)
+#define SRTrace LogStream(Level::Remote, _fileName(__FILE__), __LINE__)
 
 #define LTrace(...) { LogStream(Level::Trace, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 #define LDebug(...) { LogStream(Level::Debug, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 #define LInfo(...)  { LogStream(Level::Info, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 #define LWarn(...)  { LogStream(Level::Warn, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 #define LError(...) { LogStream(Level::Error, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
+#define RTrace(...) { LogStream(Level::Remote, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
+
 
 // #define TraceS(self) LogStream(Level::Trace, _fileName(__FILE__), __LINE__, self)
 // #define DebugS(self) LogStream(Level::Debug, _fileName(__FILE__), __LINE__, self)

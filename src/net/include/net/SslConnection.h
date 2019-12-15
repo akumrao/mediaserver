@@ -4,8 +4,8 @@
 
 //#include "net/socket.h"
 #include "net/ssladapter.h"
-#include "net/sslcontext.h"
-#include "net/sslsession.h"
+//#include "net/sslcontext.h"
+//#include "net/sslsession.h"
 #include "net/TcpConnection.h"
 //#include "scy/handle.h"
 
@@ -18,12 +18,12 @@ namespace net {
 class  SslConnection : public TcpConnection
 {
 public:
-    typedef std::shared_ptr<SslConnection> Ptr;
-    typedef std::vector<Ptr> Vec;
+   // typedef std::shared_ptr<SslConnection> Ptr;
+    //typedef std::vector<Ptr> Vec;
 
     SslConnection(Listener* listener); //, SocketMode mode = ClientSide
     SslConnection(Listener* listener, bool serverMode);
-    SslConnection(Listener* listener, SSLContext::Ptr sslContext, SSLSession::Ptr session);
+//    SslConnection(Listener* listener, SSLContext::Ptr sslContext, SSLSession::Ptr session);
 
     virtual ~SslConnection();
 
@@ -52,10 +52,10 @@ public:
  
 
     /// Use the given SSL context for this socket.
-    void useContext(SSLContext::Ptr context);
+//    void useContext(SSLContext::Ptr context);
 
     /// Returns the SSL context used for this socket.
-    SSLContext::Ptr context() const;
+  //  SSLContext::Ptr context() const;
 
     /// Sets the SSL session to use for the next
     /// connection. Setting a previously saved Session
@@ -65,14 +65,14 @@ public:
     /// can be given.
     ///
     /// Must be called before connect() to be effective.
-    void useSession(SSLSession::Ptr session);
+    //void useSession(SSLSession::Ptr session);
 
     /// Returns the SSL session of the current connection,
     /// for reuse in a future connection (if session caching
     /// is enabled).
     ///
     /// If no connection is established, returns nullptr.
-    SSLSession::Ptr currentSession();
+//    SSLSession::Ptr currentSession();
 
     /// Returns true if a reused session was negotiated during
     /// the handshake.
@@ -97,8 +97,8 @@ public:
 
       bool serverMode={false};
 protected:
-    net::SSLContext::Ptr _sslContext;
-    net::SSLSession::Ptr _sslSession;
+  //  net::SSLContext::Ptr _sslContext;
+    //net::SSLSession::Ptr _sslSession;
     net::SSLAdapter _sslAdapter;
 
     Listener* listener{ nullptr};

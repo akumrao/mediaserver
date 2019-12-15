@@ -1,14 +1,3 @@
-///
-//
-// LibSourcey
-// Copyright (c) 2005, Sourcey <https://sourcey.com>
-//
-// SPDX-License-Identifier: LGPL-2.1+
-//
-/// @addtogroup base
-/// @{
-
-
 #include "base/logger.h"
 
 
@@ -18,6 +7,8 @@
 #include "base/time.h"
 #include "base/util.h"
 
+#include <time.h>
+#include <sys/time.h>
 
 #include <assert.h>
 #include <iterator>
@@ -451,11 +442,32 @@ void RemoteChannel::write(const LogStream& stream)
     if (_level > stream.level)
         return;
 
-    if (!_filter.empty() && !util::matchNodes(stream.realm, _filter, "::"))
-        return;
+  //  if (!_filter.empty() && !util::matchNodes(stream.realm, _filter, "::"))
+    //    return;
 
+    
+
+	struct timeval mediaTime;
+   	memset (&mediaTime, 0, sizeof(mediaTime));
+   	gettimeofday(&mediaTime, 0);
+   	time_t mediaTimeMs = (mediaTime.tv_sec)*1000+(mediaTime.tv_usec)/1000;
+
+	//string kfMsgKey = std::to_string(mediaTimeMs);
+
+	//return kfMsgKey;
+
+    
     std::ostringstream ss;
-    format(stream, ss);
+    
+    std::string s = stream.message.str();
+    if (!s.empty() && s[s.length()-1] == '\n') {
+    s.erase(s.length()-1);
+}
+    
+   // ss << " {" << getStringFromLevel(stream.level) << " ";
+    ss << "{\"time\":" << mediaTimeMs << "," <<  s << "}" << std::endl;
+   //
+    //format(stream, ss);
 
 //#if defined(_MSC_VER) && defined(_DEBUG)
 //    std::string s(ss.str());
@@ -477,7 +489,13 @@ udpClient->send((char*) ss.str().c_str(), ss.str().length());
 #else
 #if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
     std::cout << ss.str() << std::flush;
-    udpClient->Send((char*) ss.str().c_str(), ss.str().length());
+    
+    static std::string str = str + ss.str();
+    if(str.length() > 1024)
+    {
+        udpClient->send((char*) str.c_str(), str.length());
+        str.erase();
+    }
 #endif
 #endif /* __ANDROID__ */
 

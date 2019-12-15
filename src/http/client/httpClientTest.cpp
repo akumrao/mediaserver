@@ -17,8 +17,6 @@ using namespace base;
 using namespace base::net;
 using namespace base::test;
 
-
-
 class Download : public Thread {
 public:
 
@@ -33,54 +31,46 @@ public:
 
     URL _url;
     ClientConnecton *client{nullptr};
-    
+
     Application app;
 
 };
 
-Download::Download(std::string url): _url(url) {
+Download::Download(std::string url) : _url(url) {
 
-    if(!client)
-    {
-         if (_url.scheme() == "http" || _url.scheme() == "ws") {
-                client = new HttpClient(nullptr, _url, HTTP_RESPONSE, 6553688);
-         }
-         else
-         {
-             LTrace("Only Http download is supported")
-         }
-               
+    if (!client) {
+        if (_url.scheme() == "http" || _url.scheme() == "ws") {
+            client = new HttpClient(nullptr, _url, HTTP_RESPONSE, 2048000000);
+        } else {
+            LTrace("Only Http download is supported")
+        }
+
     }
-  
+
 }
 
-
-void Download::stop(bool flag ) {
+void Download::stop(bool flag) {
 
     LTrace(" Download::stop")
-        
-       
-    if(client ) {
-         app.stop();
-       // client->Close();
+
+
+    if (client) {
+        app.stop();
+        // client->Close();
     }
 
 }
 
-
-Download::~Download()
-{
+Download::~Download() {
     LTrace("~Download()")
-    if(client )
-    {
+    if (client) {
         app.uvDestroy();
     }
-    
-    while( !stopped())
-     {
+
+    while (!stopped()) {
         base::sleep(1000);
-     }
-    
+    }
+
 }
 
 void Download::run() {
@@ -88,170 +78,176 @@ void Download::run() {
     LTrace("Download OnRun");
 
     ////////////////////////////////////
-       
-        std::string path("/tmp/");
-        fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-       
-        //Client *conn = new Client("http://zlib.net/index.html");
-       // client->start();
-        client->fnComplete = [&](const Response & response) {
-            std::cout << "client->fnComplete" <<  std::endl << std::flush;
-            client->Close();
-//            app.stop()
+    std::string path("/tmp/");
+    fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-        };
-        
-        client->fnLoad = [&](const std::string str) {
-            std::cout << "final test " << str << std::endl << std::flush;
-        };
-        
-        client->_request.setMethod("GET");
-        client->_request.setKeepAlive(false);
-        client->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        client->send();
 
-        app.run();
+    //Client *conn = new Client("http://zlib.net/index.html");
+    // client->start();
+    client->fnComplete = [&](const Response & response) {
+        std::cout << "client->fnComplete" << std::endl << std::flush;
+        client->Close();
+        //            app.stop()
 
-        //expects(fs::exists(path));
-        //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-       // fs::unlink(path);
-    
-       // std::cout << "app.run() over " << std::endl << std::flush;
-        
-      //  stop();
+    };
 
-        exit = true;
-        
-        delete client;
-        client = nullptr;
-        
-        LTrace("Download Over");
+    client->fnLoad = [&](const std::string str) {
+     // std::cout << "final test " << str << std::endl << std::flush;
+    };
+
+    client->_request.setMethod("GET");
+    client->_request.setKeepAlive(false);
+    client->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+    client->send();
+
+    app.run();
+
+   // expects(fs::exists(path));
+    //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    // fs::unlink(path);
+
+    // std::cout << "app.run() over " << std::endl << std::flush;
+
+    //  stop();
+
+//    exit = true;
+
+    delete client;
+    client = nullptr;
+
+    LTrace("Download Over");
 }
+
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("Info", Level::Trace));
+    Logger::instance().add(new RemoteChannel("Remote", Level::Remote));
+    
+      LTrace("exit")
+              
+
+    Logger::instance().setWriter(new AsyncLogWriter());
 
     test::init();
     {
-        Download *download = new Download("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+        Download *download = new Download("http://speedtest.tele2.net/1GB.zip");
 
         download->start();
 
-        base::sleep(900);
+        base::sleep(7000);
 
-    
+
         //base::sleep(5000);
-           
+
         LTrace("exit")
 
         download->stop();
-        
+
         delete download;
-        
+
         LTrace("Download done");
-        
-        base::sleep(9000);
-        
+
+        base::sleep(910);
+
     }
-       return 0;
-       
-           
-   /*
-    {
-        Application app;
+    return 0;
+
+
+    /*
+     {
+         Application app;
  
-        Client *conn = new Client();
-        conn->createConnection("ws","arvindubuntu",7000,"websocket");
+         Client *conn = new Client();
+         conn->createConnection("ws","arvindubuntu",7000,"websocket");
         
-        //Client *conn = new Client("http://zlib.net/index.html");
-        conn->start();
-     //   conn->clientConn->fnComplete = [&](const Response & response) {
-       //     std::cout << "Lerver response:";
-        //};
- //       conn->clientConn->_request.setMethod("GET");
-//        conn->clientConn->_request.setKeepAlive(false);
-//        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->send("Ping");
+         //Client *conn = new Client("http://zlib.net/index.html");
+         conn->start();
+      //   conn->clientConn->fnComplete = [&](const Response & response) {
+        //     std::cout << "Lerver response:";
+         //};
+  //       conn->clientConn->_request.setMethod("GET");
+ //        conn->clientConn->_request.setKeepAlive(false);
+ //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+         conn->clientConn->send("Ping");
 
-        app.run();
-    }
-*/
-        /*
-         {
+         app.run();
+     }
+     */
+    /*
+     {
      
-       Application app;
-        std::string path("./");
-        fs::addnode(path, "testDel.gz");
+   Application app;
+    std::string path("./");
+    fs::addnode(path, "testDel.gz");
 
-        Client *conn = new Client("http://ftp.debian.org/debian/dists/Debian8.11/main/Contents-armhf.gz");
-       // Client *conn = new Client("http://zlib.net/index.html");
-        conn->start();
-        conn->clientConn->fnComplete = [&](const Response & response) {
-            std::cout << "Lerver response:";
-        };
-        conn->clientConn->_request.setMethod("GET");
-        conn->clientConn->_request.setKeepAlive(false);
-        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->send();
+    Client *conn = new Client("http://ftp.debian.org/debian/dists/Debian8.11/main/Contents-armhf.gz");
+   // Client *conn = new Client("http://zlib.net/index.html");
+    conn->start();
+    conn->clientConn->fnComplete = [&](const Response & response) {
+        std::cout << "Lerver response:";
+    };
+    conn->clientConn->_request.setMethod("GET");
+    conn->clientConn->_request.setKeepAlive(false);
+    conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+    conn->clientConn->send();
 
-        app.run();
+    app.run();
         
-        expects(fs::exists(path));
-        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-        fs::unlink(path);
-    }
+    expects(fs::exists(path));
+    expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    fs::unlink(path);
+}
     
-    {
+{
      
-        Application app;
-        std::string path("./");
-        fs::addnode(path, "testdel.gz");
+    Application app;
+    std::string path("./");
+    fs::addnode(path, "testdel.gz");
 
-        Client *conn = new Client("https://dl.google.com/dl/android/studio/ide-zips/3.5.2.0/android-studio-ide-191.5977832-linux.tar.gz");
-       // Client *conn = new Client("http://zlib.net/index.html");
-        conn->start();class Download : public Thread {
-public:
+    Client *conn = new Client("https://dl.google.com/dl/android/studio/ide-zips/3.5.2.0/android-studio-ide-191.5977832-linux.tar.gz");
+   // Client *conn = new Client("http://zlib.net/index.html");
+    conn->start();class Download : public Thread {
+    public:
 
-    Download(std::string url);
+Download(std::string url);
 
-    ~Download();
+~Download();
 
-    // Download(){};
-    // virtual ~Thread2(void);
+// Download(){};
+// virtual ~Thread2(void);
 
-    void run();
+void run();
 
-    void stop(bool flag = true);
+void stop(bool flag = true);
 
 
-    std::string url;
+std::string url;
 
-    Client *conn={nullptr};
+Client *conn={nullptr};
 
-};
+    };
 
-        conn->clientConn->fnComplete = [&](const Response & response) {
-            std::cout << "Lerver response:";
-        };
-        conn->clientConn->_request.setMethod("GET");
-        conn->clientConn->_request.setKeepAlive(false);
-        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->send();
+    conn->clientConn->fnComplete = [&](const Response & response) {
+        std::cout << "Lerver response:";
+    };
+    conn->clientConn->_request.setMethod("GET");
+    conn->clientConn->_request.setKeepAlive(false);
+    conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+    conn->clientConn->send();
 
-        app.run();
+    app.run();
         
-        expects(fs::exists(path));
-        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
-        fs::unlink(path);
-    }
+    expects(fs::exists(path));
+    expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    fs::unlink(path);
+}
 
-    */
+     */
 
 
-    
-    
-    
+
+
+
 
     describe("url parser", []() {
 
@@ -337,11 +333,11 @@ public:
         conn->clientConn->fnComplete = [&](const Response & response) {
             std::cout << "Lerver response:";
         };
-        
+
         conn->clientConn->fnLoad = [&](const std::string str) {
             std::cout << "final test " << str << std::endl << std::flush;
         };
-        
+
         conn->clientConn->_request.setMethod("GET");
         conn->clientConn->_request.setKeepAlive(false);
         conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
@@ -352,7 +348,7 @@ public:
         expects(fs::exists(path));
         expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
         fs::unlink(path);
-        
+
 
     });
 

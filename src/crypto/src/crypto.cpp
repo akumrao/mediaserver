@@ -11,7 +11,7 @@
 #include <openssl/rand.h>
 #include <openssl/ssl.h>
 #include <openssl/conf.h>
-
+#include <assert.h>
 
 extern "C" {
 struct CRYPTO_dynlock_value

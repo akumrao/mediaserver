@@ -4,7 +4,7 @@
 #define Net_SSLManager_H
 
 
-#include "net/sslcontext.h"
+//#include "net/sslcontext.h"
 #include "net/sslsession.h"
 //#include "net/net.h"
 #include "base/singleton.h"

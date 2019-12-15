@@ -1,8 +1,8 @@
 #include "net/netInterface.h"
 #include "net/SslConnection.h"
 #include "base/logger.h"
-#include "net/sslmanager.h"
-
+//#include "net/sslmanager.h"
+#include <assert.h>
 
 using namespace std;
 
@@ -13,8 +13,8 @@ namespace net {
 
 SslConnection::SslConnection(Listener* listener)
     : TcpConnection(listener,65536, true)
-    , _sslContext(nullptr)
-    , _sslSession(nullptr)
+//    , _sslContext(nullptr)
+//    , _sslSession(nullptr)
     , _sslAdapter(this)
     ,listener(listener)
 {
@@ -26,7 +26,7 @@ SslConnection::SslConnection(Listener* listener)
 
 SslConnection::SslConnection(Listener* listener, bool server)
     : TcpConnection(listener , 65536, true)
-    , _sslSession(nullptr)
+  //  , _sslSession(nullptr)
     , _sslAdapter(this)
     ,listener(listener),serverMode(server)
 {
@@ -35,7 +35,7 @@ SslConnection::SslConnection(Listener* listener, bool server)
     LTrace("Create")
 }
 
-
+/*
 SslConnection::SslConnection(Listener* listener, SSLContext::Ptr context, SSLSession::Ptr session)
     :  TcpConnection(listener)
     , _sslContext(context)
@@ -45,7 +45,7 @@ SslConnection::SslConnection(Listener* listener, SSLContext::Ptr context, SSLSes
 {
     LTrace("Create")
 }
-
+*/
 
 SslConnection::~SslConnection()
 {
@@ -116,7 +116,7 @@ void SslConnection::listen(int backlog)
    // }
 }*/
 
-
+/*
 void SslConnection::useSession(SSLSession::Ptr session)
 {
     _sslSession = session;
@@ -137,8 +137,8 @@ SSLSession::Ptr SslConnection::currentSession()
     }
     return 0;
 }
-
-
+*/
+/*
 void SslConnection::useContext(SSLContext::Ptr context)
 {
     if (_sslAdapter._ssl)
@@ -153,7 +153,7 @@ SSLContext::Ptr SslConnection::context() const
 {
     return _sslContext;
 }
-
+*/
 
 bool SslConnection::sessionWasReused()
 {
