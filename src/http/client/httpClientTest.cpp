@@ -121,7 +121,7 @@ void Download::run() {
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new RemoteChannel("Remote", Level::Remote));
+    Logger::instance().add(new RemoteChannel("Remote", Level::Remote,"127.0.0.1", 6000));
     
       LTrace("exit")
               

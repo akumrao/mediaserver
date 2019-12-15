@@ -10,3 +10,15 @@ https://github.com/edenhill/librdkafka.git
 
 
 
+for cleaning kafka
+
+for running kafka
+
+localhost:56001
+
+for clean kafka indices
+curl -XDELETE 0:9200/media-\*
+
+
+
+

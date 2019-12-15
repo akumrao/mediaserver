@@ -205,9 +205,9 @@ namespace base {
             latency = latency / 2;
 
             end_time = base::Application::GetTime();
-           // RTrace("\"dowloadspeed_kbps\":", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", \"latency_ms\":", latency)
+            RTrace("\"dowloadspeed_kbps\":", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", \"latency_ms\":", latency)
 
-            SRTrace  << "\"dowloadspeed_kbps\":" <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) << ", \"latency_ms\":" <<  latency;
+           // SRTrace  << "\"dowloadspeed_kbps\":" <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) << ", \"latency_ms\":" <<  latency;
                     
                     
             std::ostringstream ss;

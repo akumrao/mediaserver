@@ -150,7 +150,7 @@ CcuKafkaMessage::sendLogMessage (Producer * kfProducer, const string & txIdKey, 
 		kfPayload += "\"media-txIdKey\":\"" + txIdKey + "\",";
 	}
 	kfPayload += "\"media-source\":{\"type\":\"LOCAL-APP\",\"address\":\"" + appName + "\"},";
-	kfPayload += "\"media-recordType\":\"WHEELER-LOG-MSG\",\"media-data\":{\"log-message\":{";
+	kfPayload += "\"media-recordType\":\"LOG-MSG\",\"media-data\":{\"log-message\":{";
 
 	kfPayload += "\"subsystem\":\"" + subsystemName + "\",";
 	kfPayload += "\"level\":\"" + level + "\",";

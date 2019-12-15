@@ -76,22 +76,25 @@ void KafkaUdpServer::postToKafka(std::string msg, kafka_msg_type type) {
     //LTrace(msg)
     string parsed, input = msg;
     stringstream input_stringstream(input);
+    
+
 
     while (getline(input_stringstream, parsed, '\n'))
     {
-        if (parsed.at(0) == '{' && parsed.at(parsed.length() - 1) == '}')
+        if(parsed.length() < 5)
+                continue;
+        
+        std::string kfKey = CcuKafkaMessage::createKfMsgKey();
+        std::string txIdKey = CcuKafkaMessage::createTxIdKey();
+    
+        if (  parsed.at(0) == '{' && parsed.at(parsed.length() - 1) == '}')
+        {
 
             LTrace(parsed);
             try {
                 // Create the kafka producer
 
-                std::string kfKey = CcuKafkaMessage::createKfMsgKey();
-                std::string txIdKey = CcuKafkaMessage::createTxIdKey();
-
-                if (type == ERR) {
-                    //std::cout << "KafkaUdpServer " << type << " msg " << msg <<  std::endl;
-                    CcuKafkaMessage::sendLogMessage(kfProducer, txIdKey, "KafkaUdpServer", "media", "error", msg, "{}");
-                } else {
+                              
                     std::string jsonOutput;
 
                     jsonOutput = "{\"media-time\":" + kfKey + ",";
@@ -101,17 +104,14 @@ void KafkaUdpServer::postToKafka(std::string msg, kafka_msg_type type) {
                     jsonOutput += parsed;
                     jsonOutput += "}";
 
-                    if (type == NORMAL) {
+   
                         MessageBuilder kfMessageBuilder = MessageBuilder("battorch-to-metrics");
                         kfMessageBuilder.partition(0).key(kfKey).payload(jsonOutput);
 
 
                         kfProducer->produce(kfMessageBuilder);
                         kfProducer->flush();
-                    }
-                    //else
-                    // CcuKafkaMessage::sendAlert(kfProducer, txIdKey, "ups-battery-critical", "KafkaUdpServer", true, "KafkaUdpServer", jsonOutput);
-                }
+                   
 
                 //std::chrono::milliseconds flushTmo(60000);
                 // kfProducer->flush(flushTmo);
@@ -119,9 +119,14 @@ void KafkaUdpServer::postToKafka(std::string msg, kafka_msg_type type) {
             } catch (...) {
 
             }
+        }
+        else
+        {
+            CcuKafkaMessage::sendLogMessage(kfProducer, txIdKey, "fix", "media", "error", parsed, "{}");
+        }
         
         
-    }
+    }//while
 
 }
 
@@ -171,7 +176,7 @@ void KafkaUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* da
     IP::GetAddressInfo(
             remoteAddr, family, peerIp, peerPort);
 
-    std::cout << data << " ip " << peerIp << ":" << peerPort << std::endl << std::flush;
+   /// std::cout << "OnUdpSocketPacketReceived " << data << " ip " << peerIp << ":" << peerPort << std::endl << std::flush;
 
     postToKafka(data, NORMAL);
 
@@ -185,10 +190,6 @@ int main(int argc, char** argv) {
 
 
 
-
-
-
-
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
 
@@ -197,12 +198,16 @@ int main(int argc, char** argv) {
     KafkaUdpServer socket("0.0.0.0", 6000);
     socket.start();
 
-    socket.postToKafka("{\"time\":1576365159633,\"dowloadspeed_kbps\":6772.05,\"latency_ms\":1.666831}\n{\"time\":1576365159633,\"dowloadspeed_kbps\":5672.05,\"latency_ms\":0.666831}\n", NORMAL);
-    //socket.send("arvind", "127.0.0.1", 6000);
+   // socket.postToKafka("{\"time\":1576365159633,\"dowloadspeed_kbps\":6772.05,\"latency_ms\":1.666831}\n{\"time\":1576365159633,\"dowloadspeed_kbps\":5672.05,\"latency_ms\":0.666831}\n", NORMAL);
+    
+    socket.postToKafka("error\n", NORMAL);
+
+    
+    socket.send("arvind", "127.0.0.1", 6000);
 
     app.waitForShutdown([&](void*) {
 
-        socket.shutdown();
+    socket.shutdown();
 
     });
 

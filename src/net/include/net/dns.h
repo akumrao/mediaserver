@@ -36,7 +36,7 @@ namespace base {
                 
                 if (status < 0) {
                 LTrace(  "getaddrinfo callback error ", uv_err_name(status));
-                assert(status == 0);
+                //assert(status == 0);
                 return;
             }
                 
