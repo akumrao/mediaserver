@@ -55,6 +55,7 @@ public:
 
     virtual void process(std::vector<unsigned char>& packet); 
    
+    void  emit( const char * data, int len );
 
 //    PacketSignal emitter;
 };
@@ -104,6 +105,8 @@ public:
 
     
       void  emit( const char * data, int len );
+      
+     
 
 //    PacketSignal emitter;
 };

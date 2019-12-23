@@ -64,8 +64,6 @@ namespace base {
 
         HttpClient::~HttpClient() {
             LTrace("~HttpClient()")
-                  
-      
         }
 
         void HttpClient::send() {
@@ -80,7 +78,8 @@ namespace base {
 
          void HttpClient::Close()
          {
-             bClosing = true;
+             _connect = true;
+             _active = true;
              TcpConnection::Close();
          }
         void HttpClient::send(const char* data, size_t len) {
@@ -95,18 +94,12 @@ namespace base {
         }
 
         void HttpClient::send(const std::string &str) {
-            connect();
-
-            if (_active)
-                // Raw data will be pushed onto the Outgoing packet stream
-                //  TcpConnectionBase::Write(str.c_str(), str.length());
-                // else
-                _outgoingBuffer.push_back(str);
-            return;
+            send(str.c_str(), str.length() );
+     
         }
 
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {
-            if(bClosing) return;
+            if(_connect) return;
             
             end_time = base::Application::GetTime();
 
@@ -118,7 +111,6 @@ namespace base {
             
             if (!_connect) {
                 _connect = true;
-
                 start_time = base::Application::GetTime();
                 LTrace("Connecting ", ip, ":", _url.port())
                 Connect(_url.host(), _url.port(), res);
@@ -127,7 +119,7 @@ namespace base {
         }
 
         void HttpClient::connect() {
-            if(bClosing) return;
+            if(_connect) return;
             LTrace("Resolve DNS ", _url.host());
 
             start_time = base::Application::GetTime();
@@ -147,7 +139,7 @@ namespace base {
         // Socket Callbacks
 
         void HttpClient::on_connect() {
-            if(bClosing) return;
+            if(_active) return;
             LTrace("On_connect")
 
             end_time = base::Application::GetTime();
@@ -159,6 +151,8 @@ namespace base {
 
             start_time = base::Application::GetTime();
             // Set the connection to active
+            
+             sendHeader();
             _active = true;
 
             // Emit the connect signal so raw connections like
@@ -174,8 +168,9 @@ namespace base {
                 _outgoingBuffer.clear();
             } else {
 
+                // sendHeader();
                 // Send the header
-                sendHeader();
+               
             }
 
             // Send the outgoing HTTP header if it hasn't already been sent.
@@ -186,12 +181,14 @@ namespace base {
             //    // LTrace("On connect: Send header")
             //    sendHeader();
             //}
+            
+            fnConnect(this);
         }
 
         void HttpClient::on_read(const char* data, size_t len) {
 
             LTrace("On socket recv: ", len);
-            // LTrace("On socket recv: ", data);
+            LTrace("On socket recv: ", data);
 
             recvBytes += len;
             // TcpConnection::on_read( data, len);
@@ -293,8 +290,7 @@ namespace base {
             if (!_complete)
                 onComplete();
             //Close.emit(*this);
-            
-            
+           
         }
 
         long HttpClient::sendHeader() {

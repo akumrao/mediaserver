@@ -106,6 +106,25 @@ namespace base {
                 emit(ost.str());*/
             }
         }
+        
+        
+        
+         void ChunkedAdapter::emit(const char * data, int len) {
+            SDebug << "emit packet: "
+                    // assert(!connection().socket()->closed());
+                    << len << ": " << "fpsCounter.fps" << std::endl;
+
+            try {
+                connection->send(data, len);
+                //fpsCounter.tick();
+            } catch (std::exception& exc) {
+                LError(exc.what())
+                connection->Close();
+            }
+
+        }
+        
+        
 
         void MultipartAdapter::emitHeader() {
             
@@ -180,8 +199,8 @@ namespace base {
         }
 
 
-    } // namespace http
-} // namespace scy
+    } // namespace net
+} // namespace base
 
 
 

@@ -33,6 +33,14 @@ public:
 
     /// Stream operator alias for process()
     virtual void operator<<(std::vector<unsigned char>& packet) { process(packet); };
+    
+    
+    virtual void emit( const char * data, int len ){};
+     
+    virtual void emit( const std::string &str )
+      {
+          emit( str.c_str() ,str.length() );
+      }
 };
 
 

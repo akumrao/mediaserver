@@ -13,7 +13,32 @@
 #include "http/HttpConn.h"
 namespace base {
     namespace net {
+            // HTTP progress signal for upload and download progress notifications.
+        class  ProgressSignal 
+        {
+        public:
+            void* sender;
+            uint64_t current;
+            uint64_t total;
 
+            ProgressSignal()
+                : sender(nullptr)
+                , current(0)
+                , total(0)
+            {
+            }
+
+            double progress() const { return (current / (total * 1.0)) * 100; }
+
+            void update(int nread)
+            {
+                assert(current <= total);
+                current += nread;
+//                emit(progress());
+            }
+        };
+
+        
         class ClientConnecton : public HttpBase {
           public:
            ClientConnecton(http_parser_type type);
@@ -25,15 +50,33 @@ namespace base {
             std::function<void(const std::string&) > fnLoad; ///< Signals when raw data is received
             std::function<void(const Response&) > fnComplete; ///< Signals when the HTTP transaction is complete
             std::function<void(ClientConnecton&) > fnClose;
+            std::function<void(ClientConnecton*) > fnConnect;
+            
 
-             virtual void setReadStream(std::ostream* os){};
-             virtual void send(){};
-             void Close() {};
-             
-           virtual void onHeaders(){};
-           virtual void on_payload(const char* data, size_t len);
-           virtual void onComplete(){};
-      
+            virtual void setReadStream(std::ostream* os) {
+            };
+
+       
+            
+            virtual void send(const char* data, size_t len){};
+            virtual void send(){};
+            virtual void send(Request& req){};
+            virtual void send(const std::string &str){};
+            
+
+            void Close() {
+            };
+
+            virtual void onHeaders() {
+            };
+            virtual void on_payload(const char* data, size_t len);
+
+            virtual void onComplete() {
+            };
+    
+            
+            ProgressSignal IncomingProgress; ///< Fired on download progress
+            ProgressSignal OutgoingProgress; ///< Fired on upload progress
             
         };
 
@@ -96,7 +139,7 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-            bool bClosing{false};
+            //bool bClosing{false};
            // WebSocketConnection *wsAdapter{ nullptr};
             //  WebSocketConnection::Listener *wsListener{ nullptr};
             // Others.

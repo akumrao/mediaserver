@@ -17,6 +17,7 @@
 #include "uv.h"
 #include <string>
 #include "base/util.h"
+#include "base/application.h"
 
 namespace base {
 
@@ -34,7 +35,7 @@ namespace base {
             static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
                 struct getaddrinfo_req* req;
                 
-                if (status < 0) {
+                if (status < 0 || !res) {
                 LTrace(  "getaddrinfo callback error ", uv_err_name(status));
                 //assert(status == 0);
                 return;
@@ -54,7 +55,7 @@ namespace base {
 
             }
 
-            void resolve(const std::string& host, int port, uv_loop_t * loop = uv_default_loop()) {
+            void resolve(const std::string& host, int port, uv_loop_t * loop = Application::uvGetLoop()) {
 
                 req.data = this;
                 int r;

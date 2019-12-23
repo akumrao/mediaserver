@@ -13,6 +13,8 @@
 #include "crypto/hash.h"
 #include "base/platform.h"
 
+#include "http/form.h"
+
 using namespace base;
 using namespace base::net;
 using namespace base::test;
@@ -93,7 +95,7 @@ void Download::run() {
     };
 
     client->fnLoad = [&](const std::string str) {
-     // std::cout << "final test " << str << std::endl << std::flush;
+        // std::cout << "final test " << str << std::endl << std::flush;
     };
 
     client->_request.setMethod("GET");
@@ -103,7 +105,7 @@ void Download::run() {
 
     app.run();
 
-   // expects(fs::exists(path));
+    // expects(fs::exists(path));
     //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
     // fs::unlink(path);
 
@@ -111,7 +113,7 @@ void Download::run() {
 
     //  stop();
 
-//    exit = true;
+    //    exit = true;
 
     delete client;
     client = nullptr;
@@ -119,14 +121,167 @@ void Download::run() {
     LTrace("Download Over");
 }
 
+/*****************************************************************************************/
+
+class Upload : public Thread {
+public:
+
+    Upload(std::string url);
+
+    ~Upload();
+
+
+    void run();
+
+    void stop(bool flag = true);
+
+    URL _url;
+    ClientConnecton *client{nullptr};
+
+    Application app;
+
+};
+
+Upload::Upload(std::string url) : _url(url) {
+
+    if (!client) {
+        if (_url.scheme() == "http" || _url.scheme() == "ws") {
+            client = new HttpClient(nullptr, _url, HTTP_RESPONSE, 2048000000);
+            //client->shouldSendHeader(false);
+        } else {
+            LTrace("Only Http Upload is supported")
+        }
+
+    }
+
+}
+
+void Upload::stop(bool flag) {
+
+    LTrace(" Upload::stop")
+
+
+    if (client) {
+        app.stop();
+        // client->Close();
+    }
+
+}
+
+Upload::~Upload() {
+    LTrace("~Upload()")
+    if (client) {
+        app.uvDestroy();
+    }
+
+    while (!stopped()) {
+        base::sleep(1000);
+    }
+
+}
+
+void Upload::run() {
+
+    LTrace("Upload OnRun");
+
+    ////////////////////////////////////
+
+    std::string accessToken("ya29.1.AADtN_WY53y0jEgN_SWcmfp6VvAQ6asnYqbDi5CKEfzwL7lfNqtbUiLeL4v07b_I");
+    std::string metadata("{ \"title\": \"My File\" }");
+
+
+    // std::string path("/tmp/");
+    //fs::addnode(path, "zlib-1.2.8.tar.gz");
+
+    //Client *conn = new Client("http://zlib.net/index.html");
+    // client->start();
+    client->fnComplete = [&](const Response & response) {
+        std::cout << "client->fnComplete" << std::endl << std::flush;
+        client->Close();
+        //            app.stop()
+
+    };
+
+    client->fnLoad = [&](const std::string str) {
+        // std::cout << "final test " << str << std::endl << std::flush;
+    };
+    
+  
+
+    client->_request.setMethod("POST");
+    client->_request.setKeepAlive(true);
+    client->_request.setChunkedTransferEncoding(false);
+    // client->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+
+
+    auto form = FormWriter::create(client, FormWriter::ENCODING_MULTIPART_FORM);
+    //
+    form->addPart("metadata", new StringPart(metadata, "application/json; charset=UTF-8"));
+    //form->addPart("file", new http::StringPart("jew", "text/plain"));
+    form->addPart("file", new FilePart("/var/tmp/a.txt", "text/plain"));
+    //form->addPart("file", new FilePart("/var/tmp/test.jpg", "image/jpeg"));
+    
+    form->header();
+    
+   client->fnConnect = [&](ClientConnecton *con) {
+     LTrace("fnConnect" )
+     form->start();
+    };
+    
+
+    client->send();
+
+
+    app.run();
+
+
+    // expects(fs::exists(path));
+    //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+    // fs::unlink(path);
+
+    std::cout << "app.run() over " << std::endl << std::flush;
+
+    //  stop();
+
+    //    exit = true;
+
+
+    delete client;
+    client = nullptr;
+
+    LTrace("Upload Over");
+}
+
+/*********************************************************************************************/
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new RemoteChannel("Remote", Level::Remote,"127.0.0.1", 6000));
-    
-      LTrace("exit")
-              
+    //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
 
-    Logger::instance().setWriter(new AsyncLogWriter());
+    Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
+
+    LTrace("exit") {
+        Upload *upload = new Upload("http://localhost:8000/upload");
+
+        upload->start();
+
+        base::sleep(5000000);
+
+        LTrace("exit")
+
+        upload->stop();
+
+        delete upload;
+
+        LTrace("Download done");
+
+        //        base::sleep(91000000000000);
+
+    }
+    return 0;
+
+
+
+    // Logger::instance().setWriter(new AsyncLogWriter());
 
     test::init();
     {
@@ -134,7 +289,7 @@ int main(int argc, char** argv) {
 
         download->start();
 
-        base::sleep(7000);
+        base::sleep(600);
 
 
         //base::sleep(5000);
