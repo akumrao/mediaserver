@@ -32,29 +32,38 @@ public:
     };
 
     void run() {
+        LTrace("MediaCapture:Run")
 
-       cap.open(0);
+      /* cap.open(0);
 
         if (!cap.isOpened()) {
             printf("no cam found ;(.\n");
+             LTrace("no cam found")
             cap.release();
             abort();
         }
 
-
+        LTrace("Camera Opened")
+                 
         while (cap.isOpened() && !stopped()) {
-        // while ( !stopped()) {
+            
+         LTrace("Captured Jpg Image")
+       */               
+         while ( !stopped()) {
              
-           //std::ifstream f("/var/tmp/red.jpg", std::ios::binary | std::ifstream::in);
-          // std::vector<uint8_t> v{std::istreambuf_iterator<char>{f}, {}};
-          // std::cout << "Read complete, got " << v.size() << " bytes\n";
-           //std::string buf =  std::string(v.begin(), v.end()); 
+           std::ifstream f("/var/tmp/red1.jpg", std::ios::binary | std::ifstream::in);
+           std::vector<uint8_t> v{std::istreambuf_iterator<char>{f}, {}};
+           std::cout << "Read complete, got " << v.size() << " bytes\n";
+           std::string buf =  std::string(v.begin(), v.end()); 
            
             std::vector<uchar> *outbuf = new std::vector<uchar>;
+            std::copy(buf.begin(), buf.end(), std::back_inserter(*outbuf));
+            test1.push(outbuf);
+            base::sleep(40);
             
-            
+            /*
             cap >> frame;
-            
+            std::vector<uchar> *outbuf = new std::vector<uchar>;
             std::vector<int> params;
             params.push_back(CV_IMWRITE_JPEG_QUALITY);
             params.push_back(50);
@@ -69,11 +78,12 @@ public:
             }
      
 
-          //  base::sleep(40);
+       
 
-            // std::vector<uchar> outbuf1 = test1.popNext();
+    
 
           frame.release();
+             */
 
         }
 
@@ -86,15 +96,15 @@ public:
 
 MediaCapture* gVideoCapture;
 
-class BasicResponder : public net::ServerResponder
+class MultiPartResponder : public net::ServerResponder
 /// Basic server responder (make echo?)
 {
 public:
 
-    BasicResponder(net::TcpHTTPConnection* conn) :
+    MultiPartResponder(net::HttpBase* conn) :
     ServerResponder(conn) {
         LDebug("Starting Server responder.")
-                //test1.ondispatch = BasicResponder::onVideoEncoded;
+                //test1.ondispatch = MultiPartResponder::onVideoEncoded;
                 // test1.start();
         if (!gVideoCapture->running()) {
             gVideoCapture->start();
@@ -104,7 +114,6 @@ public:
     virtual void onClose() {
         
         LDebug("ServerResponder::On close")
-        //stream.emitter -= packetSlot(this, &MPEGResponder::onVideoEncoded);
         test1.stop();
         gVideoCapture->stop();
         // delete gVideoCapture;
@@ -132,34 +141,80 @@ public:
 
     }
 
-    void onVideoEncoded(std::vector<uchar> & packet) {
-        LOG_CALL;
-        SDebug << "Send packet: "
-                // assert(!connection().socket()->closed());
-                << packet.size() << ": " << "fpsCounter.fps" << std::endl;
 
-        /*   try
-           {
-               connection()->Send((const uint8_t *) packet.data(), packet.size());
-               //fpsCounter.tick();
-           } catch (std::exception& exc)
-           {
-               LError(exc.what())
-               connection()->Close();
-           }
-         */
-    }
 
     MultipartAdapter* packetizer;
+};
+
+class ChunkedResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
+{
+public:
+
+    ChunkedResponder(net::HttpBase* conn) :
+    ServerResponder(conn) {
+        LDebug("Starting Server responder.")
+                //test1.ondispatch = ChunkedResponder::onVideoEncoded;
+                // test1.start();
+        if (!gVideoCapture->running()) {
+            gVideoCapture->start();
+        }
+    }
+
+    virtual void onClose() {
+        
+        LDebug("ServerResponder::On close")
+        test1.stop();
+        gVideoCapture->stop();
+        // delete gVideoCapture;
+        //stream.stop();
+    }
+
+    void onRequest(net::Request& request, net::Response& response) {
+        //DebugL << "On complete" << endl;
+
+        connection()->shouldSendHeader(false);
+
+        // response.setContentLength(14); // headers will be auto flushed
+
+        //connection()->Send((const uint8_t *) "hello universe", 14);
+        //connection()->Close();
+
+        packetizer = new ChunkedAdapter("image/jpeg",connection() );
+        //stream.attach(packetizer, 10, true);
+
+        using namespace std::placeholders;
+        test1.ondispatch = std::bind(&ChunkedAdapter::process, packetizer, _1);
+        
+        test1.start();
+
+
+    }
+
+
+
+    ChunkedAdapter* packetizer;
 };
 
 class StreamingResponderFactory : public ServerConnectionFactory {
 public:
 
-    ServerResponder* createResponder(net::TcpHTTPConnection* conn) {
-        return new BasicResponder(conn);
+    ServerResponder* createResponder(net::HttpBase* conn) {
+        
+          auto& request = conn->_request;
+
+            // Log incoming requests
+          STrace << "Incoming connection from " << ": URI:\n" << request.getURI() << ": Request:\n" << request << std::endl;
+
+        if( request.getURI() == "multipart")
+            return new MultiPartResponder(conn);
+        else
+        
+          return new ChunkedResponder(conn);
     }
 };
+
+
 
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));

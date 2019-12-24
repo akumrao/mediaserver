@@ -35,9 +35,9 @@ public:
     {
     }
 
-    ChunkedAdapter(const std::string& contentType, const std::string& frameSeparator = "", bool nocopy = true)
+    ChunkedAdapter(const std::string& contentType, HttpBase *connection = nullptr, const std::string& frameSeparator = "", bool nocopy = false)
         : PacketProcessor()
-        , connection(nullptr)
+        , connection(connection)
         , contentType(contentType)
         , frameSeparator(frameSeparator)
         , initial(true)
