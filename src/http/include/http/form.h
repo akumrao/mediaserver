@@ -43,6 +43,8 @@ public:
 
     /// Destroys the FormWriter.
     virtual ~FormWriter();
+    
+    void clearParts();
 
     /// Adds an part/attachment (file upload) to the form.
     ///
@@ -103,8 +105,11 @@ public:
     /// If "application/x-www-form-urlencoded" the entire message will be
     /// written.
     /// The complete flag will be set when the entire request has been written.
+    
+    
+    void writeChunked();
     void run();
-
+   
     /// Sets the encoding used for posting the form.
     ///
     /// Encoding must be either "application/x-www-form-urlencoded"
@@ -130,7 +135,11 @@ public:
     static const char* ENCODING_URL;               ///< "application/x-www-form-urlencoded"
     static const char* ENCODING_MULTIPART_FORM;    ///< "multipart/form-data"
     static const char* ENCODING_MULTIPART_RELATED; ///< "multipart/related" http://tools.ietf.org/html/rfc2387
+    
+    static const char* TEXT_PLAIN; 
+    static const char* APPLICATION_ZIP; 
 
+    CondWait condWait;
 protected:
     /// Creates the FormWriter that uses the given encoding.
     ///
@@ -163,6 +172,7 @@ protected:
     friend class FilePart;
     friend class StringPart;
 
+    
     struct Part
     {
         std::string name;
@@ -178,6 +188,8 @@ protected:
     void emit( const char * data, size_t len );
      
     void emit( const std::string &str ); 
+    
+    
             
 //    std::shared_ptr<Runner> _runner;
     std::string _encoding;
@@ -212,7 +224,7 @@ public:
     virtual bool writeChunk(FormWriter& writer) = 0;
 
     /// Writes the form data to the given HTTP client connection.
-    virtual void write(FormWriter& writer) = 0;
+    virtual bool write(FormWriter& writer) = 0;
 
     /// Writes the form data to the given output stream.
     virtual void write(std::ostream& ostr) = 0;
@@ -283,7 +295,7 @@ public:
     virtual bool writeChunk(FormWriter& writer);
 
     /// Writes the form data to the given HTTP client connection.
-    virtual void write(FormWriter& writer);
+    virtual bool write(FormWriter& writer);
 
     /// Writes the form data to the given output stream.
     virtual void write(std::ostream& ostr);
@@ -340,7 +352,7 @@ public:
     virtual bool writeChunk(FormWriter& writer);
 
     /// Writes the form data to the given HTTP client connection.
-    virtual void write(FormWriter& writer);
+    virtual bool write(FormWriter& writer);
 
     /// Writes the form data to the given output stream.
     virtual void write(std::ostream& ostr);

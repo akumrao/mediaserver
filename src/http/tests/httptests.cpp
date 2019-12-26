@@ -1,4 +1,4 @@
-#include "httptests.h"
+//#include "httptests.h"
 #include "http/HttpServer.h"
 #include "base/test.h"
 #include "base/logger.h"
@@ -38,7 +38,24 @@ class StreamingResponderFactory : public ServerConnectionFactory {
 public:
 
     ServerResponder* createResponder(HttpBase* conn) {
-        return new BasicResponder(conn);
+        
+         auto& request = conn->_request;
+
+        // Log incoming requests
+        STrace << "Incoming connection from " << ": URI:\n" << request.getURI() << ": Request:\n" << request << std::endl;
+
+        // Handle websocket connections
+        if (request.getURI().find("/upload") == 0 ) {   // || request.has("Sec-WebSocket-Key")) {
+            return new BasicResponder(conn);
+        }
+        else
+        {
+            return new BasicResponder(conn);
+        }
+
+        
+        
+        
     }
 };
 
@@ -46,30 +63,20 @@ int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     //test::init();
+  
+        Application app;
+        net::HttpServer socket("0.0.0.0", 8000 );
+        socket.start();
+
+        app.waitForShutdown([&](void*) {
+
+            socket.shutdown();
+
+        });
+
+    
     /*
-        Application app;
-        net::HttpServer socket("0.0.0.0", 7000, new StreamingResponderFactory() );
-        socket.start();
-
-        app.waitForShutdown([&](void*) {
-
-            socket.shutdown();
-
-        });
-
-    
-    
-        //test::init();
-
-        Application app;
-        net::HttpsServer socket("0.0.0.0", 7000, new StreamingResponderFactory() );
-        socket.start();
-
-        app.waitForShutdown([&](void*) {
-
-            socket.shutdown();
-
-        });
+     
   
     /// for websocket we do not need responder
         Application app;
@@ -83,15 +90,7 @@ int main(int argc, char** argv) {
         });
      */
 
-    Application app;
-    net::HttpsServer websocket("0.0.0.0", 8000);
-    websocket.start();
 
-    app.waitForShutdown([&](void*) {
-
-        websocket.shutdown();
-
-    });
 
     return 0;
 

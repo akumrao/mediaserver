@@ -13,18 +13,17 @@
 
 namespace base {
     namespace net {
-
-
         //
         // Form Writer
         //
 
-
         const char* FormWriter::ENCODING_URL = "application/x-www-form-urlencoded";
         const char* FormWriter::ENCODING_MULTIPART_FORM = "multipart/form-data";
         const char* FormWriter::ENCODING_MULTIPART_RELATED = "multipart/related";
+        const char* FormWriter::TEXT_PLAIN = "text/plain";
+        const char* FormWriter::APPLICATION_ZIP = "application/zip";
 
-        const int FILE_CHUNK_SIZE = 65536; // 32384;
+        const int FILE_CHUNK_SIZE = 10*1024; // 32384;65536
 
         FormWriter* FormWriter::create(ClientConnecton* stream, const std::string& encoding) {
             auto wr = new FormWriter(stream, encoding);
@@ -34,11 +33,8 @@ namespace base {
                 assert(stream->_request.getVersion() != Message::HTTP_1_0);
 
             }
-            // stream.Outgoing.lock();
             return wr;
-#if 0
-            return nullptr;
-#endif
+
         }
 
         FormWriter::FormWriter(ClientConnecton* connection, const std::string& encoding)
@@ -50,18 +46,16 @@ namespace base {
         , _writeState(0)
         , _initial(true)
         , _complete(false) {
-          ///  outgoing = new ChunkedAdapter(connection);
-#if 0 // Thread based writer
-            // Make sure threads are repeating
-            auto thread = dynamic_cast<Thread*> (runner.get());
-            if (thread)
-                thread->setRepeating(true);
-#endif
+
         }
 
         FormWriter::~FormWriter() {
+           clearParts();
+        }
+        void FormWriter::clearParts() {
             for (auto it = _parts.begin(); it != _parts.end(); ++it)
                 delete it->part;
+            _parts.clear();
         }
 
         void FormWriter::addPart(const std::string& name, FormPart* part) {
@@ -72,13 +66,12 @@ namespace base {
             p.part = part;
             p.name = name;
             _parts.push_back(p);
-
             _filesLength += part->length();
         }
 
         void FormWriter::header() {
             LTrace("Prepare header")
-
+            _stream->OutgoingProgress.start();
             Request& request = _stream->_request;
             if (request.getMethod() == Method::Post ||
                     request.getMethod() == Method::Put) {
@@ -89,7 +82,8 @@ namespace base {
                     writeUrl(ostr);
                     assert(ostr.tellp() > 0);
                     request.setContentLength(ostr.tellp());
-                } else {
+                } else if(  _encoding == ENCODING_MULTIPART_FORM || _encoding == ENCODING_MULTIPART_RELATED   )
+                {
                     if (_boundary.empty())
                         _boundary = createBoundary();
                     std::string ct(_encoding);
@@ -111,10 +105,21 @@ namespace base {
                             request.getVersion() != Message::HTTP_1_0)
                         request.setContentLength(calculateMultipartContentLength());
                 }
+                else
+                {
+                    LTrace("fu ", _filesLength)
+                    request.setContentType(_encoding);
+                   // assert(_filesLength);
+                    _stream->OutgoingProgress.total = _filesLength;
+
+                }
+                
                 if (request.getVersion() == Message::HTTP_1_0) {
                     request.setKeepAlive(false);
                     request.setChunkedTransferEncoding(false);
+                    
                 }
+                
             } else {
                 std::string uri = request.getURI();
                 std::ostringstream ostr;
@@ -124,8 +129,6 @@ namespace base {
                 request.setURI(uri);
             }
         }
-
-     
 
         uint64_t FormWriter::calculateMultipartContentLength() {
             std::ostringstream ostr;
@@ -168,100 +171,76 @@ namespace base {
         }
 
         void FormWriter::emit(const char *data, size_t len) {
-            LTrace(data);
+            LTrace(len);
             //outgoing->emit(data, len);
             _stream->send(data, len);
         }
 
         void FormWriter::emit(const std::string &data) {
-            LTrace(data);
+            LTrace(data.length());
+            
+             LTrace(data);
             _stream->send(data);
         }
 
+        
         void FormWriter::run() {
 
             LTrace("run")
-            while (!complete() && !stopped()) {
+            //_stream->OutgoingProgress.start();
+            
+            while (!complete()) {
+            //    condWait.wait();
+                if( stopped())
+                {
+                    LTrace("Set state 2 to stop")
+                     clearParts();
+                    _writeState =2; // signal server to stop with sending 0/r/n
+                }
+                
                 try {
-                   // assert(!complete());
+                    // assert(!complete());
                     if (encoding() == ENCODING_URL) {
                         std::ostringstream ostr;
                         writeUrl(ostr);
                         LTrace("Writing URL: ", ostr.str())
                         emit(ostr.str());
                         _complete = true;
-                    } else
-                    {
-                        //_stream->send("arvind");
+                    } else if(  _encoding == ENCODING_MULTIPART_FORM || _encoding == ENCODING_MULTIPART_RELATED  ) {
+                      
                         writeMultipartChunk();
                     }
-                    
-                    if (complete())
+                    else
                     {
-                        break ;
+                        writeChunked();
+                    }
+                            
+
+                    if (complete()) {
+                        break;
                         //stop();
                     }
                 } catch (std::exception& exc) {
                     LTrace("Error: ", exc.what())
-                   // assert(0);
-                  //  throw exc;
-                    //#ifdef _DEBUG
-                    //    throw exc;
-                    //#endif
+                            // assert(0);
+                            //  throw exc;
+                            //#ifdef _DEBUG
+                            //    throw exc;
+                            //#endif
                 }
+                
             }
-            
-            
+
+            _stream->Close();
             LTrace("runover")
-                      
+
             isrunning_ = false;
-            
+
         }
 
-
-#if 0
-
-void FormWriter::writeMultipart() {
-            for (NVCollection::ConstIterator it = begin(); it != end(); ++it) {
-                std::ostringstream ostr;
-                NVCollection header;
-                std::string disp("form-data; name=\"");
-                disp.append(it->first);
-                disp.append("\"");
-                header.set("Content-Disposition", disp);
-                writePartHeader(header, ostr);
-                ostr << it->second;
-                emit(ostr.str());
-            }
-
-            for (PartQueue::const_iterator pit = _parts.begin(); pit != _parts.end(); ++pit) {
-                std::ostringstream ostr;
-                NVCollection header(pit->part->headers());
-                std::string disp("form-data; name=\"");
-                disp.append(pit->name);
-                disp.append("\"");
-                std::string filename = pit->part->filename();
-                if (!filename.empty()) {
-                    disp.append("; filename=\"");
-                    disp.append(filename);
-                    disp.append("\"");
-                }
-                header.set("Content-Disposition", disp);
-                header.set("Content-Type", pit->part->contentType());
-                writePartHeader(header, ostr);
-                emit(ostr.str());
-                pit->part->write(*this);
-            }
-
-            std::ostringstream ostr;
-            writeEnd(ostr);
-            emit(ostr.str());
-            emit("0\r\n\r\n", 5, PacketFlags::NoModify | PacketFlags::Final);
-        }
-#endif
 
         void FormWriter::writeMultipartChunk() {
-            LTrace("Writing chunk: ", _writeState)
+           // LTrace("Writing chunk: ", _writeState)
 
             switch (_writeState) {
 
@@ -310,7 +289,7 @@ void FormWriter::writeMultipart() {
                             writePartHeader(header, ostr);
                             emit(ostr.str());
                         }
-                        if (p.part->writeChunk(*this)) {
+                        if (p.part->write(*this)) {
                             return; // return after writing a chunk
                         } else {
                             LTrace("Part complete: ", p.name)
@@ -340,7 +319,49 @@ void FormWriter::writeMultipart() {
                     _complete = true;
                     _writeState = -1; // raise error if called again
                 }
-                break;
+                    break;
+
+                    // Invalid state
+                default:
+                    LError("Invalid write state: ", _writeState)
+                    assert(0 && "invalid write state");
+                    break;
+            }
+        }
+        
+        
+          void FormWriter::writeChunked() {
+            LTrace("Writing chunk: ", _writeState)
+
+            switch (_writeState) {
+                case 0:
+                    if (!_parts.empty()) {
+                        auto& p = _parts.front();
+
+                   
+                        if (p.part->writeChunk(*this)) {
+                            return; // return after writing a chunk
+                        } else {
+                            LTrace("Part complete: ", p.name)
+                               delete p.part;
+                            _parts.pop_front();
+                        }
+                    }
+                    if (_parts.empty())
+                        _writeState = 2;
+                    break;
+
+                    // Send final packet
+                case 2:
+                {
+  
+                    emit("0\r\n\r\n", 5);
+          
+                    LTrace("Request complete")
+                    _complete = true;
+                    _writeState = -1; // raise error if called again
+                }
+                    break;
 
                     // Invalid state
                 default:
@@ -378,7 +399,7 @@ void FormWriter::writeMultipart() {
         }
 
         void FormWriter::updateProgress(int nread) {
-            _stream->OutgoingProgress.update(nread);
+            _stream->OutgoingProgress.update(nread, _stream);
         }
 
         std::string FormWriter::createBoundary() {
@@ -490,38 +511,49 @@ void FormWriter::writeMultipart() {
         }
 
         bool FilePart::writeChunk(FormWriter& writer) {
-            LTrace("Write chunk")
+          //  LTrace("Write chunk")
             assert(!writer.stopped());
             _initialWrite = false;
 
+            std::ostringstream ost;
             char buffer[FILE_CHUNK_SIZE];
-            if (_istr.read(buffer, FILE_CHUNK_SIZE)) {
-                writer.emit(buffer, (size_t) _istr.gcount());
+            if (_istr.read(buffer, FILE_CHUNK_SIZE) && !writer.stopped()) {
+                
+                ost << std::hex << _istr.gcount();
+                ost << "\r\n";
+                ost.write( buffer, (size_t) _istr.gcount());
+                ost << "\r\n";
+                writer.emit(ost.str());
                 writer.updateProgress((int) _istr.gcount());
                 return true;
             }
 
-            if (_istr.eof()) {
-                // Still a few bytes left to write?
-                if (_istr.gcount() > 0) {
-                    writer.emit(buffer, (size_t) _istr.gcount());
-                    writer.updateProgress((int) _istr.gcount());
+            if (_istr.eof() && !writer.stopped()) {
+                
+                if(_istr.gcount() > 0)
+                {
+                   ost << std::hex << _istr.gcount();
+                   ost << "\r\n";
+                   ost.write( buffer, (size_t) _istr.gcount());
+                   ost << "\r\n";
+                   writer.emit(ost.str());
+                   writer.updateProgress((int) _istr.gcount());
                 }
-                return false; // all done
-            }
-
-            assert(_istr.bad()); // must be bad
-            throw std::runtime_error("Cannot read multipart source file: " + _filename);
+                 return false;
+            } else if (_istr.bad())
+                throw std::runtime_error("Cannot read multipart source file: " +
+                    _filename);
         }
 
-        void FilePart::write(FormWriter& writer) {
+        bool FilePart::write(FormWriter& writer) {
             LTrace("Write")
             _initialWrite = false;
 
             char buffer[FILE_CHUNK_SIZE];
-            while (_istr.read(buffer, FILE_CHUNK_SIZE) && !writer.stopped()) {
+            if (_istr.read(buffer, FILE_CHUNK_SIZE) && !writer.stopped()) {
                 writer.emit(buffer, (size_t) _istr.gcount());
                 writer.updateProgress((int) _istr.gcount());
+               return true;
             }
 
             if (_istr.eof()) {
@@ -529,6 +561,7 @@ void FormWriter::writeMultipart() {
                     writer.emit(buffer, (size_t) _istr.gcount());
                     writer.updateProgress((int) _istr.gcount());
                 }
+                return false;
             } else if (_istr.bad())
                 throw std::runtime_error("Cannot read multipart source file: " +
                     _filename);
@@ -584,7 +617,7 @@ void FormWriter::writeMultipart() {
             LTrace("Write chunk")
             _initialWrite = false;
 
-            // TODO: Honour chunk size for large strings
+            // TODO: Honour chunk size for large strings  // wrong fix it later
 
             writer.emit(_data.c_str(), _data.length());
             writer.updateProgress((int) _data.length());
@@ -592,12 +625,13 @@ void FormWriter::writeMultipart() {
             return false;
         }
 
-        void StringPart::write(FormWriter& writer) {
+        bool StringPart::write(FormWriter& writer) {
             LTrace("Write")
             _initialWrite = false;
 
             writer.emit(_data.c_str(), _data.length());
             writer.updateProgress((int) _data.length());
+            return false;
         }
 
         void StringPart::write(std::ostream& ostr) {

@@ -107,7 +107,107 @@ namespace base
 
 
 
+class guard {
+public:
+  guard(uv_mutex_t &mutex) {
+    _mutex = &mutex;
+    uv_mutex_lock(_mutex);
+  }
 
+  ~guard() {
+    uv_mutex_unlock(_mutex);
+  }
+
+private:
+  uv_mutex_t* _mutex;
+};
+
+
+// Container class for holding thread-safe values.
+template <typename T>
+class ThreadSafe {
+public:
+  ThreadSafe(const T value) : _value(value) {
+    uv_mutex_init(&_mutex);
+  };
+
+  void set(const T value) {
+    guard guard(_mutex);
+    _value = value;
+  };
+
+  T get() {
+    guard guard(_mutex);
+    return _value;
+  };
+
+private:
+  T _value;
+  uv_mutex_t _mutex;
+};
+
+
+// Wrapper class for mutex/condition variable pair.
+class CondWait {
+public:
+  CondWait() {
+    uv_mutex_init(&mutex);
+    uv_cond_init(&cond);
+  };
+
+  ~CondWait() {
+    uv_mutex_destroy(&mutex);
+    uv_cond_destroy(&cond);
+  }
+
+  void lock() {
+    uv_mutex_lock(&mutex);
+  }
+
+  void unlock() {
+    uv_mutex_unlock(&mutex);
+  }
+
+  void signal() {
+    uv_cond_signal(&cond);
+  };
+
+  void wait() {
+    uv_cond_wait(&cond, &mutex);
+  }
+
+  uv_mutex_t mutex;
+  uv_cond_t cond;
+};
+
+
+// uv_barrier_t causes crashes on Windows (with libuv 1.15.0), so we have our
+// own implementation here.
+class Barrier {
+public:
+  Barrier(int n) : n(n) {}
+
+  void wait() {
+    guard guard(condwait.mutex);
+
+    if (n == 0) {
+      return;
+    }
+
+    --n;
+
+    if (n == 0) {
+      condwait.signal();
+    }
+    while(n > 0) {
+      condwait.wait();
+    }
+  }
+
+private:
+  int n;
+  CondWait condwait;
+};
 
 } // namespace base
 

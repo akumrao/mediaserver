@@ -9,6 +9,8 @@
 #include "http/parser.h"
 #include "http/responder.h"
 #include "http/websocket.h"
+//#include "multipartparser.h"
+
 
 namespace base {
     namespace net {
@@ -75,6 +77,10 @@ namespace base {
         protected:
             std::string ip; int port;
             //Listener* listener{ nullptr};
+            
+            
+           // multipartparser_callbacks callbacks;
+           // multipartparser           parser;
 
         };
 

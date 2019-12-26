@@ -38,7 +38,7 @@ namespace base {
 
         void ChunkedAdapter::emitHeader() {
             // Flush connection headers if the connection is set.
-            if (connection) {
+           /* if (connection) {
                 connection->shouldSendHeader(true);
                 connection->_response.setChunkedTransferEncoding(true);
                 connection->_response.set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
@@ -51,7 +51,7 @@ namespace base {
                 connection->_response.set("Expires", "0");
                // connection->sendHeader();
             }// Otherwise make up the response.
-            else {
+            else */{
                 std::ostringstream hst;
                 hst << "HTTP/1.1 200 OK\r\n"
                         // Note: If Cache-Control: no-store is not used Chrome's
@@ -68,7 +68,7 @@ namespace base {
                         << "Transfer-Encoding: chunked\r\n"
                         << "Content-Type: " << contentType << "\r\n"
                         << "\r\n";
-                //emit(hst.str());
+                emit(hst.str().c_str() ,hst.str().length() );
             }
         }
 
@@ -89,21 +89,21 @@ namespace base {
             ost << std::hex << packet.size();
 
             // Emit separate packets for nocopy
-            if (nocopy) {
-                /*            emit(ost.str());
+           /* if (nocopy) {
+                           emit(ost.str());
                             emit("\r\n", 2);
                             if (!frameSeparator.empty())
                                 emit(frameSeparator);
                             emit(packet.data(), packet.size());
-                            emit("\r\n", 2);*/
+                            emit("\r\n", 2);
             }                // Concat pieces for non fragmented
-            else {
-                /*ost << "\r\n";
+            else */{
+                ost << "\r\n";
                 if (!frameSeparator.empty())
                     ost << frameSeparator;
-                ost.write(packet.data(), packet.size());
+                ost << std::string(packet.begin(), packet.end());
                 ost << "\r\n";
-                emit(ost.str());*/
+                emit(ost.str().c_str() , ost.str().length());
             }
         }
         
@@ -124,7 +124,7 @@ namespace base {
 
         }
         
-        
+/*****************************************************************************************/        
 
         void MultipartAdapter::emitHeader() {
             

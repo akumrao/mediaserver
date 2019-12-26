@@ -81,8 +81,8 @@ void Download::run() {
 
     ////////////////////////////////////
 
-    std::string path("/tmp/");
-    fs::addnode(path, "zlib-1.2.8.tar.gz");
+    std::string path("./");
+    fs::addnode(path, "test.zip");
 
 
     //Client *conn = new Client("http://zlib.net/index.html");
@@ -91,11 +91,20 @@ void Download::run() {
         std::cout << "client->fnComplete" << std::endl << std::flush;
         client->Close();
         //            app.stop()
-
     };
 
     client->fnLoad = [&](const std::string str) {
-        // std::cout << "final test " << str << std::endl << std::flush;
+         std::cout << "final test " << str << std::endl << std::flush;
+    };
+    
+    client->fnConnect = [&](ClientConnecton * con) {
+        
+        con->OutgoingProgress.start();
+    };
+    
+    client->fnPayload = [&](ClientConnecton * con, size_t sz){
+       
+        con->OutgoingProgress.update(sz, con );
     };
 
     client->_request.setMethod("GET");
@@ -139,6 +148,8 @@ public:
     ClientConnecton *client{nullptr};
 
     Application app;
+    
+    FormWriter *form;
 
 };
 
@@ -160,10 +171,15 @@ void Upload::stop(bool flag) {
 
     LTrace(" Upload::stop")
 
-
     if (client) {
-        app.stop();
-        // client->Close();
+        
+        form->stop(true);
+        //delete form;
+       // form = nullptr;
+        //
+       // app.stop();
+        //client->Close();
+        
     }
 
 }
@@ -180,14 +196,15 @@ Upload::~Upload() {
 
 }
 
+
 void Upload::run() {
 
     LTrace("Upload OnRun");
 
     ////////////////////////////////////
 
-    std::string accessToken("ya29.1.AADtN_WY53y0jEgN_SWcmfp6VvAQ6asnYqbDi5CKEfzwL7lfNqtbUiLeL4v07b_I");
-    std::string metadata("{ \"title\": \"My File\" }");
+    //   std::string accessToken("ya29.1.AADtN_WY53y0jEgN_SWcmfp6VvAQ6asnYqbDi5CKEfzwL7lfNqtbUiLeL4v07b_I");
+    //   std::string metadata("{ \"title\": \"My File\" }");
 
 
     // std::string path("/tmp/");
@@ -195,52 +212,76 @@ void Upload::run() {
 
     //Client *conn = new Client("http://zlib.net/index.html");
     // client->start();
-    client->fnComplete = [&](const Response & response) {
-        std::cout << "client->fnComplete" << std::endl << std::flush;
-        client->Close();
-        //            app.stop()
-
-    };
+  
 
     client->fnLoad = [&](const std::string str) {
         // std::cout << "final test " << str << std::endl << std::flush;
     };
-    
-  
 
-    client->_request.setMethod("POST");
+
+
+    client->_request.setMethod("PUT");
+   // client->_request.add( "Expect", "100-continue");
+    client->_request.add( "Accept", "*/*");
     client->_request.setKeepAlive(true);
+
+    //for multipart
+    /* 
     client->_request.setChunkedTransferEncoding(false);
-    // client->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-
-
     auto form = FormWriter::create(client, FormWriter::ENCODING_MULTIPART_FORM);
-    //
     form->addPart("metadata", new StringPart(metadata, "application/json; charset=UTF-8"));
-    //form->addPart("file", new http::StringPart("jew", "text/plain"));
     form->addPart("file", new FilePart("/var/tmp/a.txt", "text/plain"));
-    //form->addPart("file", new FilePart("/var/tmp/test.jpg", "image/jpeg"));
-    
+     */
+
+    // for chunked
+    client->_request.setChunkedTransferEncoding(true);
+    //auto form = FormWriter::create(client, FormWriter::TEXT_PLAIN);
+    //form->addPart("file", new FilePart("/var/tmp/a.txt", "text/plain"));
+    form = FormWriter::create(client, FormWriter::APPLICATION_ZIP);
+    form->addPart("file", new FilePart("./test.zip", FormWriter::APPLICATION_ZIP));
+
+
     form->header();
-    
-   client->fnConnect = [&](ClientConnecton *con) {
-     LTrace("fnConnect" )
-     form->start();
+
+    client->fnConnect = [&](ClientConnecton * con) {
+     LTrace("fnConnect")
+        form->start();
     };
     
+    client->fnClose = [&](ClientConnecton * con) {
+        LTrace("fnClose")
+        app.stop();
+    }; 
 
+    client->fnComplete = [&](const Response & response) {
+          std::cout << "client->fnComplete" << std::endl << std::flush;
+          //form->condWait.signal();
+          
+          //client->Close();
+      };
+    
+     
+    client->fnPayload = [&](ClientConnecton * con, size_t sz){
+        
+       
+    };
+
+    
     client->send();
 
 
     app.run();
+ 
+    std::cout << "app.run() over " << std::endl << std::flush;
 
+    if(form)   
+    delete form;
 
     // expects(fs::exists(path));
     //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
     // fs::unlink(path);
 
-    std::cout << "app.run() over " << std::endl << std::flush;
-
+ 
     //  stop();
 
     //    exit = true;
@@ -258,39 +299,13 @@ int main(int argc, char** argv) {
     //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
 
     Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
-
-    LTrace("exit") {
-        Upload *upload = new Upload("http://localhost:8000/upload");
-
-        upload->start();
-
-        base::sleep(5000000);
-
-        LTrace("exit")
-
-        upload->stop();
-
-        delete upload;
-
-        LTrace("Download done");
-
-        //        base::sleep(91000000000000);
-
-    }
-    return 0;
-
-
-
-    // Logger::instance().setWriter(new AsyncLogWriter());
-
-    test::init();
+   /* 
     {
-        Download *download = new Download("http://speedtest.tele2.net/1GB.zip");
+        Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
 
         download->start();
 
-        base::sleep(600);
-
+        base::sleep(29000);
 
         //base::sleep(5000);
 
@@ -304,7 +319,38 @@ int main(int argc, char** argv) {
 
         base::sleep(910);
 
+    }*/
+
+    LTrace("exit") 
+    {
+       // Upload *upload = new Upload("http://arvindubuntu:8000/upload.php");
+        Upload *upload = new Upload("http://speedtest.tele2.net/upload.php");
+
+        upload->start();
+
+        base::sleep(4000);
+
+        LTrace("exit")
+
+        upload->stop();
+
+        base::sleep(400000);
+        
+        
+        delete upload;
+
+        LTrace("upload done");
+
+        //        base::sleep(91000000000000);
+
     }
+   return 0;
+
+
+    // Logger::instance().setWriter(new AsyncLogWriter());
+
+  //  test::init();
+    
     return 0;
 
 

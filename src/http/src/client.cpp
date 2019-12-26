@@ -11,21 +11,63 @@ using std::endl;
 
 namespace base {
     namespace net {
+
+        ProgressSignal::ProgressSignal()
+        : //sender(nullptr)
+         current(0)
+        , total(0)
+        , latency(0)
+        , totalTimeDiff(0) {
+            LTrace("ProgressSignal");
+        }
+
+        void ProgressSignal::start() {
+            start_time = base::Application::GetTime();
+        }
+           
+        void ProgressSignal::update(int nread, ClientConnecton* conn) {
+            assert(current <= total);
+            current += nread;
+            //emit(progress());
+
+            double timeDiff = (double) ((base::Application::GetTime()) - end_time);
+            latency = (latency + timeDiff) / 2;
+            end_time = base::Application::GetTime();
+
+            LTrace("cur ", current, "total ", total)
+                    
+            totalTimeDiff += timeDiff;
+            if (current >= total) {
+                RTrace("\"totalsize\":", double( current / 1000), ", \"time_s\":", double(end_time - start_time) / 1000.00);
+            }
+
+            if (totalTimeDiff >= 1000 || current >= total || ((int( progress()) % 10 == 0) && (totalTimeDiff > 10))) {
+                totalTimeDiff = 0;
+                RTrace("\"dowloadspeed_kbps\":", double( current  / ((end_time - start_time)*1.00)), ", \"latency_ms\":", latency)
+
+                std::ostringstream ss;
+                ss << "{dowloadspeed_kbps:" << double( current / ((end_time - start_time)*1.00)) << ", latency_ms:" << latency << "}";
+                conn->fnLoad(ss.str());
+            }
+
+        }
+
+
+
         //
         // Client Connection
         //
 
-        ClientConnecton::ClientConnecton(http_parser_type type) : HttpBase(type) {
+        ClientConnecton::ClientConnecton(http_parser_type type) :  HttpBase(type) {
         }
 
         ClientConnecton::~ClientConnecton() {
         }
-        
-        void ClientConnecton::on_payload(const char* data, size_t len){
-            
+
+        void ClientConnecton::on_payload(const char* data, size_t len) {
+
             LTrace("ClientConnecton::on_payload")
         };
-         
 
         HttpClient::HttpClient(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
         : TcpConnection(listener, bufferSize)
@@ -59,7 +101,6 @@ namespace base {
                 //wsAdapter = new WebSocketConnection(listener, this, ClientSide);
             }
 
-
         }
 
         HttpClient::~HttpClient() {
@@ -76,12 +117,12 @@ namespace base {
             connect();
         }
 
-         void HttpClient::Close()
-         {
-             _connect = true;
-             _active = true;
-             TcpConnection::Close();
-         }
+        void HttpClient::Close() {
+            _connect = true;
+            _active = true;
+            TcpConnection::Close();
+        }
+
         void HttpClient::send(const char* data, size_t len) {
             connect();
 
@@ -94,24 +135,15 @@ namespace base {
         }
 
         void HttpClient::send(const std::string &str) {
-            send(str.c_str(), str.length() );
-     
+            send(str.c_str(), str.length());
         }
 
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {
-            if(_connect) return;
-            
-            end_time = base::Application::GetTime();
+            if (_connect) return;
 
-            LInfo("{resolve_time_ms", _url.host(), ":", double(end_time - start_time), "}")
-                    
-            std::ostringstream ss;
-            ss << "{resolve_time_ms" <<  _url.host() << ":" << double(end_time - start_time)<< "}";
-            fnLoad( ss.str() );
-            
             if (!_connect) {
                 _connect = true;
-                start_time = base::Application::GetTime();
+
                 LTrace("Connecting ", ip, ":", _url.port())
                 Connect(_url.host(), _url.port(), res);
             }
@@ -119,17 +151,14 @@ namespace base {
         }
 
         void HttpClient::connect() {
-            if(_connect) return;
+            if (_connect) return;
             LTrace("Resolve DNS ", _url.host());
-
-            start_time = base::Application::GetTime();
 
             resolve(_url.host(), _url.port(), Application::uvGetLoop());
         }
 
         void HttpClient::setReadStream(std::ostream* os) {
             assert(!_connect);
-
             //Incoming.attach(new StreamWriter(os), -1, true);
             _readStream.reset(os);
         }
@@ -139,20 +168,12 @@ namespace base {
         // Socket Callbacks
 
         void HttpClient::on_connect() {
-            if(_active) return;
+            if (_active) return;
             LTrace("On_connect")
 
-            end_time = base::Application::GetTime();
-            LInfo("{connect_time_ms ", _url.host(), " : ", double(end_time - start_time), "}")
-                    
-           std::ostringstream ss;
-           ss << "{connect_time_ms" <<  _url.host() << ":" << double(end_time - start_time)<< "}";
-           fnLoad( ss.str() );
-
-            start_time = base::Application::GetTime();
             // Set the connection to active
-            
-             sendHeader();
+
+            sendHeader();
             _active = true;
 
             // Emit the connect signal so raw connections like
@@ -170,7 +191,7 @@ namespace base {
 
                 // sendHeader();
                 // Send the header
-               
+
             }
 
             // Send the outgoing HTTP header if it hasn't already been sent.
@@ -181,95 +202,58 @@ namespace base {
             //    // LTrace("On connect: Send header")
             //    sendHeader();
             //}
-            
-            fnConnect(this);
+            if (fnConnect)
+                fnConnect(this);
         }
 
         void HttpClient::on_read(const char* data, size_t len) {
 
-            LTrace("On socket recv: ", len);
-            LTrace("On socket recv: ", data);
-
+            // LTrace("On socket recv: ", len);
+             //LTrace("On socket recv: ", data);
             recvBytes += len;
             // TcpConnection::on_read( data, len);
             _parser.parse((const char*) data, len);
             //LInfo("On socket recv: ", len , " : " , recvBytes, " : ", end_time- start_time );
 
-            static double latency = 0;
-
-            latency = latency + (double) ((base::Application::GetTime()) - end_time);
-
-            latency = latency / 2;
-
-            end_time = base::Application::GetTime();
-            RTrace("\"dowloadspeed_kbps\":", double( recvBytes*8.0  / ((end_time - start_time)*1.00)), ", \"latency_ms\":", latency)
-
-           // SRTrace  << "\"dowloadspeed_kbps\":" <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) << ", \"latency_ms\":" <<  latency;
-                    
-                    
-            std::ostringstream ss;
-            ss << "{dowloadspeed_kbps:" <<  double( recvBytes*8.0  / ((end_time - start_time)*1.00)) <<  ", latency_ms:" <<  latency <<  "}";
-            fnLoad( ss.str() );
-                    /* if (this->listener)
-                         this->listener->on_read(this, data, len);
-                     else {
-
-
-
-                         if (_parser.complete()) {
-                             // Buggy HTTP servers might send late data or multiple responses,
-                             // in which case the parser state might already be HPE_OK.
-                             // In this case we discard the late message and log the error here,
-                             // rather than complicate the app with this error handling logic.
-                             // This issue was noted using Webrick with Ruby 1.9.
-                             LWarn("Dropping late HTTP response: ", data)
-                             return;
-                         }
-
-                         // Parse incoming HTTP messages
-                         _parser.parse((const char*) data, len);
-                         // onPayload( data, len);
-                     }*/
         }
         // Connection Callbacks
 
         void HttpClient::onHeaders() {
-             LTrace("On headers")
-            //IncomingProgress.total = _response.getContentLength();
-
-            // Headers.emit(_response);
+            LTrace("On headers")
+                    OutgoingProgress.total = _response.getContentLength();
         }
 
         void HttpClient::on_payload(const char* data, size_t len) {
-             LTrace("HttpClient On payload: ", len)
+            LTrace("HttpClient On payload: ", data)
 
-            //// Update download progress
-            //IncomingProgress.update(buffer.size());
+                    //// Update download progress
+                    //IncomingProgress.update(buffer.size());
 
-            //// Write to the incoming packet stream if adapters are attached
-            //if (Incoming.numAdapters() > 0 || Incoming.emitter.nslots() > 0) {
-            //    // if (!Incoming.active());
-            //    //     throw std::runtime_error("startInputStream() must be called");
-            //    Incoming.write(bufferCast<const char*>(buffer), buffer.size());
-            //}
+                    //// Write to the incoming packet stream if adapters are attached
+                    //if (Incoming.numAdapters() > 0 || Incoming.emitter.nslots() > 0) {
+                    //    // if (!Incoming.active());
+                    //    //     throw std::runtime_error("startInputStream() must be called");
+                    //    Incoming.write(bufferCast<const char*>(buffer), buffer.size());
+                    //}
 
-            // Write to the STL read stream if available
+                    // Write to the STL read stream if available
             if (_readStream) {
-                LTrace("Stream len: ", len)
+               // LTrace("Stream len: ", len)
                 //LTrace("Stream data: ", data)
                 _readStream->write((const char*) data, len);
                 _readStream->flush();
                 //Close();
             }
-
-            // Payload.emit(buffer);
+            
+            if(fnPayload)
+             fnPayload(this, len);
         }
 
         void HttpClient::onComplete() {
-             LTrace("On complete")
+            LTrace("On complete")
 
             assert(!_complete);
-           
+
 
             // Release any file handles
             if (_readStream) {
@@ -281,16 +265,19 @@ namespace base {
             }
             _complete = true; // in case close() is called inside callback
 
+            if(fnComplete)
             fnComplete(_response);
         }
 
         void HttpClient::on_close() {
             LTrace("On close")
-            
+
             if (!_complete)
                 onComplete();
-            //Close.emit(*this);
-           
+            
+            if(fnClose)
+            fnClose(this);
+
         }
 
         long HttpClient::sendHeader() {
@@ -336,273 +323,274 @@ namespace base {
         // ClientSec Connection
         //
 
-                /********************************************************************************************************************************/
- /*
-        HttpsClient::HttpsClient(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
-        : SslConnection(listener, bufferSize), ClientConnecton(type), listener(listener)
-        , _url(url)
-        , _connect(false)
-        , _active(false)
-        , _complete(false) {
+        /********************************************************************************************************************************/
+        /*
+               HttpsClient::HttpsClient(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
+               : SslConnection(listener, bufferSize), ClientConnecton(type), listener(listener)
+               , _url(url)
+               , _connect(false)
+               , _active(false)
+               , _complete(false) {
 
-            auto uri = url.pathEtc();
-            if (!uri.empty())
-                _request.setURI(uri);
-            _request.setHost(url.host(), url.port());
+                   auto uri = url.pathEtc();
+                   if (!uri.empty())
+                       _request.setURI(uri);
+                   _request.setHost(url.host(), url.port());
 
-            // Set default error status
-            _response.setStatus(StatusCode::BadGateway);
+                   // Set default error status
+                   _response.setStatus(StatusCode::BadGateway);
 
 
-            _parser.setObserver(this);
-            if (type == HTTP_REQUEST)
-                _parser.setRequest(&_request);
-            else
-                _parser.setResponse(&_response);
+                   _parser.setObserver(this);
+                   if (type == HTTP_REQUEST)
+                       _parser.setRequest(&_request);
+                   else
+                       _parser.setResponse(&_response);
 
-            // replaceAdapter(new ConnectionAdapter(this, HTTP_RESPONSE));
+                   // replaceAdapter(new ConnectionAdapter(this, HTTP_RESPONSE));
 
-            if (url.scheme() == "ws") {
+                   if (url.scheme() == "ws") {
 
-                //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
-                wsAdapter = new WebSocketConnection(listener, this, ClientSide);
-            }
+                       //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
+                       wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+                   }
 
 
-        }
+               }
 
-        HttpsClient::~HttpsClient() {
-            // LTrace("Destroy")
-        }
+               HttpsClient::~HttpsClient() {
+                   // LTrace("Destroy")
+               }
 
-        void HttpsClient::send() {
-            connect();
-        }
+               void HttpsClient::send() {
+                   connect();
+               }
 
-        void HttpsClient::send(Request& req) {
-            assert(!_connect);
-            _request = req;
-            connect();
-        }
+               void HttpsClient::send(Request& req) {
+                   assert(!_connect);
+                   _request = req;
+                   connect();
+               }
 
-        void HttpsClient::send(const char* data, size_t len) {
-            connect();
+               void HttpsClient::send(const char* data, size_t len) {
+                   connect();
 
-            if (_active)
-                // Raw data will be pushed onto the Outgoing packet stream
-                SslConnection::send(data, len);
-            else
-                _outgoingBuffer.push_back(std::string((char*) data, len));
-            return;
-        }
+                   if (_active)
+                       // Raw data will be pushed onto the Outgoing packet stream
+                       SslConnection::send(data, len);
+                   else
+                       _outgoingBuffer.push_back(std::string((char*) data, len));
+                   return;
+               }
 
-        void HttpsClient::send(const std::string &str) {
-            connect();
+               void HttpsClient::send(const std::string &str) {
+                   connect();
 
-            if (_active)
-                // Raw data will be pushed onto the Outgoing packet stream
-                //  TcpConnectionBase::Write(str.c_str(), str.length());
-                // else
-                _outgoingBuffer.push_back(str);
-            return;
-        }
+                   if (_active)
+                       // Raw data will be pushed onto the Outgoing packet stream
+                       //  TcpConnectionBase::Write(str.c_str(), str.length());
+                       // else
+                       _outgoingBuffer.push_back(str);
+                   return;
+               }
 
-        void HttpsClient::cbDnsResolve(addrinfo* res, std::string ip) {
+               void HttpsClient::cbDnsResolve(addrinfo* res, std::string ip) {
 
-            end_time = base::Application::GetTime();
+                   end_time = base::Application::GetTime();
 
-            LInfo("{Resolve time(ms) ", _url.host(), " : ", (end_time - start_time), "}")
+                   LInfo("{Resolve time(ms) ", _url.host(), " : ", (end_time - start_time), "}")
 
-            if (!_connect) {
-                _connect = true;
+                   if (!_connect) {
+                       _connect = true;
 
-                start_time = base::Application::GetTime();
-                LTrace("Connecting ", ip, ":", _url.port())
-                Connect(_url.host(), _url.port(), res);
-            }
+                       start_time = base::Application::GetTime();
+                       LTrace("Connecting ", ip, ":", _url.port())
+                       Connect(_url.host(), _url.port(), res);
+                   }
 
-        }
+               }
 
-        void HttpsClient::connect() {
-            LTrace("Resolve DNS ", _url.host());
+               void HttpsClient::connect() {
+                   LTrace("Resolve DNS ", _url.host());
 
-            start_time = base::Application::GetTime();
+                   start_time = base::Application::GetTime();
 
-            resolve(_url.host(), _url.port(), Application::uvGetLoop());
-        }
+                   resolve(_url.host(), _url.port(), Application::uvGetLoop());
+               }
 
-        void HttpsClient::setReadStream(std::ostream* os) {
-            assert(!_connect);
+               void HttpsClient::setReadStream(std::ostream* os) {
+                   assert(!_connect);
 
-            //Incoming.attach(new StreamWriter(os), -1, true);
-            _readStream.reset(os);
-        }
+                   //Incoming.attach(new StreamWriter(os), -1, true);
+                   _readStream.reset(os);
+               }
 
-        //
-        // Socket Callbacks
+               //
+               // Socket Callbacks
 
-        void HttpsClient::on_connect() {
-            LTrace("On_connect")
+               void HttpsClient::on_connect() {
+                   LTrace("On_connect")
 
-            end_time = base::Application::GetTime();
-            LInfo("{Connect time(ms) ", _url.host(), " : ", (end_time - start_time), "}")
+                   end_time = base::Application::GetTime();
+                   LInfo("{Connect time(ms) ", _url.host(), " : ", (end_time - start_time), "}")
 
-            start_time = base::Application::GetTime();
-            // Set the connection to active
-            _active = true;
+                   start_time = base::Application::GetTime();
+                   // Set the connection to active
+                   _active = true;
 
-            // Emit the connect signal so raw connections like
-            // websockets can kick off the data flow
-            //   Connect.emit();
+                   // Emit the connect signal so raw connections like
+                   // websockets can kick off the data flow
+                   //   Connect.emit();
 
-            // Flush queued packets
-            if (!_outgoingBuffer.empty()) {
-                // LTrace("Sending buffered: ", _outgoingBuffer.size())
-                for (const auto& packet : _outgoingBuffer) {
-                    SslConnection::send((const char*) packet.c_str(), packet.length());
-                }
-                _outgoingBuffer.clear();
-            } else {
+                   // Flush queued packets
+                   if (!_outgoingBuffer.empty()) {
+                       // LTrace("Sending buffered: ", _outgoingBuffer.size())
+                       for (const auto& packet : _outgoingBuffer) {
+                           SslConnection::send((const char*) packet.c_str(), packet.length());
+                       }
+                       _outgoingBuffer.clear();
+                   } else {
 
-                // Send the header
-                sendHeader();
-            }
+                       // Send the header
+                       sendHeader();
+                   }
 
-            // Send the outgoing HTTP header if it hasn't already been sent.
-            // Note the first call to socket().send() will flush headers.
-            // Note if there are stream adapters we wait for the stream to push
-            // through any custom headers. See ChunkedAdapter::emitHeader
-            //if (Outgoing.numAdapters() == 0) {
-            //    // LTrace("On connect: Send header")
-            //    sendHeader();
-            //}
-        }
+                   // Send the outgoing HTTP header if it hasn't already been sent.
+                   // Note the first call to socket().send() will flush headers.
+                   // Note if there are stream adapters we wait for the stream to push
+                   // through any custom headers. See ChunkedAdapter::emitHeader
+                   //if (Outgoing.numAdapters() == 0) {
+                   //    // LTrace("On connect: Send header")
+                   //    sendHeader();
+                   //}
+               }
 
-        void HttpsClient::on_read(const char* data, size_t len) {
+               void HttpsClient::on_read(const char* data, size_t len) {
 
-            LTrace("On socket recv: ", len);
-            // LTrace("On socket recv: ", data);
+                   LTrace("On socket recv: ", len);
+                   // LTrace("On socket recv: ", data);
 
-            recvBytes += len;
-            //HttpsConnection::on_read( data, len);
+                   recvBytes += len;
+                   //HttpsConnection::on_read( data, len);
 
-            _parser.parse((const char*) data, len);
-            // onPayload( data, len);
+                   _parser.parse((const char*) data, len);
+                   // onPayload( data, len);
 
-            //LInfo("On socket recv: ", len , " : " , recvBytes, " : ", end_time- start_time );
+                   //LInfo("On socket recv: ", len , " : " , recvBytes, " : ", end_time- start_time );
 
-            static double latency = 0;
+                   static double latency = 0;
 
-            latency = latency + (double) ((base::Application::GetTime()) - end_time);
+                   latency = latency + (double) ((base::Application::GetTime()) - end_time);
 
-            latency = latency / 2;
+                   latency = latency / 2;
 
-            end_time = base::Application::GetTime();
-            LInfo("{Dowloadspeed Bits/s ", _url.host(), " : ", double( double(recvBytes)*8.0 * 1000.00 / ((end_time - start_time)*1.00)), ", Latency(ms) ", _url.host(), " : ", latency, "}")
+                   end_time = base::Application::GetTime();
+                   LInfo("{Dowloadspeed Bits/s ", _url.host(), " : ", double( double(recvBytes)*8.0 * 1000.00 / ((end_time - start_time)*1.00)), ", Latency(ms) ", _url.host(), " : ", latency, "}")
 
 
 
-        }
-        // Connection Callbacks
+               }
+               // Connection Callbacks
 
-        void HttpsClient::onHeaders() {
-            // LTrace("On headers")
-            //IncomingProgress.total = _response.getContentLength();
+               void HttpsClient::onHeaders() {
+                   // LTrace("On headers")
+                   //IncomingProgress.total = _response.getContentLength();
 
-            // Headers.emit(_response);
-        }
+                   // Headers.emit(_response);
+               }
 
-        void HttpsClient::on_payload(const char* data, size_t len) {
-            // LTrace("On payload: ", buffer.size())
+               void HttpsClient::on_payload(const char* data, size_t len) {
+                   // LTrace("On payload: ", buffer.size())
 
-            //// Update download progress
-            //IncomingProgress.update(buffer.size());
+                   //// Update download progress
+                   //IncomingProgress.update(buffer.size());
 
-            //// Write to the incoming packet stream if adapters are attached
-            //if (Incoming.numAdapters() > 0 || Incoming.emitter.nslots() > 0) {
-            //    // if (!Incoming.active());
-            //    //     throw std::runtime_error("startInputStream() must be called");
-            //    Incoming.write(bufferCast<const char*>(buffer), buffer.size());
-            //}
+                   //// Write to the incoming packet stream if adapters are attached
+                   //if (Incoming.numAdapters() > 0 || Incoming.emitter.nslots() > 0) {
+                   //    // if (!Incoming.active());
+                   //    //     throw std::runtime_error("startInputStream() must be called");
+                   //    Incoming.write(bufferCast<const char*>(buffer), buffer.size());
+                   //}
 
-            // Write to the STL read stream if available
-            if (_readStream) {
-                LTrace("Stream len: ", len)
-                LTrace("Stream data: ", data)
-                _readStream->write((const char*) data, len);
-                _readStream->flush();
-                //Close();
-            }
+                   // Write to the STL read stream if available
+                   if (_readStream) {
+                       LTrace("Stream len: ", len)
+                       LTrace("Stream data: ", data)
+                       _readStream->write((const char*) data, len);
+                       _readStream->flush();
+                       //Close();
+                   }
 
-            // Payload.emit(buffer);
-        }
+                   // Payload.emit(buffer);
+               }
 
-        void HttpsClient::onComplete() {
-            // LTrace("On complete")
+               void HttpsClient::onComplete() {
+                   // LTrace("On complete")
 
-            assert(!_complete);
-            _complete = true; // in case close() is called inside callback
+                   assert(!_complete);
+                   _complete = true; // in case close() is called inside callback
 
-            // Release any file handles
-            if (_readStream) {
-                auto fstream = dynamic_cast<std::ofstream*> (_readStream.get());
-                if (fstream) {
-                    // LTrace("Closing file stream")
-                    fstream->close();
-                }
-            }
+                   // Release any file handles
+                   if (_readStream) {
+                       auto fstream = dynamic_cast<std::ofstream*> (_readStream.get());
+                       if (fstream) {
+                           // LTrace("Closing file stream")
+                           fstream->close();
+                       }
+                   }
 
-            //   Complete.emit(_response);
-        }
+                   //   Complete.emit(_response);
+               }
 
-        void HttpsClient::on_close() {
-            // LTrace("On close")
+               void HttpsClient::on_close() {
+                   // LTrace("On close")
 
-            if (!_complete)
-                onComplete();
-            //Close.emit(*this);
-        }
+                   if (!_complete)
+                       onComplete();
+                   //Close.emit(*this);
+               }
 
-        long HttpsClient::sendHeader() {
+               long HttpsClient::sendHeader() {
 
-            LTrace("TcpHTTPConnection::sendHeader()")
+                   LTrace("TcpHTTPConnection::sendHeader()")
 
-            if (!_shouldSendHeader)
-                return 0;
-            _shouldSendHeader = false;
-            assert(outgoingHeader());
+                   if (!_shouldSendHeader)
+                       return 0;
+                   _shouldSendHeader = false;
+                   assert(outgoingHeader());
 
-            // std::ostringstream os;
-            // outgoingHeader()->write(os);
-            // std::string head(os.str().c_str(), os.str().length());
+                   // std::ostringstream os;
+                   // outgoingHeader()->write(os);
+                   // std::string head(os.str().c_str(), os.str().length());
 
-            std::string head;
-            head.reserve(256);
-            outgoingHeader()->write(head);
+                   std::string head;
+                   head.reserve(256);
+                   outgoingHeader()->write(head);
 
-            // Send headers directly to the Socket,
-            // bypassing the ConnectionAdapter
+                   // Send headers directly to the Socket,
+                   // bypassing the ConnectionAdapter
 
-            LTrace("TcpHTTPConnection::sendHeader:head")
+                   LTrace("TcpHTTPConnection::sendHeader:head")
 
-            STrace << head;
-            SslConnection::send((const char*) head.c_str(), head.length());
-            return head.length();
-        }
+                   STrace << head;
+                   SslConnection::send((const char*) head.c_str(), head.length());
+                   return head.length();
+               }
 
-        Message * HttpsClient::incomingHeader() {"./mediaserver/src/http/src/w*.cpp
-            return reinterpret_cast<Message*> (&_response);
-        }
+               Message * HttpsClient::incomingHeader() {"./mediaserver/src/http/src/w*.cpp
+                   return reinterpret_cast<Message*> (&_response);
+               }
 
-        Message * HttpsClient::outgoingHeader() {
+               Message * HttpsClient::outgoingHeader() {
 
-            return reinterpret_cast<Message*> (&_request);
-        }
+                   return reinterpret_cast<Message*> (&_request);
+               }
 
-        //
-        // HTTP Client
-        //
-*/
+               //
+               // HTTP Client
+               //
+         */
+
         /************************************************************************************************************************/
         Client::Client(URL url) : _url(url) {
             // LTrace("Create")
@@ -620,7 +608,7 @@ namespace base {
         }
 
         Client::~Client() {
-             LTrace("Destroy")
+            LTrace("Destroy")
             shutdown();
         }
 

@@ -16,7 +16,7 @@ LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
 
 
 
-LDLIBS    := -lpthread -lm -ldl  -lminizip  -lssl -lcrypto 
+LDLIBS    := -lpthread -lm -ldl  -lssl -lcrypto  
 
 #SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
 

@@ -39,7 +39,9 @@ namespace base {
 
         void HttpConnection::on_read(const char* data, size_t len) {
 
-            LTrace("on_read()")
+           LTrace("on_read()")
+                    
+           STrace << "on_read:TCP server send data: " << data << "len: " << len << std::endl << std::flush;
                     
             if(wsAdapter)
             {
@@ -169,12 +171,19 @@ namespace base {
     
         void HttpConnection::on_payload(const char* data, size_t len){
 
+           this->listener->on_read(this, data,len );
         }
 
         void HttpConnection::onComplete() {
 
             if (_responder)
                 _responder->onRequest(_request, _response);
+            else
+            {    Close();
+                 this->listener->on_close(this);
+                
+            }
+                
         }
 
 

@@ -13,29 +13,29 @@
 #include "http/HttpConn.h"
 namespace base {
     namespace net {
-            // HTTP progress signal for upload and download progress notifications.
+        
+        class ClientConnecton;
+           // HTTP progress signal for upload and download progress notifications.
         class  ProgressSignal 
         {
         public:
-            void* sender;
-            uint64_t current;
-            uint64_t total;
+            //void* sender;
+            double current;
+            double total;
 
-            ProgressSignal()
-                : sender(nullptr)
-                , current(0)
-                , total(0)
-            {
-            }
-
+            ProgressSignal();
+                      
+            void start();
+                 
             double progress() const { return (current / (total * 1.0)) * 100; }
 
-            void update(int nread)
-            {
-                assert(current <= total);
-                current += nread;
-//                emit(progress());
-            }
+            void update(int nread , ClientConnecton* conn);
+        private: 
+            int64_t start_time;
+            int64_t end_time;
+            double latency ;
+            double totalTimeDiff;
+            
         };
 
         
@@ -49,9 +49,9 @@ namespace base {
 
             std::function<void(const std::string&) > fnLoad; ///< Signals when raw data is received
             std::function<void(const Response&) > fnComplete; ///< Signals when the HTTP transaction is complete
-            std::function<void(ClientConnecton&) > fnClose;
+            std::function<void(ClientConnecton*) > fnClose;
             std::function<void(ClientConnecton*) > fnConnect;
-            
+            std::function<void(ClientConnecton*, size_t ) > fnPayload;
 
             virtual void setReadStream(std::ostream* os) {
             };
@@ -75,7 +75,7 @@ namespace base {
             };
     
             
-            ProgressSignal IncomingProgress; ///< Fired on download progress
+           // ProgressSignal IncomingProgress; ///< Fired on download progress
             ProgressSignal OutgoingProgress; ///< Fired on upload progress
             
         };
@@ -105,9 +105,6 @@ namespace base {
             /* Pure virtual methods inherited from ::TcpHTTPConnection. */
         public:
             void on_read(const char* data, size_t len);
-
-            int64_t start_time;
-            int64_t end_time;
 
             /*  /// HTTP Parser interface
               virtual void onParserHeader(const std::string& name, const std::string& value);
