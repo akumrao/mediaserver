@@ -4,7 +4,7 @@
 CC	= clang
 CXX     = clang++
 TARGET=runSpeedTest # define the name of the executable
-SOURCES=$(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http_parser/*.cpp )
+SOURCES=$(wildcard *.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp   )
 
 CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
  

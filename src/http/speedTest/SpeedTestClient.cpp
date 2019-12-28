@@ -2,6 +2,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "SpeedTestClient.h"
+#include <fcntl.h>
+
+
 
 SpeedTestClient::SpeedTestClient(const ServerInfo &serverInfo): mServerInfo(serverInfo),
                                                                                   mSocketFd(0),
@@ -208,6 +211,26 @@ bool SpeedTestClient::mkSocket() {
 #endif
 
     serv_addr.sin_port = htons(static_cast<uint16_t>(portno));
+    
+   // fcntl(mSocketFd, F_SETFL, O_NONBLOCK); // setup non blocking socket
+    
+    
+    struct timeval timeout;      
+    timeout.tv_sec = 3;
+    timeout.tv_usec = 0;
+
+    if (setsockopt (mSocketFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                sizeof(timeout)) < 0)
+    {
+        std::cout << "setsockopt failed" << std::endl;
+    }
+
+    if (setsockopt (mSocketFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+                sizeof(timeout)) < 0)
+    {
+        std::cout << "setsockopt failed" << std::endl;
+    }
+    
 
     /* Dial */
     return ::connect(mSocketFd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) >= 0;

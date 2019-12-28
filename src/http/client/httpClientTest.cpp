@@ -56,10 +56,6 @@ void Download::stop(bool flag) {
 
     LTrace(" Download::stop")
 
-    //if (client) {
-   //     app.stopAsync();
-        // client->Close();
-  // }
     int  r = uv_async_send(&async);
     assert(r == 0);
 }

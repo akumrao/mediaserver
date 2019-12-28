@@ -3,327 +3,169 @@
 #include <iomanip>
 #include "SpeedTest.h"
 #include "TestConfigTemplate.h"
-#include "CmdOptions.h"
 #include <csignal>
 #include "base/logger.h"
+#include "base/thread.h"
+#include "base/platform.h"
 
 using namespace base;
 
-void banner(){
-    std::cout << "SpeedTest version " << SpeedTest_VERSION_MAJOR << "." << SpeedTest_VERSION_MINOR << std::endl;
-    std::cout << "Speedtest.net command line interface" << std::endl;
+class Speed : public Thread {
+public:
 
-}
+    Speed();
+    ~Speed();
+    void run();
 
-void usage(const char* name){
-    std::cerr << "Usage: " << name << " ";
-    std::cerr << " [--latency] [--quality] [--download] [--upload] [--share] [--help]\n"
-            "      [--test-server host:port] [--output verbose|text|json]\n";
-    std::cerr << "optional arguments:" << std::endl;
-    std::cerr << "  --help                      Show this message and exit\n";
-    std::cerr << "  --latency                   Perform latency test only\n";
-    std::cerr << "  --download                  Perform download test only. It includes latency test\n";
-    std::cerr << "  --upload                    Perform upload test only. It includes latency test\n";
-    std::cerr << "  --share                     Generate and provide a URL to the speedtest.net share results image\n";
-    std::cerr << "  --test-server host:port     Run speed test against a specific server\n";
-    std::cerr << "  --output verbose|text|json  Set output type. Default: verbose\n";
-}
+};
 
-int main(const int argc, const char **argv) {
-  
-      //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
-
-    Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
-        // Logger::instance().setWriter(new AsyncLogWriter());
-   /*
-      std::vector<ServerInfo> mServerList(100);
-        
-      ServerInfo sf ( "http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India" , "IN" ,"Hathway Cable Datacom Ltd", 4663,  "bangspeed.hathway.com:8080", 0.0);
-            
-     LTrace( sf.url);
-     LTrace( sf.country);
-     LTrace( sf.sponsor);
-     LTrace( sf.host);
-    
-   ServerInfo sf1;
-   mServerList.push_back(sf1);
-   
-   int x  = sizeof(sf);
-   
-   
-   mServerList.push_back(sf);
-  
-   */ 
-    
-    ProgramOptions programOptions;
-
-    if (!ParseOptions(argc, argv, programOptions)){
-        usage(argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    if (programOptions.output_type == OutputType::verbose){
-        banner();
-        std::cout << std::endl;
-    }
-
-
-    if (programOptions.help) {
-        usage(argv[0]);
-        return EXIT_SUCCESS;
-    }
+Speed::Speed() {
 
     signal(SIGPIPE, SIG_IGN);
+}
+
+Speed::~Speed() {
+    LTrace("~Speed()")
+    join();
+}
+
+void Speed::run() {
+
+    LTrace("Speed OnRun");
 
 
-    auto sp = SpeedTest(SPEED_TEST_MIN_SERVER_VERSION);
-    IPInfo info;
+    SpeedTest sp = SpeedTest(SPEED_TEST_MIN_SERVER_VERSION);
+    //IPInfo info;
     ServerInfo serverInfo;
     ServerInfo serverQualityInfo;
 
-    if (programOptions.output_type == OutputType::json)
-        std::cout << "{";
-
-   /* if (!sp.ipInfo(info)){
-        std::cerr << "Unable to retrieve your IP info. Try again later" << std::endl;
-        if (programOptions.output_type == OutputType::json)
-            std::cout << "\"error\":\"unable to retrieve your ip info\"}" << std::endl;
-        return EXIT_FAILURE;
-    }*/
-
-    if (programOptions.output_type == OutputType::verbose){
-        std::cout << "IP: " << info.ip_address
-                  << " ( " << info.isp << " ) "
-                  << "Location: [" << info.lat << ", " << info.lon << "]" << std::endl;
-    } else if (programOptions.output_type == OutputType::text) {
-        std::cout << "IP=" << info.ip_address << std::endl;
-        std::cout << "IP_LAT=" << info.lat << std::endl;
-        std::cout << "IP_LON=" << info.lon << std::endl;
-        std::cout << "PROVIDER=" << info.isp << std::endl;
-    } else if (programOptions.output_type == OutputType::json) {
-        std::cout << "\"client\":{";
-        std::cout << "\"ip\":\""  << info.ip_address << "\",";
-        std::cout << "\"lat\":\"" << info.lat << "\",";
-        std::cout << "\"lon\":\"" << info.lon << "\",";
-        std::cout << "\"isp\":\"" << info.isp << "\"";
-        std::cout << "},";
-    }
 
     auto serverList = sp.serverList();
 
-    if (programOptions.selected_server.empty()){
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << "Finding fastest server... " << std::flush;
+    STrace << serverList.size() << " Servers online" << std::endl;
 
-        if (serverList.empty()){
-            std::cerr << "Unable to download server list. Try again later" << std::endl;
-            if (programOptions.output_type == OutputType::json)
-                std::cout << "\"error\":\"unable to download server list\"}" << std::endl;
-            return EXIT_FAILURE;
-        }
+    serverInfo = sp.bestServer(10, [&](bool success) {
 
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << serverList.size() << " Servers online" << std::endl;
-        else if (programOptions.output_type == OutputType::json)
-            std::cout << "\"servers_online\":\"" << serverList.size() << "\",";
+        std::cout << (success ? '.' : '*') << std::flush;
+
+        return stopped();
+    });
+
+    if (stopped())
+        return;
 
 
-        serverInfo = sp.bestServer(10, [&programOptions](bool success) {
-            if (programOptions.output_type == OutputType::verbose)
-                std::cout << (success ? '.' : '*') << std::flush;
-        });
+    STrace << "Server: " << serverInfo.name
+            << " " << serverInfo.host
+            << " by " << serverInfo.sponsor
+            << " (" << serverInfo.distance << " km from you): "
+            << sp.latency() << " ms" << std::endl;
 
-        if (programOptions.output_type == OutputType::verbose){
-            std::cout << std::endl;
-            std::cout << "Server: " << serverInfo.name
-                      << " " << serverInfo.host
-                      << " by " << serverInfo.sponsor
-                      << " (" << serverInfo.distance << " km from you): "
-                      << sp.latency() << " ms" << std::endl;
-        } else if (programOptions.output_type == OutputType::text) {
-            std::cout << "TEST_SERVER_HOST=" << serverInfo.host << std::endl;
-            std::cout << "TEST_SERVER_DISTANCE=" << serverInfo.distance << std::endl;
 
-        }
-        else if (programOptions.output_type == OutputType::json) {
-            std::cout << "\"server\":{";
-            std::cout << "\"name\":\"" << serverInfo.name << "\",";
-            std::cout << "\"sponsor\":\"" << serverInfo.sponsor << "\",";
-            std::cout << "\"distance\":\"" << serverInfo.distance << "\",";
-            std::cout << "\"latency\":\"" << sp.latency() << "\",";
-            std::cout << "\"host\":\"" << serverInfo.host << "\"";
-            std::cout << "},";
-        }
+    STrace << "Ping: " << sp.latency() << " ms." << std::endl;
 
-    } else {
-
-        serverInfo.host.append(programOptions.selected_server);
-        sp.setServer(serverInfo);
-
-        for (auto &s : serverList) {
-            if (s.host == serverInfo.host)
-                serverInfo.id = s.id;
-        }
-
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << "Selected server: " << serverInfo.host << std::endl;
-        else if (programOptions.output_type == OutputType::text) {
-            std::cout << "TEST_SERVER_HOST=" << serverInfo.host << std::endl;
-        }
-        else if (programOptions.output_type == OutputType::json) {
-            std::cout << "\"server\":{";
-            std::cout << "\"host\":\"" << serverInfo.host << "\"";
-            std::cout << "},";
-        }
-    }
-
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << "Ping: " << sp.latency() << " ms." << std::endl;
-    else if (programOptions.output_type == OutputType::text)
-        std::cout << "LATENCY=" << sp.latency() << std::endl;
-    else if (programOptions.output_type == OutputType::json) {
-        std::cout << "\"ping\":\"";
-        std::cout << std::fixed;
-        std::cout << sp.latency() << "\",";
-    }
+    STrace << "Latency:" << sp.latency() << " ms." << std::endl;
 
     long jitter = 0;
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << "Jitter: " << std::flush;
-    if (sp.jitter(serverInfo, jitter)){
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << jitter << " ms." << std::endl;
-        else if (programOptions.output_type == OutputType::text)
-            std::cout << "JITTER=" << jitter << std::endl;
-        else if (programOptions.output_type == OutputType::json) {
-            std::cout << "\"jitter\":\"";
-            std::cout << std::fixed;
-            std::cout << jitter << "\",";
-        }
-    } else {
-        std::cerr << "Jitter measurement is unavailable at this time." << std::endl;
+    if (sp.jitter(serverInfo, jitter)) {
+        STrace << "Jitter:" << jitter << " ms." << std::endl;
     }
 
-    if (programOptions.latency) {
-        if (programOptions.output_type == OutputType::json)
-            std::cout << "\"_\":\"only latency requested\"}" << std::endl;
-        return EXIT_SUCCESS;
-    }
-
-
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << "Determine line type (" << preflightConfigDownload.concurrency << ") "  << std::flush;
-    double preSpeed = 0;
-    if (!sp.downloadSpeed(serverInfo, preflightConfigDownload, preSpeed, [&programOptions](bool success){
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << (success ? '.' : '*') << std::flush;
-    })){
-        std::cerr << "Pre-flight check failed." << std::endl;
-        if (programOptions.output_type == OutputType::json)
-            std::cout << "\"error\":\"pre-flight check failed\"}" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << std::endl;
 
     TestConfig uploadConfig;
     TestConfig downloadConfig;
-    testConfigSelector(preSpeed, uploadConfig, downloadConfig);
+    downloadConfig = narrowConfigDownload;
+    uploadConfig = narrowConfigUpload;
 
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << downloadConfig.label << std::endl;
+    /*       
+       double preSpeed = 0;
+       if (!sp.downloadSpeed(serverInfo, preflightConfigDownload, preSpeed, [&programOptions](bool success){
+      
+               std::cout << (success ? '.' : '*') << std::flush;
+                std::cout << "Testing download speed (" << downloadConfig.concurrency << ") "  << std::flush;
+       })){
+           std::cerr << "Pre-flight check failed." << std::endl;
+           return;
+       }
+       testConfigSelector(preSpeed, uploadConfig, downloadConfig);
+     */
 
+    if (stopped())
+        return;
 
-    if (!programOptions.upload){
-        if (programOptions.output_type == OutputType::verbose){
-            std::cout << std::endl;
-            std::cout << "Testing download speed (" << downloadConfig.concurrency << ") "  << std::flush;
-        }
+    double downloadSpeed = 0;
+    if (sp.downloadSpeed(serverInfo, downloadConfig, downloadSpeed, [&](bool success, double matrix) {
 
-        double downloadSpeed = 0;
-        if (sp.downloadSpeed(serverInfo, downloadConfig, downloadSpeed, [&programOptions](bool success){
-            if (programOptions.output_type == OutputType::verbose)
-                std::cout << (success ? '.' : '*') << std::flush;
-        })){
-            if (programOptions.output_type == OutputType::verbose){
-                std::cout << std::endl;
-                std::cout << "Download: ";
-                std::cout << std::fixed;
-                std::cout << std::setprecision(2);
-                std::cout << downloadSpeed << " Mbit/s" << std::endl;
-            } else if (programOptions.output_type == OutputType::text) {
-                std::cout << "DOWNLOAD_SPEED=";
-                std::cout << std::fixed;
-                std::cout << std::setprecision(2);
-                std::cout << downloadSpeed << std::endl;
-            } else if (programOptions.output_type == OutputType::json) {
-                std::cout << "\"download\":\"";
-                std::cout << std::fixed;
-                std::cout << (downloadSpeed*1000*1000) << "\",";
+            //std::cout << (success ? '.' : '*') << std::flush;
+            if (success)
+                STrace << std::fixed << std::setprecision(2) << uploadConfig.concurrency * matrix / 1000000 << " Mbit/s" << std::endl << std::flush;
+            else {
+                STrace << "download failed" << std::endl << std::flush;
+                return false;
             }
-        } else {
-            std::cerr << "Download test failed." << std::endl;
-            if (programOptions.output_type == OutputType::json)
-                std::cout << "\"error\":\"download test failed\"}" << std::endl;
-            return EXIT_FAILURE;
-        }
+
+            return stopped();
+        })) {
+
+    STrace <<  "Download: " << std::fixed << std::setprecision(2) << downloadSpeed << " Mbit/s" << std::endl;
+   
+
+} else {
+        STrace << "Download test failed." << std::endl;
+
+        return;
     }
 
-    if (programOptions.download) {
-        if (programOptions.output_type == OutputType::json)
-            std::cout << "\"_\":\"only download requested\"}" << std::endl;
-        return EXIT_SUCCESS;
-    }
+    if (stopped())
+        return;
 
-    if (programOptions.output_type == OutputType::verbose)
-        std::cout << "Testing upload speed (" << uploadConfig.concurrency << ") "  << std::flush;
 
     double uploadSpeed = 0;
-    if (sp.uploadSpeed(serverInfo, uploadConfig, uploadSpeed, [&programOptions](bool success){
-        if (programOptions.output_type == OutputType::verbose)
-            std::cout << (success ? '.' : '*') << std::flush;
-    })){
-        if (programOptions.output_type == OutputType::verbose){
-            std::cout << std::endl;
-            std::cout << "Upload: ";
-            std::cout << std::fixed;
-            std::cout << std::setprecision(2);
-            std::cout << uploadSpeed << " Mbit/s" << std::endl;
-        } else if (programOptions.output_type == OutputType::text) {
-            std::cout << "UPLOAD_SPEED=";
-            std::cout << std::fixed;
-            std::cout << std::setprecision(2);
-            std::cout << uploadSpeed << std::endl;
-        } else if (programOptions.output_type == OutputType::json) {
-            std::cout << "\"upload\":\"";
-            std::cout << std::fixed;
-            std::cout << (uploadSpeed*1000*1000) << "\",";
-        }
+    if (sp.uploadSpeed(serverInfo, uploadConfig, uploadSpeed, [&](bool success, double matrix) {
 
-    } else {
-        std::cerr << "Upload test failed." << std::endl;
-        if (programOptions.output_type == OutputType::json)
-            std::cout << "\"error\":\"upload test failed\"}" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-/*
-    if (programOptions.share){
-        std::string share_it;
-        if (sp.share(serverInfo, share_it)) {
-            if (programOptions.output_type == OutputType::verbose) {
-                std::cout << "Results image: " << share_it << std::endl;
-            } else if (programOptions.output_type == OutputType::text) {
-                std::cout << "IMAGE_URL=" << share_it << std::endl;
-            } else if (programOptions.output_type == OutputType::json) {
-                std::cout << "\"share\":\"" << share_it << "\",";
+            // std::cout << (success ? '.' : '*') << std::flush;
+            if (success)
+                STrace << "Upload:" << std::fixed << std::setprecision(2) << uploadConfig.concurrency * matrix / 1000000 << " Mbit/s" << std::endl << std::flush;
+            else {
+                std::cout << "upload test failed" << std::endl << std::flush;
+                return false;
             }
-        }
-    }
-*/
-    if (programOptions.output_type == OutputType::json)
-        std::cout << "\"_\":\"all ok\"}" << std::endl;
+            return stopped();
+        })) {
 
-    return EXIT_SUCCESS;
+    STrace << "Upload: " << std::fixed << std::setprecision(2) << uploadSpeed << " Mbit/s" << std::endl;
+   
+
+} else {
+        STrace << "Upload test failed." << std::endl;
+        return;
+    }
+
+    LTrace("Speed Over");
+}
+
+int main(const int argc, const char **argv) {
+
+    //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
+
+    Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
+
+
+    Speed *upload = new Speed();
+
+    upload->start();
+
+    base::sleep(75000);
+
+    LTrace("upload stop")
+
+    upload->stop();
+
+    delete upload;
+
+    LTrace("upload done");
+
+
+    return 0;
+
 }

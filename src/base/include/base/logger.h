@@ -18,7 +18,7 @@
 #include <mutex>
 #include <string.h>
 
-#define _REMOTELOG
+//#define _REMOTELOG
 #if defined(__ANDROID__)    
 #include <android/log.h>
 #include "net/UdpSocket.h"

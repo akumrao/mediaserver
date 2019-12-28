@@ -9,39 +9,39 @@ SpeedTest::SpeedTest(float minServerVersion) :
 mLatency(0),
 mUploadSpeed(0),
 mDownloadSpeed(0) {
-//    curl_global_init(CURL_GLOBAL_DEFAULT);
+    //    curl_global_init(CURL_GLOBAL_DEFAULT);
     mIpInfo = IPInfo();
     mServerList = std::vector<ServerInfo>();
     mMinSupportedServer = minServerVersion;
 }
 
 SpeedTest::~SpeedTest() {
-//    curl_global_cleanup();
+    //    curl_global_cleanup();
     mServerList.clear();
 }
 
 bool SpeedTest::ipInfo(IPInfo& info) {
- //mIpInfo.ip_address ="116.73.242.28";
+    //mIpInfo.ip_address ="116.73.242.28";
     if (!mIpInfo.ip_address.empty()) {
         info = mIpInfo;
         return true;
     }
-/*
-    std::stringstream oss;
-    auto code = httpGet(SPEED_TEST_IP_INFO_API_URL, oss);
-    if (code == CURLE_OK) {
-        auto values = SpeedTest::parseQueryString(oss.str());
-        mIpInfo = IPInfo();
-        mIpInfo.ip_address = values["ip_address"];
-        mIpInfo.isp = values["isp"];
-        mIpInfo.lat = std::stof(values["lat"]);
-        mIpInfo.lon = std::stof(values["lon"]);
-        values.clear();
-        oss.clear();
-        info = mIpInfo;
-        return true;
-    }
-*/
+    /*
+        std::stringstream oss;
+        auto code = httpGet(SPEED_TEST_IP_INFO_API_URL, oss);
+        if (code == CURLE_OK) {
+            auto values = SpeedTest::parseQueryString(oss.str());
+            mIpInfo = IPInfo();
+            mIpInfo.ip_address = values["ip_address"];
+            mIpInfo.isp = values["isp"];
+            mIpInfo.lat = std::stof(values["lat"]);
+            mIpInfo.lon = std::stof(values["lon"]);
+            values.clear();
+            oss.clear();
+            info = mIpInfo;
+            return true;
+        }
+     */
     return false;
 }
 
@@ -49,21 +49,21 @@ const std::vector<ServerInfo>& SpeedTest::serverList() {
     if (!mServerList.empty())
         return mServerList;
 
-    
-mServerList = { 
-               {"http://speedtestkk1.airtel.in:8080/speedtest/upload.php"          ,12.9833, 77.5833, "Bangalore", "India", "IN", "Bharti Airtel Ltd", 2564,"speedtestkk1.airtel.in:8080", 0.0},
-               {"http://speedtestblr.airtelbroadband.in:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Airtel Broadband", 18976, "speedtestblr.airtelbroadband.in:8080", 0.0},
-               {"http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0}
-              };     
 
-       // ServerInfo sf("http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0);
+    mServerList = {
+        {"http://speedtestkk1.airtel.in:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Bharti Airtel Ltd", 2564, "speedtestkk1.airtel.in:8080", 0.0},
+        {"http://speedtestblr.airtelbroadband.in:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Airtel Broadband", 18976, "speedtestblr.airtelbroadband.in:8080", 0.0},
+        {"http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0}
+    };
+
+    // ServerInfo sf("http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0);
 
 
     //mServerList.push_back(sf);
     return mServerList;
 }
 
-const ServerInfo SpeedTest::bestServer(const int sample_size, std::function<void(bool) > cb) {
+const ServerInfo SpeedTest::bestServer(const int sample_size, std::function<bool(bool) > cb) {
     auto best = findBestServerWithin(serverList(), mLatency, sample_size, cb);
     SpeedTestClient client = SpeedTestClient(best);
     testLatency(client, SPEED_TEST_LATENCY_SAMPLE_SIZE, mLatency);
@@ -86,14 +86,14 @@ bool SpeedTest::setServer(ServerInfo& server) {
 
 }
 
-bool SpeedTest::downloadSpeed(const ServerInfo &server, const TestConfig &config, double& result, std::function<void(bool) > cb) {
+bool SpeedTest::downloadSpeed(const ServerInfo &server, const TestConfig &config, double& result, std::function<bool(bool, double) > cb) {
     opFn pfunc = &SpeedTestClient::download;
     mDownloadSpeed = execute(server, config, pfunc, cb);
     result = mDownloadSpeed;
     return true;
 }
 
-bool SpeedTest::uploadSpeed(const ServerInfo &server, const TestConfig &config, double& result, std::function<void(bool) > cb) {
+bool SpeedTest::uploadSpeed(const ServerInfo &server, const TestConfig &config, double& result, std::function<bool(bool, double) > cb) {
     opFn pfunc = &SpeedTestClient::upload;
     mUploadSpeed = execute(server, config, pfunc, cb);
     result = mUploadSpeed;
@@ -132,7 +132,7 @@ bool SpeedTest::jitter(const ServerInfo &server, long& result, const int sample)
 
 // private
 
-double SpeedTest::execute(const ServerInfo &server, const TestConfig &config, const opFn &pfunc, std::function<void(bool) > cb) {
+double SpeedTest::execute(const ServerInfo &server, const TestConfig &config, const opFn &pfunc, std::function<bool(bool, double) > cb) {
     std::vector<std::thread> workers;
     double overall_speed = 0;
     std::mutex mtx;
@@ -157,12 +157,18 @@ double SpeedTest::execute(const ServerInfo &server, const TestConfig &config, co
                                 total_time += op_time;
                                 double metric = (curr_size * 8) / (static_cast<double> (op_time) / 1000);
                                 partial_results.push_back(metric);
-                        if (cb)
-                                cb(true);
-                        } else {
-                        if (cb)
-                                cb(false);
-                        }
+                        if (cb) {
+                            bool ret = cb(true, metric);
+                            if (ret)
+                                break;
+                            }
+                    } else {
+                        if (cb) {
+                            bool ret = cb(false, 0);
+                            if (ret)
+                                break;
+                            }
+                    }
                     curr_size += incr_size;
                             auto stop = std::chrono::steady_clock::now();
                     if (std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() > config.min_test_time_ms)
@@ -189,9 +195,12 @@ double SpeedTest::execute(const ServerInfo &server, const TestConfig &config, co
                         overall_speed += (real_sum / iter);
                         mtx.unlock();
             } else {
-                if (cb)
-                        cb(false);
-                }
+                if (cb) {
+                    bool ret = cb(false, 0);
+                   // if (ret)
+                     //   break;
+                    }
+            }
         }));
 
     }
@@ -219,7 +228,6 @@ T SpeedTest::harversine(std::pair<T, T> n1, std::pair<T, T> n2) {
     T v = std::sin((lon2r - lon1r) / 2);
     return 2.0 * EARTH_RADIUS_KM * std::asin(std::sqrt(u * u + std::cos(lat1r) * std::cos(lat2r) * v * v));
 }
-
 
 size_t SpeedTest::writeFunc(void *buf, size_t size, size_t nmemb, void *userp) {
 
@@ -264,7 +272,7 @@ std::vector<std::string> SpeedTest::splitString(const std::string &instr, const 
 }
 
 const ServerInfo SpeedTest::findBestServerWithin(const std::vector<ServerInfo> &serverList, long &latency,
-        const int sample_size, std::function<void(bool) > cb) {
+        const int sample_size, std::function<bool(bool) > cb) {
     int i = sample_size;
     ServerInfo bestServer = serverList[0];
 
@@ -274,8 +282,11 @@ const ServerInfo SpeedTest::findBestServerWithin(const std::vector<ServerInfo> &
         auto client = SpeedTestClient(server);
 
         if (!client.connect()) {
-            if (cb)
-                cb(false);
+            if (cb) {
+                bool ret = cb(false);
+                if (ret)
+                    break;
+            }
             continue;
         }
 
@@ -292,8 +303,11 @@ const ServerInfo SpeedTest::findBestServerWithin(const std::vector<ServerInfo> &
             }
         }
         client.close();
-        if (cb)
-            cb(true);
+        if (cb) {
+            bool ret = cb(true);
+            if (ret)
+                break;
+        }
 
         if (i-- < 0) {
             break;
