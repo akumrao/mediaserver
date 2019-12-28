@@ -20,8 +20,8 @@
 namespace base {
     namespace net {
 
-        HttpConnection::HttpConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : TcpConnection(listener, bufferSize),
+        HttpConnection::HttpConnection(Listener* listener, http_parser_type type)
+        : TcpConnection(listener),
            listener(listener),HttpBase(type),wsAdapter(nullptr) {
 
 

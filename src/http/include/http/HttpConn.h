@@ -29,7 +29,7 @@ namespace base {
         public:
 
         public:
-            HttpConnection(Listener* listener, http_parser_type type, size_t bufferSize = 65536);
+            HttpConnection(Listener* listener, http_parser_type type);
             ~HttpConnection() override;
 
         public:

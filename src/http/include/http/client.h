@@ -20,8 +20,8 @@ namespace base {
         {
         public:
             //void* sender;
-            double current;
-            double total;
+            long current;
+            long total;
 
             ProgressSignal();
                       
@@ -84,7 +84,7 @@ namespace base {
         public:
 
         public:
-            HttpClient(Listener* listener, const URL& url, http_parser_type type = HTTP_RESPONSE, size_t bufferSize = 65536);
+            HttpClient(Listener* listener, const URL& url, http_parser_type type = HTTP_RESPONSE);
 
             ~HttpClient() override;
             void connect();
@@ -136,13 +136,7 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-            //bool bClosing{false};
-           // WebSocketConnection *wsAdapter{ nullptr};
-            //  WebSocketConnection::Listener *wsListener{ nullptr};
-            // Others.
-            // size_t frameStart{ 0}; // Where the latest frame starts.
-            //  size_t recvBytes{ 0};
-            //  size_t sentBytes{ 0};
+        
 
         public:
             // Request _request;

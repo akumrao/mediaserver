@@ -50,11 +50,16 @@ namespace base {
             LTrace("onClose");
            TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
          
+            if(obj)
             obj->on_close();
             delete handle;
+            handle = nullptr;
         }
 
         inline static void onShutdown(uv_shutdown_t* req, int /*status*/) {
+            
+            LTrace( "onShutdown");
+            
             auto* handle = req->handle;
             handle->data = req->data;
           //  delete handle;
@@ -68,7 +73,7 @@ namespace base {
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 
-        TcpConnectionBase::TcpConnectionBase(size_t bufferSize, bool tls) : bufferSize(bufferSize), tls(tls) {
+        TcpConnectionBase::TcpConnectionBase(bool tls) : tls(tls) {
 
             this->uvHandle = new uv_tcp_t;
             this->uvHandle->data = (void*) this;
@@ -82,12 +87,12 @@ namespace base {
             if (!this->closed)
                 Close();
 
-            delete[] this->buffer;
+           // delete[] this->buffer;
         }
 
         void TcpConnectionBase::Close() {
 
-            LTrace("Close")
+            LTrace("Close ", this->uvHandle)
             if (this->closed)
                 return;
 
@@ -95,22 +100,27 @@ namespace base {
 
             this->closed = true;
 
+            this->uvHandle->data = this;
+            
             // Tell the UV handle that the TcpConnectionBase has been closed.
-            this->uvHandle->data = nullptr;
+            /*this->uvHandle->data = nullptr;
 
+            
             // Don't read more.
             err = uv_read_stop(reinterpret_cast<uv_stream_t*> (this->uvHandle));
+            if (err != 0)
+              
+             LError("uv_read_stop() failed: %s", uv_strerror(err));
+           
             this->uvHandle->data = this;
 
-            if (err != 0)
-                LError("uv_read_stop() failed: %s", uv_strerror(err));
-
-            // If there is no error and the peer didn't close its connection side then close gracefully.
+             // If there is no error and the peer didn't close its connection side then close gracefully.
             if (!this->hasError && !this->isClosedByPeer) {
                 // Use uv_shutdown() so pending data to be written will be sent to the peer
                 // before closing.
+                LTrace( "uv_shutdown_t");
                 auto req = new uv_shutdown_t;
-                uvHandle->type = UV_TCP;
+               // uvHandle->type = UV_TCP;
                 req->data = (void*) this;
                 err = uv_shutdown(
                         req, reinterpret_cast<uv_stream_t*> (this->uvHandle), static_cast<uv_shutdown_cb> (onShutdown));
@@ -119,7 +129,7 @@ namespace base {
                     LError("uv_shutdown() failed: %s", uv_strerror(err));
                 //on_close();
             }// Otherwise directly close the socket.
-            else {
+            else*/ {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
             }
         }
@@ -274,14 +284,16 @@ namespace base {
 
         void TcpConnectionBase::Write(const char* data, size_t len) {
 
-            LTrace("TcpConnectionBase::Write" );
+           
             if (this->closed)
                 return;
 
             if (len == 0)
                 return;
+            
+             LTrace("TcpConnectionBase::Write " , len);
 
-            // First try uv_try_write(). In case it can not directly write all the given
+             // First try uv_try_write(). In case it can not directly write all the given
             // data then build a uv_req_t and use uv_write().
 
             uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data)), len);
@@ -298,10 +310,7 @@ namespace base {
             else if (written < 0) {
                 LDebug("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-                Close();
-
-
-
+              //  Close();
                 return;
             }
 
@@ -328,7 +337,7 @@ namespace base {
             if (err != 0)
                 LError("uv_write() failed: %s", uv_strerror(err));
         }
-
+/*
         void TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2) {
 
             if (this->closed)
@@ -399,7 +408,7 @@ namespace base {
             if (err != 0)
                 LError("uv_write() failed: %s", uv_strerror(err));
         }
-
+*/
         void TcpConnectionBase::ErrorReceiving() {
 
 
@@ -430,12 +439,16 @@ namespace base {
             return true;
         }
 
-        inline void TcpConnectionBase::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf) {
+        inline void TcpConnectionBase::OnUvReadAlloc(size_t suggested_size, uv_buf_t* buf) {
 
 
             if (this->closed)
                 return;
-
+             static char slab[65536];
+            assert(suggested_size <= sizeof(slab));
+            buf->base = slab;
+            buf->len = sizeof(slab);
+/*
             // If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
             if (this->buffer == nullptr)
                 this->buffer = new char[this->bufferSize];
@@ -451,10 +464,11 @@ namespace base {
 
                 LDebug("no available space in the buffer");
             }
+ */
         }
 
         inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
-            LTrace("OnUvRead" )
+           // LTrace("OnUvRead" )
 
             if (this->closed)
                 return;
@@ -465,7 +479,7 @@ namespace base {
             // Data received.
             if (nread > 0) {
                 // Update the buffer data length.
-                this->bufferDataLen += static_cast<size_t> (nread);
+               // this->bufferDataLen += static_cast<size_t> (nread);
 
                 
                 // Notify the subclass.
@@ -514,8 +528,8 @@ namespace base {
         /*************************************************************************************************************/
 
 
-        TcpConnection::TcpConnection(Listener* listener, size_t bufferSize, bool tls)
-        : TcpConnectionBase(bufferSize ,tls), listener(listener) {
+        TcpConnection::TcpConnection(Listener* listener,bool tls)
+        : TcpConnectionBase(tls), listener(listener) {
 
         }
 

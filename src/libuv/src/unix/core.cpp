@@ -183,8 +183,8 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
      * itself close uv__make_close_pending whenever appropriate. */
     return;
 
-  default:
-    assert(0);
+  //default:  // arvind core dump when no network and dns resolve stucked
+   // assert(0);
   }
 
   uv__make_close_pending(handle);

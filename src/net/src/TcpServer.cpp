@@ -249,7 +249,7 @@ namespace base
             if(ssl)
              *connection = new SslConnection(listener, true);
             else
-            *connection = new TcpConnection(listener, 65536);
+            *connection = new TcpConnection(listener);
             
             
         }

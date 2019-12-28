@@ -139,7 +139,7 @@ public:
     static const char* TEXT_PLAIN; 
     static const char* APPLICATION_ZIP; 
 
-    CondWait condWait;
+   // CondWait condWait;
 protected:
     /// Creates the FormWriter that uses the given encoding.
     ///

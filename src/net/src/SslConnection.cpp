@@ -12,7 +12,7 @@ namespace net {
 
 
 SslConnection::SslConnection(Listener* listener)
-    : TcpConnection(listener,65536, true)
+    : TcpConnection(listener, true)
 //    , _sslContext(nullptr)
 //    , _sslSession(nullptr)
     , _sslAdapter(this)
@@ -25,7 +25,7 @@ SslConnection::SslConnection(Listener* listener)
 
 
 SslConnection::SslConnection(Listener* listener, bool server)
-    : TcpConnection(listener , 65536, true)
+    : TcpConnection(listener , true)
   //  , _sslSession(nullptr)
     , _sslAdapter(this)
     ,listener(listener),serverMode(server)

@@ -31,7 +31,7 @@ namespace base
             friend class TcpServerBase;
 
         public:
-            explicit TcpConnectionBase(size_t bufferSize, bool tls = false);
+            explicit TcpConnectionBase(bool tls = false);
             TcpConnectionBase& operator=(const TcpConnectionBase&) = delete;
             TcpConnectionBase(const TcpConnectionBase&) = delete;
             virtual ~TcpConnectionBase();
@@ -53,7 +53,7 @@ namespace base
             uv_tcp_t* GetUvHandle() const;
             void Start();
             void Write(const char* data, size_t len);
-            void Write(const char* data1, size_t len1, const char* data2, size_t len2);
+            //void Write(const char* data1, size_t len1, const char* data2, size_t len2);
             void Write(const std::string& data);
             void ErrorReceiving();
             const struct sockaddr* GetLocalAddress() const;
@@ -77,11 +77,11 @@ namespace base
 
         protected:
             // Passed by argument.
-            size_t bufferSize{ 0};
+            //size_t bufferSize{ 0};
             // Allocated by this.
-            char* buffer{ nullptr};
+            //char* buffer{ nullptr};
             // Others.
-            size_t bufferDataLen{ 0};
+           // size_t bufferDataLen{ 0};
             std::string localIp;
             uint16_t localPort{ 0};
             struct sockaddr_storage peerAddr;
@@ -158,7 +158,7 @@ namespace base
 
 
         public:
-            TcpConnection(Listener* listener, size_t bufferSize=65536, bool tls=false);
+            TcpConnection(Listener* listener, bool tls=false);
             ~TcpConnection() override;
 
         public:

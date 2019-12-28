@@ -1,15 +1,12 @@
 
 #include "http/form.h"
 //#include "crypto/crypto.h"
-
-
 #include "base/filesystem.h"
 
 #include "http/packetizers.h"
 #include "http/url.h"
-//#include "scy/idler.h"
 #include <stdexcept>
-
+#include "base/platform.h"
 
 namespace base {
     namespace net {
@@ -71,7 +68,7 @@ namespace base {
 
         void FormWriter::header() {
             LTrace("Prepare header")
-            _stream->OutgoingProgress.start();
+           // _stream->OutgoingProgress.start();
             Request& request = _stream->_request;
             if (request.getMethod() == Method::Post ||
                     request.getMethod() == Method::Put) {
@@ -107,7 +104,7 @@ namespace base {
                 }
                 else
                 {
-                    LTrace("fu ", _filesLength)
+
                     request.setContentType(_encoding);
                    // assert(_filesLength);
                     _stream->OutgoingProgress.total = _filesLength;
@@ -172,14 +169,12 @@ namespace base {
 
         void FormWriter::emit(const char *data, size_t len) {
             LTrace(len);
-            //outgoing->emit(data, len);
             _stream->send(data, len);
         }
 
         void FormWriter::emit(const std::string &data) {
             LTrace(data.length());
-            
-             LTrace(data);
+             //LTrace(data);
             _stream->send(data);
         }
 
@@ -187,7 +182,7 @@ namespace base {
         void FormWriter::run() {
 
             LTrace("run")
-            //_stream->OutgoingProgress.start();
+            _stream->OutgoingProgress.start();
             
             while (!complete()) {
             //    condWait.wait();
@@ -229,15 +224,14 @@ namespace base {
                             //#endif
                 }
                 
+               base::sleep(7);
+                
             }
 
-            _stream->Close();
             LTrace("runover")
-
             isrunning_ = false;
 
         }
-
 
         void FormWriter::writeMultipartChunk() {
            // LTrace("Writing chunk: ", _writeState)
@@ -331,7 +325,7 @@ namespace base {
         
         
           void FormWriter::writeChunked() {
-            LTrace("Writing chunk: ", _writeState)
+          //  LTrace("Writing chunk: ", _writeState)
 
             switch (_writeState) {
                 case 0:
@@ -354,9 +348,7 @@ namespace base {
                     // Send final packet
                 case 2:
                 {
-  
                     emit("0\r\n\r\n", 5);
-          
                     LTrace("Request complete")
                     _complete = true;
                     _writeState = -1; // raise error if called again
@@ -512,7 +504,7 @@ namespace base {
 
         bool FilePart::writeChunk(FormWriter& writer) {
           //  LTrace("Write chunk")
-            assert(!writer.stopped());
+           // assert(!writer.stopped());
             _initialWrite = false;
 
             std::ostringstream ost;

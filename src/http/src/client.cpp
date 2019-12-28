@@ -52,8 +52,6 @@ namespace base {
 
         }
 
-
-
         //
         // Client Connection
         //
@@ -69,8 +67,8 @@ namespace base {
             LTrace("ClientConnecton::on_payload")
         };
 
-        HttpClient::HttpClient(Listener* listener, const URL& url, http_parser_type type, size_t bufferSize)
-        : TcpConnection(listener, bufferSize)
+        HttpClient::HttpClient(Listener* listener, const URL& url, http_parser_type type)
+        : TcpConnection(listener)
         , ClientConnecton(type)
         , listener(listener)
         , _url(url)
@@ -275,8 +273,8 @@ namespace base {
             if (!_complete)
                 onComplete();
             
-            if(fnClose)
-            fnClose(this);
+          //  if(fnClose)
+           // fnClose(this);
 
         }
 
@@ -312,7 +310,6 @@ namespace base {
         }
 
         Message * HttpClient::outgoingHeader() {
-
             return reinterpret_cast<Message*> (&_request);
         }
 
@@ -622,7 +619,7 @@ namespace base {
 
         void Client::start() {
             if (_url.scheme() == "http" || _url.scheme() == "ws") {
-                clientConn = new HttpClient(nullptr, _url, HTTP_RESPONSE, 6553688);
+                clientConn = new HttpClient(nullptr, _url, HTTP_RESPONSE);
             } else if (_url.scheme() == "https" || _url.scheme() == "wss") {
                 //clientConn = new HttpsClient(nullptr, _url, HTTP_RESPONSE, 6553688);
             }

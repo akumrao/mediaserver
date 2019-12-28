@@ -43,9 +43,9 @@ namespace base {
             LTrace(" On acccept-> UserOnTcpConnectionAlloc"  )
             // Allocate a new RTC::HttpConnection for the HttpServerBase to handle it.
             if(ssl)
-            *connection = new HttpsConnection(listener, HTTP_REQUEST,  65536);
+            *connection = new HttpsConnection(listener, HTTP_REQUEST);
             else
-            *connection = new HttpConnection(listener, HTTP_REQUEST,  1024*8*1000*4);
+            *connection = new HttpConnection(listener, HTTP_REQUEST);
                
             
         }

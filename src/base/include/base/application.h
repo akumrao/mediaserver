@@ -43,8 +43,8 @@ public:
     /// event loop will be used.
     static uv_loop_t* loop;
     
-    void uvInit();
-    void uvDestroy();
+    void  uvInit();
+    void  uvDestroy();
     
     static uv_loop_t* uvGetLoop(    )
     {
@@ -59,10 +59,15 @@ public:
     //
     // Event Loop
     //
+    
+     /// When Run the application event loop in a thread. Call stopAsync to stop
+    //void runAsync();
 
     /// Run the application event loop.
     void run();
 
+    //void stopAsync();
+    
     /// Stop the application event loop.
     void stop();
 
@@ -88,6 +93,8 @@ protected:
 
     static void onShutdownSignal(uv_signal_t* req, int signum);
     static void onPrintHandle(uv_handle_t* handle, void* arg);
+    
+     //uv_async_t async;
 };
 
 

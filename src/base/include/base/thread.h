@@ -48,7 +48,7 @@ namespace base
     {
     public:
 
-        Thread() : isrunning_(false) { }
+        Thread() : isrunning_(false), exit(false) { }
         virtual ~Thread(void);
 
         virtual void start(entry fun, void* arg) {
