@@ -18,7 +18,7 @@ namespace net {
 //class  Request;
 class  FormPart;
 
-
+const int FILE_CHUNK_SIZE = 10*1024; // 32384;65536
 //
 // HTML Form Writer
 //

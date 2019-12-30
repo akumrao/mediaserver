@@ -20,7 +20,6 @@ namespace base {
         const char* FormWriter::TEXT_PLAIN = "text/plain";
         const char* FormWriter::APPLICATION_ZIP = "application/zip";
 
-        const int FILE_CHUNK_SIZE = 10*1024; // 32384;65536
 
         FormWriter* FormWriter::create(ClientConnecton* stream, const std::string& encoding) {
             auto wr = new FormWriter(stream, encoding);
@@ -609,12 +608,21 @@ namespace base {
             LTrace("Write chunk")
             _initialWrite = false;
 
-            // TODO: Honour chunk size for large strings  // wrong fix it later
+             std::ostringstream ost;
 
-            writer.emit(_data.c_str(), _data.length());
+          //  writer.emit(_data.c_str(), _data.length());
+           // writer.updateProgress((int) _data.length());
+
+          //  return false;
+
+            ost << std::hex << _data.length();
+            ost << "\r\n";
+            ost.write( _data.c_str(), (size_t) _data.length());
+            ost << "\r\n";
+            writer.emit(ost.str());
             writer.updateProgress((int) _data.length());
+            return true;
 
-            return false;
         }
 
         bool StringPart::write(FormWriter& writer) {
