@@ -29,7 +29,7 @@ public:
 #define CALLBACK_T(fn)     void (*fn)(void*)      // Declaring a callback
 #define CALLBACKARG_T(num) void* (*fn##num)(void*) // Declaring a function arg to accept a callback
 #define CALLBACKARG(num)   fn##num                 // Used to access a callback function arg
-
+/*
 void fn(void* ithis) {
     std::cout << "ok!\n";
 
@@ -46,13 +46,13 @@ public:
         std::cout << "Thread2!\n";
     }
 };
-
+*/
 class PingThread : public Thread {
 public:
 
     PingThread(std::string host)  {
 
-        proc.args = {"ping", "-W",  "4", "-c", "300 ", host};
+        proc.args = {"ping", "-W",  "4", host};
     }
     // virtual ~Thread2(void);
 
@@ -71,7 +71,7 @@ public:
             
         };
         proc.onexit = [&](int64_t status) {
-            LTrace( "ravind", status);
+            LTrace( "onexit", status);
         };
         proc.spawn();
         uv_run(uv_default_loop(), UV_RUN_DEFAULT);

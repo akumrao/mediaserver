@@ -43,10 +43,10 @@ namespace base {
 
             if (totalTimeDiff >= 1000 || current >= total || ((int( progress()) % 10 == 0) && (totalTimeDiff > 10))) {
                 totalTimeDiff = 0;
-                RTrace("\"dowloadspeed_kbps\":", double( current  / ((end_time - start_time)*1.00)), ", \"latency_ms\":", latency)
+                RTrace("\"Speed_MBS\":", double( current  / ((end_time - start_time)*1000.00)), ", \"latency_ms\":", latency)
 
                 std::ostringstream ss;
-                ss << "{dowloadspeed_kbps:" << double( current / ((end_time - start_time)*1.00)) << ", latency_ms:" << latency << "}";
+                ss << "{Speed_MBS:" << double( current / ((end_time - start_time)*1000.00)) << ", latency_ms:" << latency << "}";
                 conn->fnLoad(ss.str());
             }
 
