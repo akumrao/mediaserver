@@ -614,13 +614,23 @@ namespace base {
            // writer.updateProgress((int) _data.length());
 
           //  return false;
+             
+            static int len =0;
+             
 
-            ost << std::hex << _data.length();
+            ost << std::hex << FILE_CHUNK_SIZE;
             ost << "\r\n";
-            ost.write( _data.c_str(), (size_t) _data.length());
+            ost.write( _data.c_str(), (size_t) FILE_CHUNK_SIZE);
             ost << "\r\n";
             writer.emit(ost.str());
-            writer.updateProgress((int) _data.length());
+            writer.updateProgress((int) FILE_CHUNK_SIZE);
+            ++len;
+            
+            if(len * FILE_CHUNK_SIZE  >= _data.length() )
+            {
+                return false;
+            }
+            
             return true;
 
         }
