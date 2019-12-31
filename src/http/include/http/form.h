@@ -362,6 +362,7 @@ public:
 
 protected:
     std::string _data;
+    int curlen;
 };
 
 

@@ -53,6 +53,9 @@ namespace base {
             std::function<void(ClientConnecton*) > fnConnect;
             std::function<void(ClientConnecton*, size_t ) > fnPayload;
 
+            std::function<void(ClientConnecton*) > fnFormClose;
+
+
             virtual void setReadStream(std::ostream* os) {
             };
 

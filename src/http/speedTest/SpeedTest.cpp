@@ -53,7 +53,9 @@ const std::vector<ServerInfo>& SpeedTest::serverList() {
     mServerList = {
         {"http://speedtestkk1.airtel.in:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Bharti Airtel Ltd", 2564, "speedtestkk1.airtel.in:8080", 0.0},
         {"http://speedtestblr.airtelbroadband.in:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Airtel Broadband", 18976, "speedtestblr.airtelbroadband.in:8080", 0.0},
-        {"http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0}
+        {"http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0},
+        {"http://ooklatestbenguluru.live.vodafone.in:8080/speedtest/upload.php", 12.9716,77.5946, "Benguluru","India","IN","Vodafone India",24683,"ooklatestbenguluru.live.vodafone.in:8080",0.0}
+
     };
 
     // ServerInfo sf("http://bangspeed.hathway.com:8080/speedtest/upload.php", 12.9833, 77.5833, "Bangalore", "India", "IN", "Hathway Cable Datacom Ltd", 4663, "bangspeed.hathway.com:8080", 0.0);

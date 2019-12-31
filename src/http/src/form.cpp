@@ -227,6 +227,8 @@ namespace base {
                 
             }
 
+            _stream->fnFormClose(_stream);
+
             LTrace("runover")
             isrunning_ = false;
 
@@ -593,12 +595,12 @@ namespace base {
 
         StringPart::StringPart(const std::string& data)
         : FormPart("application/octet-stream")
-        , _data(data) {
+        , curlen(0), _data(data) {
         }
 
         StringPart::StringPart(const std::string& data, const std::string& contentType)
         : FormPart(contentType)
-        , _data(data) {
+        ,curlen(0), _data(data) {
         }
 
         StringPart::~StringPart() {
@@ -615,18 +617,15 @@ namespace base {
 
           //  return false;
              
-            static int len =0;
-             
-
             ost << std::hex << FILE_CHUNK_SIZE;
             ost << "\r\n";
             ost.write( _data.c_str(), (size_t) FILE_CHUNK_SIZE);
             ost << "\r\n";
             writer.emit(ost.str());
             writer.updateProgress((int) FILE_CHUNK_SIZE);
-            ++len;
+            ++curlen;
             
-            if(len * FILE_CHUNK_SIZE  >= _data.length() )
+            if(curlen * FILE_CHUNK_SIZE  >= _data.length() )
             {
                 return false;
             }
