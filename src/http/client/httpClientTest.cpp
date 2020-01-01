@@ -253,7 +253,7 @@ void Upload::run() {
     //auto form = FormWriter::create(client, FormWriter::TEXT_PLAIN);
     //form->addPart("file", new FilePart("/var/tmp/a.txt", "text/plain"));
     form = FormWriter::create(client, FormWriter::APPLICATION_ZIP);
-    form->addPart("file", new FilePart("./test.zip", FormWriter::APPLICATION_ZIP));
+    form->addPart("file", new StringPart(std::string( FILE_CHUNK_SIZE*1024, '*'), FormWriter::APPLICATION_ZIP));
 
 
     form->header();
@@ -418,7 +418,7 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
 
     LTrace("Download")
-     {
+  /*   {
          Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
 
          download->start();
@@ -436,7 +436,7 @@ int main(int argc, char** argv) {
          LTrace("Download done");
 
      }
- 
+ */
         LTrace("Upload start");
      
        {
@@ -445,7 +445,7 @@ int main(int argc, char** argv) {
 
         upload->start();
 
-        base::sleep(5000);
+        base::sleep(1000);
 
         LTrace("upload stop")
 
