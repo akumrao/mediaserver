@@ -9,7 +9,7 @@
 #include "http/url.h"
 #include "http/util.h"
 #include "base/filesystem.h"
-#include "http/client.h"
+#include "http/HttpClient.h"
 #include "crypto/hash.h"
 #include "base/platform.h"
 
@@ -56,7 +56,7 @@ void Download::stop(bool flag) {
 
     LTrace(" Download::stop")
 
-            int r = uv_async_send(&async);
+    int r = uv_async_send(&async);
     assert(r == 0);
 }
 
@@ -69,9 +69,9 @@ Download::~Download() {
 
 static void async_cb_download(uv_async_t* handle) {
 
-    LTrace("async_cb_download");
-    Download *p = (Download *) handle->data;
-    uv_close((uv_handle_t*) & p->async, nullptr);
+   LTrace("async_cb_download");
+    Download *p = ( Download *) handle->data;
+   // uv_close((uv_handle_t*)&p->async, nullptr);
 
     p->client->Close();
     p->app.stop();
@@ -96,6 +96,7 @@ void Download::run() {
     // client->start();
     client->fnComplete = [&](const Response & response) {
         std::cout << "client->fnComplete" << std::endl << std::flush;
+        uv_close((uv_handle_t*)&async, nullptr);
         client->Close();
         //            app.stop()
     };
@@ -177,18 +178,18 @@ Upload::Upload(std::string url) : _url(url) {
 
 void Upload::stop(bool flag) {
 
-    LTrace(" Upload::stop")
+ LTrace(" Upload::stop")
 
     if (client) {
 
         form->stop(true);
         form->join();
         //app.stopAsync();
-        int r = uv_async_send(&async);
+        int  r = uv_async_send(&async);
         assert(r == 0);
     }
 
-    LTrace(" Upload::stop over")
+    LTrace("Upload::stop over");
 
 }
 
@@ -199,10 +200,11 @@ Upload::~Upload() {
 
 static void async_cb_upload(uv_async_t* handle) {
 
+ 
     LTrace(" Upload::async_cb_upload")
 
-    Upload *p = (Upload *) handle->data;
-    uv_close((uv_handle_t*) & p->async, nullptr);
+    Upload *p = ( Upload *) handle->data;
+    uv_close((uv_handle_t*)&p->async, nullptr);
 
     p->client->Close();
     p->app.stop();
@@ -211,6 +213,7 @@ static void async_cb_upload(uv_async_t* handle) {
     p->app.uvDestroy();
 
     LTrace(" Upload::async_cb_upload over")
+
 
 
 }
@@ -269,6 +272,16 @@ void Upload::run() {
         LTrace("fnClose")
     };
 
+
+
+
+    client->fnFormClose = [&](ClientConnecton * con) {
+         int  r = uv_async_send(&async);
+    };
+
+
+
+
     client->fnComplete = [&](const Response & response) {
         std::cout << "client->fnComplete" << std::endl << std::flush;
         //form->condWait.signal();
@@ -317,7 +330,7 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
 
     LTrace("Download")
-            /*   {
+              {
                     Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
 
                     download->start();
@@ -357,7 +370,7 @@ int main(int argc, char** argv) {
                    // base::sleep(91000000000000);
 
                }
-             */
+          
 
 
             // Logger::instance().setWriter(new AsyncLogWriter());
@@ -368,17 +381,15 @@ int main(int argc, char** argv) {
  {
         Application app;
 
-        Client *conn = new Client();
-        conn->createConnection("ws", "arvindubuntu", 8000, "/websocket");
-        conn->start();
+        ClientConnecton *conn = new HttpClient("ws", "arvindubuntu", 8000, "/websocket");
 
 
-        conn->clientConn->fnConnect = [&](HttpBase * con) {
-            conn->clientConn->send("Ping");
+        conn->fnConnect = [&](HttpBase * con) {
+            conn->send("Ping");
 
         };
 
-        conn->clientConn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
+        conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
             std::cout << "client->fnPayload" << data << std::endl << std::flush;
         };
 
@@ -386,7 +397,7 @@ int main(int argc, char** argv) {
         //        conn->clientConn->_request.setKeepAlive(false);
         //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
 
-        conn->clientConn->send();
+        conn->send();
 
 
         app.run();
@@ -549,21 +560,20 @@ Client *conn={nullptr};
         std::string path("/tmp/");
         fs::addnode(path, "zlib-1.2.8.tar.gz");
 
-        Client *conn = new Client("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
+        ClientConnecton *conn = new HttpClient("http://zlib.net/fossils/zlib-1.2.8.tar.gz");
         //Client *conn = new Client("http://zlib.net/index.html");
-        conn->start();
-        conn->clientConn->fnComplete = [&](const Response & response) {
+        conn->fnComplete = [&](const Response & response) {
             std::cout << "Lerver response:";
         };
 
-        conn->clientConn->fnUpdateProgess = [&](const std::string str) {
+        conn->fnUpdateProgess = [&](const std::string str) {
             std::cout << "final test " << str << std::endl << std::flush;
         };
 
-        conn->clientConn->_request.setMethod("GET");
-        conn->clientConn->_request.setKeepAlive(false);
-        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-        conn->clientConn->send();
+        conn->_request.setMethod("GET");
+        conn->_request.setKeepAlive(false);
+        conn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        conn->send();
 
         app.run();
 

@@ -289,7 +289,7 @@ namespace base {
 
         /**********************************************************************************************************************/
         HttpBase::HttpBase(http_parser_type type)
-        : _parser(type), _responder(nullptr), _shouldSendHeader(true) {
+        : _parser(type),_type(type), _responder(nullptr), _shouldSendHeader(true) {
 
             _parser.setObserver(this);
             if (type == HTTP_REQUEST)

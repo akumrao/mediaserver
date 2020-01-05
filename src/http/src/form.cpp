@@ -227,6 +227,7 @@ namespace base {
                 
             }
 
+            if(_stream->fnFormClose)
             _stream->fnFormClose(_stream);
 
             LTrace("runover")

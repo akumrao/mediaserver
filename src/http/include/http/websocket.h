@@ -197,7 +197,7 @@ namespace base {
                 send(data, len,  0);
             }
 
-            void send(const char* data, size_t len, int flags = 0) ; // flags = Text || Binary
+            void send(const char* data, size_t len, int flags) ; // flags = Text || Binary
 
             bool shutdown(uint16_t statusCode, const std::string& statusMessage);
 

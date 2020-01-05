@@ -21,8 +21,8 @@
 namespace base {
     namespace net {
 
-        HttpsConnection::HttpsConnection(Listener* listener, http_parser_type type, size_t bufferSize)
-        : SslConnection(listener, bufferSize),
+        HttpsConnection::HttpsConnection(Listener* listener, http_parser_type type)
+        : SslConnection(listener),
            listener(listener),HttpBase(type),wsAdapter(nullptr){
 
 

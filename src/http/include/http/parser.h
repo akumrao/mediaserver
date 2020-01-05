@@ -104,7 +104,7 @@ namespace base {
             virtual ~HttpBase();
 
         public:
-            virtual void tcpsend(const char* data, size_t len) = 0;
+            virtual void tcpsend(const char* data, size_t len) {};
             virtual void send(const char* data, size_t len) = 0;
             virtual void Close() = 0;
 
@@ -142,7 +142,7 @@ namespace base {
             Request _request;
             Response _response;
             Parser _parser;
-            http_parser_type type;
+            http_parser_type _type;
 
         protected:
             
