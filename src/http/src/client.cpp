@@ -46,8 +46,13 @@ namespace base {
                 RTrace("\"Speed_MBS\":", double( current  / ((end_time - start_time)*1000.00)), ", \"latency_ms\":", latency)
 
                 std::ostringstream ss;
-                ss << "{Speed_MBS:" << double( current / ((end_time - start_time)*1000.00)) << ", latency_ms:" << latency << "}";
-                conn->fnLoad(ss.str());
+                if( conn->fnFormClose) //upload speed
+                    ss << "{UplaodSpeed_MBS:" << double( current / ((end_time - start_time)*1000.00)) << ", latency_ms:" << latency << "}";
+                else
+                    ss << "{DownloadSpeed_MBS:" << double( current / ((end_time - start_time)*1000.00)) << ", latency_ms:" << latency << "}";
+
+                 conn->fnLoad(ss.str());
+
             }
 
         }
