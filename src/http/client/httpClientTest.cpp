@@ -56,30 +56,32 @@ void Download::stop(bool flag) {
 
     LTrace(" Download::stop")
 
-    int  r = uv_async_send(&async);
+            int r = uv_async_send(&async);
     assert(r == 0);
 }
 
 Download::~Download() {
-    
+
     LTrace("~Download()")
-    
-    join(); 
+
+    join();
 }
-  static void async_cb_download(uv_async_t* handle) {
-      
-      LTrace("async_cb_download");
-      Download *p = ( Download *) handle->data;
-      uv_close((uv_handle_t*)&p->async, nullptr);
-     
-      p->client->Close();
-      p->app.stop();
-      p->join();
-      p->app.uvDestroy();
-      LTrace("async_cb_download over");
-   
-      
-    }
+
+static void async_cb_download(uv_async_t* handle) {
+
+    LTrace("async_cb_download");
+    Download *p = (Download *) handle->data;
+    uv_close((uv_handle_t*) & p->async, nullptr);
+
+    p->client->Close();
+    p->app.stop();
+    p->join();
+    p->app.uvDestroy();
+    LTrace("async_cb_download over");
+
+
+}
+
 void Download::run() {
 
     LTrace("Download OnRun");
@@ -98,17 +100,17 @@ void Download::run() {
         //            app.stop()
     };
 
-    client->fnLoad = [&](const std::string str) {
+    client->fnUpdateProgess = [&](const std::string str) {
         std::cout << "final test " << str << std::endl << std::flush;
     };
 
-    client->fnConnect = [&](ClientConnecton * con) {
-
+    client->fnConnect = [&](HttpBase * conn) {
+        ClientConnecton* con = (ClientConnecton*) conn;
         con->OutgoingProgress.start();
     };
 
-    client->fnPayload = [&](ClientConnecton * con, size_t sz) {
-
+    client->fnPayload = [&](HttpBase * conn, const char* data, size_t sz) {
+        ClientConnecton* con = (ClientConnecton*) conn;
         con->OutgoingProgress.update(sz, con);
     };
 
@@ -156,7 +158,7 @@ public:
     Application app;
     FormWriter *form;
 
-   uv_async_t async;
+    uv_async_t async;
 };
 
 Upload::Upload(std::string url) : _url(url) {
@@ -182,10 +184,10 @@ void Upload::stop(bool flag) {
         form->stop(true);
         form->join();
         //app.stopAsync();
-        int  r = uv_async_send(&async);
+        int r = uv_async_send(&async);
         assert(r == 0);
     }
-    
+
     LTrace(" Upload::stop over")
 
 }
@@ -195,23 +197,23 @@ Upload::~Upload() {
     join();
 }
 
-  static void async_cb_upload(uv_async_t* handle) {
-      
-      LTrace(" Upload::async_cb_upload")
-               
-      Upload *p = ( Upload *) handle->data;
-      uv_close((uv_handle_t*)&p->async, nullptr);
-     
-      p->client->Close();
-      p->app.stop();
-     
-      p->join();
-      p->app.uvDestroy();
-      
-       LTrace(" Upload::async_cb_upload over")
-   
-      
-    }
+static void async_cb_upload(uv_async_t* handle) {
+
+    LTrace(" Upload::async_cb_upload")
+
+    Upload *p = (Upload *) handle->data;
+    uv_close((uv_handle_t*) & p->async, nullptr);
+
+    p->client->Close();
+    p->app.stop();
+
+    p->join();
+    p->app.uvDestroy();
+
+    LTrace(" Upload::async_cb_upload over")
+
+
+}
 
 void Upload::run() {
 
@@ -230,7 +232,7 @@ void Upload::run() {
     // client->start();
 
 
-    client->fnLoad = [&](const std::string str) {
+    client->fnUpdateProgess = [&](const std::string str) {
         // std::cout << "final test " << str << std::endl << std::flush;
     };
 
@@ -253,17 +255,17 @@ void Upload::run() {
     //auto form = FormWriter::create(client, FormWriter::TEXT_PLAIN);
     //form->addPart("file", new FilePart("/var/tmp/a.txt", "text/plain"));
     form = FormWriter::create(client, FormWriter::APPLICATION_ZIP);
-    form->addPart("file", new StringPart(std::string( FILE_CHUNK_SIZE*1024, '*'), FormWriter::APPLICATION_ZIP));
+    form->addPart("file", new StringPart(std::string(FILE_CHUNK_SIZE * 1024, '*'), FormWriter::APPLICATION_ZIP));
 
 
     form->header();
 
-    client->fnConnect = [&](ClientConnecton * con) {
+    client->fnConnect = [&](HttpBase * con) {
         LTrace("fnConnect")
         form->start();
     };
 
-    client->fnClose = [&](ClientConnecton * con) {
+    client->fnClose = [&](HttpBase * con) {
         LTrace("fnClose")
     };
 
@@ -272,7 +274,7 @@ void Upload::run() {
         //form->condWait.signal();
     };
 
-    client->fnPayload = [&](ClientConnecton * con, size_t sz) {
+    client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
 
     };
 
@@ -306,186 +308,93 @@ void Upload::run() {
 }
 
 /*********************************************************************************************/
-#define FIXTURE "testfile"
-
-static void timer_cb(uv_timer_t* handle);
-static void close_cb(uv_handle_t* handle);
-static void poll_cb(uv_fs_poll_t* handle,
-                    int status,
-                    const uv_stat_t* prev,
-                    const uv_stat_t* curr);
-
-static void poll_cb_fail(uv_fs_poll_t* handle,
-                         int status,
-                         const uv_stat_t* prev,
-                         const uv_stat_t* curr);
-static void poll_cb_noop(uv_fs_poll_t* handle,
-                         int status,
-                         const uv_stat_t* prev,
-                         const uv_stat_t* curr);
-
-static uv_fs_poll_t poll_handle;
-static uv_timer_t timer_handle;
-static uv_loop_t* loop;
-
-static int poll_cb_called;
-static int timer_cb_called;
-static int close_cb_called;
-
-
-static void close_cb(uv_handle_t* handle) {
-  close_cb_called++;
-}
-
-
-
-
-static void poll_cb_fail(uv_fs_poll_t* handle,
-                         int status,
-                         const uv_stat_t* prev,
-                         const uv_stat_t* curr) {
-  assert(0 && "fail_cb called");
-}
-
-
-
-
 
 /***********************************************************************************************/
 int main(int argc, char** argv) {
 
     //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
 
-
-    {
-        
-        
-        Application app;
-                
-       // uv_loop_t loop;
-        uv_fs_poll_t poll_handle;
-        int i;
-
-       remove(FIXTURE);
-
-       // assert(0 == uv_loop_init(&loop));
-
-        assert(0 == uv_fs_poll_init(app.uvGetLoop(), &poll_handle));
-
-        for (i = 0; i < 10; ++i) {
-            assert(0 == uv_fs_poll_start(&poll_handle, poll_cb_fail, FIXTURE, 100));
-            assert(0 == uv_fs_poll_stop(&poll_handle));
-        }
-        uv_close((uv_handle_t*) & poll_handle, close_cb);
-      //  while (close_cb_called == 0)
-          app.run();
-          app.stop();
-        assert(close_cb_called == 1);
-
-       // assert(0 == uv_loop_close(&loop));
-
-    }
-    
-    {
-        
-        Application app;
-        //uv_loop_t loop;
-        uv_fs_poll_t poll_handle;
-        int i;
-
-        remove(FIXTURE);
-
-      //  assert(0 == uv_loop_init(&loop));
-
-        assert(0 == uv_fs_poll_init(app.uvGetLoop(), &poll_handle));
-
-        for (i = 0; i < 10; ++i) {
-            assert(0 == uv_fs_poll_stop(&poll_handle));
-            assert(0 == uv_fs_poll_start(&poll_handle, poll_cb_fail, FIXTURE, 100));
-        }
-        uv_close((uv_handle_t*) & poll_handle, close_cb);
-       // while (close_cb_called == 0)
-            app.run();
-             app.stop();
-        //assert(close_cb_called == 1);
-
-       // assert(0 == uv_loop_close(&loop));
-    }
-    
-
-    
-    
     Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
 
     LTrace("Download")
-  /*   {
-         Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
+            /*   {
+                    Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
 
-         download->start();
+                    download->start();
 
-         base::sleep(5000);
+                    base::sleep(5000);
 
-         //base::sleep(5000);
+                    //base::sleep(5000);
 
-         LTrace("download stop ")
+                    LTrace("download stop ")
 
-         download->stop();
+                    download->stop();
 
-         delete download;
+                    delete download;
 
-         LTrace("Download done");
+                    LTrace("Download done");
 
-     }
- */
-        LTrace("Upload start");
+                }
+
+                   LTrace("Upload start");
      
-       {
-        //Upload *upload = new Upload("http://arvindubuntu:8000/upload.php");
-        Upload *upload = new Upload("http://speedtest.tele2.net/upload.php");
+                  {
+                   //Upload *upload = new Upload("http://arvindubuntu:8000/upload.php");
+                   Upload *upload = new Upload("http://speedtest.tele2.net/upload.php");
 
-        upload->start();
+                   upload->start();
 
-        base::sleep(1000);
+                   base::sleep(1000);
 
-        LTrace("upload stop")
+                   LTrace("upload stop")
 
-        upload->stop();
+                   upload->stop();
 
-        delete upload;
+                   delete upload;
 
-        LTrace("upload done");
+                   LTrace("upload done");
 
-        // base::sleep(91000000000000);
+                   // base::sleep(91000000000000);
 
+               }
+             */
+
+
+            // Logger::instance().setWriter(new AsyncLogWriter());
+
+            //  test::init();
+
+
+ {
+        Application app;
+
+        Client *conn = new Client();
+        conn->createConnection("ws", "arvindubuntu", 8000, "/websocket");
+        conn->start();
+
+
+        conn->clientConn->fnConnect = [&](HttpBase * con) {
+            conn->clientConn->send("Ping");
+
+        };
+
+        conn->clientConn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
+            std::cout << "client->fnPayload" << data << std::endl << std::flush;
+        };
+
+        //       conn->clientConn->_request.setMethod("GET");
+        //        conn->clientConn->_request.setKeepAlive(false);
+        //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+
+        conn->clientConn->send();
+
+
+        app.run();
     }
+
+
     return 0;
 
-
-    // Logger::instance().setWriter(new AsyncLogWriter());
-
-    //  test::init();
-
-  
-    /*
-     {
-         Application app;
- 
-         Client *conn = new Client();
-         conn->createConnection("ws","arvindubuntu",7000,"websocket");
-        
-         //Client *conn = new Client("http://zlib.net/index.html");
-         conn->start();
-      //   conn->clientConn->fnComplete = [&](const Response & response) {
-        //     std::cout << "Lerver response:";
-         //};
-  //       conn->clientConn->_request.setMethod("GET");
- //        conn->clientConn->_request.setKeepAlive(false);
- //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
-         conn->clientConn->send("Ping");
-
-         app.run();
-     }
-     */
     /*
      {
      
@@ -647,7 +556,7 @@ Client *conn={nullptr};
             std::cout << "Lerver response:";
         };
 
-        conn->clientConn->fnLoad = [&](const std::string str) {
+        conn->clientConn->fnUpdateProgess = [&](const std::string str) {
             std::cout << "final test " << str << std::endl << std::flush;
         };
 

@@ -4,7 +4,7 @@
 #include "http/request.h"
 #include "http/response.h"
 #include <http_parser.h>
-
+#include <functional> 
 
 #ifndef HTTP_Parser_H
 #define HTTP_Parser_H
@@ -104,6 +104,7 @@ namespace base {
             virtual ~HttpBase();
 
         public:
+            virtual void tcpsend(const char* data, size_t len) = 0;
             virtual void send(const char* data, size_t len) = 0;
             virtual void Close() = 0;
 
@@ -125,6 +126,10 @@ namespace base {
             virtual void on_payload(const char* data, size_t len)=0;
             virtual void onComplete()=0;
 
+            std::function<void(HttpBase*) > fnClose;
+            std::function<void(HttpBase*) > fnConnect;
+            std::function<void(HttpBase*, const char* data, size_t ) > fnPayload;
+            
 
             virtual Message* incomingHeader();
             virtual Message* outgoingHeader();

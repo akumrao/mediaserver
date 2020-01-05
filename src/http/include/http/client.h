@@ -8,7 +8,7 @@
 #include "http/url.h"
 #include "base/logger.h"
 #include "net/dns.h"
-#include <functional> 
+
 //#include "http/HttpsConn.h"
 #include "http/HttpConn.h"
 namespace base {
@@ -47,14 +47,16 @@ namespace base {
 
              
 
-            std::function<void(const std::string&) > fnLoad; ///< Signals when raw data is received
+            std::function<void(const std::string&) > fnUpdateProgess; ///< Signals when raw data is received
             std::function<void(const Response&) > fnComplete; ///< Signals when the HTTP transaction is complete
-            std::function<void(ClientConnecton*) > fnClose;
-            std::function<void(ClientConnecton*) > fnConnect;
-            std::function<void(ClientConnecton*, size_t ) > fnPayload;
 
+          
+
+            /// for upload form close
             std::function<void(ClientConnecton*) > fnFormClose;
-
+            
+            /// for websocket connect
+            
 
             virtual void setReadStream(std::ostream* os) {
             };
@@ -93,6 +95,7 @@ namespace base {
             void connect();
 
         public:
+            void tcpsend(const char* data, size_t len);
             void send(const char* data, size_t len);
             void send();
             void send(Request& req);
@@ -139,7 +142,7 @@ namespace base {
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-        
+            WebSocketConnection *wsAdapter{ nullptr};
 
         public:
             // Request _request;

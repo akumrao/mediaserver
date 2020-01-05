@@ -58,7 +58,7 @@ namespace base {
             framer.writeFrame(data, len, flags, writer);
 
             assert(socket);
-            _connection->send((const char*) writer.begin(), writer.position());
+            _connection->tcpsend((const char*) writer.begin(), writer.position());
             
             
         }
@@ -71,13 +71,17 @@ namespace base {
             LTrace("Client request: ", oss.str())
 
             assert(socket);
-            _connection->send((const char*) oss.str().c_str(), oss.str().length());
+            _connection->tcpsend((const char*) oss.str().c_str(), oss.str().length());
         }
 
     
         void WebSocketConnection::onHandshakeComplete() {
             LTrace("onHandshakeComplete");
 
+            if(_connection->fnConnect)
+            _connection->fnConnect(_connection);
+            
+            if(listener)
             listener->on_connect( this);
             // Call net::SocketEmitter::onSocketConnect to notify handlers that data may flow
             //net::SocketEmitter::onSocketConnect(*socket.get());
@@ -188,10 +192,14 @@ namespace base {
                     // Emit the result packet
                     assert(payload);
                     assert(payloadLength);
+                    if(listener)
                     listener->on_read( this,(const char*) payload, payloadLength );
-                    // net::SocketEmitter::onSocketRecv(*socket.get(),
+                    
+                   // net::SocketEmitter::onSocketRecv(*socket.get(),
                     //  mutableBuffer(payload, (size_t)payloadLength),
                     // peerAddress);
+                    if(_connection->fnPayload)
+                    _connection->fnPayload(_connection,payload , payloadLength);
                 }
                 assert(offset == total);
             } else {

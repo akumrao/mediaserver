@@ -6,6 +6,7 @@
 #include "base/util.h"
 #include "base/application.h"
 #include "base/platform.h"
+#include "http/websocket.h"
 using std::endl;
 
 
@@ -51,7 +52,8 @@ namespace base {
                 else
                     ss << "{DownloadSpeed_MBS:" << double( current / ((end_time - start_time)*1000.00)) << ", latency_ms:" << latency << "}";
 
-                 conn->fnLoad(ss.str());
+                if(conn->fnUpdateProgess)
+                conn->fnUpdateProgess(ss.str());
 
             }
 
@@ -101,7 +103,7 @@ namespace base {
             if (url.scheme() == "ws") {
 
                 //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
-                //wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+                wsAdapter = new WebSocketConnection(listener, this, ClientSide);
             }
 
         }
@@ -126,8 +128,19 @@ namespace base {
             TcpConnection::Close();
         }
 
+         void HttpClient::tcpsend(const char* data, size_t len) {
+    
+             TcpConnection::send(data, len);
+         }
+         
         void HttpClient::send(const char* data, size_t len) {
             connect();
+            
+            if(wsAdapter)
+            {
+                wsAdapter->send(data,len );
+                return;
+            }
 
             if (_active)
                 // Raw data will be pushed onto the Outgoing packet stream
@@ -176,7 +189,16 @@ namespace base {
 
             // Set the connection to active
 
-            sendHeader();
+            if(wsAdapter)
+            {
+                wsAdapter->onSocketConnect();
+                
+                return;
+            }
+            else
+            {
+                sendHeader();
+            }
             _active = true;
 
             // Emit the connect signal so raw connections like
@@ -214,8 +236,17 @@ namespace base {
             // LTrace("On socket recv: ", len);
              //LTrace("On socket recv: ", data);
             recvBytes += len;
+            
+            if(wsAdapter)
+            {
+                wsAdapter->onSocketRecv( std::string((char*)data, len));
+                return;
+            }
             // TcpConnection::on_read( data, len);
             _parser.parse((const char*) data, len);
+            
+            
+            
             //LInfo("On socket recv: ", len , " : " , recvBytes, " : ", end_time- start_time );
 
         }
@@ -249,7 +280,7 @@ namespace base {
             }
             
             if(fnPayload)
-             fnPayload(this, len);
+             fnPayload(this,data, len);
         }
 
         void HttpClient::onComplete() {
