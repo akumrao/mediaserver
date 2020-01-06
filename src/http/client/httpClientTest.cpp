@@ -10,6 +10,7 @@
 #include "http/util.h"
 #include "base/filesystem.h"
 #include "http/HttpClient.h"
+#include "http/HttpsClient.h"
 #include "crypto/hash.h"
 #include "base/platform.h"
 
@@ -328,48 +329,110 @@ int main(int argc, char** argv) {
     //Logger::instance().add(new RemoteChannel("Remote", Level::Remote, "127.0.0.1", 6000));
 
     Logger::instance().add(new ConsoleChannel("Trace", Level::Trace));
+    /*
+    {
+       Application app;
+       
+       std::string path("./");
+       fs::addnode(path, "test.html");
+       
+       ClientConnecton *conn = new HttpsClient("https://www.google.com/");
 
+        // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
+        conn->fnComplete = [&](const Response & response) {
+             std::cout << "Lerver response:";
+        };
+        conn->_request.setKeepAlive(false);
+        // conn->setReadStream(new std::stringstream);
+        
+        conn->_request.setMethod("GET");
+        conn->_request.setKeepAlive(false);
+        conn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+        
+        conn->send();
+        app.run();
+      //  expects(conn->closed());
+      //  expects(!conn->eerror().any());
+        
+       
+        return 0;
+        
+    }*/
+    
+    {
+
+        Application app;
+
+        ClientConnecton *conn = new HttpsClient("wss", "arvindubuntu", 1338, "/websocket");
+
+
+        conn->fnConnect = [&](HttpBase * con) {
+            conn->send("Ping");
+
+        };
+
+        conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
+            std::cout << "client->fnPayload" << data << std::endl << std::flush;
+        };
+
+        //       conn->clientConn->_request.setMethod("GET");
+        //        conn->clientConn->_request.setKeepAlive(false);
+        //        conn->clientConn->setReadStream(new std::ofstream(path, std::ios_base::out | std::ios_base::binary));
+
+        conn->send();
+
+
+        app.run();
+        
+       
+        return 0;
+        
+    }
+
+    
+    
+    
     LTrace("Download")
-              {
-                    Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
+    {
+          Download *download = new Download("http://speedtest.tele2.net/20MB.zip");
 
-                    download->start();
+          download->start();
 
-                    base::sleep(5000);
+          base::sleep(5000);
 
-                    //base::sleep(5000);
+          //base::sleep(5000);
 
-                    LTrace("download stop ")
+          LTrace("download stop ")
 
-                    download->stop();
+          download->stop();
 
-                    delete download;
+          delete download;
 
-                    LTrace("Download done");
+          LTrace("Download done");
 
-                }
+      }
 
-                   LTrace("Upload start");
-     
-                  {
-                   //Upload *upload = new Upload("http://arvindubuntu:8000/upload.php");
-                   Upload *upload = new Upload("http://speedtest.tele2.net/upload.php");
+         LTrace("Upload start");
 
-                   upload->start();
+        {
+         //Upload *upload = new Upload("http://arvindubuntu:8000/upload.php");
+         Upload *upload = new Upload("http://speedtest.tele2.net/upload.php");
 
-                   base::sleep(1000);
+         upload->start();
 
-                   LTrace("upload stop")
+         base::sleep(1000);
 
-                   upload->stop();
+         LTrace("upload stop")
 
-                   delete upload;
+         upload->stop();
 
-                   LTrace("upload done");
+         delete upload;
 
-                   // base::sleep(91000000000000);
+         LTrace("upload done");
 
-               }
+         // base::sleep(91000000000000);
+
+     }
           
 
 

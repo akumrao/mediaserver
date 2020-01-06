@@ -216,11 +216,12 @@ void SslConnection::on_read(const char* data, size_t len)
 
 void SslConnection::on_connect()
 {
-    LTrace("On connect")
+    LTrace("SSL On connect")
    // if (readStart()) {
         _sslAdapter.initClient();
         // _sslAdapter.start();
     //emit
+    if(listener)
     listener->on_connect( this);
         
    // }
