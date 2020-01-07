@@ -4,7 +4,8 @@
 #include "http/HttpConn.h"
 #include "http/websocket.h"
 #include "base/base64.h"
-#include "crypto/hash.h"
+//#include "crypto/hash.h"
+#include "base/sha1.h"
 //#include "http/client.h"
 #include "http/HttpConn.h"
 #include "base/logger.h"
@@ -289,10 +290,23 @@ namespace base {
         }
 
         std::string computeAccept(const std::string& key) {
-            std::string accept(key);
-            crypto::Hash engine("SHA1");
-            engine.update(key + ProtocolGuid);
-            return base64::encode(engine.digest());
+            std::string accept(key + ProtocolGuid);
+            
+           // crypto::Hash engine("SHA1");
+           // engine.update(key + ProtocolGuid);
+           //  return base64::encode(engine.digest());
+            
+            sha1::SHA1_CTX context;
+            sha1::reid_SHA1_Init(&context);
+            sha1::reid_SHA1_Update(&context, (uint8_t*)accept.c_str(), accept.length());
+            std::vector<uint8_t> digest(SHA1_DIGEST_SIZE);
+            sha1::reid_SHA1_Final(&context, &digest[0]);
+            return base64::encode(digest);
+           
+          //  LTrace(base64::encode(engine.digest()));
+          //  LTrace(base64::encode(digest));
+          
+           
         }
 
         void WebSocketFramer::createClientHandshakeRequest(Request& request) {
