@@ -221,8 +221,11 @@ int uv__socket_sockopt(uv_handle_t* handle, int optname, int* value) {
 void uv__make_close_pending(uv_handle_t* handle) {
   assert(handle->flags & UV_HANDLE_CLOSING);
   assert(!(handle->flags & UV_HANDLE_CLOSED));
-  handle->next_closing = handle->loop->closing_handles;
-  handle->loop->closing_handles = handle;
+  if(handle->loop)
+  {
+    handle->next_closing = handle->loop->closing_handles;
+    handle->loop->closing_handles = handle;
+  }
 }
 
 int uv__getiovmax(void) {

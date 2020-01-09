@@ -115,6 +115,12 @@ void Download::run() {
         ClientConnecton* con = (ClientConnecton*) conn;
         con->OutgoingProgress.update(sz, con);
     };
+    
+    
+    client->fnClose = [&](HttpBase * con, std::string string) {
+        LTrace("fnClose")
+        uv_close((uv_handle_t*)&async, nullptr);
+    };
 
     client->_request.setMethod("GET");
     client->_request.setKeepAlive(false);
@@ -269,8 +275,9 @@ void Upload::run() {
         form->start();
     };
 
-    client->fnClose = [&](HttpBase * con) {
+    client->fnClose = [&](HttpBase * con, std::string string) {
         LTrace("fnClose")
+        uv_close((uv_handle_t*)&async, nullptr);
     };
 
 
@@ -357,7 +364,7 @@ int main(int argc, char** argv) {
        
         return 0;
         
-    }*/
+    }
     
     {
 
@@ -388,7 +395,7 @@ int main(int argc, char** argv) {
         return 0;
         
     }
-
+*/
     
     
     
@@ -398,7 +405,7 @@ int main(int argc, char** argv) {
 
           download->start();
 
-          base::sleep(5000);
+          base::sleep(55000);
 
           //base::sleep(5000);
 
@@ -409,6 +416,7 @@ int main(int argc, char** argv) {
           delete download;
 
           LTrace("Download done");
+          
 
       }
 
@@ -420,7 +428,7 @@ int main(int argc, char** argv) {
 
          upload->start();
 
-         base::sleep(1000);
+         base::sleep(100000);
 
          LTrace("upload stop")
 
@@ -432,6 +440,7 @@ int main(int argc, char** argv) {
 
          // base::sleep(91000000000000);
 
+         return 0;
      }
           
 

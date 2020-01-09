@@ -29,15 +29,15 @@ namespace base {
                 LTrace("GetAddrInfoReq::cbDnsResolve");
             }
 
-            
-              
     
             static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
                 struct getaddrinfo_req* req;
                 
+                GetAddrInfoReq *obj = (GetAddrInfoReq*) handle->data;
+                
                 if (status < 0 || !res) {
                 LTrace(  "getaddrinfo callback error ", uv_err_name(status));
-                //assert(status == 0);
+                obj->cbDnsResolve(nullptr, "");
                 return;
             }
                 
@@ -48,7 +48,7 @@ namespace base {
                 // uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
 
 
-                GetAddrInfoReq *obj = (GetAddrInfoReq*) handle->data;
+          
                 obj->cbDnsResolve(res, addr);
 
                 uv_freeaddrinfo(res);

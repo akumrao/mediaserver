@@ -126,7 +126,7 @@ namespace base {
             virtual void on_payload(const char* data, size_t len)=0;
             virtual void onComplete()=0;
 
-            std::function<void(HttpBase*) > fnClose;
+            std::function<void(HttpBase*, std::string) > fnClose;
             std::function<void(HttpBase*) > fnConnect;
             std::function<void(HttpBase*, const char* data, size_t ) > fnPayload;
             

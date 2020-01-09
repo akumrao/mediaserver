@@ -134,6 +134,14 @@ namespace base {
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {
             if (_connect) return;
 
+            if(!res)
+            {
+                 if(fnClose)
+                 fnClose(this, "DNS-Resolve-Error");
+
+                return;
+            }
+            
             if (!_connect) {
                 _connect = true;
 
