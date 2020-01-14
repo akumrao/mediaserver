@@ -266,7 +266,7 @@ namespace base {
         }
 
         void packet_manager::put_payload(string const& payload) {
-            std::cout << "payload " << payload << std::endl << std::flush;
+            STrace << "payload " << payload ;
 
             unique_ptr<packet> p;
             do {

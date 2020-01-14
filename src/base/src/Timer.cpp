@@ -123,8 +123,11 @@ namespace base
 
     inline void Timer::OnUvTimer(int timerID) {
         LOG_CALL;
-
         // Notify the listener.
+        if(this->listener)
         this->listener->OnTimer(this,timerID);
+        
+        if(cb_timeout)
+        cb_timeout();
     }
 } // namespace base

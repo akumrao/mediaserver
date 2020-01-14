@@ -9,7 +9,6 @@ removeListener
 ping
 pong
  
- 
  */
 
 #include "socketio/client.h"
@@ -98,9 +97,9 @@ namespace base {
 
         Client::Client(const std::string& host, uint16_t port) : //, uv::Loop* loop
         //net::SocketAdapter(nullptr, this),
-        m_ping_timer(this),
-        m_ping_timeout_timer(this),
-        m_reconn_timer(this),
+       // m_ping_timer(this),
+        //m_ping_timeout_timer(this),
+       // m_reconn_timer(this),
         _host(host),
         _port(port),
         m_ping_interval(0),
@@ -139,7 +138,7 @@ namespace base {
 
                 try {
 
-                    m_ping_timeout = message["pingInterval"];
+                    m_ping_timeout = message["pingTimeout"];
                     LTrace("Ping timeout ", m_ping_timeout)
                 } catch (...) {
                     m_ping_timeout = 60000;
@@ -147,10 +146,57 @@ namespace base {
 
             }
 
-            m_ping_timer.Start(m_ping_interval);
-
+            m_ping_timer.cb_timeout = std::bind(&Client::ping, this);
+            m_ping_timer.Start(m_ping_interval,m_ping_interval);
+            
+             m_ping_timeout_timer.cb_timeout = std::bind(&Client::timeout_pong, this);
+   
         }
 
+
+        /////////////////////////////////////////////////////////////////////
+
+        void Client::ping() {
+            STrace << "ping " ;
+
+                  packet p(packet::frame_ping);
+            m_packet_mgr.encode(p, [&](bool /*isBin*/, shared_ptr<const string> payload) {
+              
+                m_client->send( *payload);
+            });
+            
+            
+               
+             m_ping_timeout_timer.Start(m_ping_timeout);
+            
+        }
+
+        void Client::timeout_pong() {
+            STrace << "timeout pong " ;
+
+            close_impl, this, close::status::policy_violation, "Pong timeout"));
+        }
+
+        void Client::timeout_reconnect() {
+            STrace << "timeout=reconnect" ;
+
+            
+            if (m_con_state == con_closed) {
+                m_con_state = con_opening;
+                m_client->Close();
+                delete m_client;
+                m_sid.clear();
+                m_packet_mgr.reset();
+  
+                LTrace("Reconnecting...");
+                connect();
+                //if (m_reconnecting_listener) m_reconnecting_listener();
+               // m_client.get_io_service().dispatch(lib::bind(&client_impl::connect_impl, this, m_base_url, m_query_string));
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////
+        
         void Client::close_impl(int const& code, string const& reason) {
             LTrace("Close by reason:", reason);
 
@@ -160,8 +206,19 @@ namespace base {
             m_client->Close();
 
         }
+        
+        void Client::on_close()
+        {
+            LTrace("Client Disconnected.");
+
+            m_con_state = con_closed;
+
+            this->clear_timers();
+
+        }
 
         socket* Client::get_socket(string const& nsp) {
+            
             string aux;
             if (nsp == "") {
                 aux = "/";
@@ -177,14 +234,14 @@ namespace base {
             if (it != m_sockets.end()) {
                 return it->second;
             } else {
-
+                lock_guard<mutex> guard(m_socket_mutex);
                 m_sockets[aux] = new socket(this, aux);
                 return m_sockets[aux];
             }
         }
 
         void Client::on_decode(packet const& p) {
-            std::cout << "on_decode" << std::endl << std::flush;
+            STrace << "on_decode" ;
 
             switch (p.get_frame()) {
                 case packet::frame_message:
@@ -212,7 +269,8 @@ namespace base {
         void Client::clear_timers() {
             LTrace("clear timers")
 
-
+            m_ping_timeout_timer.Stop();
+            m_ping_timer.Stop();
             m_ping_timeout_timer.Close();
             m_ping_timer.Close();
 
@@ -220,11 +278,11 @@ namespace base {
 
         void Client::on_pong() {
             LTrace("on_pong")
-            m_ping_timeout_timer.Reset();
+            m_ping_timeout_timer.Stop();
         }
 
         void Client::on_encode(bool isBinary, shared_ptr<const string> const& payload) {
-            std::cout << "on_encode" << payload << std::endl << std::flush;
+            STrace << "on_encode" << payload ;
 
             if (!isBinary) {
                 LTrace("on_encode ", *payload)
@@ -242,7 +300,6 @@ namespace base {
 
         void Client::connect(const std::string& host, uint16_t port) {
             {
-                //Mutex::ScopedLock lock(_mutex);
                 _host = host;
                 _port = port;
             }
@@ -250,8 +307,8 @@ namespace base {
         }
 
         void Client::connect() {
-            //TraceL << "SocketIO Connecting" << endl;
-
+            STrace << "SocketIO Connecting" ;
+            m_con_state = con_opening;
             if (_host.empty() || !_port)
                 throw std::runtime_error("The SocketIO server address is not set.");
 
@@ -265,7 +322,7 @@ namespace base {
         }
 
         void Client::sendHandshakeRequest() {
-            //Mutex::ScopedLock lock(_mutex);
+            LTrace("sendHandshakeRequest")
 
             //TraceL << "Send handshake request" << endl;	
             bool ssl = false;
@@ -291,13 +348,9 @@ namespace base {
             };
 
             m_client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-                std::cout << "client->fnPayload" << data << std::endl << std::flush;
-
-
-                if (m_ping_timeout) {
-                    m_ping_timeout_timer.Start(m_ping_timeout);
-                    // m_ping_timeout_timer->async_wait(lib::bind(&Client::timeout_pong, this,lib::placeholders::_1));
-                }
+                STrace << "client->fnPayload" << data ;
+                
+                m_ping_timeout_timer.Reset();
 
                 m_packet_mgr.put_payload(data);
 
@@ -307,6 +360,8 @@ namespace base {
             m_client->setReadStream(new std::stringstream);
 
             m_client->send();
+            
+             LTrace("sendHandshakeRequest over")
 
 
         }
@@ -326,48 +381,27 @@ namespace base {
       
         }
 
-
-
-
-
-
-
-
-
-
-        //void Client::onPacket(sockio::Packet& packet)
-        //{
-        //TraceL << "On packet: " << packet.toString() << endl;		
-        //PacketSignal::emit(this, packet);	
-        //}
-
-        void Client::OnTimer(Timer* timer, int timerID)
-        //void Client::onHeartBeatTimer(void*)
-        {
-            //TraceL << "On heartbeat" << endl;
-            /*
-            if (isOnline())
-                    sendHeartbeat();
-
-            // Try to reconnect if disconnected in error
-            else if (error().any()) {	
-            //	TraceL << "Attempting to reconnect" << endl;	
-                    try {
-                            connect();
-                    } 
-                    catch (std::exception& exc) {			
-                            ErrorL << "Reconnection attempt failed: " << exc.what() << endl;
-                    }	
-            }*/
-        }
-
+    
         void Client::send(packet& p) {
-            std::cout << "send " << std::endl << std::flush;
+            STrace << "send " ;
             m_packet_mgr.encode(p);
         }
 
+        
+        void Client::remove_socket(string const& nsp)
+        {
+            STrace << "remove_socket "  << nsp ;
+            lock_guard<mutex> guard(m_socket_mutex);
+            auto it = m_sockets.find(nsp);
+            if(it!= m_sockets.end())
+            {
+                m_sockets.erase(it);
+                delete it->second;
+            }
+        }
+        
         /***************************************************************************/
-        socket::socket(Client* client, std::string const& nsp) : m_client(client), m_nsp(nsp), m_connection_timer(this) {
+        socket::socket(Client* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
         }
 
         socket::~socket() {
@@ -399,16 +433,26 @@ namespace base {
 
         void socket::close() {
 
+            if(m_connected)
+            {
+                packet p(packet::type_disconnect,m_nsp);
+                send_packet(p);
+                m_connection_timer.cb_timeout = std::bind(&socket::on_close, this);
+                m_connection_timer.Start( 3000, 0);
+                
+            }
+              
+
         }
 
         void socket::on_error(error_listener const& l) {
 
-            std::cout << "on_error " << std::endl << std::flush;
+            STrace << "on_error " ;
             m_error_listener = l;
         }
 
         void socket::off_error() {
-            std::cout << "off_error " << std::endl << std::flush;
+            STrace << "off_error " ;
             m_error_listener = nullptr;
         }
 
@@ -417,16 +461,18 @@ namespace base {
         }
 
         void socket::on_close() {
+            m_connection_timer.Stop();
             m_connection_timer.Close();
             m_connected = false;
             {
-
+                std::lock_guard<std::mutex> guard(m_packet_mutex);
                 while (!m_packet_queue.empty()) {
                     m_packet_queue.pop();
                 }
             }
-            //  client->on_socket_closed(m_nsp);
-            // client->remove_socket(m_nsp);
+            
+            // m_client->on_socket_closed(m_nsp);
+             m_client->remove_socket(m_nsp);
 
             //  m_client->Close();
             //delete m_client;
@@ -496,45 +542,50 @@ namespace base {
 
         }
 
-        void socket::OnTimer(Timer* timer, int timerID) {
-
-           // timer->
-            
-        }
+       
 
         void socket::send_connect() {
-            std::cout << "send_connect " << m_nsp << std::endl << std::flush;
+            STrace << "send_connect " << m_nsp ;
 
             if (m_nsp == "/" || m_nsp == "") {
                 return;
             }
             packet p(packet::type_connect, m_nsp);
-
-            // m_client->send(p);
-
+            m_client->send(p);
+            
+            m_connection_timer.cb_timeout = std::bind(&socket::timeout_connection, this);
+            
             m_connection_timer.Start(20000);
 
         }
 
+         void socket::timeout_connection()
+        {
+            STrace << "timeout_connection "  ;
+            m_connection_timer.Reset();
+            //Should close socket if no connected message arrive.Otherwise we'll never ask for open again.
+            this->on_close();
+        }
+         
         void socket::on_connected() {
 
-            std::cout << "on_connected " << m_nsp << std::endl << std::flush;
+            STrace << "on_connected " << m_nsp ;
 
-            m_connection_timer.Close();
+            m_connection_timer.Stop();
 
             if (!m_connected) {
                 m_connected = true;
                 //m_client->on_socket_opened(m_nsp);
 
                 while (true) {
-                    //m_packet_mutex.lock();
+                    m_packet_mutex.lock();
                     if (m_packet_queue.empty()) {
-                        //m_packet_mutex.unlock();
+                        m_packet_mutex.unlock();
                         break;
                     }
                     packet front_pack = std::move(m_packet_queue.front());
                     m_packet_queue.pop();
-                    //m_packet_mutex.unlock();
+                    m_packet_mutex.unlock();
                     m_client->send(front_pack);
                 }
                 m_client->cbConnected(this);
@@ -542,14 +593,14 @@ namespace base {
         }
 
         void socket::on_socketio_error(json const& err_message) {
-            std::cout << "on_sokcetio_error " << std::endl << std::flush;
+            STrace << "on_sokcetio_error " ;
             if (m_error_listener)m_error_listener(err_message);
         }
 
         /****************************************************************************/
 
         void socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
-            std::cout << "emit " << name << std::endl << std::flush;
+            STrace << "emit " << name ;
 
             auto array = json::array();
             array.push_back(name);
@@ -568,7 +619,7 @@ namespace base {
         }
 
         void socket::send_packet(packet &p) {
-            std::cout << "send_packet" << std::endl << std::flush;
+            STrace << "send_packet" ;
 
             if (m_connected) {
                 while (true) {
@@ -591,7 +642,7 @@ namespace base {
 
         void socket::on_socketio_event(const std::string& nsp, int msgId, const std::string& name, json && message) {
 
-            std::cout << "on_socketio_event " << name << std::endl << std::flush;
+            STrace << "on_socketio_event " << name ;
             bool needAck = msgId >= 0;
             event ev = event_adapter::create_event(nsp, name, std::move(message), needAck);
             event_listener func = this->get_bind_listener_locked(name);
@@ -612,7 +663,7 @@ namespace base {
         }
 
         void socket::ack(int msgId, const string &, const json &ack_message) {
-            std::cout << "ack " << msgId << std::endl << std::flush;
+            STrace << "ack " << msgId ;
 
             packet p(m_nsp, ack_message, msgId, true);
             send_packet(p);
@@ -622,7 +673,7 @@ namespace base {
         //json array is equivalent to message::list
         void socket::on_socketio_ack(int msgId, json const& message)
         {
-            std::cout << "on_socketio_ack "  << msgId << std::endl << std::flush;
+            STrace << "on_socketio_ack "  << msgId ;
             std::function<void (json const&)> l;
             {
                 std::lock_guard<std::mutex> guard(m_event_mutex);

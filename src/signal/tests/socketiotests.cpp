@@ -39,7 +39,9 @@ class Tests
 	
 public:
 	Tests()
-	{		
+	{
+            LTrace("Tests Begin" )
+                    
             client = new Client(SERVER_HOST , SERVER_PORT);
             client->connect();
             client->cbConnected = [&](socket* soc)
@@ -80,14 +82,14 @@ public:
                 LTrace("client->cbConnected" )
                 
             };
-            
+             LTrace("Tests over" )
 	}		
 
-	void onClientStateChange(void* sender, sockio::ClientState& state, const sockio::ClientState& oldState) 
+	/*void onClientStateChange(void* sender, sockio::ClientState& state, const sockio::ClientState& oldState) 
 	{
 		sockio::Client* client = reinterpret_cast<sockio::Client*>(sender);	
 		//DebugL << "Connection state changed: " << state.toString() << ": " << client->socket().address() << endl;
-		/*
+		
 		switch (state.id()) {
 		case sockio::ClientState::Connecting:
 			break;
@@ -99,8 +101,8 @@ public:
 			break;
 		case sockio::ClientState::Disconnected: 
 			break;
-		}*/
-	}
+		}
+	}*/
         
         void run()
         {

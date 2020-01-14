@@ -1,7 +1,9 @@
 #ifndef TIMER_H
 #define TIMER_H
-
 #include <uv.h>
+#include <functional>
+
+
 namespace base
 {
 
@@ -36,6 +38,7 @@ namespace base
     public:
         void OnUvTimer(int timerID);
         int timerID{-1}; //
+        std::function<void(void) > cb_timeout;
     private:
         // Passed by argument.
         Listener* listener{ nullptr};
