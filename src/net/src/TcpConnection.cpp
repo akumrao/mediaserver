@@ -84,8 +84,8 @@ namespace base {
         TcpConnectionBase::~TcpConnectionBase() {
 
 
-            if (!this->closed)
-                Close();
+           // if (!this->closed)
+              //  Close();
 
            // delete[] this->buffer;
         }
