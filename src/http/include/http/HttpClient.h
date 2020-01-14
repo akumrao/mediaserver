@@ -91,6 +91,11 @@ namespace base {
             bool _complete;
             std::vector<std::string> _outgoingBuffer;
             std::unique_ptr<std::ostream> _readStream;
+            
+           std::stringstream* readStream()
+           {
+		return dynamic_cast<std::stringstream*>(_readStream.get());
+           }
 
 
         };

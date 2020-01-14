@@ -15,11 +15,11 @@ namespace base
             virtual ~Listener() = default;
 
         public:
-            virtual void OnTimer(Timer* timer) = 0;
+            virtual void OnTimer(Timer* timer, int timerID) = 0;
         };
 
     public:
-        explicit Timer(Listener* listener);
+        explicit Timer(Listener* listener,int timerID=-1);
         Timer& operator=(const Timer&) = delete;
         Timer(const Timer&) = delete;
         ~Timer();
@@ -34,8 +34,8 @@ namespace base
 
         /* Callbacks fired by UV events. */
     public:
-        void OnUvTimer();
-
+        void OnUvTimer(int timerID);
+        int timerID{-1}; //
     private:
         // Passed by argument.
         Listener* listener{ nullptr};

@@ -57,8 +57,13 @@ namespace base {
 
             virtual void setReadStream(std::ostream* os) {
             };
-
-       
+            
+            virtual std::stringstream* readStream()
+            {
+                return nullptr;
+            }
+		// Returns the cast read stream pointer or nullptr.
+	
             
             virtual void send(const char* data, size_t len){};
             virtual void send(){};

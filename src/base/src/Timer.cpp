@@ -1,5 +1,5 @@
 
-#include "net/Timer.h"
+#include "base/Timer.h"
 //#include "base/loop.h"
 #include "base/logger.h"
 #include "base/application.h"
@@ -10,7 +10,9 @@ namespace base
     /* Static methods for UV callbacks. */
 
     inline static void onTimer(uv_timer_t* handle) {
-        static_cast<Timer*> (handle->data)->OnUvTimer();
+        Timer *cls = static_cast<Timer*> (handle->data);
+        
+       cls->OnUvTimer( cls->timerID);
     }
 
     inline static void onClose(uv_handle_t* handle) {
@@ -19,7 +21,7 @@ namespace base
 
     /* Instance methods. */
 
-    Timer::Timer(Listener* listener) : listener(listener) {
+    Timer::Timer(Listener* listener, int timerID) : listener(listener),timerID(timerID) {
         LOG_CALL;
 
         this->uvHandle = new uv_timer_t;
@@ -119,10 +121,10 @@ namespace base
             LError("uv_timer_start() failed: %s", uv_strerror(err));
     }
 
-    inline void Timer::OnUvTimer() {
+    inline void Timer::OnUvTimer(int timerID) {
         LOG_CALL;
 
         // Notify the listener.
-        this->listener->OnTimer(this);
+        this->listener->OnTimer(this,timerID);
     }
 } // namespace base

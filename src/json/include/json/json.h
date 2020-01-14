@@ -61,27 +61,22 @@ inline void saveFile(const std::string& path, const json& root, int indent = 4)
 }
 
 
-//inline void stringify(const json::value& root, std::string& output, bool pretty = false)
-//{
-//    if (pretty) {
-//        json::StyledWriter writer;
-//        output = writer.write(root);
-//    } else {
-//        json::FastWriter writer;
-//        output = writer.write(root); // NOTE: The FastWriter appends a newline
-//                                     // character which we don't want.
-//        if (output.size() > 0)
-//            output.resize(output.size() - 1);
-//    }
-//}
-//
-//
-//inline std::string stringify(const json::value& root, bool pretty = false)
-//{
-//    std::string output;
-//    stringify(root, output, pretty);
-//    return output;
-//}
+inline void stringify(const json& root, std::string& output, bool pretty = false)
+{
+    if (pretty) {
+        output = root.dump(4);
+    } else {
+        output = root.dump();
+    }
+}
+
+
+inline std::string stringify(const json& root, bool pretty = false)
+{
+    std::string output;
+    stringify(root, output, pretty);
+    return output;
+}
 
 
 inline void assertMember(const json& root, const std::string& name)

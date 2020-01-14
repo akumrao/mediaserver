@@ -1,331 +1,302 @@
-
+/*
+ The following events are reserved and should not be used as event names by your application:
+ error
+connect
+disconnect
+disconnecting
+newListener
+removeListener
+ping
+pong
+ 
+ 
+ */
 
 #include "socketio/packet.h"
-//#include "scy/crypto/crypto.h"
 #include "base/logger.h"
 #include "base/util.h"
-//#include "Poco/Format.h"
 
+#include "json/json.h"
 
 using std::endl;
-//using Poco::format;
 
 
 namespace base {
-namespace sockio {
+    namespace sockio {
 
 
-Packet::Packet(Type type, int id, const std::string& endpoint, const std::string& message, bool ack) : 
-	_type(type), 
-	_id(id),
-	_endpoint(endpoint),
-	_message(message),
-	_ack(ack),
-	_size(0)
-{
-}
+        packet::packet(string const& nsp, json const& msg, int pack_id, bool isAck) :
+        _frame(frame_message),
+        _type((isAck ? type_ack : type_event) | type_undetermined),
+        _nsp(nsp),
+        _pack_id(pack_id),
+        _message(msg),
+        _pending_buffers(0) {
+            assert((!isAck
+                    || (isAck && pack_id >= 0)));
+        }
 
-	
-Packet::Packet(Type type, const std::string& message, bool ack) : 
-	_type(type), 
-	_id(util::randomNumber()),
-	_message(message),
-	_ack(ack),
-	_size(0)
-{
-	assert(_id);
-}
+        packet::packet(type type, string const& nsp, json const& msg) :
+        _frame(frame_message),
+        _type(type),
+        _nsp(nsp),
+        _pack_id(-1),
+        _message(msg),
+        _pending_buffers(0) {
 
-	
-Packet::Packet(const std::string& message, bool ack) : 
-	_type(Packet::Message), 
-	_id(util::randomNumber()),
-	_message(message),
-	_ack(ack),
-	_size(0)
-{
-	assert(_id);
-}
+        }
 
-	
-Packet::Packet(const json::Value& data, bool ack) : 
-	_type(Packet::JSON), 
-	_id(util::randomNumber()),
-	_message(json::stringify(data)),
-	_ack(ack),
-	_size(0)
-{
-	assert(_id);
-}
+        packet::packet(packet::frame_type frame) :
+        _frame(frame),
+        _type(type_undetermined),
+        _pack_id(-1),
+        _pending_buffers(0) {
 
-	
-Packet::Packet(const std::string& event, const json::Value& data, bool ack) : 
-	_type(Packet::Event), 
-	_id(util::randomNumber()),
-	_ack(ack),
-	_size(0)
-{	
-	assert(_id);
+        }
 
-	json::Value root;
-	root["name"] = event;
+        packet::packet() :
+        _type(type_undetermined),
+        _pack_id(-1),
+        _pending_buffers(0) {
 
-	// add the data into an array if it isn't already
-	if (!data.isArray()) {
-		json::Value array(Json::arrayValue); 
-		array.append(data);
-		root["args"] = array;
-	}
-	else
-		root["args"] = data;
-		
-	_message = json::stringify(root);
-}
+        }
 
+        bool packet::is_binary_message(string const& payload_ptr) {
+            return payload_ptr.size() > 0 && payload_ptr[0] == frame_message;
+        }
 
-Packet::Packet(const Packet& r) : 
-	_type(r._type), 
-	_id(r._id),
-	_endpoint(r._endpoint), 
-	_message(r._message),
-	_ack(true),
-	_size(0)
-{
-}
+        bool packet::is_text_message(string const& payload_ptr) {
+            return payload_ptr.size() > 0 && payload_ptr[0] == (frame_message + '0');
+        }
 
+        bool packet::is_message(string const& payload_ptr) {
+            return is_binary_message(payload_ptr) || is_text_message(payload_ptr);
+        }
 
-Packet& Packet::operator = (const Packet& r) 
-{
-	_type = r._type;
-	_id = r._id;
-	_ack = r._ack;
-	_endpoint = r._endpoint;
-	_message = r._message;
-	_size = r._size;
-	return *this;
-}
+        bool packet::parse_buffer(const string &buf_payload) {
+            if (_pending_buffers > 0) {
+                assert(is_binary_message(buf_payload)); //this is ensured by outside.
+                _buffers.push_back(std::make_shared<string>(buf_payload.data() + 1, buf_payload.size() - 1));
+                _pending_buffers--;
+                if (_pending_buffers == 0) {
 
+                    //  Document doc;
+                    //  doc.Parse<0>(_buffers.front()->data());
+                    //   _buffers.erase(_buffers.begin());
+                    //   _message = from_json(doc, _buffers);
+                    // _buffers.clear();
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
 
-Packet::~Packet() 
-{
-}
+        bool packet::parse(const string& payload_ptr) {
+            assert(!is_binary_message(payload_ptr)); //this is ensured by outside
+            _frame = (packet::frame_type) (payload_ptr[0] - '0');
+            _message.clear();
+            _pack_id = -1;
+            _buffers.clear();
+            _pending_buffers = 0;
+            size_t pos = 1;
+            if (_frame == frame_message) {
+                _type = (packet::type)(payload_ptr[pos] - '0');
+                if (_type < type_min || _type > type_max) {
+                    return false;
+                }
+                pos++;
+                if (_type == type_binary_event || _type == type_binary_ack) {
+                    size_t score_pos = payload_ptr.find('-'); //arvind
+                    //     _pending_buffers = boost::lexical_cast<unsigned>(payload_ptr.substr(pos,score_pos - pos));
+                    pos = score_pos + 1;
+                }
+            }
 
+            size_t nsp_json_pos = payload_ptr.find_first_of("{[\"/", pos, 4);
+            if (nsp_json_pos == string::npos)//no namespace and no message,the end.
+            {
+                _nsp = "/";
+                return false;
+            }
+            size_t json_pos = nsp_json_pos;
+            if (payload_ptr[nsp_json_pos] == '/')//nsp_json_pos is start of nsp
+            {
+                size_t comma_pos = payload_ptr.find_first_of(","); //end of nsp
+                if (comma_pos == string::npos)//packet end with nsp
+                {
+                    _nsp = payload_ptr.substr(nsp_json_pos);
+                    return false;
+                } else//we have a message, maybe the message have an id.
+                {
+                    _nsp = payload_ptr.substr(nsp_json_pos, comma_pos - nsp_json_pos);
+                    pos = comma_pos + 1; //start of the message
+                    json_pos = payload_ptr.find_first_of("\"[{", pos, 3); //start of the json part of message
+                    if (json_pos == string::npos) {
+                        //no message,the end
+                        //assume if there's no message, there's no message id.
+                        return false;
+                    }
+                }
+            } else {
+                _nsp = "/";
+            }
 
-IPacket* Packet::clone() const 
-{
-	return new Packet(*this);
-}
+            if (pos < json_pos)//we've got pack id.
+            {//arvind
+                _pack_id = std::stoi(payload_ptr.substr(pos, json_pos - pos));
+                LTrace("packet id ", _pack_id)
+            }
+            if (_frame == frame_message && (_type == type_binary_event || _type == type_binary_ack)) {
+                //parse later when all buffers are arrived.
+                _buffers.push_back(make_shared<string>(payload_ptr.data() + json_pos, payload_ptr.length() - json_pos));
+                return true;
+            } else {
+                //arvind
+                //  Document doc;
+                //  doc.Parse<0>(payload_ptr.data()+json_pos);
+                _message = json::parse(payload_ptr.data() + json_pos);
+                return false;
+            }
 
+        }
 
-std::size_t Packet::read(const std::string& buf) 
-{			
-	// https://github.com/LearnBoost/socket.io-spec#Encoding
+        bool packet::accept(string& payload_ptr, vector<shared_ptr<const string> >&buffers) {
+            char frame_char = _frame + '0';
+            payload_ptr.append(&frame_char, 1);
+            if (_frame != frame_message) {
+                return false;
+            }
+            bool hasMessage = false; //arvind
+            ///* Document doc;
+            if (_message.size()) {
+                // accept_message(*_message, doc, doc, buffers);
+                hasMessage = true;
+            }
+            bool hasBinary = buffers.size() > 0;
+            _type = _type & (~type_undetermined);
+            if (_type == type_event) {
+                _type = hasBinary ? type_binary_event : type_event;
+            } else if (_type == type_ack) {
+                _type = hasBinary ? type_binary_ack : type_ack;
+            }
+            ostringstream ss;
+            ss.precision(8);
+            ss << _type;
+            if (hasBinary) {
+                ss << buffers.size() << "-";
+            }
+            if (_nsp.size() > 0 && _nsp != "/") {
+                ss << _nsp;
+                if (hasMessage || _pack_id >= 0) {
+                    ss << ",";
+                }
+            }
 
-	// Reset all data
-	_type = Packet::Message;
-	_id = 0;
-	_endpoint = "";
-	_message = "";
-	_size = 0;
+            if (_pack_id >= 0) {
+                ss << _pack_id;
+            }
 
-	if (buf.size() < 3)
-		return 0;
+            payload_ptr.append(ss.str());
+            if (hasMessage) {//arvind
+                //StringBuffer buffer;
+                // Writer<StringBuffer> writer(buffer);
+                //  doc.Accept(writer);
+                // payload_ptr.append(buffer.GetString(),buffer.GetSize());
+                payload_ptr.append(cnfg::stringify(_message));
+            }
+            LTrace(payload_ptr);
+            return hasBinary;
+        }
 
-	//std::string data(bufferCast<const char*>(buf), buf.size());	
-	std::vector<std::string> frags = util::split(buf, ':', 4);
-	if (frags.size() < 1) {
-		//DebugLS(this) << "Reading: Invalid Data: " << frags.size() << endl;
-		return false;
-	}
-		
-	if (!frags[0].empty()) {
-		_type = util::strtoi<UInt32>(frags[0]);
-		//DebugLS(this) << "Reading: Type: " << typeString() << endl;
-	}
+        packet::frame_type packet::get_frame() const {
+            return _frame;
+        }
 
-	if (_type < 0 || _type > 7) {
-		//DebugLS(this) << "Reading: Invalid Type: " << _type << endl;
-		return false;
-	}
-	if (frags.size() >= 2 && !frags[1].empty()) {
-		_ack = (frags[1].find('+') != std::string::npos);
-		_id = util::strtoi<UInt32>(frags[1]);
-	}	
-	if (frags.size() >= 3 && !frags[2].empty()) {
-		_endpoint = frags[2];
-	}
-	if (frags.size() >= 4 && !frags[3].empty()) {
-		_message = frags[3];
-	}
+        packet::type packet::get_type() const {
+            assert((_type & type_undetermined) == 0);
+            return (type) _type;
+        }
 
-	// For Ack packets the ID is at the start of the message
-	if (_type == 6) {
-		_ack = true; // This flag is mostly for requests, but we'll set it anyway
+        string const& packet::get_nsp() const {
+            return _nsp;
+        }
 
-		std::string data(frags[frags.size() - 1]);
-		std::string::size_type pos = data.find('+');
-		if (pos != std::string::npos) 
-		{	// complex ack
-			_id = util::strtoi<UInt32>(data.substr(0, pos));
-			_message = data.substr(pos + 1, data.length());
-		}
-		else
-		{	// simple ack
-			_message = data;
-		}
+        json const& packet::get_message() const {
+            return _message;
+        }
 
-		/*
-		frags.clear();
-		util::split(_message, '+', frags, 2);
-		if (frags.size() != 2) {
-			assert(frags.size() == 2 && "invalid ack response");
-			return false;
-		}
+        unsigned packet::get_pack_id() const {
+            return _pack_id;
+        }
 
-		_ack = true; // This is mostly for requests, but we'll set it anyway
-		_id = util::strtoi<UInt32>(frags[0]);
-		_message = frags[1];
-		*/
-	}
+        void packet_manager::set_decode_callback(function<void (packet const&) > const& decode_callback) {
+            m_decode_callback = decode_callback;
+        }
 
-	_size = data.length();
-	//DebugLS(this) << "Parse Success: " << toString() << endl;
+        void packet_manager::set_encode_callback(function<void (bool, shared_ptr<const string> const&) > const& encode_callback) {
+            m_encode_callback = encode_callback;
+        }
 
-	return _size;
-}
+        void packet_manager::reset() {
+            m_partial_packet.reset();
+        }
 
+        void packet_manager::encode(packet& pack, encode_callback_function const& override_encode_callback) const {
+            shared_ptr<string> ptr = make_shared<string>();
+            vector<shared_ptr<const string> > buffers;
+            const encode_callback_function *cb_ptr = &m_encode_callback;
+            if (override_encode_callback) {
+                cb_ptr = &override_encode_callback;
+            }
+            if (pack.accept(*ptr, buffers)) {
+                if ((*cb_ptr)) {
+                    (*cb_ptr)(false, ptr);
+                }
+                for (auto it = buffers.begin(); it != buffers.end(); ++it) {
+                    if ((*cb_ptr)) {
+                        (*cb_ptr)(true, *it);
+                    }
+                }
+            } else {
+                if ((*cb_ptr)) {
+                    (*cb_ptr)(false, ptr);
+                }
+            }
+        }
 
-void Packet::write(Buffer& buf) const 
-{
-	assert(valid());
-	std::ostringstream ss;
-	print(ss);
-	
-	std::string str(ss.str()); // TODO: avoid copy
-	buf.insert(buf.end(), str.begin(), str.end()); 
-	//buf.append(ss.str().c_str(), ss.tellp());
-}
+        void packet_manager::put_payload(string const& payload) {
+            std::cout << "payload " << payload << std::endl << std::flush;
 
+            unique_ptr<packet> p;
+            do {
+                if (packet::is_text_message(payload)) {
+                    p.reset(new packet());
+                    if (p->parse(payload)) {
+                        m_partial_packet = std::move(p);
+                    } else {
+                        break;
+                    }
+                } else if (packet::is_binary_message(payload)) {
+                    if (m_partial_packet) {
+                        if (!m_partial_packet->parse_buffer(payload)) {
+                            p = std::move(m_partial_packet);
+                            break;
+                        }
+                    }
+                } else {
+                    p.reset(new packet());
+                    p->parse(payload);
+                    break;
+                }
+                return;
+            } while (0);
 
-void Packet::setID(int id) 
-{ 
-	_id = id; 
-}
-
-
-void Packet::setEndpoint(const std::string& endpoint) 
-{ 
-	_endpoint = endpoint; 
-}
-
-
-void Packet::setMessage(const std::string& message) 
-{ 
-	_message = message; 
-}
-
-
-void Packet::setAck(bool flag) 
-{ 
-	_ack = flag; 
-}
-
-
-Packet::Type Packet::type() const 
-{ 
-	return static_cast<Packet::Type>(_type); 
-}
-
-
-int Packet::id() const 
-{ 
-	return _id; 
-}
-
-
-std::string Packet::endpoint() const 
-{ 
-	return _endpoint; 
-}
-
-
-std::string Packet::message() const 
-{ 
-	return _message; 
-}
-
-
-json::Value Packet::json() const
-{
-	if (!_message.empty()) {
-		json::Value data;
-		json::Reader reader;
-		if (reader.parse(_message, data))
-			return data;
-	}
-	return json::Value();
-}
-
-
-std::string Packet::typeString() const 
-{
-	switch (_type) {
-	case Disconnect: return "Disconnect";
-	case Connect: return "Connect";
-	case Heartbeat: return "Heartbeat";
-	case Message: return "Message";
-	case JSON: return "JSON";
-	case Event: return "Event";
-	case Ack: return "Ack";
-	case Error: return "Error";		
-	default: return "Unknown";
-	}
-}
-
-
-std::string Packet::toString() const 
-{
-	std::ostringstream ss;
-	print(ss);
-	//ss << endl;
-	return ss.str();
-}
+            if (m_decode_callback) {
+                m_decode_callback(*p);
+            }
+        }
 
 
-bool Packet::valid() const
-{
-	// Check that ID and correct type have been set
-	return _type >= 0 && _type <= 8 && _id > 0;
-}
-
-
-size_t Packet::size() const
-{
-	std::ostringstream ss;
-	print(ss);
-	assert(ss.tellp());
-	return static_cast<size_t>(ss.tellp());
-}
-
-
-void Packet::print(std::ostream& os) const
-{
-	os << _type;
-	if (_id == -1 && _endpoint.empty() && _message.empty()) {
-		os << "::";
-	}
-	else if (_id == -1 && _endpoint.empty()){
-		os << ":::" << _message;
-	}  
-	else if (_id > -1 && _type != 6) {
-		os << ":" << _id << (_ack ? "+":"") 
-			<< ":" << _endpoint << ":" << _message;
-	}
-	else {
-		os << "::" << _endpoint << ":" << _message;
-	}
-}
-
-
-
-} } // namespace scy::sockio
+    }
+} // namespace scy::sockio
