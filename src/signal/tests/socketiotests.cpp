@@ -46,6 +46,16 @@ public:
             client->connect();
             client->cbConnected = [&](socket* soc)
             {
+                     socket* soc1 = client->io("/my-namespace");
+
+                     soc1->on("hi", socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                       // LTrace("data ", data);
+                        
+                        soc1->emit("new message", "newmessage1");
+                        
+                     }));
+
+                
                       soc->on("login", socket::event_listener_aux([&](string const& name, json const& data, bool isAck,json &ack_resp){
 
                       int participants = data["numUsers"];
@@ -70,6 +80,8 @@ public:
                 soc->emit("add user", "arvind");
                 
                 soc->emit("add user", "arvind");
+                
+                 soc->emit("add user1", "arvind");
                 
                 soc->emit("ferret", "tobi", [&](json const& data) { // args are sent in order to acknowledgement function
                     LTrace("ack ", data)

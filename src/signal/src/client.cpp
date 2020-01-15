@@ -96,21 +96,14 @@ namespace base {
         }
 
         Client::Client(const std::string& host, uint16_t port) : //, uv::Loop* loop
-        //net::SocketAdapter(nullptr, this),
-       // m_ping_timer(this),
-        //m_ping_timeout_timer(this),
-       // m_reconn_timer(this),
         _host(host),
         _port(port),
         m_ping_interval(0),
         m_ping_timeout(0)
-        //_ws(socket), // arvind
-        //_loop(loop),
         {
             // arvind
             //_ws.addReceiver(this);
             m_packet_mgr.set_decode_callback(bind(&Client::on_decode, this, _1));
-
             m_packet_mgr.set_encode_callback(bind(&Client::on_encode, this, _1, _2));
         }
 
@@ -126,7 +119,6 @@ namespace base {
                     LError("Handshake error")
                     m_client->Close();
                 }
-
 
                 try {
 
@@ -148,11 +140,9 @@ namespace base {
 
             m_ping_timer.cb_timeout = std::bind(&Client::ping, this);
             m_ping_timer.Start(m_ping_interval,m_ping_interval);
-            
-             m_ping_timeout_timer.cb_timeout = std::bind(&Client::timeout_pong, this);
+            m_ping_timeout_timer.cb_timeout = std::bind(&Client::timeout_pong, this);
    
         }
-
 
         /////////////////////////////////////////////////////////////////////
 
@@ -165,21 +155,17 @@ namespace base {
                 m_client->send( *payload);
             });
             
-            
-               
              m_ping_timeout_timer.Start(m_ping_timeout);
-            
         }
 
         void Client::timeout_pong() {
             STrace << "timeout pong " ;
 
-            close_impl, this, close::status::policy_violation, "Pong timeout"));
+            close_impl(1, "Pong timeout");
         }
 
         void Client::timeout_reconnect() {
             STrace << "timeout=reconnect" ;
-
             
             if (m_con_state == con_closed) {
                 m_con_state = con_opening;
@@ -201,7 +187,6 @@ namespace base {
             LTrace("Close by reason:", reason);
 
             m_reconn_timer.Stop();
-
             m_reconn_timer.Close();
             m_client->Close();
 
@@ -212,9 +197,14 @@ namespace base {
             LTrace("Client Disconnected.");
 
             m_con_state = con_closed;
-
             this->clear_timers();
 
+        }
+          socket* Client::io(string const& nsp)
+        {
+           socket *soc = get_socket( nsp);
+           soc->send_connect();
+           return soc;
         }
 
         socket* Client::get_socket(string const& nsp) {
@@ -290,7 +280,6 @@ namespace base {
             } else {
                 LTrace("on_encode:Binary send is still pending to do ")
             }
-
         }
 
         Client::~Client() {
@@ -348,32 +337,23 @@ namespace base {
             };
 
             m_client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-                STrace << "client->fnPayload" << data ;
-                
+                STrace << "client->fnPayload" << std::string(data,sz) ;
                 m_ping_timeout_timer.Reset();
-
-                m_packet_mgr.put_payload(data);
-
+                m_packet_mgr.put_payload(std::string(data,sz));
             };
 
             //  conn->_request.setKeepAlive(false);
             m_client->setReadStream(new std::stringstream);
-
             m_client->send();
-            
-             LTrace("sendHandshakeRequest over")
-
+            LTrace("sendHandshakeRequest over")
 
         }
-
 
         void Client::reset() {
             m_sid.clear();
             //Mutex::ScopedLock lock(_mutex);
-
             // Note: Only reset session related variables here.
             // Do not reset host and port variables.
-
             //_timer.Timeout -= sdelegate(this, &Client::onHeartBeatTimer);
             m_ping_timer.Stop();
             m_ping_timeout_timer.Stop();
@@ -614,6 +594,11 @@ namespace base {
             } else {
                 pack_id = -1;
             }
+             LTrace("m_nsp: ", m_nsp )
+            LTrace("emit: ", cnfg::stringify(array ))
+           
+            
+            
             packet p(m_nsp, array, pack_id);
             send_packet(p);
         }
