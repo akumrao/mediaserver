@@ -487,7 +487,35 @@ namespace base {
                         LTrace("Received Message type (Event)");
                         const json ptr = p.get_message();
                         std::string str = cnfg::stringify(ptr);
-                        json value = ptr.at(1);
+                        json value ;
+                        
+                        if( ptr.is_array())
+                        {
+                        
+                            
+                            if( ptr.size() == 2)
+                            {
+                               value = ptr.at(1);
+                            }
+                            else
+                            {
+                                auto array = json::array();
+                                for (int i=1; i< ptr.size() ; ++i)
+                                {   
+                                    array.push_back( ptr.at(i));
+                                    //std::cout << "key: " << x.key() << ", value: " << x.value() << '\n';
+                                }
+                                value=array;
+                            }
+                                
+                        }
+                            
+                        else
+                        {
+                            LTrace("Event is not array")
+                            return;
+                        }
+                        
                         json name = ptr.at(0);
                         LTrace(str);
                         on_socketio_event(p.get_nsp(), p.get_pack_id(), name, std::move(value));
@@ -581,9 +609,16 @@ namespace base {
 
         void socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
             STrace << "emit " << name ;
-
+            
+            
+            const char *ptr1 = m_nsp.c_str();
+             int ss = m_nsp.length();
+             LTrace("m_nsp: ", m_nsp )
+            
             auto array = json::array();
             array.push_back(name);
+            
+            if(!msglist.empty())
             array.push_back(msglist);
 
             int pack_id;
@@ -594,6 +629,9 @@ namespace base {
             } else {
                 pack_id = -1;
             }
+            
+            const char *ptr1 = m_nsp.c_str();
+             int ss = m_nsp.length();
              LTrace("m_nsp: ", m_nsp )
             LTrace("emit: ", cnfg::stringify(array ))
            
