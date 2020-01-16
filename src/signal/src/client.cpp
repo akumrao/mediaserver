@@ -113,7 +113,8 @@ namespace base {
             if (message.is_object()) {
 
                 try {
-                    m_sid = message["sid"];
+
+                    m_sid = message["sid"].get<std::string>();
                     LTrace(m_sid)
                 } catch (...) {
                     LError("Handshake error")
@@ -122,7 +123,7 @@ namespace base {
 
                 try {
 
-                    m_ping_interval = message["pingInterval"];
+                    m_ping_interval = message["pingInterval"].get<int>();
                     LTrace("Ping Interval ", m_ping_interval)
                 } catch (...) {
                     m_ping_interval = 25000;
@@ -130,7 +131,7 @@ namespace base {
 
                 try {
 
-                    m_ping_timeout = message["pingTimeout"];
+                    m_ping_timeout = message["pingTimeout"].get<int>();
                     LTrace("Ping timeout ", m_ping_timeout)
                 } catch (...) {
                     m_ping_timeout = 60000;
@@ -161,7 +162,7 @@ namespace base {
         void Client::timeout_pong() {
             STrace << "timeout pong " ;
 
-            close_impl(1, "Pong timeout");
+            close(1, "Pong timeout");
         }
 
         void Client::timeout_reconnect() {
@@ -183,7 +184,7 @@ namespace base {
         
         ////////////////////////////////////////////////////////////////////
         
-        void Client::close_impl(int const& code, string const& reason) {
+        void Client::close(int const& code, string const& reason) {
             LTrace("Close by reason:", reason);
 
             m_reconn_timer.Stop();
@@ -245,7 +246,7 @@ namespace base {
                     break;
                 case packet::frame_close:
                     //FIXME how to deal?
-                    close_impl(0, "End by server");
+                    close(0, "End by server");
                     break;
                 case packet::frame_pong:
                     on_pong();
@@ -527,7 +528,7 @@ namespace base {
                     case packet::type_binary_ack:
                     {
                          LTrace("Received Message type (ACK)");
-                         const json ptr = p.get_message();
+                         const json &ptr = p.get_message();
                                                            
                          on_socketio_ack(p.get_pack_id(),ptr);
                     
@@ -608,33 +609,37 @@ namespace base {
         /****************************************************************************/
 
         void socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
-            STrace << "emit " << name ;
-            
-            
-            const char *ptr1 = m_nsp.c_str();
-             int ss = m_nsp.length();
-             LTrace("m_nsp: ", m_nsp )
-            
-            auto array = json::array();
-            array.push_back(name);
-            
-            if(!msglist.empty())
+        STrace << "emit " <<     name;
+
+
+        const char *ptr1 = m_nsp.c_str();
+        int ss = m_nsp.length();
+        LTrace("m_nsp: ", m_nsp )
+
+        auto array = json::array();
+        array.push_back(name);
+
+        if(!msglist.empty())
             array.push_back(msglist);
 
-            int pack_id;
-            if (ack) {
-                pack_id = s_global_event_id++;
-                 std::lock_guard<std::mutex> guard(m_event_mutex);
-                m_acks[pack_id] = ack;
-            } else {
-                pack_id = -1;
-            }
-            
+        int pack_id;
+        if (ack) {
+            pack_id = s_global_event_id++;
+            std::lock_guard <std::mutex> guard(m_event_mutex);
+            m_acks[pack_id] =  ack;
+        }
+        else {
+             pack_id = -1;
+        }
+
+            {//arvind
+
             const char *ptr1 = m_nsp.c_str();
-             int ss = m_nsp.length();
-             LTrace("m_nsp: ", m_nsp )
-            LTrace("emit: ", cnfg::stringify(array ))
-           
+            int ss = m_nsp.length();
+            LTrace("m_nsp: ", m_nsp )
+            LTrace("emit: ",cnfg::stringify(array ))
+            }
+
             
             
             packet p(m_nsp, array, pack_id);

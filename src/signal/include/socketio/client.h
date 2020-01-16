@@ -35,7 +35,7 @@ pong
 #include "base/application.h"
 #include "base/platform.h"
 #include "http/HttpClient.h"
-#include "http/HttpsClient.h"
+//#include "http/HttpsClient.h"
 
 namespace base {
     namespace sockio {
@@ -97,7 +97,7 @@ namespace base {
          
             std::mutex m_socket_mutex;
 
-            void close_impl(int const& code, string const& reason);
+            void close(int const& code, string const& reason);
             
              void ping();
              void timeout_pong();
