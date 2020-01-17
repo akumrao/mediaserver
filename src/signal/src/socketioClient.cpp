@@ -11,7 +11,7 @@ pong
  
  */
 
-#include "socketio/client.h"
+#include "socketio/socketioClient.h"
 #include "http/client.h"
 #include <stdexcept>
 using namespace std::placeholders;
@@ -29,13 +29,14 @@ namespace base {
         class event_adapter {
         public:
 
-            static void adapt_func(socket::event_listener_aux const& func, event& event) {
-                func(event.get_name(), event.get_message(), event.need_ack(), event.get_ack_message_impl());
-            }
+         //   static void adapt_func(socket::event_listener_aux const& func, event& event) {
+           //     func(event.get_name(), event.get_message(), event.need_ack(), event.get_ack_message_impl());
+           // }
 
-            static inline socket::event_listener do_adapt(socket::event_listener_aux const& func) {
-                return std::bind(&event_adapter::adapt_func, func, std::placeholders::_1);
-            }
+          //  static inline socket::event_listener do_adapt(socket::event_listener_aux const& func) {
+              
+         //       return std::bind(&event_adapter::adapt_func, func, std::placeholders::_1);
+         //   }
 
             static inline event create_event(std::string const& nsp, std::string const& name, json&& message, bool need_ack) {
                 return event(nsp, name, message, need_ack);
@@ -95,7 +96,7 @@ namespace base {
         m_need_ack(need_ack) {
         }
 
-        Client::Client(const std::string& host, uint16_t port) : //, uv::Loop* loop
+        SocketioClient::SocketioClient(const std::string& host, uint16_t port) : //, uv::Loop* loop
         _host(host),
         _port(port),
         m_ping_interval(0),
@@ -103,11 +104,11 @@ namespace base {
         {
             // arvind
             //_ws.addReceiver(this);
-            m_packet_mgr.set_decode_callback(bind(&Client::on_decode, this, _1));
-            m_packet_mgr.set_encode_callback(bind(&Client::on_encode, this, _1, _2));
+            m_packet_mgr.set_decode_callback(bind(&SocketioClient::on_decode, this, _1));
+            m_packet_mgr.set_encode_callback(bind(&SocketioClient::on_encode, this, _1, _2));
         }
 
-        void Client::on_handshake(json const& message) {
+        void SocketioClient::on_handshake(json const& message) {
 
             LTrace("on_handshake")
             if (message.is_object()) {
@@ -139,15 +140,15 @@ namespace base {
 
             }
 
-            m_ping_timer.cb_timeout = std::bind(&Client::ping, this);
+            m_ping_timer.cb_timeout = std::bind(&SocketioClient::ping, this);
             m_ping_timer.Start(m_ping_interval,m_ping_interval);
-            m_ping_timeout_timer.cb_timeout = std::bind(&Client::timeout_pong, this);
+            m_ping_timeout_timer.cb_timeout = std::bind(&SocketioClient::timeout_pong, this);
    
         }
 
         /////////////////////////////////////////////////////////////////////
 
-        void Client::ping() {
+        void SocketioClient::ping() {
             STrace << "ping " ;
 
                   packet p(packet::frame_ping);
@@ -159,13 +160,13 @@ namespace base {
              m_ping_timeout_timer.Start(m_ping_timeout);
         }
 
-        void Client::timeout_pong() {
+        void SocketioClient::timeout_pong() {
             STrace << "timeout pong " ;
 
             close(1, "Pong timeout");
         }
 
-        void Client::timeout_reconnect() {
+        void SocketioClient::timeout_reconnect() {
             STrace << "timeout=reconnect" ;
             
             if (m_con_state == con_closed) {
@@ -184,31 +185,51 @@ namespace base {
         
         ////////////////////////////////////////////////////////////////////
         
-        void Client::close(int const& code, string const& reason) {
+        void SocketioClient::close(int const& code, string const& reason) {
             LTrace("Close by reason:", reason);
 
             m_reconn_timer.Stop();
             m_reconn_timer.Close();
+            
+            m_ping_timer.Stop();
+            m_ping_timer.Close();
+            
+            m_ping_timeout_timer.Stop();
+            m_ping_timeout_timer.Close();
+            
+            
+           /*  Do not do it here already done at onclose
+            *  lock_guard<mutex> guard(m_socket_mutex);
+            
+            for( auto it : m_sockets )
+            {
+                it.second->close();
+                it.second->on_close();
+                delete it.second;
+            }*/
+            
+            m_sockets.clear();
+            
             m_client->Close();
 
         }
         
-        void Client::on_close()
+        void SocketioClient::on_close()
         {
-            LTrace("Client Disconnected.");
+            LTrace("SocketioClient Disconnected.");
 
             m_con_state = con_closed;
             this->clear_timers();
 
         }
-          socket* Client::io(string const& nsp)
+          socket* SocketioClient::io(string const& nsp)
         {
            socket *soc = get_socket( nsp);
            soc->send_connect();
            return soc;
         }
 
-        socket* Client::get_socket(string const& nsp) {
+        socket* SocketioClient::get_socket(string const& nsp) {
             
             string aux;
             if (nsp == "") {
@@ -231,7 +252,7 @@ namespace base {
             }
         }
 
-        void Client::on_decode(packet const& p) {
+        void SocketioClient::on_decode(packet const& p) {
             STrace << "on_decode" ;
 
             switch (p.get_frame()) {
@@ -257,7 +278,7 @@ namespace base {
             }
         }
 
-        void Client::clear_timers() {
+        void SocketioClient::clear_timers() {
             LTrace("clear timers")
 
             m_ping_timeout_timer.Stop();
@@ -267,12 +288,12 @@ namespace base {
 
         }
 
-        void Client::on_pong() {
+        void SocketioClient::on_pong() {
             LTrace("on_pong")
             m_ping_timeout_timer.Stop();
         }
 
-        void Client::on_encode(bool isBinary, shared_ptr<const string> const& payload) {
+        void SocketioClient::on_encode(bool isBinary, shared_ptr<const string> const& payload) {
             STrace << "on_encode" << payload ;
 
             if (!isBinary) {
@@ -283,12 +304,12 @@ namespace base {
             }
         }
 
-        Client::~Client() {
+        SocketioClient::~SocketioClient() {
 
             //reset();
         }
 
-        void Client::connect(const std::string& host, uint16_t port) {
+        void SocketioClient::connect(const std::string& host, uint16_t port) {
             {
                 _host = host;
                 _port = port;
@@ -296,7 +317,7 @@ namespace base {
             connect();
         }
 
-        void Client::connect() {
+        void SocketioClient::connect() {
             STrace << "SocketIO Connecting" ;
             m_con_state = con_opening;
             if (_host.empty() || !_port)
@@ -307,11 +328,11 @@ namespace base {
             sendHandshakeRequest();
         }
 
-        std::string const& Client::get_sessionid() {
+        std::string const& SocketioClient::get_sessionid() {
             return m_sid;
         }
 
-        void Client::sendHandshakeRequest() {
+        void SocketioClient::sendHandshakeRequest() {
             LTrace("sendHandshakeRequest")
 
             //TraceL << "Send handshake request" << endl;	
@@ -334,7 +355,7 @@ namespace base {
                 std::string reason = response.getReason();
                 StatusCode statuscode = response.getStatus();
                 std::string body = m_client->readStream()->str();
-                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
+               // STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
             };
 
             m_client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
@@ -342,6 +363,15 @@ namespace base {
                 m_ping_timeout_timer.Reset();
                 m_packet_mgr.put_payload(std::string(data,sz));
             };
+            
+            m_client->fnClose = [&](HttpBase * con, std::string str) {
+                STrace << "client->fnClose" << str ;
+                close(0,"exit");
+                on_close();
+            };
+            
+            std::function<void(HttpBase*, std::string) > ;
+                  
 
             //  conn->_request.setKeepAlive(false);
             m_client->setReadStream(new std::stringstream);
@@ -350,12 +380,12 @@ namespace base {
 
         }
 
-        void Client::reset() {
+        void SocketioClient::reset() {
             m_sid.clear();
             //Mutex::ScopedLock lock(_mutex);
             // Note: Only reset session related variables here.
             // Do not reset host and port variables.
-            //_timer.Timeout -= sdelegate(this, &Client::onHeartBeatTimer);
+            //_timer.Timeout -= sdelegate(this, &SocketioClient::onHeartBeatTimer);
             m_ping_timer.Stop();
             m_ping_timeout_timer.Stop();
             m_reconn_timer.Stop();
@@ -363,13 +393,13 @@ namespace base {
         }
 
     
-        void Client::send(packet& p) {
+        void SocketioClient::send(packet& p) {
             STrace << "send " ;
             m_packet_mgr.encode(p);
         }
 
         
-        void Client::remove_socket(string const& nsp)
+        void SocketioClient::remove_socket(string const& nsp)
         {
             STrace << "remove_socket "  << nsp ;
             lock_guard<mutex> guard(m_socket_mutex);
@@ -377,26 +407,28 @@ namespace base {
             if(it!= m_sockets.end())
             {
                 m_sockets.erase(it);
+                it->second->close();
+                it->second->on_close();
                 delete it->second;
             }
         }
         
         /***************************************************************************/
-        socket::socket(Client* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
+        socket::socket(SocketioClient* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
         }
 
         socket::~socket() {
 
         }
 
-        void socket::on(std::string const& event_name, event_listener const& func) {
-            m_event_binding[event_name] = func;
+        //void socket::on(std::string const& event_name, event_listener const& func) {
+        //    m_event_binding[event_name] = func;
 
-        }
+       // }
 
         void socket::on(std::string const& event_name, event_listener_aux const& func) {
-            on(event_name, event_adapter::do_adapt(func));
-
+            //on(event_name, event_adapter::do_adapt(func));
+            m_event_binding[event_name] = func;
         }
 
         void socket::off(std::string const& event_name) {
@@ -519,6 +551,8 @@ namespace base {
                         
                         json name = ptr.at(0);
                         LTrace(str);
+                        
+                        LTrace("namespace ", p.get_nsp())
                         on_socketio_event(p.get_nsp(), p.get_pack_id(), name, std::move(value));
 
                         break;
@@ -611,11 +645,6 @@ namespace base {
         void socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
         STrace << "emit " <<     name;
 
-
-        const char *ptr1 = m_nsp.c_str();
-        int ss = m_nsp.length();
-        LTrace("m_nsp: ", m_nsp )
-
         auto array = json::array();
         array.push_back(name);
 
@@ -632,15 +661,7 @@ namespace base {
              pack_id = -1;
         }
 
-            {//arvind
-
-            const char *ptr1 = m_nsp.c_str();
-            int ss = m_nsp.length();
-            LTrace("m_nsp: ", m_nsp )
-            LTrace("emit: ",cnfg::stringify(array ))
-            }
-
-            
+        
             
             packet p(m_nsp, array, pack_id);
             send_packet(p);
@@ -673,21 +694,21 @@ namespace base {
             STrace << "on_socketio_event " << name ;
             bool needAck = msgId >= 0;
             event ev = event_adapter::create_event(nsp, name, std::move(message), needAck);
-            event_listener func = this->get_bind_listener_locked(name);
-            if (func)func(ev);
+            event_listener_aux func = this->get_bind_listener_locked(name);
+            if (func)func(ev.get_name(), ev.get_message(), ev.need_ack(), ev.get_ack_message_impl());
             if (needAck)//arvind
             {
                 this->ack(msgId, name, ev.get_ack_message());
             }
         }
 
-        socket::event_listener socket::get_bind_listener_locked(const string &event) {
+        socket::event_listener_aux socket::get_bind_listener_locked(const string &event) {
              std::lock_guard<std::mutex> guard(m_event_mutex);
             auto it = m_event_binding.find(event);
             if (it != m_event_binding.end()) {
                 return it->second;
             }
-            return socket::event_listener();
+            return socket::event_listener_aux();
         }
 
         void socket::ack(int msgId, const string &, const json &ack_message) {

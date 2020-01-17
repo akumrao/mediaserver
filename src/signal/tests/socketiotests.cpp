@@ -1,4 +1,4 @@
-#include "socketio/client.h"
+#include "socketio/socketioClient.h"
 //#include "socketio/transaction.h"
 //#include "net/sslmanager.h"
 #include "base/application.h"
@@ -31,18 +31,18 @@ namespace sockio {
 
 
 // ----------------------------------------------------------------------------
-// SocketIO Client Test
+// SocketIO SocketioClient Test
 //	
 class Tests
 {
-        Client *client; 
+        SocketioClient *client; 
 	
 public:
 	/*Tests()
 	{
             LTrace("Tests Begin" )
                     
-            client = new Client(SERVER_HOST , SERVER_PORT);
+            client = new SocketioClient(SERVER_HOST , SERVER_PORT);
             client->connect();
             client->cbConnected = [&](socket* soc)
             {
@@ -98,12 +98,12 @@ public:
              LTrace("Tests over" )
 	}		
 */
-    
+    /*
    Tests()
 	{
             LTrace("Tests Begin" )
                     
-            client = new Client(SERVER_HOST , SERVER_PORT);
+            client = new SocketioClient(SERVER_HOST , SERVER_PORT);
             client->connect();
             client->cbConnected = [&](socket* soc)
             {
@@ -128,12 +128,12 @@ public:
              LTrace("Tests over" )
 	}		
 
-    
-    /*Tests()
+    */
+    Tests()
 	{
             LTrace("Tests Begin" )
                     
-            client = new Client(SERVER_HOST , 8080);
+            client = new SocketioClient(SERVER_HOST , 8080);
             client->connect();
             client->cbConnected = [&](socket* socket)
             {
@@ -196,7 +196,7 @@ public:
 
               socket->on("message", socket::event_listener_aux([&](string const& name, json const& data, bool isAck,json &ack_resp){
                 LTrace(cnfg::stringify(data));
-               // console.log('Client received message:', message);
+               // console.log('SocketioClient received message:', message);
                // signalingMessageCallback(message);
               }));
 
@@ -223,17 +223,9 @@ public:
                 socket->emit("ipaddr");
             };
             
-            
-            // function sendMessage(message) {
-             //   console.log('Client sending message: ', message);
-              //  socket->emit('message', message);
-             // }
-             //
-                 
+   
              LTrace("Tests over" )
 	}
-    */
-	
         
         void run()
         {

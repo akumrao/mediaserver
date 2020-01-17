@@ -73,7 +73,7 @@ namespace base {
 
         class socket;
 
-        class Client  {
+        class SocketioClient  {
         public:
 
             enum con_state
@@ -83,8 +83,8 @@ namespace base {
                 con_closing,
                 con_closed
             };
-            Client(const std::string& host, uint16_t port);
-            virtual ~Client();
+            SocketioClient(const std::string& host, uint16_t port);
+            virtual ~SocketioClient();
 
             virtual void connect(const std::string& host, uint16_t port);
             virtual void connect();
@@ -162,7 +162,7 @@ namespace base {
         public:
             typedef std::function<void(const std::string& name, json const& message, bool need_ack, json& ack_message) > event_listener_aux;
 
-            typedef std::function<void(event& event) > event_listener;
+           // typedef std::function<void(event& event) > event_listener;
 
             typedef std::function<void(json const& message) > error_listener;
 
@@ -170,7 +170,7 @@ namespace base {
 
             ~socket();
 
-            void on(std::string const& event_name, event_listener const& func);
+           // void on(std::string const& event_name, event_listener const& func);
 
             void on(std::string const& event_name, event_listener_aux const& func);
 
@@ -191,13 +191,13 @@ namespace base {
             void ack(int msgId,string const& name,json const& ack_message);
             void on_socketio_ack(int msgId, json const& message);
 
-            event_listener get_bind_listener_locked(const string &event);
+            event_listener_aux get_bind_listener_locked(const string &event);
 
             std::string const& get_namespace() const;
 
-            socket(Client*, std::string const&);
+            socket(SocketioClient*, std::string const&);
 
-            std::map<std::string, event_listener> m_event_binding;
+            std::map<std::string, event_listener_aux> m_event_binding;
         protected:
 
             void on_connected();
@@ -218,7 +218,7 @@ namespace base {
             void send_packet(packet &p);
 
 
-            friend class Client;
+            friend class SocketioClient;
 
         private:
             //disable copy constructor and assign operator.
@@ -231,7 +231,7 @@ namespace base {
 
             const std::string m_nsp;
 
-            Client *m_client;
+            SocketioClient *m_client;
 
             Timer m_connection_timer{ nullptr};
             bool m_connected{ false};
