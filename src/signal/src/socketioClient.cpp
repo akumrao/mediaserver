@@ -95,7 +95,7 @@ namespace base {
         m_messages(std::move(messages)),
         m_need_ack(need_ack) {
         }
-
+/****************************************************************************************/
         SocketioClient::SocketioClient(const std::string& host, uint16_t port) : //, uv::Loop* loop
         _host(host),
         _port(port),
@@ -222,15 +222,24 @@ namespace base {
             this->clear_timers();
 
         }
-          socket* SocketioClient::io(string const& nsp)
+        socket* SocketioClient::io(string const& nsp)
         {
+                   
+            if (nsp != "/" && nsp != "") {
+            
+            packet p(packet::type_connect, nsp);
+            socket *soc = get_socket( "/");
+            soc->send_connect(nsp);
+
+            }
+              
            socket *soc = get_socket( nsp);
-           soc->send_connect();
            return soc;
         }
 
         socket* SocketioClient::get_socket(string const& nsp) {
-            
+
+           lock_guard<mutex> guard(m_socket_mutex);
             string aux;
             if (nsp == "") {
                 aux = "/";
@@ -246,7 +255,6 @@ namespace base {
             if (it != m_sockets.end()) {
                 return it->second;
             } else {
-                lock_guard<mutex> guard(m_socket_mutex);
                 m_sockets[aux] = new socket(this, aux);
                 return m_sockets[aux];
             }
@@ -587,14 +595,11 @@ namespace base {
 
        
 
-        void socket::send_connect() {
-            STrace << "send_connect " << m_nsp ;
-
-            if (m_nsp == "/" || m_nsp == "") {
-                return;
-            }
-            packet p(packet::type_connect, m_nsp);
-            m_client->send(p);
+        void socket::send_connect(const std::string & nsp) {
+            STrace << "send_connect " << nsp ;
+            
+            packet p(packet::type_connect, nsp);
+            send_packet(p);
             
             m_connection_timer.cb_timeout = std::bind(&socket::timeout_connection, this);
             
@@ -626,12 +631,20 @@ namespace base {
                         m_packet_mutex.unlock();
                         break;
                     }
+                    LTrace("Sending stored packet")
                     packet front_pack = std::move(m_packet_queue.front());
                     m_packet_queue.pop();
                     m_packet_mutex.unlock();
                     m_client->send(front_pack);
                 }
-                m_client->cbConnected(this);
+                //m_client->cbConnected(this);
+                
+                event_listener_aux func = this->get_bind_listener_locked("connection");
+                
+                json ack=nullptr;
+                
+                if (func)func("connection", nullptr, 0, ack);
+                
             }
         }
 
@@ -660,8 +673,6 @@ namespace base {
         else {
              pack_id = -1;
         }
-
-        
             
             packet p(m_nsp, array, pack_id);
             send_packet(p);
@@ -684,6 +695,7 @@ namespace base {
                 }
                 m_client->send(p);
             } else {
+                 LTrace("Storing packet")
                 std::lock_guard<std::mutex> guard(m_packet_mutex);
                 m_packet_queue.push(p);
             }

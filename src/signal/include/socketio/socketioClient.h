@@ -112,7 +112,7 @@ namespace base {
 
             void send(packet& p);
 
-            socket* io(string const& nsp);
+            socket* io(string const& nsp="");
 
         protected:
             // virtual void setError(const Errors& error);
@@ -214,7 +214,7 @@ namespace base {
 
             void on_message_packet(packet const& p);
             void on_socketio_error(json const& err_message);
-            void send_connect();
+            void send_connect(const std::string & nsp);
             void send_packet(packet &p);
 
 
