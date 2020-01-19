@@ -13,22 +13,12 @@
 
   <h1>Realtime communication with WebRTC</h1>
 
-  <div id="videoCanvas">
-    <video id="camera" autoplay playsinline></video>
-    <canvas id="photo"></canvas>
+  <div id="videos">
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
   </div>
 
-  <div id="buttons">
-    <button id="snap">Snap</button><span> then </span><button id="send">Send</button>
-    <span> or </span>
-    <button id="snapAndSend">Snap &amp; Send</button>
-  </div>
-
-  <div id="incoming">
-    <h2>Incoming photos</h2>
-    <div id="trail"></div>
-  </div>
-
+  <!-- This file is automatically added/served when running "node index.js". -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="js/main.js"></script>

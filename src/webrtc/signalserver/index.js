@@ -10,8 +10,6 @@ var app = http.createServer(function(req, res) {
   fileServer.serve(req, res);
 }).listen(8080);
 
-
-
 var io = socketIO.listen(app);
 io.sockets.on('connection', function(socket) {
 
@@ -20,7 +18,7 @@ io.sockets.on('connection', function(socket) {
     var array = ['Message from server:'];
     array.push.apply(array, arguments);
     socket.emit('log', array);
-     console.log(array);
+    console.log(array);
   }
 
   socket.on('message', function(message) {
@@ -36,35 +34,17 @@ io.sockets.on('connection', function(socket) {
     var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
     log('Room ' + room + ' now has ' + numClients + ' client(s)');
 
-
-     socket.join(room);
-
-     var arr2 = [];
-
-     var clients = io.sockets.adapter.rooms[room].sockets;   
-      for (var clientId in clients ) {
-           //this is the socket of each client in the room.
-           var clientSocket = io.sockets.connected[clientId];
-
-            var obj = { "clientid": clientSocket.id, "status":"connected"};
-           
-           //you can do whatever you need with this
-           ///clientSocket.emit('new event', "Updates");
-           arr2.push(obj);
-
-           console.log(arr2); 
-      }
- 
     if (numClients === 0) {
-     
+      socket.join(room);
       log('Client ID ' + socket.id + ' created room ' + room);
-      socket.emit('created', room, socket.id, arr2);
-    } else if (numClients <= 10) {
+      socket.emit('created', room, socket.id);
+
+    } else if (numClients === 1) {
       log('Client ID ' + socket.id + ' joined room ' + room);
-      // io.sockets.in(room).emit('join', room);
-      socket.emit('joined', room, socket.id,arr2);
-      io.sockets.in(room).emit('ready', room);
-      socket.broadcast.emit('ready', room);
+      io.sockets.in(room).emit('join', room);
+      socket.join(room);
+      socket.emit('joined', room, socket.id);
+      io.sockets.in(room).emit('ready');
     } else { // max two clients
       socket.emit('full', room);
     }
@@ -81,13 +61,8 @@ io.sockets.on('connection', function(socket) {
     }
   });
 
-  socket.on('disconnect', function(reason) {
-    console.log(`Peer or server disconnected. Reason: ${reason}.`);
-    var obj = { "clientid": socket.id, "status":"connected"};
-    socket.broadcast.emit('bye', obj);
+  socket.on('bye', function(){
+    console.log('received bye');
   });
 
-  socket.on('bye', function(room) {
-    console.log(`Peer said bye on room ${room}.`);
-  });
 });
