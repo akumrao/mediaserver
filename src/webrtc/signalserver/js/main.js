@@ -15,10 +15,10 @@ var pcConfig = {
 };
 
 // Set up audio and video regardless of what devices are present.
-var sdpConstraints = {
+/*var sdpConstraints = {
   offerToReceiveAudio: true,
   offerToReceiveVideo: true
-};
+};*/
 
 /////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 navigator.mediaDevices.getUserMedia({
-  audio: false,
+  audio: true,
   video: true
 })
 .then(gotStream)
@@ -247,7 +247,7 @@ function hangup() {
 function handleRemoteHangup() {
   console.log('Session terminated.');
   stop();
-  isInitiator = false;
+  //isInitiator = false;
 }
 
 function stop() {
