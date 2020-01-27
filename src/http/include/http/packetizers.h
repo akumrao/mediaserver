@@ -18,7 +18,7 @@ namespace net {
 //
 
 
-class  ChunkedAdapter : public IPacketizer
+class  ChunkedAdapter : public PacketProcessor
 {
 public:
     HttpBase *connection;
@@ -66,7 +66,7 @@ public:
 //
 
 
-class HTTP_API MultipartAdapter : public IPacketizer
+class HTTP_API MultipartAdapter : public PacketProcessor
 {
 public:
     HttpBase* connection;
@@ -75,7 +75,7 @@ public:
     bool initial;
 
     MultipartAdapter(HttpBase* con, bool base64 = false)
-        : IPacketizer()
+        : PacketProcessor()
         , connection(con)
         , contentType(con->outgoingHeader()->getContentType())
         , isBase64(base64)
@@ -84,7 +84,7 @@ public:
     }
 
     MultipartAdapter(const std::string& contentType, HttpBase* con, bool base64 = false)
-        : IPacketizer()
+        : PacketProcessor()
         , connection(con)
         , contentType(contentType)
         , isBase64(base64)

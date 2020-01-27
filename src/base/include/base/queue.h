@@ -204,6 +204,7 @@ protected:
     {
         T* next;
         {
+            LTrace("RunnableQueue:popNext")
             std::lock_guard<std::mutex> guard(_mutex);
             if (Queue<T*>::empty())
                 return nullptr;
@@ -217,6 +218,8 @@ protected:
     /// Pops and dispatches the next waiting item.
     virtual bool dispatchNext()
     {
+         LTrace("dispatchNext")
+                 
         T* next = popNext();
         if (next) {
             dispatch(*next);
@@ -237,15 +240,17 @@ protected:
 //
 
 
-/*
 /// SyncQueue extends Synchronizer to implement a synchronized FIFO
 /// queue which receives T objects from any thread and synchronizes
 /// them for safe consumption by the associated event loop.
+/*
 template <class T>
 class SyncQueue : public RunnableQueue<T>
 {
 public:
     typedef RunnableQueue<T> Queue;
+
+    
     
     SyncQueue(uv_loop_t* loop, int limit = 2048, int timeout = 20)
         : Queue(limit, timeout)
@@ -281,8 +286,8 @@ public:
 protected:
     Synchronizer _sync;
 };
-
 */
+
 //
 // Asynchronous Queue
 //
@@ -304,23 +309,31 @@ public:
 
     AsyncQueue(int limit = 2048)
         : Queue(limit)
-        , _thread(std::bind(&Queue::run, this))
     {
+        Queue::start();
     }
 
-    virtual void cancel()
+    void run()
     {
-        Queue::cancel();
-        _thread.stop();
+        LTrace("AsyncQueue Run")
+        Queue::run();
+    }
+    
+    virtual void stop()
+    {
+        Queue::stop();
+       //Thread::start();
     }
 
 protected:
     virtual ~AsyncQueue()
     {
+        Queue::join();
     }
 
-    Thread _thread;
+
 };
+
 
 
 } // namespace base

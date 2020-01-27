@@ -378,9 +378,6 @@ namespace base {
                 on_close();
             };
             
-            std::function<void(HttpBase*, std::string) > ;
-                  
-
             //  conn->_request.setKeepAlive(false);
             m_client->setReadStream(new std::stringstream);
             m_client->send();
@@ -436,10 +433,12 @@ namespace base {
 
         void socket::on(std::string const& event_name, event_listener_aux const& func) {
             //on(event_name, event_adapter::do_adapt(func));
+             std::lock_guard<std::mutex> guard(m_event_mutex);
             m_event_binding[event_name] = func;
         }
 
         void socket::off(std::string const& event_name) {
+            std::lock_guard<std::mutex> guard(m_event_mutex);
             auto it = m_event_binding.find(event_name);
             if (it != m_event_binding.end()) {
                 m_event_binding.erase(it);
@@ -448,6 +447,7 @@ namespace base {
         }
 
         void socket::off_all() {
+            std::lock_guard<std::mutex> guard(m_event_mutex);
             m_event_binding.clear();
 
         }
@@ -715,7 +715,7 @@ namespace base {
         }
 
         socket::event_listener_aux socket::get_bind_listener_locked(const string &event) {
-             std::lock_guard<std::mutex> guard(m_event_mutex);
+            std::lock_guard<std::mutex> guard(m_event_mutex);
             auto it = m_event_binding.find(event);
             if (it != m_event_binding.end()) {
                 return it->second;
