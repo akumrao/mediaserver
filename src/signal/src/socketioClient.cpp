@@ -29,11 +29,11 @@ namespace base {
         class event_adapter {
         public:
 
-         //   static void adapt_func(socket::event_listener_aux const& func, event& event) {
+         //   static void adapt_func(Socket::event_listener_aux const& func, event& event) {
            //     func(event.get_name(), event.get_message(), event.need_ack(), event.get_ack_message_impl());
            // }
 
-          //  static inline socket::event_listener do_adapt(socket::event_listener_aux const& func) {
+          //  static inline Socket::event_listener do_adapt(socket::event_listener_aux const& func) {
               
          //       return std::bind(&event_adapter::adapt_func, func, std::placeholders::_1);
          //   }
@@ -222,22 +222,22 @@ namespace base {
             this->clear_timers();
 
         }
-        socket* SocketioClient::io(string const& nsp)
+        Socket* SocketioClient::io(string const& nsp)
         {
                    
             if (nsp != "/" && nsp != "") {
             
             packet p(packet::type_connect, nsp);
-            socket *soc = get_socket( "/");
+            Socket *soc = get_socket( "/");
             soc->send_connect(nsp);
 
             }
               
-           socket *soc = get_socket( nsp);
+           Socket *soc = get_socket( nsp);
            return soc;
         }
 
-        socket* SocketioClient::get_socket(string const& nsp) {
+        Socket* SocketioClient::get_socket(string const& nsp) {
 
            lock_guard<mutex> guard(m_socket_mutex);
             string aux;
@@ -255,7 +255,7 @@ namespace base {
             if (it != m_sockets.end()) {
                 return it->second;
             } else {
-                m_sockets[aux] = new socket(this, aux);
+                m_sockets[aux] = new Socket(this, aux);
                 return m_sockets[aux];
             }
         }
@@ -266,7 +266,7 @@ namespace base {
             switch (p.get_frame()) {
                 case packet::frame_message:
                 {
-                    socket *so_ptr = get_socket(p.get_nsp());
+                    Socket *so_ptr = get_socket(p.get_nsp());
                     if (so_ptr)so_ptr->on_message_packet(p);
                     break;
                 }
@@ -419,25 +419,25 @@ namespace base {
         }
         
         /***************************************************************************/
-        socket::socket(SocketioClient* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
+        Socket::Socket(SocketioClient* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
         }
 
-        socket::~socket() {
+        Socket::~Socket() {
 
         }
 
-        //void socket::on(std::string const& event_name, event_listener const& func) {
+        //void Socket::on(std::string const& event_name, event_listener const& func) {
         //    m_event_binding[event_name] = func;
 
        // }
 
-        void socket::on(std::string const& event_name, event_listener_aux const& func) {
+        void Socket::on(std::string const& event_name, event_listener_aux const& func) {
             //on(event_name, event_adapter::do_adapt(func));
              std::lock_guard<std::mutex> guard(m_event_mutex);
             m_event_binding[event_name] = func;
         }
 
-        void socket::off(std::string const& event_name) {
+        void Socket::off(std::string const& event_name) {
             std::lock_guard<std::mutex> guard(m_event_mutex);
             auto it = m_event_binding.find(event_name);
             if (it != m_event_binding.end()) {
@@ -446,19 +446,19 @@ namespace base {
 
         }
 
-        void socket::off_all() {
+        void Socket::off_all() {
             std::lock_guard<std::mutex> guard(m_event_mutex);
             m_event_binding.clear();
 
         }
 
-        void socket::close() {
+        void Socket::close() {
 
             if(m_connected)
             {
                 packet p(packet::type_disconnect,m_nsp);
                 send_packet(p);
-                m_connection_timer.cb_timeout = std::bind(&socket::on_close, this);
+                m_connection_timer.cb_timeout = std::bind(&Socket::on_close, this);
                 m_connection_timer.Start( 3000, 0);
                 
             }
@@ -466,22 +466,22 @@ namespace base {
 
         }
 
-        void socket::on_error(error_listener const& l) {
+        void Socket::on_error(error_listener const& l) {
 
             STrace << "on_error " ;
             m_error_listener = l;
         }
 
-        void socket::off_error() {
+        void Socket::off_error() {
             STrace << "off_error " ;
             m_error_listener = nullptr;
         }
 
-        std::string const& socket::get_namespace() const {
+        std::string const& Socket::get_namespace() const {
             return m_nsp;
         }
 
-        void socket::on_close() {
+        void Socket::on_close() {
             m_connection_timer.Stop();
             m_connection_timer.Close();
             m_connected = false;
@@ -500,11 +500,11 @@ namespace base {
             //m_client = NULL;
         }
 
-        void socket::on_open() {
+        void Socket::on_open() {
 
         }
 
-        void socket::on_message_packet(packet const& p) {
+        void Socket::on_message_packet(packet const& p) {
 
             if (p.get_nsp() == m_nsp) {
                 switch (p.get_type()) {
@@ -589,25 +589,25 @@ namespace base {
             }
         }
 
-        void socket::on_disconnect() {
+        void Socket::on_disconnect() {
 
         }
 
        
 
-        void socket::send_connect(const std::string & nsp) {
+        void Socket::send_connect(const std::string & nsp) {
             STrace << "send_connect " << nsp ;
             
             packet p(packet::type_connect, nsp);
             send_packet(p);
             
-            m_connection_timer.cb_timeout = std::bind(&socket::timeout_connection, this);
+            m_connection_timer.cb_timeout = std::bind(&Socket::timeout_connection, this);
             
             m_connection_timer.Start(20000);
 
         }
 
-         void socket::timeout_connection()
+         void Socket::timeout_connection()
         {
             STrace << "timeout_connection "  ;
             m_connection_timer.Reset();
@@ -615,7 +615,7 @@ namespace base {
             this->on_close();
         }
          
-        void socket::on_connected() {
+        void Socket::on_connected() {
 
             STrace << "on_connected " << m_nsp ;
 
@@ -648,14 +648,14 @@ namespace base {
             }
         }
 
-        void socket::on_socketio_error(json const& err_message) {
+        void Socket::on_socketio_error(json const& err_message) {
             STrace << "on_sokcetio_error " ;
             if (m_error_listener)m_error_listener(err_message);
         }
 
         /****************************************************************************/
 
-        void socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
+        void Socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
         STrace << "emit " <<     name;
 
         auto array = json::array();
@@ -678,7 +678,7 @@ namespace base {
             send_packet(p);
         }
 
-        void socket::send_packet(packet &p) {
+        void Socket::send_packet(packet &p) {
             STrace << "send_packet" ;
 
             if (m_connected) {
@@ -701,7 +701,7 @@ namespace base {
             }
         }
 
-        void socket::on_socketio_event(const std::string& nsp, int msgId, const std::string& name, json && message) {
+        void Socket::on_socketio_event(const std::string& nsp, int msgId, const std::string& name, json && message) {
 
             STrace << "on_socketio_event " << name ;
             bool needAck = msgId >= 0;
@@ -714,16 +714,16 @@ namespace base {
             }
         }
 
-        socket::event_listener_aux socket::get_bind_listener_locked(const string &event) {
+        Socket::event_listener_aux Socket::get_bind_listener_locked(const string &event) {
             std::lock_guard<std::mutex> guard(m_event_mutex);
             auto it = m_event_binding.find(event);
             if (it != m_event_binding.end()) {
                 return it->second;
             }
-            return socket::event_listener_aux();
+            return Socket::event_listener_aux();
         }
 
-        void socket::ack(int msgId, const string &, const json &ack_message) {
+        void Socket::ack(int msgId, const string &, const json &ack_message) {
             STrace << "ack " << msgId ;
 
             packet p(m_nsp, ack_message, msgId, true);
@@ -732,7 +732,7 @@ namespace base {
         
         
         //json array is equivalent to message::list
-        void socket::on_socketio_ack(int msgId, json const& message)
+        void Socket::on_socketio_ack(int msgId, json const& message)
         {
             STrace << "on_socketio_ack "  << msgId ;
             std::function<void (json const&)> l;

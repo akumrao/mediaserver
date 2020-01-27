@@ -142,9 +142,28 @@ void MediaCapture::stop()
 
 void MediaCapture::emit(IPacket& packet)
 {
-    LTrace("Emit: ", packet.size())
+    
 
-//    emitter.emit(packet);
+
+    
+    
+     if (cbProcessAudio && packet.className() == std::string("PlanarAudioPacket") )
+     {
+        LTrace("Emit: ", packet.size(), ", ", packet.className())
+        cbProcessAudio(packet);
+     }
+    
+     if (cbProcessVideo && packet.className() == std::string("PlanarVideoPacket") )
+     {
+         LTrace("Emit: ", packet.size(), ", ", packet.className())
+         cbProcessVideo(packet);
+     }
+       
+        /// This method ensures compatibility with the given
+        /// packet type. Return false to reject the packet.
+
+      
+        
 }
 
 
@@ -202,9 +221,9 @@ void MediaCapture::run()
 
                 // Decode and emit
                 if (_video->decode(ipacket, this)) {
-                    STrace << "Decoded video: "
-                           << "time=" << _video->time << ", "
-                           << "pts=" << _video->pts << endl;
+                    //STrace << "Decoded video: "
+                       //    << "time=" << ipacket->time << ", "
+                        //   << "pts=" << ipacket->pts << endl;
                 }
 
                 // Pause the input stream in rate limited mode if the
@@ -228,9 +247,9 @@ void MediaCapture::run()
 
                 // Decode and emit
                 if (_audio->decode(ipacket , this)) {
-                    STrace << "Decoded Audio: "
-                           << "time=" << _audio->time << ", "
-                           << "pts=" << _audio->pts << endl;
+                    //STrace << "Decoded Audio: "
+                    //       << "time=" << _audio->time << ", "
+                    //       << "pts=" << _audio->pts << endl;
                 }
             }
 

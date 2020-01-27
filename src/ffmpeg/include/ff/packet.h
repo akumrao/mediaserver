@@ -1,59 +1,16 @@
 
-
-
 #ifndef BASE_AV_Packet_H
 #define BASE_AV_Packet_H
 
 
 #include "ff/ff.h"
-//#include "base/packet.h"
+#include "base/packet.h"
 #include "base/time.h"
 
 
 namespace base {
 namespace ff {
 
-struct IPacket{
- virtual IPacket* clone() const = 0;
- 
-  uint8_t* _data;
-    
-    size_t _size;
-    
-    
-    uint8_t* data()
-    {
-        return _data;
-    }
-    
-    size_t size()
-    {
-        return _size;
-    }
-};
-
-struct MediaPacket:IPacket 
-{
-    int64_t time; // microseconds
-
-    MediaPacket(uint8_t* data = nullptr, size_t size = 0, int64_t time = 0):
-         time(time)
-    {
-    }
-
-    MediaPacket(const MediaPacket& r)
-        : time(r.time)
-    {
-    }
-
-    virtual ~MediaPacket() = default;
-
-    virtual IPacket* clone() const override { return new MediaPacket(*this); }
-
-    virtual const char* className() const { return "MediaPacket"; }
-    
-   
-};
 
 
 /// Video packet for interleaved formats

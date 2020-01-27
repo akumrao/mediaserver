@@ -66,10 +66,10 @@ PlanarVideoPacket::PlanarVideoPacket(const PlanarVideoPacket& r)
 
 PlanarVideoPacket::~PlanarVideoPacket()
 {
-//    if (_free) {
-      //  av_freep(&buffer[0]);
-      //  av_freep(buffer);
-   // }
+    if (_free) {
+        av_freep(&buffer[0]);
+        av_freep(buffer);
+    }
 }
 
 
@@ -119,10 +119,10 @@ PlanarAudioPacket::PlanarAudioPacket(const PlanarAudioPacket& r)
 
 PlanarAudioPacket::~PlanarAudioPacket()
 {
-//    if (_free) {
-      //  av_freep(&buffer[0]);
-       // av_freep(buffer);
-  //  }
+    if (_free) {
+        av_freep(&buffer[0]);
+        av_freep(buffer);
+    }
 }
 
 

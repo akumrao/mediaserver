@@ -67,9 +67,14 @@ public:
 //    NullSignal Closing;
 
         void emit(IPacket& packet);
+        
+        std::function<void(IPacket&) > cbProcessAudio;
+        std::function<void(IPacket&) > cbProcessVideo;  
+        
 protected:
     virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams);
 
+     
 
 
 protected:

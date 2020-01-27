@@ -4,13 +4,13 @@
 #define BASE_AV_MultiplexPacketEncoder_H
 
 
-#include "scy/base.h"
+#include "base/base.h"
 #ifdef HAVE_FFMPEG
-#include "scy/av/multiplexencoder.h"
-#include "scy/packetstream.h"
+#include "av/multiplexencoder.h"
 
 
-namespace scy {
+
+namespace base {
 namespace ff {
 
 
@@ -32,7 +32,7 @@ public:
 protected:
     virtual void onStreamStateChange(const PacketStreamState& state) override;
 
-    friend class PacketStream;
+    //friend class PacketStream;
 
     mutable std::mutex _mutex;
 };

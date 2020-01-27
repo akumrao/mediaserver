@@ -71,7 +71,7 @@ namespace base {
         };
 
 
-        class socket;
+        class Socket;
 
         class SocketioClient  {
         public:
@@ -91,7 +91,7 @@ namespace base {
             // virtual void close();
 
 
-            std::map<const std::string, socket*> m_sockets;
+            std::map<const std::string, Socket*> m_sockets;
            
             void remove_socket(string const& nsp);
          
@@ -108,11 +108,11 @@ namespace base {
             //virtual const char* className() const { return "SocketIOClient"; }
             std::string const& get_sessionid();
             // void on_message_packet(packet const& p);
-            std::function<void(socket* sock) > cbConnected;
+            std::function<void(Socket* sock) > cbConnected;
 
             void send(packet& p);
 
-            socket* io(string const& nsp="");
+            Socket* io(string const& nsp="");
 
         protected:
             // virtual void setError(const Errors& error);
@@ -132,7 +132,7 @@ namespace base {
 
 
         protected:
-            socket* get_socket(string const& nsp);
+            Socket* get_socket(string const& nsp);
             std::string _host;
             uint16_t _port;
     
@@ -156,9 +156,9 @@ namespace base {
         /********************************************************/
         class packet;
 
-        //The name 'socket' is taken from concept of official socket.io.
+        //The name 'Socket' is taken from concept of official Socket.io.
 
-        class socket {
+        class Socket {
         public:
             typedef std::function<void(const std::string& name, json const& message, bool need_ack, json& ack_message) > event_listener_aux;
 
@@ -166,9 +166,9 @@ namespace base {
 
             typedef std::function<void(json const& message) > error_listener;
 
-            //typedef std::shared_ptr<socket> ptr;
+            //typedef std::shared_ptr<Socket> ptr;
 
-            ~socket();
+            ~Socket();
 
            // void on(std::string const& event_name, event_listener const& func);
 
@@ -195,7 +195,7 @@ namespace base {
 
             std::string const& get_namespace() const;
 
-            socket(SocketioClient*, std::string const&);
+            Socket(SocketioClient*, std::string const&);
 
             std::map<std::string, event_listener_aux> m_event_binding;
         protected:
@@ -223,10 +223,10 @@ namespace base {
         private:
             //disable copy constructor and assign operator.
 
-            socket(socket const&) {
+            Socket(Socket const&) {
             }
 
-            void operator=(socket const&) {
+            void operator=(Socket const&) {
             }
 
             const std::string m_nsp;
