@@ -1,12 +1,19 @@
 'use strict';
 
-var isChannelReady = false;
+var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
 var localStream;
 var pc;
 var remoteStream;
 var turnReady;
+
+var room = 'foo'; /*think as a group  peerName@room */
+var  remotePeerID;
+var  peerID;
+var  remotePeerName;
+var  peerName;
+
 
 var pcConfig = {
   'iceServers': [{
@@ -22,16 +29,12 @@ var pcConfig = {
 
 /////////////////////////////////////////////
 
-var room = 'foo';
+
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 
 var socket = io.connect();
 
-if (room !== '') {
-  socket.emit('create or join', room);
-  console.log('Attempted to create or  join room', room);
-}
 
 socket.on('created', function(room) {
   console.log('Created room ' + room);
@@ -48,10 +51,16 @@ socket.on('join', function (room){
   isChannelReady = true;
 });
 
-socket.on('joined', function(room) {
-  console.log('joined: ' + room);
-  log('joined: ' + room);
+socket.on('joined', function(room, id) {
+ console.log('joined: ' + room + 'peerID: ' + id);
   isChannelReady = true;
+  peerID = id;
+
+
+  if (isInitiator) {
+    doCall();
+  }
+
 });
 
 socket.on('log', function(array) {
@@ -81,8 +90,9 @@ socket.on('message', function(message) {
     pc.setRemoteDescription(new RTCSessionDescription(message));
   } else if (message.type === 'candidate' && isStarted) {
     var candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.label,
-      candidate: message.candidate
+      sdpMLineIndex: message.candidate.sdpMLineIndex,
+      sdpMid: message.candidate.sdpMid,
+      candidate: message.candidate.candidate
     });
     pc.addIceCandidate(candidate);
   } else if (message === 'bye' && isStarted) {
@@ -109,6 +119,7 @@ function gotStream(stream) {
   localStream = stream;
   localVideo.srcObject = stream;
   sendMessage('got user media');
+    isInitiator = true;
   if (isInitiator) {
     maybeStart();
   }
@@ -134,9 +145,15 @@ function maybeStart() {
     pc.addStream(localStream);
     isStarted = true;
     console.log('isInitiator', isInitiator);
-    if (isInitiator) {
-      doCall();
-    }
+   // if (isInitiator) {
+     // doCall();
+   // }
+      if (room !== '') {
+        socket.emit('create or join', room);
+        console.log('Attempted to create or  join room', room);
+      }
+
+
   }
 }
 
@@ -165,9 +182,7 @@ function handleIceCandidate(event) {
   if (event.candidate) {
     sendMessage({
       type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
+      candidate: event.candidate
     });
   } else {
     console.log('End of candidates.');
@@ -256,4 +271,5 @@ function stop() {
   isStarted = false;
   pc.close();
   pc = null;
+  localStream=null;
 }

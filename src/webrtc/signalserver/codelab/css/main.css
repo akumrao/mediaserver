@@ -19,3 +19,8 @@ div.b {
 div.c {
   font-size: 150%;
 }
+pre {
+   font-family: "courier new", courier, monospace;
+   font-size: 11px; 
+   font-weight: bold;
+}
