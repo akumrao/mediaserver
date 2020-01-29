@@ -3,11 +3,11 @@
 #ifndef WebRTCStreamer_Signaler_H
 #define WebRTCStreamer_Signaler_H
 
-//#include "base/application.h"
-//#include "base/util.h"
+
 #include "socketio/socketioClient.h"
 #include "webrtc/peermanager.h"
 #include "webrtc/multiplexmediacapturer.h"
+#include "rtc_base/ssladapter.h"
 
 using namespace base::sockio;
 
@@ -37,7 +37,7 @@ namespace base {
             //void syncMessage(const ipc::Action& action);
 
             void onPeerConnected(std::string& peerID);
-            void onPeerMessage(json& m);
+            void onPeerMessage(json const& m);
             void onPeerDiconnected(std::string& peerID);
 
 

@@ -17,12 +17,7 @@ namespace base {
         Signaler::Signaler():
         _capturer()
         , _context(_capturer.getAudioModule()) {
-            // Setup the signalling client
-            //    _client.StateChange += slot(this, &Signaler::onClientStateChange);
-            //    _client.roster().ItemAdded += slot(this, &Signaler::onPeerConnected);
-            //    _client.roster().ItemRemoved += slot(this, &Signaler::onPeerDiconnected);
-            //    _client += packetSlot(this, &Signaler::onPeerMessage);
-            //    _client.connect();
+
         }
 
         Signaler::~Signaler() {
@@ -95,7 +90,7 @@ namespace base {
             wrtc::PeerManager::add(peerID, conn);
         }
 
-        void Signaler::onPeerMessage(json& m) {
+        void Signaler::onPeerMessage(json const& m) {
            // LDebug("Peer message: ", m.from().toString())
 
                     //    if (m.find("offer") != m.end()) {
@@ -140,13 +135,14 @@ namespace base {
         }
 
         void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
+             LTrace("onFailure stop FFMPEG Capture")
             _capturer.stop();
             wrtc::PeerManager::onFailure(conn, error);
         }
 
         void Signaler::postMessage(const json& m) {
             
-            LTrace(cnfg::stringify(m));
+            LTrace("postMessage" , cnfg::stringify(m));
             socket->emit("message", cnfg::stringify(m));
         }
         
@@ -192,6 +188,10 @@ namespace base {
                         LTrace("Another peer made a request to join room " + room)
                         LTrace("This peer is the initiator of room " + room + "!")
                         isChannelReady = true;
+                        
+                        std::string peerid = data;
+                        //onPeerConnected(peerid);
+                        
                     }));
 
                     socket->on("joined", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
@@ -200,10 +200,7 @@ namespace base {
                         LTrace("joined: " + room)
                                 
                          ////////////////////////     
-                                
-                        std::string peerid = data[1];
-                        
-                        onPeerConnected(peerid);
+                      
                                        
                     }));
 
@@ -220,19 +217,20 @@ namespace base {
                         LTrace(cnfg::stringify(data))
                     }));
 
-                    socket->on("message", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data));
-                        LTrace('SocketioClient received message:', cnfg::stringify(data));
+                    socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
+                        LTrace(cnfg::stringify(m));
+                        LTrace('SocketioClient received message:', cnfg::stringify(m));
+                        
+                        onPeerMessage(m);
                         // signalingMessageCallback(message);
                         
-                        
-//                         if (m.find("offer") != m.end()) {
-//                            assert(0 && "offer not supported");
-//                        } else if (m.find("answer") != m.end()) {
-//                            recvSDP(m.from().id, m["answer"]);
-//                        } else if (m.find("candidate") != m.end()) {
-//                            recvCandidate(m.from().id, m["candidate"]);
-//                        }
+                         if (m.find("offer") != m.end()) {
+                            assert(0 && "offer not supported");
+                        } else if (m.find("answer") != m.end()) {
+                            recvSDP(m["from"], m["answer"]);
+                        } else if (m.find("candidate") != m.end()) {
+                            recvCandidate(m["from"], m["candidate"]);
+                        }
                         
                         
                     }));
@@ -250,7 +248,7 @@ namespace base {
 
                     socket->on("bye", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                         LTrace(cnfg::stringify(data));
-                        //  LTrace("Peer leaving room {" "room" }.`);
+                          LTrace("Peer leaving room", room  );
                         // sendBtn.disabled = true;
                         //snapAndSendBtn.disabled = true;
                         // If peer did not create the room, re-enter to be creator.

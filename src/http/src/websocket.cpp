@@ -45,7 +45,7 @@ namespace base {
         }
 
         void WebSocketConnection::send(const char* data, size_t len, int flags) {
-            LTrace("Send: ", len, ": ", std::string(data, len))
+           // LTrace("Send: ", len, ": ", std::string(data, len))
             assert(framer.handshakeComplete());
 
             // Set default text flag if none specified
