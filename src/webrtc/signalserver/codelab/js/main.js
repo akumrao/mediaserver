@@ -50,6 +50,7 @@ socket.on('join', function (room){
 
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
+  log('joined: ' + room);
   isChannelReady = true;
 });
 
@@ -61,6 +62,7 @@ socket.on('log', function(array) {
 
 function sendMessage(message) {
   console.log('Client sending message: ', message);
+  log('Client sending message: ', message);
   socket.emit('message', message);
 }
 
