@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 
 
     // Setup WebRTC environment
-    rtc::LogMessage::LogToDebug(rtc::LS_INFO); // LS_VERBOSE, LS_INFO, LERROR
+    rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE); // LS_VERBOSE, LS_INFO, LERROR
     // rtc::LogMessage::LogTimestamps();
     // rtc::LogMessage::LogThreads();
 

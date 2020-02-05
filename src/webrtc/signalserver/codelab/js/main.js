@@ -52,13 +52,22 @@ socket.on('join', function (room){
 });
 
 socket.on('joined', function(room, id) {
- console.log('joined: ' + room + 'peerID: ' + id);
+ console.log('joined: ' + room + ' with peerID: ' + id);
+ log('joined: ' + room + ' with peerID: ' + id);
   isChannelReady = true;
   peerID = id;
 
 
   if (isInitiator) {
-    doCall();
+    // doCall();
+
+     sendMessage ({
+      from: peerID,
+      to: remotePeerID,
+      type: 'offer',
+      desc:'sessionDescription'
+    });
+
   }
 
 });
@@ -78,16 +87,29 @@ function sendMessage(message) {
 // This client receives a message
 socket.on('message', function(message) {
   console.log('Client received message:', message);
+  log('Client received message:', message);
+
+
+  if (!message.offer && remotePeerID && remotePeerID != message.from) {
+      console.log('Dropping message from unknown peer', message);
+      log('Dropping message from unknown peer', message);
+      return;
+  }
+
+
   if (message === 'got user media') {
     maybeStart();
   } else if (message.type === 'offer') {
     if (!isInitiator && !isStarted) {
       maybeStart();
     }
-    pc.setRemoteDescription(new RTCSessionDescription(message));
+    remotePeerID=message.from;
+    log('got offfer from remotePeerID: ' + remotePeerID);
+
+    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
     doAnswer();
   } else if (message.type === 'answer' && isStarted) {
-    pc.setRemoteDescription(new RTCSessionDescription(message));
+    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
   } else if (message.type === 'candidate' && isStarted) {
     var candidate = new RTCIceCandidate({
       sdpMLineIndex: message.candidate.sdpMLineIndex,
@@ -95,7 +117,7 @@ socket.on('message', function(message) {
       candidate: message.candidate.candidate
     });
     pc.addIceCandidate(candidate);
-  } else if (message === 'bye' && isStarted) {
+  } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   }
 });
@@ -158,7 +180,11 @@ function maybeStart() {
 }
 
 window.onbeforeunload = function() {
-  sendMessage('bye');
+    sendMessage({
+      from: peerID,
+      to: remotePeerID,
+      type: 'bye'
+    });
 };
 
 /////////////////////////////////////////////////////////
@@ -181,6 +207,8 @@ function handleIceCandidate(event) {
   console.log('icecandidate event: ', event);
   if (event.candidate) {
     sendMessage({
+      from: peerID,
+      to: remotePeerID,
       type: 'candidate',
       candidate: event.candidate
     });
@@ -209,11 +237,19 @@ function doAnswer() {
 function setLocalAndSendMessage(sessionDescription) {
   pc.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
-  sendMessage(sessionDescription);
+
+   sendMessage ({
+      from: peerID,
+      to: remotePeerID,
+      type: sessionDescription.type,
+      desc:sessionDescription
+    });
 }
 
 function onCreateSessionDescriptionError(error) {
-  trace('Failed to create session description: ' + error.toString());
+  log('Failed to create session description: ' + error.toString());
+  console.log('Failed to create session description: ' + error.toString());
+  
 }
 
 function requestTurn(turnURL) {
@@ -258,7 +294,11 @@ function handleRemoteStreamRemoved(event) {
 function hangup() {
   console.log('Hanging up.');
   stop();
-  sendMessage('bye');
+  sendMessage({
+      from: peerID,
+      to: remotePeerID,
+      type: 'bye'
+    });
 }
 
 function handleRemoteHangup() {

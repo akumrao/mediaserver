@@ -185,7 +185,10 @@ namespace base {
             void off_error();
 
             std::map<unsigned int, std::function<void (json const&) > > m_acks;
-            void emit(std::string const& name, std::string const& msglist = "", std::function<void (json const&)> const& ack = nullptr);
+            //void emit(std::string const& name, std::string const& msglist = "", std::function<void (json const&)> const& ack = nullptr);
+            
+            void emit(std::string const& name, json const& msglist = nullptr, std::function<void (json const&)> const& ack = nullptr);
+
             void on_socketio_event(const std::string& nsp, int msgId, const std::string& name, json && message);
             
             void ack(int msgId,string const& name,json const& ack_message);

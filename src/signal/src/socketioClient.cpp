@@ -655,7 +655,7 @@ namespace base {
 
         /****************************************************************************/
 
-        void Socket::emit(std::string const& name, std::string const& msglist, std::function<void (json const&) > const& ack) {
+        void Socket::emit(std::string const& name, json const& msglist, std::function<void (json const&) > const& ack) {
         STrace << "emit " <<     name;
 
         auto array = json::array();

@@ -50,6 +50,8 @@ namespace base {
 #else
             SocketioClient *client;
             Socket *socket;
+            std::string peerID;
+            std::string remotePeerID;
 #endif
             wrtc::MultiplexMediaCapturer _capturer;
             wrtc::PeerFactoryContext _context;

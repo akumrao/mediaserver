@@ -199,9 +199,9 @@ void MediaCapture::run()
 
         // Read input packets until complete
         while ((res = av_read_frame(_formatCtx, &ipacket)) >= 0) {
-            STrace << "Read frame: "
-                   << "pts=" << ipacket.pts << ", "
-                   << "dts=" << ipacket.dts << endl;
+//            STrace << "Read frame: "
+//                   << "pts=" << ipacket.pts << ", "
+//                   << "dts=" << ipacket.dts << endl;
 
             if (_stopping)
                 break;

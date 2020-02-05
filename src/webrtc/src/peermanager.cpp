@@ -52,6 +52,8 @@ namespace base {
                 assert(0 && "peer mismath");
                 return;
             }
+            
+             LTrace("recvCandidate" , cnfg::stringify(message))
 
             std::string mid = message.value(kCandidateSdpMidName, "");
             int mlineindex = message.value(kCandidateSdpMlineIndexName, -1);

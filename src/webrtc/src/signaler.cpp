@@ -14,7 +14,7 @@ using std::endl;
 namespace base {
     namespace wrtc {
 
-        Signaler::Signaler():
+        Signaler::Signaler() :
         _capturer()
         , _context(_capturer.getAudioModule()) {
 
@@ -36,14 +36,19 @@ namespace base {
             json desc;
             desc[wrtc::kSessionDescriptionTypeName] = type;
             desc[wrtc::kSessionDescriptionSdpName] = sdp;
-            //m[type] = desc;
 
+            json m;
+
+            m[wrtc::kSessionDescriptionTypeName] = type;
+            m["desc"] = desc;
+            m["from"] = peerID;
+            m["to"]=remotePeerID;
             // smpl::Message m({ type, {
             //     { wrtc::kSessionDescriptionTypeName, type },
             //     { wrtc::kSessionDescriptionSdpName, sdp} }
             // });
 
-            postMessage(desc);
+            postMessage(m);
         }
 
         void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
@@ -53,7 +58,12 @@ namespace base {
             desc[wrtc::kCandidateSdpMidName] = mid;
             desc[wrtc::kCandidateSdpMlineIndexName] = mlineindex;
             desc[wrtc::kCandidateSdpName] = sdp;
-           // m["candidate"] = desc;
+
+            json m;
+            m[wrtc::kSessionDescriptionTypeName] = "candidate";
+            m["candidate"] = desc;
+            m["from"] = peerID;
+            m["to"]=remotePeerID;
 
             // smpl::Message m({ "candidate", {
             //     { wrtc::kCandidateSdpMidName, mid },
@@ -61,11 +71,12 @@ namespace base {
             //     { wrtc::kCandidateSdpName, sdp} }
             // });
 
-            postMessage(desc);
+            LTrace( "send candidate ",  cnfg::stringify(m))
+            postMessage(m);
         }
 
-        void Signaler::onPeerConnected( std::string& peerID) {
-        
+        void Signaler::onPeerConnected(std::string& peerID) {
+
             LDebug("Peer connected: ", peerID)
 
             if (wrtc::PeerManager::exists(peerID)) {
@@ -91,28 +102,48 @@ namespace base {
         }
 
         void Signaler::onPeerMessage(json const& m) {
-           // LDebug("Peer message: ", m.from().toString())
 
-                    //    if (m.find("offer") != m.end()) {
-                    //        assert(0 && "offer not supported");
-                    //    } else if (m.find("answer") != m.end()) {
-                    //        recvSDP(m.from().id, m["answer"]);
-                    //    } else if (m.find("candidate") != m.end()) {
-                    //        recvCandidate(m.from().id, m["candidate"]);
-                    //    }
-                    // else assert(0 && "unknown event");
+            if (std::string("got user media") == m) {
+                return;
+            }
+
+            std::string from;
+            std::string type;
+
+            if (m.find("from") != m.end()) {
+                from = m["from"].get<std::string>();
+            }
+            if (m.find("type") != m.end()) {
+                type = m["type"].get<std::string>();
+            }
+
+            LDebug("Peer message: ", from)
+
+            if (std::string("offer") == type) {
+                //assert(0 && "offer not supported");
+                remotePeerID = from;
+                onPeerConnected(from);
+                
+            } else if (std::string("answer") == type) {
+                recvSDP(from, m["desc"]);
+            } else if (std::string("candidate") == type) {
+                recvCandidate(from, m["candidate"]);
+            } else if (std::string("bye") == type) {
+                onPeerDiconnected(from);
+            }
+
         }
 
         void Signaler::onPeerDiconnected(std::string& peerID) {
             LDebug("Peer disconnected")
 
-                        auto conn = wrtc::PeerManager::remove(peerID);
-                        if (conn) {
-                            LDebug("Deleting peer connection: ", peerID)
-                            // async delete not essential, but to be safe
-                             delete conn;
-                            //deleteLater<wrtc::Peer>(conn);
-                        }
+                    auto conn = wrtc::PeerManager::remove(peerID);
+            if (conn) {
+                LDebug("Deleting peer connection: ", peerID)
+                        // async delete not essential, but to be safe
+                        delete conn;
+                //deleteLater<wrtc::Peer>(conn);
+            }
         }
 
         void Signaler::onAddRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) {
@@ -129,151 +160,141 @@ namespace base {
         }
 
         void Signaler::onClosed(wrtc::Peer* conn) {
-             LTrace("stop FFMPEG Capture")
+            LTrace("stop FFMPEG Capture")
             _capturer.stop();
             wrtc::PeerManager::onClosed(conn);
         }
 
         void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
-             LTrace("onFailure stop FFMPEG Capture")
+            LTrace("onFailure stop FFMPEG Capture")
             _capturer.stop();
             wrtc::PeerManager::onFailure(conn, error);
         }
 
         void Signaler::postMessage(const json& m) {
-            
-            LTrace("postMessage" , cnfg::stringify(m));
-            socket->emit("message", cnfg::stringify(m));
+
+            LTrace("postMessage", cnfg::stringify(m));
+            socket->emit("message", m);
         }
-        
-        
-        void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm  ){
-              
-                room = rm;
-                
-                LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-                client = new SocketioClient(host, port);
-                client->connect();
+        void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
 
-                    socket = client->io();
+            room = rm;
 
-                socket->on("connection", Socket::event_listener_aux([=](string const& name, json const& data, bool isAck, json & ack_resp) {
+            LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-                    socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data))
+            client = new SocketioClient(host, port);
+            client->connect();
 
-                        LTrace("Server IP address is: ", data)
-                                // updateRoomURL(ipaddr);
-                    }));
+            socket = client->io();
 
-                    socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+            socket->on("connection", Socket::event_listener_aux([ = ](string const& name, json const& data, bool isAck, json & ack_resp){
 
-                        LTrace(cnfg::stringify(data))
-                        LTrace("Created room", data[0], "- my client ID is", data[1])
-                        isInitiator = true;
-                        //grabWebCamVideo();
-                    }));
+                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data))
 
-                    socket->on("full", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data));
-                        LTrace("Room " + room + " is full.")
-                                // window.location.hash = '';
-                                // window.location.reload();
-                    }));
-
-
-                    socket->on("join", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data));
-                        LTrace("Another peer made a request to join room " + room)
-                        LTrace("This peer is the initiator of room " + room + "!")
-                        isChannelReady = true;
-                        
-                        std::string peerid = data;
-                        //onPeerConnected(peerid);
-                        
-                    }));
-
-                    socket->on("joined", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        
-                        LTrace(cnfg::stringify(data))
-                        LTrace("joined: " + room)
-                                
-                         ////////////////////////     
-                      
-                                       
-                    }));
-
-                                        
-
-                    socket->on("ready", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data))
-                                // LTrace('Socket is ready');
-                                // createPeerConnection(isInitiator, configuration);
-                    }));
-
-                    socket->on("log", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        // LTrace(cnfg::stringify(data))
-                        LTrace(cnfg::stringify(data))
-                    }));
-
-                    socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(m));
-                        LTrace('SocketioClient received message:', cnfg::stringify(m));
-                        
-                        onPeerMessage(m);
-                        // signalingMessageCallback(message);
-                        
-                         if (m.find("offer") != m.end()) {
-                            assert(0 && "offer not supported");
-                        } else if (m.find("answer") != m.end()) {
-                            recvSDP(m["from"], m["answer"]);
-                        } else if (m.find("candidate") != m.end()) {
-                            recvCandidate(m["from"], m["candidate"]);
-                        }
-                        
-                        
-                    }));
-
-
-
-                    // Leaving rooms and disconnecting from peers.
-                    socket->on("disconnect", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data));
-                        //LTrace(`Disconnected: ${reason}.`);
-                        // sendBtn.disabled = true;
-                        // snapAndSendBtn.disabled = true;
-                    }));
-
-
-                    socket->on("bye", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                        LTrace(cnfg::stringify(data));
-                          LTrace("Peer leaving room", room  );
-                        // sendBtn.disabled = true;
-                        //snapAndSendBtn.disabled = true;
-                        // If peer did not create the room, re-enter to be creator.
-                        //if (!isInitiator) {
-                        // window.location.reload();
-                        //}
-                    }));
-
-
-                    // window.addEventListener('unload', function() {
-                    //  LTrace(`Unloading window. Notifying peers in ${room}.`);
-                    // socket->emit('bye', room);
-                    // });
-
-                    if (room != "") {
-                        socket->emit("create or join", room);
-                                LTrace("Attempted to create or  join room ", room);
-                    }
-
-
-                    //socket->emit("ipaddr");
+                    LTrace("Server IP address is: ", data)
+                            // updateRoomURL(ipaddr);
                 }));
 
-                
-            }
+                socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+
+                    LTrace(cnfg::stringify(data))
+                    LTrace("Created room", data[0], "- my client ID is", data[1])
+                    isInitiator = true;
+                    //grabWebCamVideo();
+                }));
+
+                socket->on("full", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data));
+                    LTrace("Room " + room + " is full.")
+                            // window.location.hash = '';
+                            // window.location.reload();
+                }));
+
+
+                socket->on("join", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data));
+                    LTrace("Another peer made a request to join room " + room)
+                    LTrace("This peer is the initiator of room " + room + "!")
+                    isChannelReady = true;
+
+
+
+                }));
+
+                socket->on("joined", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+
+                    LTrace(cnfg::stringify(data))
+                    LTrace("joined: ", data[0])
+                    peerID = data[1];
+                    ////////////////////////     
+
+                }));
+
+
+
+                socket->on("ready", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data))
+                            // LTrace('Socket is ready');
+                            // createPeerConnection(isInitiator, configuration);
+                }));
+
+                socket->on("log", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    // LTrace(cnfg::stringify(data))
+                    LTrace(cnfg::stringify(data))
+                }));
+
+                socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(m));
+                    LTrace('SocketioClient received message:', cnfg::stringify(m));
+
+                    onPeerMessage(m);
+                    // signalingMessageCallback(message);
+
+
+
+                }));
+
+
+
+                // Leaving rooms and disconnecting from peers.
+                socket->on("disconnect", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data));
+                    //LTrace(`Disconnected: ${reason}.`);
+                    // sendBtn.disabled = true;
+                    // snapAndSendBtn.disabled = true;
+                }));
+
+
+                socket->on("bye", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data));
+                    LTrace("Peer leaving room", room);
+                    // sendBtn.disabled = true;
+                    //snapAndSendBtn.disabled = true;
+                    // If peer did not create the room, re-enter to be creator.
+                    //if (!isInitiator) {
+                    // window.location.reload();
+                    //}
+                }));
+
+
+                // window.addEventListener('unload', function() {
+                //  LTrace(`Unloading window. Notifying peers in ${room}.`);
+                // socket->emit('bye', room);
+                // });
+
+                if (room != "") {
+                    socket->emit("create or join", room);
+                            LTrace("Attempted to create or  join room ", room);
+                }
+
+
+                //socket->emit("ipaddr");
+            }));
+
+
+        }
 
 
 
