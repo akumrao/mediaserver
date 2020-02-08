@@ -6,6 +6,7 @@
 
 #include "ff/ffmpeg.h"
 #include "base/logger.h"
+#include "base/platform.h"
 
 
 using std::endl;

@@ -3,7 +3,7 @@
 #define Net_SSLAdapter_H
 
 
-#include "crypto/crypto.h"
+//#include "crypto/crypto.h"
 //#include "net/address.h"
 //#include "net/net.h"
 //#include "base/handle.h"

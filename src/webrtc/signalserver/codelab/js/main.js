@@ -59,8 +59,10 @@ socket.on('joined', function(room, id) {
 
 
   if (isInitiator) {
-    // doCall();
 
+    // when working with web enable bellow line
+    // doCall();
+    // disable  send message 
      sendMessage ({
       from: peerID,
       to: remotePeerID,

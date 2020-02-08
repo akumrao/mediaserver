@@ -11,7 +11,7 @@
 #include "base/filesystem.h"
 #include "http/HttpClient.h"
 #include "http/HttpsClient.h"
-#include "crypto/hash.h"
+//#include "crypto/hash.h"
 #include "base/platform.h"
 
 #include "http/form.h"
@@ -650,7 +650,7 @@ Client *conn={nullptr};
         app.run();
 
         expects(fs::exists(path));
-        expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
+        //expects(crypto::checksum("MD5", path) == "44d667c142d7cda120332623eab69f40");
         fs::unlink(path);
 
 

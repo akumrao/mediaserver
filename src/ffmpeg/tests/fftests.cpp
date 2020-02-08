@@ -225,17 +225,41 @@ int main(int argc, char** argv)
     
     Application app;
     
-      ff::MediaCapture  _capturer;
+      ff::MediaCapture*  _capturer = new    ff::MediaCapture();
 
       std::string sourceFile(sampleDataDir("test.mp4"));
       LTrace("file: ", sourceFile)
-     _capturer.openFile(sourceFile);
+              
+     /////////////////////////////////////////////////////////////////////////
+     _capturer->setLoopInput(true);
+     _capturer->setLimitFramerate(true);
+     _capturer->openFile(sourceFile);
+
+    // Set the output settings
+    if (_capturer->audio()) {
+        _capturer->audio()->oparams.sampleFmt = "s16";
+        _capturer->audio()->oparams.sampleRate = 44000;
+        _capturer->audio()->oparams.channels = 2;
+        _capturer->audio()->recreateResampler();
+        // _videoCapture->audio()->resampler->maxNumSamples = 440;
+        // _videoCapture->audio()->resampler->variableOutput = false;
+    }
+
+    // Convert to yuv420p for WebRTC compatability
+    if (_capturer->video()) {
+        _capturer->video()->oparams.pixelFmt = "yuv420p"; // nv12
+        // _videoCapture->video()->oparams.width = capture_format.width;
+        // _videoCapture->video()->oparams.height = capture_format.height;
+    }       
+     /////////////////////////////////////////////////////////////////////////         
+   
       
-      _capturer.start();
+      _capturer->start();
       
       app.waitForShutdown([&](void*) {
 
-          _capturer.stop();
+          _capturer->stop();
+          delete _capturer;
 
     });
       

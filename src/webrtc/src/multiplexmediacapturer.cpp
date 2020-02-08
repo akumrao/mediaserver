@@ -116,9 +116,8 @@ void MultiplexMediaCapturer::addMediaTracks(
 void MultiplexMediaCapturer::start()
 {
     //_stream.start
-    _videoCapture->run();
+    _videoCapture->start();
 }
-
 
 void MultiplexMediaCapturer::stop()
 {

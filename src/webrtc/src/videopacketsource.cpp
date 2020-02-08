@@ -114,7 +114,8 @@ void VideoPacketSource::Stop()
 void VideoPacketSource::onVideoCaptured(IPacket& pac)
 {
     if(!IsRunning())
-        return;
+    return;
+    
     ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
     
     LTrace("On video frame: ", packet.width, 'x', packet.height)

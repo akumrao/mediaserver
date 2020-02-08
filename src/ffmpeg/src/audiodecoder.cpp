@@ -73,15 +73,15 @@ bool AudioDecoder::emitPacket( MediaCapture *mediaCapure)
     // Set the decoder time in microseconds
     // This value represents the number of microseconds
     // that have elapsed since the brginning of the stream.
-    time = frame->pkt_pts > 0 ? static_cast<int64_t>(frame->pkt_pts *
+    this->time = frame->pkt_pts > 0 ? static_cast<int64_t>(frame->pkt_pts *
                 av_q2d(stream->time_base) * AV_TIME_BASE) : 0;
 
     // Set the decoder pts in stream time base
-    pts = frame->pkt_pts;
+    this->pts = frame->pkt_pts;
 
     // Set the decoder seconds since stream start
     // http://stackoverflow.com/questions/6731706/syncing-decoded-video-using-ffmpeg
-    seconds = (frame->pkt_dts - stream->start_time) * av_q2d(stream->time_base);
+    this->seconds = (frame->pkt_dts - stream->start_time) * av_q2d(stream->time_base);
 
     if (resampler) {
         if (!resampler->resample((uint8_t**)frame->extended_data, frame->nb_samples)) {
@@ -92,7 +92,7 @@ bool AudioDecoder::emitPacket( MediaCapture *mediaCapure)
       
         PlanarAudioPacket audio(resampler->outSamples,
             oparams.channels, resampler->outNumSamples,
-            oparams.sampleFmt, time);
+            oparams.sampleFmt, this->time);
         outputFrameSize = resampler->outNumSamples;
          mediaCapure->emit(audio);
         assert(audio.size() == resampler->outBufferSize);
@@ -102,7 +102,7 @@ bool AudioDecoder::emitPacket( MediaCapture *mediaCapure)
 
         PlanarAudioPacket audio(frame->data,
             oparams.channels, frame->nb_samples,
-            oparams.sampleFmt, time);
+            oparams.sampleFmt, this->time);
         outputFrameSize = frame->nb_samples;
           mediaCapure->emit(audio);
     }

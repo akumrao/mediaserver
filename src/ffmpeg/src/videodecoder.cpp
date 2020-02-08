@@ -76,22 +76,22 @@ void VideoDecoder::emitPacket( AVFrame* frame, MediaCapture *mediaCapure)
     // This value represents the number of microseconds
     // that have elapsed since the beginning of the stream.
     int64_t pts = frame->pts;
-    time = pts > 0 ? static_cast<int64_t>(pts *
+    this->time = pts > 0 ? static_cast<int64_t>(pts *
                 av_q2d(stream->time_base) * AV_TIME_BASE) : 0;
 
     // Set the decoder pts in stream time base
-    pts = pts;
+    this->pts = pts;
 
     // Set the decoder seconds since stream start
-    seconds = (pts - stream->start_time) * av_q2d(stream->time_base);
+    this->seconds = (pts - stream->start_time) * av_q2d(stream->time_base);
 
     STrace << "Decoded video frame:"
         << "\n\tFrame Pkt DTS: " << frame->pkt_dts
         << "\n\tFrame Pkt PTS: " << frame->pkt_pts
         << "\n\tFrame PTS: " << frame->pts
-        << "\n\tTimestamp: " << time
-        << "\n\tPTS: " << pts
-        << "\n\tSeconds: " << seconds
+        << "\n\tTimestamp: " << this->time
+        << "\n\tPTS: " << this->pts
+        << "\n\tSeconds: " << this->seconds
         << endl;
 
     PlanarVideoPacket video(frame->data, frame->linesize, oparams.pixelFmt,
