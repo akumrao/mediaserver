@@ -18,12 +18,12 @@ public:
 
     tesTcpClient(): TcpConnection(this) {}
 
-    void start() {
+    void start(std::string ip, int port) {
 
         // socket.send("Arvind", "127.0.0.1", 7331);
         tcpClient = new TcpConnection(this);
 
-        tcpClient->Connect("0.0.0.0", 7000);
+        tcpClient->Connect(ip, port);
         const char snd[6] = "12345";
         std::cout << "TCP Client send data: " << snd << "len: " << strlen((const char*) snd) << std::endl << std::flush;
 
@@ -62,7 +62,25 @@ int main(int argc, char** argv) {
         Application app;
 
         tesTcpClient socket;
-        socket.start();
+
+
+	int port = 51038;
+	std::string ip = "18.221.232.217";
+	std::string filename;
+	    
+	if (argc > 1) {
+	   filename = argv[1];
+	}
+
+	if (argc > 2) {
+	   ip = argv[2];
+	 }
+
+	 if (argc > 3) {
+	    port = atoi(argv[3]);
+	 }
+
+        socket.start(ip, port);
 
 
         app.waitForShutdown([&](void*) {

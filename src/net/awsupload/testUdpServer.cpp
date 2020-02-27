@@ -68,14 +68,21 @@ int main(int argc, char** argv) {
         Application app;
         
         int port = 51038;
-        if(argc > 1)
+        
+        std::string ip = "0.0.0.0";
+        
+        if (argc > 1) {
+            ip = argv[1];
+        }
+        
+        if(argc > 2)
         {
-            port = atoi(argv[1]);
+            port = atoi(argv[2]);
         }
         
         std::cout << "Udp listening at port " << port << std::endl << std::flush;
         
-        testUdpServer socket("172.31.31.71", port);
+        testUdpServer socket(ip, port);
         socket.start();
         
         //socket.send("arvind", "127.0.0.1" , 6000);

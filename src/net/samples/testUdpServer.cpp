@@ -12,8 +12,6 @@ using namespace net;
 using namespace base::test;
 
 
-
-
 class testUdpServer : public UdpServer::Listener {
 public:
 
@@ -21,7 +19,6 @@ public:
     }
 
     void start() {
-        // socket.send("Arvind", "127.0.0.1", 7331);
         udpServer = new UdpServer( this, IP, port);
         udpServer->bind();
     }

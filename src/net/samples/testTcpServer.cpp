@@ -19,9 +19,9 @@ public:
     tesTcpServer() {
     }
 
-    void start() {
+    void start(std::string ip, int port) {
         // socket.send("Arvind", "127.0.0.1", 7331);
-        tcpServer = new TcpServer(this, "0.0.0.0", 7000);
+        tcpServer = new TcpServer(this, ip, port);
 
     }
 
@@ -52,12 +52,23 @@ public:
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
- 
+        int port = 51038;
+        
+        std::string ip = "0.0.0.0";
+        
+        if (argc > 1) {
+            ip = argv[1];
+        }
+        
+        if(argc > 2)
+        {
+            port = atoi(argv[2]);
+        }
 
         Application app;
 
         tesTcpServer socket;
-        socket.start();
+        socket.start(ip, port);
 
         app.waitForShutdown([&](void*) {
 
