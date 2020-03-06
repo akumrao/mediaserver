@@ -40,12 +40,22 @@ public:
 
     std::string IP;
     int port;
+    
+
 
 };
+
+
+
 
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
+    int64_t start_time;
+    int64_t end_time;
+    
+    LTrace("./runtestUdpClient test.mp4 127.0.0.1")
+    LTrace("./runtestUdpClient test.mp4")
     Application app;
 
     int port = 51038;
@@ -64,32 +74,88 @@ int main(int argc, char** argv) {
     }
 
 
+    for( int x=0; x < StorageCount; ++x )
+    {
+        backstorage[x] = new char[UdpDataSize];
+    }
+    
     testUdpClient socket(ip, port);
     socket.start();
 
+    start_time = base::Application::GetTime();
+   
     std::ifstream infile;
     infile.open(filename, std::ios::binary | std::ios::in);
+    
+    Packet init_packet;
+    
+    int size_of_packet = sizeof(struct Packet);
 
-    char* buffer = new char[32768];
+    init_packet.type =0;
+     init_packet.sequence_number =-1;
+    init_packet.len = 256 ;
+    
+    strncpy( init_packet.data, filename.c_str(), 256);
+    
+    char *send_buffer = (char*)malloc(size_of_packet);
+    
+    memset(send_buffer,0,size_of_packet);
+    memcpy(send_buffer,(char*)&init_packet,size_of_packet);
+    
+    socket.send(send_buffer, size_of_packet);
+    
+    free(send_buffer);
+
+
 
     if (infile.is_open()) {
 
-        while (infile.read(buffer, 32768)) {
-            socket.send(buffer, 32768);
-        }
+        int bcst =0;
+        int rem =0;
+        Packet packet;
+        send_buffer = (char*)malloc(sizeof(struct Packet));
+        
+        
+        while (infile.read(backstorage[rem], UdpDataSize)) {
+            packet.type =1;
+            packet.sequence_number = bcst;
+            packet.len = UdpDataSize;
+            memcpy( packet.data, backstorage[rem], UdpDataSize);
+            
+            memset(send_buffer,0,size_of_packet);
+            memcpy(send_buffer,(char*)&packet,size_of_packet);
+           // char *output = str2md5(data_packet.data, data_size);
+            //char *output1 = str2md5(buffer[send_count], data_size);
 
-        // if the bytes of the block are less than 65536,
-        // use fin.gcount() calculate the number, put the va
-        // into var s
-        socket.send(buffer, infile.gcount());
+            socket.send(send_buffer, size_of_packet);
+            rem = (++bcst)%StorageCount;
+           
+        }
+        
+        packet.type =2;
+        packet.sequence_number = bcst;
+        packet.len = infile.gcount();
+        memcpy( packet.data, backstorage[rem], infile.gcount());
+            
+        memset(send_buffer,0,size_of_packet);
+        memcpy(send_buffer,(char*)&packet,size_of_packet);
+        socket.send(send_buffer, size_of_packet);
 
         infile.close();
     } else {
         std::cerr << "Cannot open file:" << filename << endl;
     }
-    delete[] buffer;
+    
 
+    for( int x=0; x < StorageCount; ++x )
+    {
+        delete [] backstorage[x];
+    }
 
+    end_time = base::Application::GetTime();    
+    
+    std::cout << "time_s " << double(end_time - start_time) / 1000.00 << std::endl << std::flush;
+        
 
     app.run();
 

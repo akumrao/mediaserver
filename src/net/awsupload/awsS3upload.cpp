@@ -1,26 +1,3 @@
- 
-//snippet-sourcedescription:[put_object.cpp demonstrates how to put a file into an Amazon S3 bucket.]
-//snippet-service:[s3]
-//snippet-keyword:[Amazon S3]
-//snippet-keyword:[C++]
-//snippet-sourcesyntax:[cpp]
-//snippet-keyword:[Code Sample]
-//snippet-sourcetype:[full-example]
-//snippet-sourceauthor:[AWS]
-
-/*
-   Copyright 2010-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-   This file is licensed under the Apache License, Version 2.0 (the "License").
-   You may not use this file except in compliance with the License. A copy of
-   the License is located at
-
-    http://aws.amazon.com/apache2.0/
-
-   This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied. See the License for the
-   specific language governing permissions and limitations under the License.
-*/
 
 //snippet-start:[s3.cpp.put_object.inc]
 #include <aws/core/Aws.h>
@@ -77,6 +54,9 @@ bool put_s3_object_async(const Aws::S3::S3Client& s3_client,
             << std::endl;
         return false;
     }
+    
+    std::ifstream infile;
+    infile.open(file_name, std::ios::binary | std::ios::in);
 
     // Set up request
     Aws::S3::Model::PutObjectRequest object_request;
@@ -85,11 +65,30 @@ bool put_s3_object_async(const Aws::S3::S3Client& s3_client,
     object_request.SetACL(Aws::S3::Model::ObjectCannedACL::public_read);
      object_request.SetContentType("video/mp4");
     object_request.SetKey(s3_object_name);
-    const std::shared_ptr<Aws::IOStream> input_data =
-        Aws::MakeShared<Aws::FStream>("SampleAllocationTag",
-            file_name.c_str(),
-            std::ios_base::in | std::ios_base::binary);
-    object_request.SetBody(input_data);
+//    const std::shared_ptr<Aws::IOStream> input_data =
+//        Aws::MakeShared<Aws::FStream>("SampleAllocationTag",
+//            file_name.c_str(),
+//            std::ios_base::in | std::ios_base::binary);
+    
+   auto data = Aws::MakeShared<Aws::StringStream>("PutObjectInputStream", std::stringstream::in | std::stringstream::out | std::stringstream::binary);
+
+    char* buffer = new char[32768];
+
+    if (infile.is_open()) {
+
+        while (infile.read(buffer, 32768)) {
+            
+               data->write(reinterpret_cast<char*>(buffer), 32768);
+            }
+       data->write(reinterpret_cast<char*>(buffer), infile.gcount());
+
+       infile.close();
+
+       
+    }
+     delete[] buffer;
+    
+    object_request.SetBody(data);
 
     // Set up AsyncCallerContext. Pass the S3 object name to the callback.
     auto context =

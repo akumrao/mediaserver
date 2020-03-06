@@ -4,14 +4,12 @@
 #include "net/UdpSocket.h"
 #include "base/test.h"
 #include "base/time.h"
-
+#include "upload.h"
 
 using std::endl;
 using namespace base;
 using namespace net;
 using namespace base::test;
-
-
 
 
 class testUdpServer : public UdpServer::Listener {
@@ -49,7 +47,43 @@ public:
         IP::GetAddressInfo(
                     remoteAddr, family, peerIp, peerPort);
             
-        std::cout  <<  "Received from " << peerIp << ":" << peerPort << " size:"<< len << std::endl;
+      
+        
+        
+      Packet packet;
+      memcpy(&packet,(void*)data,len);
+      
+      switch(packet.type)
+      {
+          case 0:
+          {   STrace <<  "Received from " << peerIp << ":" << peerPort << " size:"<< packet.len  << " sequence:"<< packet.sequence_number ;
+              LTrace("First Packet")
+              break;
+          }   
+          case 1:
+          {
+              STrace <<  "Received from " << peerIp << ":" << peerPort << " size:"<< packet.len  << " sequence:"<< packet.sequence_number ;
+             LTrace(packet.data)
+              break;
+          }
+
+          case 2:
+          {
+               STrace <<  "Received from " << peerIp << ":" << peerPort << " size:"<< packet.len  << " sequence:"<< packet.sequence_number ;
+              
+               LTrace(packet.data)
+                       
+               LTrace("Last Packet")
+              break;
+          }
+          default:
+          {
+              LError("fatal UPD pakcets are dropped, check the internet connection")
+          }
+              
+      
+      };
+    
         
     }
 
@@ -62,7 +96,7 @@ public:
 
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Error));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
  
         Application app;
@@ -80,7 +114,7 @@ int main(int argc, char** argv) {
             port = atoi(argv[2]);
         }
         
-        std::cout << "Udp listening at port " << port << std::endl << std::flush;
+        STrace << "Udp listening at port " << port << std::endl << std::flush;
         
         testUdpServer socket(ip, port);
         socket.start();
