@@ -3,8 +3,8 @@
 
 CC	= clang
 CXX     = clang++
-TARGET=runtestUdpClient # define the name of the executable
-SOURCES=$(wildcard testUdpClient.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
+TARGET=runAwsUdpClient # define the name of the executable
+SOURCES=$(wildcard awsUdpClient.cpp awsTcpClient.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 
@@ -18,7 +18,6 @@ LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
 LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto
 
-#SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
 
 
 ################################################################################

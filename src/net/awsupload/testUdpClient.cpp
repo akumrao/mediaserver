@@ -4,12 +4,15 @@
 #include "net/UdpSocket.h"
 #include "base/test.h"
 #include "base/time.h"
-
+#include "upload.h"
 
 using std::endl;
 using namespace base;
 using namespace net;
 using namespace base::test;
+
+
+char *clinetstorage[clientCount];
 
 class testUdpClient {
 public:
@@ -46,8 +49,6 @@ public:
 };
 
 
-
-
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
@@ -74,9 +75,9 @@ int main(int argc, char** argv) {
     }
 
 
-    for( int x=0; x < StorageCount; ++x )
+    for( int x=0; x < clientCount; ++x )
     {
-        backstorage[x] = new char[UdpDataSize];
+        clinetstorage[x] = new char[UdpDataSize];
     }
     
     testUdpClient socket(ip, port);
@@ -93,9 +94,9 @@ int main(int argc, char** argv) {
 
     init_packet.type =0;
      init_packet.sequence_number =-1;
-    init_packet.len = 256 ;
+    init_packet.len = UdpDataSize ;
     
-    strncpy( init_packet.data, filename.c_str(), 256);
+    strncpy( init_packet.data, filename.c_str(), UdpDataSize);
     
     char *send_buffer = (char*)malloc(size_of_packet);
     
@@ -116,11 +117,11 @@ int main(int argc, char** argv) {
         send_buffer = (char*)malloc(sizeof(struct Packet));
         
         
-        while (infile.read(backstorage[rem], UdpDataSize)) {
+        while (infile.read(clinetstorage[rem], UdpDataSize)) {
             packet.type =1;
             packet.sequence_number = bcst;
             packet.len = UdpDataSize;
-            memcpy( packet.data, backstorage[rem], UdpDataSize);
+            memcpy( packet.data, clinetstorage[rem], UdpDataSize);
             
             memset(send_buffer,0,size_of_packet);
             memcpy(send_buffer,(char*)&packet,size_of_packet);
@@ -128,14 +129,14 @@ int main(int argc, char** argv) {
             //char *output1 = str2md5(buffer[send_count], data_size);
 
             socket.send(send_buffer, size_of_packet);
-            rem = (++bcst)%StorageCount;
+            rem = (++bcst)%clientCount;
            
         }
         
         packet.type =2;
         packet.sequence_number = bcst;
         packet.len = infile.gcount();
-        memcpy( packet.data, backstorage[rem], infile.gcount());
+        memcpy( packet.data, clinetstorage[rem], infile.gcount());
             
         memset(send_buffer,0,size_of_packet);
         memcpy(send_buffer,(char*)&packet,size_of_packet);
@@ -147,9 +148,9 @@ int main(int argc, char** argv) {
     }
     
 
-    for( int x=0; x < StorageCount; ++x )
+    for( int x=0; x < clientCount; ++x )
     {
-        delete [] backstorage[x];
+        delete [] clinetstorage[x];
     }
 
     end_time = base::Application::GetTime();    

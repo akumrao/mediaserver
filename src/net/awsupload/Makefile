@@ -1,7 +1,7 @@
 
 
 # the target is obtained linking all .o files
-all: make1 make2 make3 make4
+all: make1 make2 
 
 make1:
 	make -f Makefile1
@@ -9,18 +9,11 @@ make1:
 make2:
 	make -f Makefile2
 
-make3:
-	make -f Makefile3
-
-make4:
-	make -f Makefile4
-
-
 
 purge: clean
 
 clean:
-	make -f Makefile1 purge && make -f Makefile2 purge && make -f Makefile3 purge  && make -f Makefile4 purge
+	make -f Makefile1 purge && make -f Makefile2 purge
 
 ###############################################################################
 ################################################################################
