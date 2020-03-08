@@ -40,7 +40,9 @@ private:
     int port;
     TcpConnection* tcpConn;
     unsigned int curPtr;
-  
+    
+    int lastPacketNo{0};
+    std::string fileName;
 };
 
 

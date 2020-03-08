@@ -50,6 +50,8 @@ void awsUdpClient::shutdown() {
 
 void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
+    STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
+    
     Packet packet;
     packet.type = type;
     packet.payload_number = payloadNo;
@@ -61,8 +63,6 @@ void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payload
     memcpy(send_buffer, (char*) &packet, size_of_packet);
 
     udpClient->send(send_buffer, size_of_packet);
-
-
 
 }
 
@@ -77,7 +77,6 @@ void awsUdpClient::sendFile(const std::string fileName) {
 
     if (infile.is_open()) {
 
-
         infile.seekg(0, infile.end);
         float length = infile.tellg();
         infile.seekg(0, infile.beg);
@@ -88,24 +87,18 @@ void awsUdpClient::sendFile(const std::string fileName) {
         int bcst = 0;
         int rem = 0;
 
-
-
         while (infile.read(clinetstorage[rem], UdpDataSize)) {
-
             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
-
             sendPacket(1, bcst, UdpDataSize, clinetstorage[rem]);
             rem = (++bcst) % clientCount;
-
         }
 
-        sendPacket(2, bcst, infile.gcount(), clinetstorage[rem]);
+        sendPacket(1, bcst, infile.gcount(), clinetstorage[rem]);
         infile.close();
     } else {
         SError << "Cannot open file: " << fileName ;
     }
-
 
     end_time = base::Application::GetTime();
 

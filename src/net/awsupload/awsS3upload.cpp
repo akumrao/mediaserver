@@ -1,5 +1,4 @@
 
-//snippet-start:[s3.cpp.put_object.inc]
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -7,7 +6,11 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
-//snippet-end:[s3.cpp.put_object.inc]
+#include "awsS3upload.h"
+
+const Aws::String region = "us-east-2";      // Optional
+const Aws::String s3_bucket_name = "ubercloudproject";
+
 /********************************************************************/
 /**
  * Check if file exists
@@ -20,8 +23,9 @@ inline bool file_exists(const std::string& name)
     return (stat(name.c_str(), &buffer) == 0);
 }
 
- std::mutex upload_mutex;
-std::condition_variable upload_variable;
+//std::mutex upload_mutex;
+//std::condition_variable upload_variable;
+
 void put_object_async_finished(const Aws::S3::S3Client* client, 
     const Aws::S3::Model::PutObjectRequest& request, 
     const Aws::S3::Model::PutObjectOutcome& outcome,
@@ -39,15 +43,21 @@ void put_object_async_finished(const Aws::S3::S3Client* client,
     }
 
     // Notify the thread that started the operation
-    upload_variable.notify_one();
+//    upload_variable.notify_one();
 }
 
 
-bool put_s3_object_async(const Aws::S3::S3Client& s3_client,
-    const Aws::String& s3_bucket_name,
-    const Aws::String& s3_object_name,
-    const std::string& file_name)
+bool put_s3_object_async( const Aws::String& s3_object_name, std::string &file_name)
 {
+
+    Aws::Client::ClientConfiguration clientConfig;
+    if (!region.empty())
+        clientConfig.region = region;
+
+    // Set up request
+    // snippet-start:[s3.cpp.put_object.code]
+    Aws::S3::S3Client s3_client(clientConfig);
+
     // Verify file_name exists
     if (!file_exists(file_name)) {
         std::cout << "ERROR: NoSuchFile: The specified file does not exist"
@@ -103,90 +113,32 @@ bool put_s3_object_async(const Aws::S3::S3Client& s3_client,
     
 }
 
-
-    
-
-/**********************************************************************/
-
-/**
- * Put an object into an Amazon S3 bucket
- */
-bool put_s3_object(const Aws::String& s3_bucket_name, 
-    const Aws::String& s3_object_name, 
-    const std::string& file_name, 
-    const Aws::String& region = "us-east-2")
+void awsInit()
 {
-    // Verify file_name exists
-    if (!file_exists(file_name)) {
-        std::cout << "ERROR: NoSuchFile: The specified file does not exist" 
-            << std::endl;
-        return false;
-    }
-
-    // If region is specified, use it
-    Aws::Client::ClientConfiguration clientConfig;
-    if (!region.empty())
-        clientConfig.region = region;
-
-    // Set up request
-    // snippet-start:[s3.cpp.put_object.code]
-    Aws::S3::S3Client s3_client(clientConfig);
-    Aws::S3::Model::PutObjectRequest object_request;
-
-//    object_request.SetBucket(s3_bucket_name);
-//    object_request.SetKey(s3_object_name);
-//    const std::shared_ptr<Aws::IOStream> input_data = 
-//        Aws::MakeShared<Aws::FStream>("SampleAllocationTag", 
-//                                      file_name.c_str(), 
-//                                      std::ios_base::in | std::ios_base::binary);
-//    object_request.SetBody(input_data);
-    
-    
-    ///////////////////////////////////////////////////////
-    
-     char buffer[]="arvind1 is working";
-    object_request.SetBucket(s3_bucket_name);
-    object_request.SetKey(s3_object_name);
-    
-    object_request.SetACL(Aws::S3::Model::ObjectCannedACL::public_read);
-    
-    auto data = Aws::MakeShared<Aws::StringStream>("PutObjectInputStream", std::stringstream::in | std::stringstream::out | std::stringstream::binary);
-    data->write(reinterpret_cast<char*>(buffer), strlen(buffer));
-     data->write(reinterpret_cast<char*>(buffer), strlen(buffer));
-      data->write(reinterpret_cast<char*>(buffer), strlen(buffer));
-    object_request.SetBody(data);
-
-    ///////////////////////////////////////////////////////
-
-    // Put the object
-    auto put_object_outcome = s3_client.PutObject(object_request);
-    if (!put_object_outcome.IsSuccess()) {
-        auto error = put_object_outcome.GetError();
-        std::cout << "ERROR: " << error.GetExceptionName() << ": " 
-            << error.GetMessage() << std::endl;
-        return false;
-    }
-    return true;
-    // snippet-end:[s3.cpp.put_object.code]
-}
-
-
-
-
-/**
- * Exercise put_s3_object()
- */
-int main(int argc, char** argv)
-{
-
     Aws::SDKOptions options;
     Aws::InitAPI(options);
+
+}
+
+void awsExit()
+{
+    Aws::SDKOptions options;
+    Aws::ShutdownAPI(options);
+
+}
+
+#if 0    
+
+int main(int argc, char** argv)
+{
+    awsInit();
+
     {
         // Assign these values before running the program
-        const Aws::String bucket_name = "ubercloudproject";
+       
         const Aws::String object_name = "test.mp4";
         const std::string file_name = "test.mp4";
-        const Aws::String region = "us-east-2";      // Optional
+      
 
         // Put the file into the S3 bucket
 //        if (put_s3_object(bucket_name, object_name, file_name, region)) {
@@ -196,14 +148,7 @@ int main(int argc, char** argv)
 //        }
         
         
-     Aws::Client::ClientConfiguration clientConfig;
-    if (!region.empty())
-        clientConfig.region = region;
 
-    // Set up request
-    // snippet-start:[s3.cpp.put_object.code]
-    Aws::S3::S3Client s3_client(clientConfig);
-    
 
 
         std::unique_lock<std::mutex> lock(upload_mutex);
@@ -224,6 +169,8 @@ int main(int argc, char** argv)
     
     }
     }
-    Aws::ShutdownAPI(options);
-}
+   
 
+   awsExit()
+}
+#endif

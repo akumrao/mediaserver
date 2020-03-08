@@ -2,20 +2,21 @@
 ### CUSTOMIZE BELOW HERE #######################################################
 
 CC	= clang
-CXX     = clang++
+CXX     = g++
 TARGET=runAwsUdpServer # define the name of the executable
-SOURCES=$(wildcard awsUdpServer.cpp  awsTcpServer.cpp  ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
+SOURCES=$(wildcard awsUdpServer.cpp  awsTcpServer.cpp awsS3upload.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 
-CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
+CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 
 
-CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
-              -D_GLIBCXX_USE_CXX11_ABI=0 \
+CPPFLAGS   := -I/data/del/aws-sdk-cpp/aws-cpp-sdk-core/include -I/data/del/aws-sdk-cpp/aws-cpp-sdk-s3/include -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
+               -DAWS_COMMON_USE_IMPORT_EXPORT -DAWS_EVENT_STREAM_USE_IMPORT_EXPORT -DAWS_SDK_VERSION_MAJOR=1 -DAWS_SDK_VERSION_MINOR=7 -DAWS_SDK_VERSION_PATCH=289 -DENABLE_CURL_CLIENT -DENABLE_OPENSSL_ENCRYPTION -DHAS_PATHCONF -DHAS_UMASK -DPLATFORM_LINUX \
               
-LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
+LDFLAGS   := -L/data/del/aws-sdk-cpp/build/aws-cpp-sdk-core -L/data/del/aws-sdk-cpp/build/aws-cpp-sdk-s3
 
 
-LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto
+
+LDLIBS    := -lpthread -laws-cpp-sdk-core -laws-cpp-sdk-s3 -lm -ldl -lssl -lcrypto
 
 
 

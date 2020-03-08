@@ -6,6 +6,7 @@
 #include "net/netInterface.h"
 #include "tcpUpload.h"
 #include "awsUdpServer.h"
+#include "awsS3upload.h"
 
 using std::endl;
 using namespace base;
@@ -106,7 +107,8 @@ public:
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
-
+    awsInit();
+    
     int port = 41038;
 
     std::string ip = "0.0.0.0";
@@ -130,8 +132,11 @@ int main(int argc, char** argv) {
     app.waitForShutdown([&](void*) {
 
         socket.shutdown();
+        awsExit();
+
 
     });
+
 
 
 
