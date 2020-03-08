@@ -6,6 +6,11 @@
 #define clientCount 100*1024
 #define serverCount 512*1024
 
+//type 0 for first upd packet. It contains file name
+//type 1 for contains file data in chunks
+
+
+
 struct Packet{
     uint8_t type;
     uint16_t payload_number;

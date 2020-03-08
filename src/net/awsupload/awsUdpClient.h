@@ -20,12 +20,13 @@ public:
     
     void sendFile(const std::string);
     void sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) ;
-
+    
+    char *clinetstorage[clientCount];
 private:
     UdpSocket *udpClient;
     std::string IP;
     int port;
-    char *clinetstorage[clientCount];
+
     
     int size_of_packet;
     char *send_buffer;

@@ -67,8 +67,8 @@ public:
         switch (packet.type) {
             case 1:
             {
-                LTrace("First TCP Packet received")
-                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
+                LTrace("First TCP Packet received. ")
+                STrace << "UDP Client connect at type " << (int) packet.type << " Port: " << packet.sequence_number;
 
                 udpsocket = new awsUdpClient(m_IP, packet.sequence_number);
                 udpsocket->start();
@@ -79,9 +79,9 @@ public:
             }
             case 2:
             {
-
-                LTrace("First TCP Packet received")
-                STrace << "TCP Received type " << packet.type << " payload:" << packet.sequence_number;
+                STrace << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
+                int rem = packet.sequence_number % clientCount;
+                udpsocket->sendPacket(1, packet.sequence_number, UdpDataSize, udpsocket->clinetstorage[rem]);
                 break;
             }
 

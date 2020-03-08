@@ -289,7 +289,7 @@ namespace base {
             if (len == 0)
                 return;
             
-             LTrace("TcpConnectionBase::Write " , len);
+            // LTrace("TcpConnectionBase::Write " , len);
 
              // First try uv_try_write(). In case it can not directly write all the given
             // data then build a uv_req_t and use uv_write().

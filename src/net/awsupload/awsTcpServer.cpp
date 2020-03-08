@@ -37,22 +37,7 @@ public:
 
     }
 
-    void sendPacket(Listener* connection, uint8_t type, uint16_t payload) {
-
-        STrace << "Send " << type << " payload " << payload;
-
-            TcpPacket tcpPacket;
-        int size_of_packet = sizeof (struct TcpPacket);
-        tcpPacket.type = type;
-        tcpPacket.sequence_number = payload;
-        
-        char *send_buffer = (char*)malloc(size_of_packet);
-        memset(send_buffer, 0, size_of_packet);
-        memcpy(send_buffer, (char*) &tcpPacket, size_of_packet);
-        connection->send(send_buffer, size_of_packet);
-        free(send_buffer);
-    }
-
+    
     void on_read(Listener* connection, const char* data, size_t len) {
        // STrace << "TCP server on_read: " << data << "len: " << len;
       ///  std::string send = "12345";
@@ -80,11 +65,11 @@ public:
                     // todo circular port allocation
                 }
                 
-                awsUdpServer  *socket  = new awsUdpServer(m_ip, port);
+                awsUdpServer  *socket  = new awsUdpServer(connection, m_ip, port);
                 socket->start();
                 udpPortManager[port]= socket;
                
-                sendPacket( connection, 1, port);
+                socket->sendTcpPacket( connection, 1, port);
               
                 break;
             }
@@ -99,7 +84,7 @@ public:
             case 3:
             {
                 LTrace("First TCP Packet received")
-                STrace << "TCP Received type " <<  packet.type << " payload:" << packet.sequence_number;
+                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
                 break;
                 break;
             }
