@@ -5,17 +5,17 @@
 #include "base/base.h"
 #include "net/UdpSocket.h"
 #include "udpUpload.h"
+#include "net/TcpConnection.h"
 
 
 using namespace base;
 using namespace net;
 
 
-
 class awsUdpServer : public UdpServer::Listener {
 public:
 
-    awsUdpServer(std::string IP, int port) : IP(IP), port(port), curPtr(0) {
+    awsUdpServer(TcpConnection* tcpConn, std::string IP, int port) : tcpConn(tcpConn), IP(IP), port(port), curPtr(0) {
 
         for (int x = 0; x < serverCount; ++x) {
             serverstorage[x] = new char[UdpDataSize];
@@ -29,14 +29,18 @@ public:
     void shutdown();
 
     void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) ;
+    void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload);
+    char *serverstorage[serverCount];
+
+private:
 
     UdpServer *udpServer;
 
     std::string IP;
     int port;
-
+    TcpConnection* tcpConn;
     unsigned int curPtr;
-    char *serverstorage[serverCount];
+  
 };
 
 

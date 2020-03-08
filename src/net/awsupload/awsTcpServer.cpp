@@ -40,7 +40,6 @@ public:
     
     void on_read(Listener* connection, const char* data, size_t len) {
        // STrace << "TCP server on_read: " << data << "len: " << len;
-      ///  std::string send = "12345";
         //connection->send((const char*) send.c_str(), 5);
         
         if (len != sizeof (struct TcpPacket)) {
@@ -65,11 +64,11 @@ public:
                     // todo circular port allocation
                 }
                 
-                awsUdpServer  *socket  = new awsUdpServer(connection, m_ip, port);
+                awsUdpServer  *socket  = new awsUdpServer((TcpConnection*)connection, m_ip, port);
                 socket->start();
                 udpPortManager[port]= socket;
                
-                socket->sendTcpPacket( connection, 1, port);
+                socket->sendTcpPacket( (TcpConnection*)connection, 1, port);
               
                 break;
             }
