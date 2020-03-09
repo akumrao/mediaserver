@@ -54,7 +54,7 @@ public:
                
                 STrace << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
-                uint16_t port = 51038;
+                uint16_t port = 46001;
 
                 int portmangersize = udpPortManager.size();
                 if (portmangersize) {
@@ -105,8 +105,10 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
     awsInit();
-    
-    int port = 41038;
+    //TCP PORT RANGE 47000-47999
+    //UDP PORT RANGE 46000-46999
+
+    int port = 47001;
 
     std::string ip = "0.0.0.0";
 

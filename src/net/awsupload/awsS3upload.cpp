@@ -47,7 +47,7 @@ void put_object_async_finished1(const Aws::S3::S3Client* client,
         std::cout << "put_object_async_finished: Finished uploading "
                 << context->GetUUID() << std::endl;
         
-        system("SendEmail"); 
+        system("SendMail"); 
         
     } else {
         auto error = outcome.GetError();
