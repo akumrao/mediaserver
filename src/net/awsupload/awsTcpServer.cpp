@@ -29,13 +29,10 @@ public:
         // socket.send("Arvind", "127.0.0.1", 7331);
         delete tcpServer;
         tcpServer = nullptr;
-
     }
 
     void on_close(Listener* connection) {
-
         std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
-
     }
 
     
@@ -54,8 +51,8 @@ public:
         switch (packet.type) {
             case 0:
             {
-                LTrace("First TCP Packet received")
-                STrace << "TCP Packet type " <<  (int) packet.type << " payload: " << packet.sequence_number;
+               
+                STrace << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
                 uint16_t port = 51038;
 
@@ -73,21 +70,21 @@ public:
               
                 break;
             }
-            case 2:
-            {
-                
-                LTrace("First TCP Packet received")
-                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
-                break;
-            }
-
-            case 3:
-            {
-                LTrace("First TCP Packet received")
-                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
-                break;
-                break;
-            }
+//            case 2:
+//            {
+//                
+//                LTrace("First TCP Packet received")
+//                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
+//                break;
+//            }
+//
+//            case 3:
+//            {
+//                LTrace("First TCP Packet received")
+//                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
+//                break;
+//                break;
+//            }
             default:
             {
                 LError("Fatal TCP: Not a valid state")

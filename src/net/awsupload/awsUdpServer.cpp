@@ -94,27 +94,37 @@ using namespace net;
                 STrace << "Received from " << peerIp << ":" << peerPort << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
                 //LTrace(packet.payload)
                 if (packet.payload_number == curPtr)
-                    memcpy(&serverstorage[curPtr++], packet.payload, packet.payloadlen);
+                    memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
                 else {
                     while (packet.payload_number > curPtr) {
                         sendTcpPacket(tcpConn, 2, curPtr);
-                        SError << "Packet lost. Sequence No: " << curPtr++;
+                        SInfo << "Packet lost. Sequence No: " << curPtr++;
                     }
                     if (packet.payload_number < curPtr) {
-                        STrace << "Lost Packet found. Sequence No: " << packet.payload_number;
-                         memcpy(&serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
+                        SInfo << "Lost Packet found. Sequence No: " << packet.payload_number;
+                         memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
                         break;
                     }
 
-                    memcpy(&serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
+                    memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
                     ++curPtr;
                 }
                 
+             
+                LInfo( curPtr % ((lastPacketNo+1)/10 ))
+                
                 if(curPtr > lastPacketNo )
-                {
+                {  
+                    sendTcpPacket(tcpConn, 3, 100);
+                
+                    lastPacketLen = packet.payloadlen;
                     LTrace("Saving S3 file ", fileName )
-                    const Aws::String object_name = "test.mp4";
-                    put_s3_object_async(object_name, fileName );   
+                    const Aws::String object_name = fileName.c_str();
+                    put_s3_object_async(object_name,serverstorage, lastPacketNo , lastPacketLen );   
+                }
+                else if( !( curPtr % ((lastPacketNo+1)/10))     )
+                {
+                    sendTcpPacket(tcpConn, 3,   ( curPtr / ((lastPacketNo+1)/10))   );
                 }
                 break;
             }

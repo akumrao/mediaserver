@@ -30,8 +30,9 @@ public:
 
     void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) ;
     void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload);
+    
     char *serverstorage[serverCount];
-
+    
 private:
 
     UdpServer *udpServer;
@@ -42,6 +43,7 @@ private:
     unsigned int curPtr;
     
     int lastPacketNo{0};
+    int lastPacketLen;
     std::string fileName;
 };
 

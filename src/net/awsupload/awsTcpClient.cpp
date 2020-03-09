@@ -57,6 +57,7 @@ public:
         // connection->send((const char*) send.c_str(), 5);
 
         if (len != sizeof (struct TcpPacket)) {
+            LTrace(data)
             LError("Fatal error: Some part of packet lost. ")
             return;
         }
@@ -67,8 +68,8 @@ public:
         switch (packet.type) {
             case 1:
             {
-                LTrace("First TCP Packet received. ")
-                STrace << "UDP Client connect at type " << (int) packet.type << " Port: " << packet.sequence_number;
+                //LTrace("First TCP Packet received. ")
+                STrace << "UDP Client connect at " << " Port: " << packet.sequence_number;
 
                 udpsocket = new awsUdpClient(m_IP, packet.sequence_number);
                 udpsocket->start();
@@ -79,16 +80,27 @@ public:
             }
             case 2:
             {
-                STrace << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
+                SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
+            
+                uint16_t payloadsize = UdpDataSize;
+                
+                if(packet.sequence_number == udpsocket->lastPacketNo )
+                {
+                    payloadsize =udpsocket->lastPacketLen;
+                    SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " <<  payloadsize;
+                }
+                        
+                        
                 int rem = packet.sequence_number % clientCount;
-                udpsocket->sendPacket(1, packet.sequence_number, UdpDataSize, udpsocket->clinetstorage[rem]);
+                udpsocket->sendPacket(1, packet.sequence_number, payloadsize, udpsocket->clinetstorage[rem]);
                 break;
             }
 
             case 3:
             {
-                LTrace("First TCP Packet received")
                 STrace << "TCP Received type " << packet.type << " payload:" << packet.sequence_number;
+                SInfo << "Percentage uploaded " << packet.sequence_number;
+            
                 break;
             }
             default:

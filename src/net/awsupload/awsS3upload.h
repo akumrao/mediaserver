@@ -1,10 +1,7 @@
 
 #include <aws/core/Aws.h>
-#include <iostream>
-#include <fstream>
 
-
-bool put_s3_object_async( const Aws::String& s3_object_name, std::string &file_name);
+bool put_s3_object_async( const Aws::String& s3_object_name,  char *serverstorage[] , int lastPacketNO, int lastPacketLen) ;
 void awsInit();
 void awsExit();
 

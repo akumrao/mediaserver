@@ -1,7 +1,8 @@
 #ifndef UDP_UPLOAD_H
 #define UDP_UPLOAD_H
 
-
+// #define UdpDataSize 70 for textfile
+ 
 #define UdpDataSize 32768
 #define clientCount 100*1024
 #define serverCount 512*1024

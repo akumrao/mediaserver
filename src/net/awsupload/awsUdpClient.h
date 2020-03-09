@@ -19,9 +19,11 @@ public:
     void shutdown() ;
     
     void sendFile(const std::string);
-    void sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) ;
-    
+    void sendPacket(uint8_t type, uint16_t payloadNo,  uint16_t payloadsize, char *payload) ;
+       
     char *clinetstorage[clientCount];
+    uint16_t lastPacketLen;
+    uint16_t lastPacketNo;
 private:
     UdpSocket *udpClient;
     std::string IP;
@@ -31,7 +33,7 @@ private:
     int size_of_packet;
     char *send_buffer;
       
-
+ 
 };
 
 #if 0

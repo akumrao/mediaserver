@@ -50,6 +50,8 @@ void awsUdpClient::shutdown() {
 
 void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
+  
+    
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
     Packet packet;
@@ -57,8 +59,8 @@ void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payload
     packet.payload_number = payloadNo;
     packet.payloadlen = payloadsize;
 
-    strncpy(packet.payload, payload, payloadsize);
-
+            
+    memcpy(packet.payload, payload, payloadsize);
     memset(send_buffer, 0, size_of_packet);
     memcpy(send_buffer, (char*) &packet, size_of_packet);
 
@@ -81,8 +83,8 @@ void awsUdpClient::sendFile(const std::string fileName) {
         float length = infile.tellg();
         infile.seekg(0, infile.beg);
 
-        int block = ceil(length / UdpDataSize);
-        sendPacket(0, block, UdpDataSize, (char*)fileName.c_str());
+        lastPacketNo = ceil(length / UdpDataSize);
+        sendPacket(0, lastPacketNo, fileName.length()+1, (char*)fileName.c_str());
 
         int bcst = 0;
         int rem = 0;
@@ -90,10 +92,11 @@ void awsUdpClient::sendFile(const std::string fileName) {
         while (infile.read(clinetstorage[rem], UdpDataSize)) {
             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
-            sendPacket(1, bcst, UdpDataSize, clinetstorage[rem]);
+            sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
             rem = (++bcst) % clientCount;
         }
-
+        
+        lastPacketLen = infile.gcount();
         sendPacket(1, bcst, infile.gcount(), clinetstorage[rem]);
         infile.close();
     } else {
