@@ -9,6 +9,7 @@
 #include "awsS3upload.h"
 #include "udpUpload.h"
 
+
 const Aws::String region = "us-east-2"; // Optional
 const Aws::String s3_bucket_name = "ubercloudproject";
 
@@ -138,12 +139,16 @@ void awsInit() {
     // Set up request
     // snippet-start:[s3.cpp.put_object.code]
     s3_client = new Aws::S3::S3Client(clientConfig);
-
+   // dynamoClient = new Aws::DynamoDB::DynamoDBClient(clientConfig);
 
 }
 
 void awsExit() {
 
+    delete s3_client;
+    
+//    delete dynamoClient;
+    
     Aws::ShutdownAPI(options);
 
 }

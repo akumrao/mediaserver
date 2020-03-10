@@ -1,3 +1,7 @@
+#ifndef AWS_UDP_CLIENT
+#define AWS_UDP_CLIENT
+
+
 #include "base/base.h"
 #include "net/UdpSocket.h"
 #include "udpUpload.h"
@@ -35,6 +39,9 @@ private:
       
  
 };
+
+#endif  //AWS_UDP_CLIENT
+
 
 #if 0
 int main(int argc, char** argv) {

@@ -1,9 +1,15 @@
 
+#ifndef AWS_S3_SERVER_H
+#define AWS_S3_SERVER_H
+
 #include <aws/core/Aws.h>
 
 bool put_s3_object_async( const Aws::String& s3_object_name,  char *serverstorage[] , int lastPacketNO, int lastPacketLen) ;
 void awsInit();
 void awsExit();
+
+
+#endif  //AWS_S3_SERVER_H
 
 
 #if 0    
