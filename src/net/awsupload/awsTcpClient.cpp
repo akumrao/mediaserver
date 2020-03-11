@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 
 
     int port = 47001;
-    std::string ip = "18.221.232.217";
+    std::string ip = "52.14.171.173";
     std::string filename;
 
     if (argc > 1) {

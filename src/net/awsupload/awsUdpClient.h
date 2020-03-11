@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     Application app;
 
     int port = 51038;
-    std::string ip = "18.221.232.217";
+    std::string ip = "52.14.171.173";
     std::string filename;
     if (argc > 1) {
         filename = argv[1];

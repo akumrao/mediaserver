@@ -2,6 +2,7 @@
 #include "awsUdpClient.h"
 #include "base/logger.h"
 #include "base/application.h"
+#include "base/platform.h"
 #include <math.h>       /* ceil */
 
 
@@ -94,6 +95,8 @@ void awsUdpClient::sendFile(const std::string fileName) {
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
             rem = (++bcst) % clientCount;
+            
+            base::sleep(1000);
         }
         
         lastPacketLen = infile.gcount();
@@ -120,7 +123,7 @@ void awsUdpClient::sendFile(const std::string fileName) {
         Application app;
 
         int port = 51038;
-        std::string ip = "18.221.232.217";
+        std::string ip = "52.14.171.173";
         std::string filename;
         if (argc > 1) {
             filename = argv[1];
