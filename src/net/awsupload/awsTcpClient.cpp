@@ -14,13 +14,19 @@ using namespace net;
 class awsTcpClient : public TcpConnection {
 public:
 
-    awsTcpClient(const std::string ip, const std::string fileName) : m_IP(ip), m_fileName(fileName), udpsocket(nullptr),
+    awsTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port), udpsocket(nullptr),
     TcpConnection(this) {
     }
 
-    void start(std::string ip, int port) {
-
-        Connect(ip, port);
+    void start() {
+        Connect(m_IP, m_port);
+    }
+    
+    void upload( std::string fileName, std::string driverId, std::string metaData)
+    {
+       m_fileName = fileName;
+       m_driverId  = driverId;
+       m_metaData = metaData;
     }
 
     void sendPacket(uint8_t type, uint16_t payload) {
@@ -72,9 +78,9 @@ public:
                 STrace << "UDP Client connect at " << " Port: " << packet.sequence_number;
 
                 udpsocket = new awsUdpClient(m_IP, packet.sequence_number);
+                udpsocket->upload( m_fileName, m_driverId, m_metaData); 
+
                 udpsocket->start();
-                
-                udpsocket->sendFile(m_fileName);
 
                 break;
             }
@@ -113,9 +119,15 @@ public:
 
     // TcpConnection *tcpClient;
 
+private:
     awsUdpClient *udpsocket;
     std::string m_IP;
+
+    int m_port;
+    
     std::string m_fileName;
+    std::string m_driverId;
+    std::string m_metaData;
 
 };
 
@@ -141,8 +153,13 @@ int main(int argc, char** argv) {
         port = atoi(argv[3]);
     }
 
-    awsTcpClient socket(ip, filename);
-    socket.start(ip, port);
+    awsTcpClient socket(ip, port);
+    
+    std::string metadata = "file:driver-1234-1232323.mp4 gps-latitude:28.674109 gps-longitude:77.438009 timestamp:20200309194530 uploadmode:normal";
+
+    socket.upload( filename, "driver-1234", metadata);
+            
+    socket.start();
 
     app.waitForShutdown([&](void*) {
         socket.shutdown();

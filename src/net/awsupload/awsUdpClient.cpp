@@ -31,10 +31,13 @@ awsUdpClient::~awsUdpClient() {
     delete udpClient;
 }
 
-void awsUdpClient::start() {
+void awsUdpClient::run() {
+    
     LTrace("start UDP client")
     udpClient = new UdpSocket(IP, port);
     udpClient->connect();
+    
+     sendFile(m_fileName);
 
 }
 
@@ -69,6 +72,10 @@ void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payload
 
 }
 
+
+
+
+
 void awsUdpClient::sendFile(const std::string fileName) {
 
     int64_t start_time;
@@ -85,7 +92,9 @@ void awsUdpClient::sendFile(const std::string fileName) {
         infile.seekg(0, infile.beg);
 
         lastPacketNo = ceil(length / UdpDataSize);
-        sendPacket(0, lastPacketNo, fileName.length()+1, (char*)fileName.c_str());
+        
+        std::string mtTmp = m_driverId  +";" + m_metaData;
+        sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
 
         int bcst = 0;
         int rem = 0;
@@ -96,7 +105,7 @@ void awsUdpClient::sendFile(const std::string fileName) {
             sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
             rem = (++bcst) % clientCount;
             
-            base::sleep(1000);
+            base::sleep(100);
         }
         
         lastPacketLen = infile.gcount();

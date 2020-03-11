@@ -19,6 +19,11 @@ GetItem to get Item in table
 
 #include <aws/dynamodb/model/GetItemRequest.h>
 
+
+Aws::DynamoDB::DynamoDBClient *dynamoClient;
+const Aws::String region = "us-east-2"; // Optional
+Aws::Client::ClientConfiguration clientConfig1;
+
 #define PRIMERYKEY "driverid"
 const Aws::String table = "UberDriverInfo";
 
@@ -53,7 +58,20 @@ void CreateTable() {
     }
 
 }
+void putItemFinished(const Aws::DynamoDB::DynamoDBClient* client,
+        const Aws::DynamoDB::Model::PutItemRequest& request,
+        const Aws::DynamoDB::Model::PutItemOutcome& result,
+        const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
 
+    if (result.IsSuccess()) {
+        std::cout << "added row item" << std::endl;
+    } else {
+        std::cout << "Failed to create table: " << result.GetError().GetMessage();
+    }
+    // Notify the thread that started the operation
+    //    upload_variable.notify_one();
+
+}
 int PutItem(std::string driverName, std::string jsonArray) {
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -83,12 +101,17 @@ int PutItem(std::string driverName, std::string jsonArray) {
         }
     }
 
-    const Aws::DynamoDB::Model::PutItemOutcome result = dynamoClient->PutItem(pir);
-    if (!result.IsSuccess()) {
-        std::cout << result.GetError().GetMessage() << std::endl;
-        return 1;
-    }
+//    const Aws::DynamoDB::Model::PutItemOutcome result = dynamoClient->PutItem(pir);
+//    if (!result.IsSuccess()) {
+//        std::cout << result.GetError().GetMessage() << std::endl;
+//        return 1;
+//    }
 
+    auto context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
+    context->SetUUID("UniqueRequestKey");
+
+    dynamoClient->PutItemAsync(pir, &putItemFinished, context);
+    
     return 0;
     //  std::cout << "Done!" << std::endl;
     ///////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +156,21 @@ int GetItem(std::string driverName) {
         std::cout << "Failed to get item: " << result.GetError().GetMessage();
     }
 }
+
+
+
+void dbInit() {
+
+dynamoClient = new Aws::DynamoDB::DynamoDBClient(clientConfig1);
+
+}
+
+void dbExit() {
+
+    delete dynamoClient;
+  
+}
+
 
 #if 0
 

@@ -33,6 +33,9 @@ public:
     
     char *serverstorage[serverCount];
     
+    void savetoS3();
+    void savetoDB();
+    
 private:
 
     UdpServer *udpServer;
@@ -44,7 +47,9 @@ private:
     
     int lastPacketNo{0};
     int lastPacketLen;
-    std::string fileName;
+    std::string driverId;
+    std::string metadata;
+    
 };
 
 

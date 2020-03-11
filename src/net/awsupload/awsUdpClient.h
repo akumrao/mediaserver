@@ -4,31 +4,41 @@
 
 #include "base/base.h"
 #include "net/UdpSocket.h"
+#include "base/thread.h"
 #include "udpUpload.h"
 //using std::endl;
 using namespace base;
 using namespace net;
 
 
-class awsUdpClient {
+class awsUdpClient: public base::Thread {
 public:
 
     awsUdpClient(std::string IP, int port) ;
     ~awsUdpClient();
     
-    void start() ;
+    void run() ;
 
    // void send(char* data, unsigned int lent);
 
     void shutdown() ;
     
-    void sendFile(const std::string);
+ 
+   void upload( std::string fileName, std::string driverId, std::string metaData)
+    {
+       m_fileName = fileName;
+       m_driverId  = driverId;
+       m_metaData = metaData;
+    }
+ 
     void sendPacket(uint8_t type, uint16_t payloadNo,  uint16_t payloadsize, char *payload) ;
        
     char *clinetstorage[clientCount];
     uint16_t lastPacketLen;
     uint16_t lastPacketNo;
 private:
+    
+    void sendFile(const std::string);
     UdpSocket *udpClient;
     std::string IP;
     int port;
@@ -37,7 +47,9 @@ private:
     int size_of_packet;
     char *send_buffer;
       
- 
+    std::string m_fileName;
+    std::string m_driverId;
+    std::string m_metaData;
 };
 
 #endif  //AWS_UDP_CLIENT

@@ -78,7 +78,17 @@ using namespace net;
                 STrace << "Received from " << peerIp << ":" << peerPort <<  " Payload Size:" << packet.payloadlen << " Last Packet NO:" << packet.payload_number -1;
 
                 LTrace(packet.payload)
-                fileName =   packet.payload;      
+                
+                
+                std::vector<std::string> tmp =  base::util::split( packet.payload, ";",1);  
+                if(tmp.size() > 1 )
+                {
+                    driverId = tmp[0];
+                    metadata = tmp[1];
+                }
+                
+                STrace << " S3 file " <<  driverId  << ".mp4 db item " << metadata;
+                
                 if (curPtr) {
                     LError("Fatal error: Two Udp streams are not possible on one port. ")
                 }
@@ -118,9 +128,9 @@ using namespace net;
                     sendTcpPacket(tcpConn, 3, 100);
                 
                     lastPacketLen = packet.payloadlen;
-                    LTrace("Saving S3 file ", fileName )
-                    const Aws::String object_name = fileName.c_str();
-                    put_s3_object_async(object_name,serverstorage, lastPacketNo , lastPacketLen );   
+                    
+                    savetoS3();
+                    savetoDB();
                 }
                 else if( !( curPtr % ((lastPacketNo+1)/10))     )
                 {
@@ -138,5 +148,21 @@ using namespace net;
         };
 
     }
-
     
+    
+    void awsUdpServer::savetoS3() {
+
+        std::string driverIdTmp = driverId +".mp4";
+        LTrace("Saving S3 file ", driverIdTmp )
+        const Aws::String object_name = driverIdTmp.c_str();
+        put_s3_object_async(object_name,serverstorage, lastPacketNo , lastPacketLen );   
+    }
+
+
+      void awsUdpServer::savetoDB() {
+    
+       PutItem( driverId , metadata);
+
+ 
+    }
+

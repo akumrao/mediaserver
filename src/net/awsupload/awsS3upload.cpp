@@ -7,14 +7,14 @@
 #include <fstream>
 #include <sys/stat.h>
 #include "awsS3upload.h"
+#include "awsDynamodb.h"
 #include "udpUpload.h"
 
 
 const Aws::String region = "us-east-2"; // Optional
-const Aws::String s3_bucket_name = "ubercloudproject";
-
-//const Aws::String bucket_name = "ubercloudproject";
 Aws::Client::ClientConfiguration clientConfig;
+
+const Aws::String s3_bucket_name = "ubercloudproject";
 
 // Set up request
 // snippet-start:[s3.cpp.put_object.code]
@@ -48,7 +48,7 @@ void put_object_async_finished1(const Aws::S3::S3Client* client,
         std::cout << "put_object_async_finished: Finished uploading "
                 << context->GetUUID() << std::endl;
         
-        system("SendMail"); 
+        //system("SendMail"); 
         
     } else {
         auto error = outcome.GetError();
@@ -139,16 +139,15 @@ void awsInit() {
     // Set up request
     // snippet-start:[s3.cpp.put_object.code]
     s3_client = new Aws::S3::S3Client(clientConfig);
-   // dynamoClient = new Aws::DynamoDB::DynamoDBClient(clientConfig);
+    dbInit();
 
 }
 
 void awsExit() {
 
     delete s3_client;
-    
-//    delete dynamoClient;
-    
+    dbExit();
+
     Aws::ShutdownAPI(options);
 
 }
