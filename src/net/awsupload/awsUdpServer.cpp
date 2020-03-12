@@ -8,6 +8,7 @@
 #include "awsUdpServer.h"
 #include "tcpUpload.h"
 #include "awsS3upload.h"
+#include "awsDynamodb.h"
 
 using std::endl;
 using namespace base;
@@ -80,14 +81,18 @@ using namespace net;
                 LTrace(packet.payload)
                 
                 
-                std::vector<std::string> tmp =  base::util::split( packet.payload, ";",1);  
+                std::vector<std::string> tmp =  base::util::split( packet.payload, ';',1);  
                 if(tmp.size() > 1 )
                 {
                     driverId = tmp[0];
                     metadata = tmp[1];
+                    sharedS3File = driverId + std::to_string(Application::GetTime())+ ".mp4";
                 }
                 
-                STrace << " S3 file " <<  driverId  << ".mp4 db item " << metadata;
+                
+                STrace << " S3 shared file " <<  sharedS3File; 
+                STrace << "metadata " << metadata;
+                STrace << "driverid " << driverId;
                 
                 if (curPtr) {
                     LError("Fatal error: Two Udp streams are not possible on one port. ")
@@ -128,9 +133,10 @@ using namespace net;
                     sendTcpPacket(tcpConn, 3, 100);
                 
                     lastPacketLen = packet.payloadlen;
+                     savetoS3();
+                     savetoDB();
                     
-                    savetoS3();
-                    savetoDB();
+                   
                 }
                 else if( !( curPtr % ((lastPacketNo+1)/10))     )
                 {
@@ -152,17 +158,15 @@ using namespace net;
     
     void awsUdpServer::savetoS3() {
 
-        std::string driverIdTmp = driverId +".mp4";
-        LTrace("Saving S3 file ", driverIdTmp )
+        std::string driverIdTmp = sharedS3File ;
+        
+        LTrace("Saving S3 file ", "https://ubercloudproject.s3.amazonaws.com/" , sharedS3File )
         const Aws::String object_name = driverIdTmp.c_str();
         put_s3_object_async(object_name,serverstorage, lastPacketNo , lastPacketLen );   
     }
 
 
-      void awsUdpServer::savetoDB() {
-    
+    void awsUdpServer::savetoDB() {
        PutItem( driverId , metadata);
-
- 
     }
 

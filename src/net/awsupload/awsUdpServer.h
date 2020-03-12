@@ -50,6 +50,8 @@ private:
     std::string driverId;
     std::string metadata;
     
+    std::string sharedS3File;
+    
 };
 
 

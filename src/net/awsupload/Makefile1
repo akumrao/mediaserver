@@ -2,7 +2,7 @@
 ### CUSTOMIZE BELOW HERE #######################################################
 
 CC	= clang
-CXX     = clang++
+CXX     = g++
 TARGET=runAwsUdpServer # define the name of the executable
 SOURCES=$(wildcard awsUdpServer.cpp  awsTcpServer.cpp awsS3upload.cpp awsDynamodb.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 

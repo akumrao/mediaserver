@@ -1,4 +1,4 @@
-
+#include "base/logger.h"
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -9,7 +9,7 @@
 #include "awsS3upload.h"
 #include "awsDynamodb.h"
 #include "udpUpload.h"
-
+using namespace base;
 
 const Aws::String region = "us-east-2"; // Optional
 Aws::Client::ClientConfiguration clientConfig;
@@ -45,15 +45,15 @@ void put_object_async_finished1(const Aws::S3::S3Client* client,
         const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
     // Output operation status
     if (outcome.IsSuccess()) {
-        std::cout << "put_object_async_finished: Finished uploading "
-                << context->GetUUID() << std::endl;
+        STrace << "put_object_async_finished: Finished uploading "
+                << context->GetUUID();
         
         //system("SendMail"); 
         
     } else {
         auto error = outcome.GetError();
-        std::cout << "ERROR: " << error.GetExceptionName() << ": "
-                << error.GetMessage() << std::endl;
+        SError << "ERROR: " << error.GetExceptionName() << ": "
+                << error.GetMessage() ;
     }
 
     // Notify the thread that started the operation

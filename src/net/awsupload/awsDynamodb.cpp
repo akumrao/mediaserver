@@ -3,6 +3,7 @@ Create Table to Create table
 PutItem to put item in table
 GetItem to get Item in table
  *************************************/
+#include "base/logger.h"
 #include "awsDynamodb.h"
 #include <aws/core/Aws.h>
 #include <aws/core/utils/Outcome.h> 
@@ -19,6 +20,7 @@ GetItem to get Item in table
 
 #include <aws/dynamodb/model/GetItemRequest.h>
 
+using namespace base;
 
 Aws::DynamoDB::DynamoDBClient *dynamoClient;
 const Aws::String region = "us-east-2"; // Optional
@@ -29,8 +31,7 @@ const Aws::String table = "UberDriverInfo";
 
 void CreateTable() {
 
-    std::cout << "Creating table " << table <<
-            " with a simple primary key: " << PRIMERYKEY << std::endl;
+    std::cout << "Creating table " << table << " with a simple primary key: " << PRIMERYKEY << std::endl;
 
     Aws::DynamoDB::Model::CreateTableRequest req;
 
@@ -51,31 +52,32 @@ void CreateTable() {
 
     const Aws::DynamoDB::Model::CreateTableOutcome& result = dynamoClient->CreateTable(req);
     if (result.IsSuccess()) {
-        std::cout << "Table \"" << result.GetResult().GetTableDescription().GetTableName() <<
-                " created!" << std::endl;
+        STrace << "Table \"" << result.GetResult().GetTableDescription().GetTableName() <<    " created!";
     } else {
-        std::cout << "Failed to create table: " << result.GetError().GetMessage();
+        SError << "Failed to create table: " << result.GetError().GetMessage();
     }
 
 }
+
 void putItemFinished(const Aws::DynamoDB::DynamoDBClient* client,
         const Aws::DynamoDB::Model::PutItemRequest& request,
         const Aws::DynamoDB::Model::PutItemOutcome& result,
         const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
 
     if (result.IsSuccess()) {
-        std::cout << "added row item" << std::endl;
+        STrace << "added row item" << std::endl;
     } else {
-        std::cout << "Failed to create table: " << result.GetError().GetMessage();
+        SError << "Failed to create table: " << result.GetError().GetMessage();
     }
     // Notify the thread that started the operation
     //    upload_variable.notify_one();
 
 }
+
 int PutItem(std::string driverName, std::string jsonArray) {
 
     ////////////////////////////////////////////////////////////////////////////////////
-
+    
     const Aws::String name(driverName.c_str());
 
     Aws::DynamoDB::Model::PutItemRequest pir;
@@ -84,9 +86,19 @@ int PutItem(std::string driverName, std::string jsonArray) {
     Aws::DynamoDB::Model::AttributeValue av;
     av.SetS(name);
     pir.AddItem(PRIMERYKEY, av);
-
-    const Aws::String args(jsonArray.c_str());
-    const Aws::Vector<Aws::String>& fldspace = Aws::Utils::StringUtils::Split(args, ' ');
+    Aws::String args(jsonArray.c_str());
+    
+    char delimiter1[] = { '{', 0 };
+    char delimiter2[] = { '}', 0 };
+    char delimiter3[] = { ' ', 0 };
+   
+    
+    Aws::Utils::StringUtils::Replace(args, delimiter1, "");
+    Aws::Utils::StringUtils::Replace(args, delimiter2, "");
+    Aws::Utils::StringUtils::Replace(args, delimiter3, "");
+        
+   args = args +",sharedfile:" +  driverName.c_str(); 
+    const Aws::Vector<Aws::String>& fldspace = Aws::Utils::StringUtils::Split(args, ',');
 
     for (int x = 0; x < fldspace.size(); x++) {
         const Aws::String arg(fldspace[x]);
@@ -101,20 +113,19 @@ int PutItem(std::string driverName, std::string jsonArray) {
         }
     }
 
-//    const Aws::DynamoDB::Model::PutItemOutcome result = dynamoClient->PutItem(pir);
-//    if (!result.IsSuccess()) {
-//        std::cout << result.GetError().GetMessage() << std::endl;
-//        return 1;
-//    }
-
     auto context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
     context->SetUUID("UniqueRequestKey");
 
     dynamoClient->PutItemAsync(pir, &putItemFinished, context);
-    
+    //    if (!result.IsSuccess()) {
+    //        std::cout << result.GetError().GetMessage() << std::endl;
+    //        return 1;
+    //    }
+
     return 0;
     //  std::cout << "Done!" << std::endl;
     ///////////////////////////////////////////////////////////////////////////////////
+
 }
 
 int GetItem(std::string driverName) {
@@ -157,18 +168,19 @@ int GetItem(std::string driverName) {
     }
 }
 
-
-
 void dbInit() {
 
-dynamoClient = new Aws::DynamoDB::DynamoDBClient(clientConfig1);
+    if (!region.empty())
+    clientConfig1.region = region;
+
+    dynamoClient = new Aws::DynamoDB::DynamoDBClient(clientConfig1);
 
 }
 
 void dbExit() {
 
     delete dynamoClient;
-  
+
 }
 
 

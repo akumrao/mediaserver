@@ -7,6 +7,7 @@
 #include "tcpUpload.h"
 #include "awsUdpServer.h"
 #include "awsS3upload.h"
+#include "awsDynamodb.h"
 
 using std::endl;
 using namespace base;
@@ -105,6 +106,13 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
     awsInit();
+    
+    // std::string jsonArray = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
+    // std::cout << jsonArray << std::endl << std::flush;
+    // PutItem("driver12345", jsonArray);
+    
+   // PutItem( driverId , metadata);
+    
     //TCP PORT RANGE 47000-47999
     //UDP PORT RANGE 46000-46999
 

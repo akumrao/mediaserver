@@ -152,10 +152,9 @@ int main(int argc, char** argv) {
     if (argc > 3) {
         port = atoi(argv[3]);
     }
-
     awsTcpClient socket(ip, port);
     
-    std::string metadata = "file:driver-1234-1232323.mp4 gps-latitude:28.674109 gps-longitude:77.438009 timestamp:20200309194530 uploadmode:normal";
+    std::string metadata = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
 
     socket.upload( filename, "driver-1234", metadata);
             

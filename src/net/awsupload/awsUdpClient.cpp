@@ -54,8 +54,6 @@ void awsUdpClient::shutdown() {
 
 void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
-  
-    
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
     Packet packet;
