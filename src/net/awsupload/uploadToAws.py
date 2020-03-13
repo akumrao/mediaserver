@@ -3,7 +3,7 @@ import time
 import socket
 import sys
 
-serverAddressPort   = ("52.14.171.173", 51038)
+serverAddressPort   = ("18.228.58.178", 51038)
 
 CHUNK_SIZE = 32 * 1024
 

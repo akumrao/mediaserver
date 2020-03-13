@@ -130,7 +130,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
         Application app;
 
         int port = 51038;
-        std::string ip = "52.14.171.173";
+        std::string ip = "18.228.58.178";
         std::string filename;
         if (argc > 1) {
             filename = argv[1];
