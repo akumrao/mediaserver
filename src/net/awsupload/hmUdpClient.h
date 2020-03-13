@@ -1,5 +1,5 @@
-#ifndef AWS_UDP_CLIENT
-#define AWS_UDP_CLIENT
+#ifndef HM_UDP_CLIENT
+#define HM_UDP_CLIENT
 
 
 #include "base/base.h"
@@ -11,11 +11,11 @@ using namespace base;
 using namespace net;
 
 
-class awsUdpClient: public base::Thread {
+class hmUdpClient: public base::Thread {
 public:
 
-    awsUdpClient(std::string IP, int port) ;
-    ~awsUdpClient();
+    hmUdpClient(std::string IP, int port) ;
+    ~hmUdpClient();
     
     void run() ;
 
@@ -52,7 +52,7 @@ private:
     std::string m_metaData;
 };
 
-#endif  //AWS_UDP_CLIENT
+#endif  //HM_UDP_CLIENT
 
 
 #if 0
@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
     int64_t start_time;
     int64_t end_time;
     
-    LTrace("./runawsUdpClient test.mp4 127.0.0.1")
-    LTrace("./runawsUdpClient test.mp4")
+    LTrace("./runhmUdpClient test.mp4 127.0.0.1")
+    LTrace("./runhmUdpClient test.mp4")
     Application app;
 
     int port = 51038;
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
         clinetstorage[x] = new char[UdpDataSize];
     }
     
-    awsUdpClient socket(ip, port);
+    hmUdpClient socket(ip, port);
     socket.start();
 
     

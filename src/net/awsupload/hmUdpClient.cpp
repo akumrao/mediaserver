@@ -1,5 +1,5 @@
-
-#include "awsUdpClient.h"
+#include "hmTcpClient.h"
+#include "hmUdpClient.h"
 #include "base/logger.h"
 #include "base/application.h"
 #include "base/platform.h"
@@ -10,7 +10,7 @@
 using namespace base;
 using namespace net;
 
-awsUdpClient::awsUdpClient(std::string IP, int port) : IP(IP), port(port) {
+hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port) {
 
     for (int x = 0; x < clientCount; ++x) {
         clinetstorage[x] = new char[UdpDataSize];
@@ -20,7 +20,7 @@ awsUdpClient::awsUdpClient(std::string IP, int port) : IP(IP), port(port) {
     send_buffer = new char[size_of_packet];
 }
 
-awsUdpClient::~awsUdpClient() {
+hmUdpClient::~hmUdpClient() {
 
 
     for (int x = 0; x < clientCount; ++x) {
@@ -31,7 +31,7 @@ awsUdpClient::~awsUdpClient() {
     delete udpClient;
 }
 
-void awsUdpClient::run() {
+void hmUdpClient::run() {
     
     LTrace("start UDP client")
     udpClient = new UdpSocket(IP, port);
@@ -41,18 +41,18 @@ void awsUdpClient::run() {
 
 }
 
-//void awsUdpClient::send(char* data, unsigned int lent) {
+//void hmUdpClient::send(char* data, unsigned int lent) {
 //    std::cout << "sending data " << lent << std::endl;
 //    udpClient->send(data, lent);
 //}
 
-void awsUdpClient::shutdown() {
+void hmUdpClient::shutdown() {
     delete udpClient;
     udpClient = nullptr;
 
 }
 
-void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
+void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
@@ -74,7 +74,7 @@ void awsUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payload
 
 
 
-void awsUdpClient::sendFile(const std::string fileName) {
+void hmUdpClient::sendFile(const std::string fileName) {
 
     int64_t start_time;
     int64_t end_time;
@@ -103,7 +103,7 @@ void awsUdpClient::sendFile(const std::string fileName) {
             sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
             rem = (++bcst) % clientCount;
             
-            base::sleep(100);
+            base::sleep(50);
         }
         
         lastPacketLen = infile.gcount();
@@ -125,8 +125,8 @@ void awsUdpClient::sendFile(const std::string fileName) {
         Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
 
-        LTrace("./runawsUdpClient test.mp4 127.0.0.1")
-        LTrace("./runawsUdpClient test.mp4")
+        LTrace("./runhmUdpClient test.mp4 127.0.0.1")
+        LTrace("./runhmUdpClient test.mp4")
         Application app;
 
         int port = 51038;

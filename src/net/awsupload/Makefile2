@@ -4,7 +4,7 @@
 CC	= clang
 CXX     = g++
 TARGET=runAwsUdpClient # define the name of the executable
-SOURCES=$(wildcard awsUdpClient.cpp awsTcpClient.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
+SOURCES=$(wildcard hmUdpClient.cpp hmTcpClient.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 
