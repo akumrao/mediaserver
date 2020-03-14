@@ -413,11 +413,11 @@ RemoteChannel::RemoteChannel(std::string name, Level level, std::string ip, int 
 #if defined(__ANDROID__)
 
         // Android log function wrappers
-        static const char* kTAG = "hello-jniCallback";
+        static const char* kTAG = "jnilog";
 
         __android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
 
-        udpClient->send((char*) ss.str().c_str(), ss.str().length());
+       //udpClient->send((char*) ss.str().c_str(), ss.str().length());
 
 #else
 #if !defined(WIN32) || defined(_REMOTELOG) || defined(_DEBUG)
