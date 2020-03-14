@@ -117,7 +117,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
 }
 
-
+#if _Main_
 
 namespace hm {
 
@@ -178,3 +178,5 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+#endif
