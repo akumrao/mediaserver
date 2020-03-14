@@ -140,7 +140,7 @@ using namespace net;
                 }
                 else if( !( curPtr % ((lastPacketNo+1)/10))     )
                 {
-                    sendTcpPacket(tcpConn, 3,   ( curPtr / ((lastPacketNo+1)/10))   );
+                    sendTcpPacket(tcpConn, 3,   10*( curPtr / ((lastPacketNo+1)/10))   );
                 }
                 break;
             }

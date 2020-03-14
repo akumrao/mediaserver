@@ -9,7 +9,7 @@ SOURCES=$(wildcard hmUdpClient.cpp hmTcpClient.cpp ../src/*.cpp ../../libuv/src/
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 
 
-CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
+CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ -D_Main_
               
 LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
