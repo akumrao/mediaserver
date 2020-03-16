@@ -126,7 +126,7 @@ static void uv__stream_osx_interrupt_select(uv_stream_t* stream) {
   uv__stream_select_t* s;
   int r;
 
-  s = stream->select;
+  s = ( uv__stream_select_t*) stream->select;
   if (s == NULL)
     return;
 
@@ -155,8 +155,8 @@ static void uv__stream_osx_select(void* arg) {
   int r;
   int max_fd;
 
-  stream = arg;
-  s = stream->select;
+  stream = (uv_stream_t*) arg;
+  s = (uv__stream_select_t*) stream->select;
   fd = s->fd;
 
   if (fd > s->int_fd)
@@ -333,7 +333,7 @@ int uv__stream_try_select(uv_stream_t* stream, int* fd) {
   sread_sz = ROUND_UP(max_fd + 1, sizeof(uint32_t) * NBBY) / NBBY;
   swrite_sz = sread_sz;
 
-  s = uv__malloc(sizeof(*s) + sread_sz + swrite_sz);
+  s = (uv__stream_select_t*) uv__malloc(sizeof(*s) + sread_sz + swrite_sz);
   if (s == NULL) {
     err = UV_ENOMEM;
     goto failed_malloc;
@@ -1620,7 +1620,7 @@ int uv___stream_fd(const uv_stream_t* handle) {
          handle->type == UV_TTY ||
          handle->type == UV_NAMED_PIPE);
 
-  s = handle->select;
+  s = (uv__stream_select_t*) handle->select;
   if (s != NULL)
     return s->fd;
 
@@ -1638,7 +1638,7 @@ void uv__stream_close(uv_stream_t* handle) {
   if (handle->select != NULL) {
     uv__stream_select_t* s;
 
-    s = handle->select;
+    s = (uv__stream_select_t*) handle->select;
 
     uv_sem_post(&s->close_sem);
     uv_sem_post(&s->async_sem);

@@ -34,7 +34,12 @@
 #define uv_thread_id pthread_self
 
 #else
-#error "no supported os"
+//#error "no supported os"
+#include <pthread.h>
+#include <unistd.h>
+
+#define uv_thread_sleep(ms) usleep((ms) * 1000)
+#define uv_thread_id pthread_self
 #endif
 
 
@@ -83,7 +88,8 @@ namespace base
         }
 
         int GetThreadID(void) const {
-            return uv_thread_id();
+            //return uv_thread_id();
+	    return 0;
         }
 
         virtual void stop(bool flag = true) {

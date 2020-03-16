@@ -650,7 +650,7 @@ static ssize_t uv__fs_realpath(uv_fs_t* req) {
   ssize_t len;
 
   len = uv__fs_pathmax_size(req->path);
-  buf = uv__malloc(len + 1);
+  buf = (char*) uv__malloc(len + 1);
 
   if (buf == NULL) {
     errno = ENOMEM;
