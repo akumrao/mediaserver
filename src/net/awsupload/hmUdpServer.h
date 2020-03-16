@@ -1,5 +1,5 @@
-#ifndef AWS_UDP_SERVER_H
-#define AWS_UDP_SERVER_H
+#ifndef HM_UDP_SERVER_H
+#define HM_UDP_SERVER_H
 
 
 #include "base/base.h"
@@ -12,17 +12,19 @@ using namespace base;
 using namespace net;
 
 
-class awsUdpServer : public UdpServer::Listener {
+class hmUdpServer : public UdpServer::Listener, public base::Thread {
 public:
 
-    awsUdpServer(TcpConnection* tcpConn, std::string IP, int port) : tcpConn(tcpConn), IP(IP), port(port), curPtr(0) {
+    hmUdpServer(TcpConnection* tcpConn, std::string IP, int port) : tcpConn(tcpConn), m_ip(IP), m_port(port), curPtr(0) {
 
         for (int x = 0; x < serverCount; ++x) {
             serverstorage[x] = new char[UdpDataSize];
         }
     }
+    
+    ~hmUdpServer();
 
-    void start();
+    void run();
 
     void send(std::string txt, std::string ip, int port);
 
@@ -40,8 +42,8 @@ private:
 
     UdpServer *udpServer;
 
-    std::string IP;
-    int port;
+    std::string m_ip;
+    int m_port;
     TcpConnection* tcpConn;
     unsigned int curPtr;
     
@@ -55,5 +57,4 @@ private:
 };
 
 
-
-#endif  //AWS_UDP_SERVER_H
+#endif  //hm_UDP_SERVER_H

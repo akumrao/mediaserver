@@ -5,7 +5,7 @@
 #include "net/UdpSocket.h"
 #include "base/test.h"
 #include "base/time.h"
-#include "awsUdpServer.h"
+#include "hmUdpServer.h"
 #include "tcpUpload.h"
 #include "awsS3upload.h"
 #include "awsDynamodb.h"
@@ -16,18 +16,23 @@ using namespace net;
 
 
     
-    void awsUdpServer::start() {
+    void hmUdpServer::run() {
 
-       udpServer = new UdpServer(this, IP, port);
+       udpServer = new UdpServer(this, m_ip,    m_port);
        udpServer->bind();
     }
+    
+    hmUdpServer::~hmUdpServer()
+    {
+        shutdown();
+    }
 
-//    void awsUdpServer::send(std::string txt, std::string ip, int port) {
+//    void hmUdpServer::send(std::string txt, std::string ip, int port) {
 //        send((char*) txt.c_str(), txt.length(), ip, port);
 //    }
     
     
-    void awsUdpServer::sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload) {
+    void hmUdpServer::sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload) {
 
         STrace << "sendTcpPacket  " << (int) type << " payload " << payload;
 
@@ -47,14 +52,16 @@ using namespace net;
         free(send_buffer);
     }
 
-    void awsUdpServer::shutdown() {
+    void hmUdpServer::shutdown() {
 
-        delete udpServer;
-        udpServer = nullptr;
-
+        if(udpServer )
+        {
+            delete udpServer;
+           udpServer = nullptr;
+        }
     }
 
-    void awsUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) {
+    void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) {
 
         int family;
 
@@ -156,7 +163,7 @@ using namespace net;
     }
     
     
-    void awsUdpServer::savetoS3() {
+    void hmUdpServer::savetoS3() {
 
         std::string driverIdTmp = sharedS3File ;
         
@@ -166,7 +173,7 @@ using namespace net;
     }
 
 
-    void awsUdpServer::savetoDB() {
+    void hmUdpServer::savetoDB() {
        PutItem( driverId , metadata);
     }
 

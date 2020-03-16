@@ -73,11 +73,11 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 1:
         {
             //LTrace("First TCP Packet received. ")
-            STrace << "UDP Client connect at " << " Port: " << packet.sequence_number;
 
+            SInfo << "UDP Client connect at: " <<  packet.sequence_number;  ;
+            
             udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
             udpsocket->upload(m_fileName, m_driverId, m_metaData);
-
             udpsocket->start();
 
             break;
@@ -161,7 +161,7 @@ namespace hm {
 }// end hm
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
 
     hm::init();
 

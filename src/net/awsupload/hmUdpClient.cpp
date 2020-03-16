@@ -71,9 +71,6 @@ void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloads
 }
 
 
-
-
-
 void hmUdpClient::sendFile(const std::string fileName) {
 
     int64_t start_time;

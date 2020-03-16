@@ -5,7 +5,7 @@
 #include "base/time.h"
 #include "net/netInterface.h"
 #include "tcpUpload.h"
-#include "awsUdpServer.h"
+#include "hmUdpServer.h"
 #include "awsS3upload.h"
 #include "awsDynamodb.h"
 
@@ -14,15 +14,17 @@ using namespace base;
 using namespace net;
 
 
-class awsTcpServer : public Listener {
+class hmTcpServer : public Listener {
 public:
 
-    awsTcpServer() {
+    hmTcpServer() {
     }
 
     void start(std::string ip, int port) {
         // socket.send("Arvind", "127.0.0.1", 7331);
         tcpServer = new TcpServer(this, ip, port);
+        
+        SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
     }
 
@@ -63,11 +65,14 @@ public:
                     // todo circular port allocation
                 }
                 
-                awsUdpServer  *socket  = new awsUdpServer((TcpConnection*)connection, m_ip, port);
+                hmUdpServer  *socket  = new hmUdpServer((TcpConnection*)connection, m_ip, port);
                 socket->start();
                 udpPortManager[port]= socket;
                
                 socket->sendTcpPacket( (TcpConnection*)connection, 1, port);
+                
+                SInfo << "UDP port allocated: " <<  port  ;
+                  
               
                 break;
             }
@@ -97,7 +102,7 @@ public:
     }
     TcpServer *tcpServer;
 
-    std::map<uint16_t, awsUdpServer* > udpPortManager;
+    std::map<uint16_t, hmUdpServer* > udpPortManager;
     std::string m_ip;
 
 };
@@ -105,7 +110,6 @@ public:
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
-    awsInit();
     
     // std::string jsonArray = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
     // std::cout << jsonArray << std::endl << std::flush;
@@ -128,10 +132,12 @@ int main(int argc, char** argv) {
         port = atoi(argv[2]);
     }
 
+     awsInit();
+
 
     Application app;
 
-    awsTcpServer socket;
+    hmTcpServer socket;
     socket.start(ip, port);
 
 
@@ -140,8 +146,6 @@ int main(int argc, char** argv) {
 
         socket.shutdown();
         awsExit();
-
-
     });
 
 
