@@ -18,6 +18,9 @@
  * IN THE SOFTWARE.
  */
 
+#if defined(__APPLE__)
+
+
 #include "uv.h"
 #include "internal.h"
 
@@ -542,3 +545,5 @@ int uv_fs_event_stop(uv_fs_event_t* handle) {
 void uv__fs_event_close(uv_fs_event_t* handle) {
   uv_fs_event_stop(handle);
 }
+
+#endif

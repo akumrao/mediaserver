@@ -18,6 +18,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#if defined(__APPLE__)
 
 #include "uv.h"
 #include "internal.h"
@@ -159,3 +160,6 @@ void uv_free_interface_addresses(uv_interface_address_t* addresses,
 
   uv__free(addresses);
 }
+
+
+#endif

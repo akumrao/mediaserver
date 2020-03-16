@@ -18,6 +18,8 @@
  * IN THE SOFTWARE.
  */
 
+#if defined(__APPLE__)
+
 #include "uv.h"
 #include "internal.h"
 
@@ -25,7 +27,7 @@
 #include <stdint.h>
 #include <errno.h>
 
-#include <mach/mach.h>
+//#include <mach/mach.h>
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h> /* _NSGetExecutablePath */
 #include <sys/resource.h>
@@ -223,3 +225,7 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
 
   return 0;
 }
+
+
+
+#endif

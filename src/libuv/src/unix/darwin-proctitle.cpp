@@ -18,6 +18,8 @@
  * IN THE SOFTWARE.
  */
 
+#if defined(__APPLE__)
+
 #include "uv.h"
 #include "internal.h"
 
@@ -194,3 +196,5 @@ void uv__set_process_title(const char* title) {
   uv__strscpy(namebuf, title, sizeof(namebuf));
   pthread_setname_np(namebuf);
 }
+
+#endif
