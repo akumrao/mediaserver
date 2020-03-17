@@ -121,8 +121,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
 namespace hm {
 
-    //const std::string ip = "18.228.58.178";
-    const std::string ip = "127.0.0.1";
+   // const std::string ip = "18.228.58.178";
+   // const std::string ip = "3.21.171.200";
+    
+   const std::string ip = "127.0.0.1";
 
     const int port = 47001;
 
@@ -161,7 +163,7 @@ namespace hm {
 }// end hm
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
     hm::init();
 

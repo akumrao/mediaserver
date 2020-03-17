@@ -23,9 +23,15 @@ public:
     void start(std::string ip, int port) {
         // socket.send("Arvind", "127.0.0.1", 7331);
         tcpServer = new TcpServer(this, ip, port);
-        
         SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
+        
+        for(  uint16_t iport =46001 ;  iport < 46008 ;  ++iport  )  
+        {
+            hmUdpServer  *socket  = new hmUdpServer(m_ip, iport);
+            socket->start();
+            udpPortManager[iport]= socket;
+        }
     }
 
     void shutdown() {
@@ -57,21 +63,31 @@ public:
                
                 STrace << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
-                uint16_t port = 46001;
+//                uint16_t port = 46001;
+//
+//                int portmangersize = udpPortManager.size();
+//                for( int i =0 ; i< portmangersize ++ i  )
+//                if (portmangersize) {
+//                    port = (--udpPortManager.end())->first + 1;
+//                    // todo circular port allocation
+//                }
 
-                int portmangersize = udpPortManager.size();
-                if (portmangersize) {
-                    port = (--udpPortManager.end())->first + 1;
-                    // todo circular port allocation
+                for ( std::map<uint16_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
+                {
+                     if( it->second->freePort)
+                     {
+                         it->second->tcpConn = (TcpConnection*)connection;
+                         it->second->sendTcpPacket( (TcpConnection*)connection, 1, it->first);
+                         it->second->freePort = false;
+                         SInfo << "UDP port allocated: " <<  it->first  ;
+                         break;
+                     }
                 }
+             //  // std::cout << it->first << " => " << it->second << '\n'
                 
-                hmUdpServer  *socket  = new hmUdpServer((TcpConnection*)connection, m_ip, port);
-                socket->start();
-                udpPortManager[port]= socket;
+            ///////////
                
-                socket->sendTcpPacket( (TcpConnection*)connection, 1, port);
-                
-                SInfo << "UDP port allocated: " <<  port  ;
+               
                   
               
                 break;

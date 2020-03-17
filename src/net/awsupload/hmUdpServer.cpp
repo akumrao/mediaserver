@@ -140,10 +140,8 @@ using namespace net;
                     sendTcpPacket(tcpConn, 3, 100);
                 
                     lastPacketLen = packet.payloadlen;
-                     savetoS3();
-                     savetoDB();
-                    
-                   
+                    savetoS3();
+                    savetoDB();
                 }
                 else if( !( curPtr % ((lastPacketNo+1)/10))     )
                 {
