@@ -3,9 +3,9 @@ import time
 import socket
 import sys
 
-serverAddressPort   = ("18.228.58.178", 51038)
+serverAddressPort   = ("localhost", 51038)
 
-CHUNK_SIZE = 32 * 1024
+CHUNK_SIZE = 1024
 
 path = sys.argv[1]
 
