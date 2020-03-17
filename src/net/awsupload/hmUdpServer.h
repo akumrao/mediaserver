@@ -15,7 +15,7 @@ using namespace net;
 class hmUdpServer : public UdpServer::Listener, public base::Thread {
 public:
 
-    hmUdpServer(TcpConnection* tcpConn, std::string IP, int port) : tcpConn(tcpConn), m_ip(IP), m_port(port), curPtr(0) {
+    hmUdpServer( std::string IP, int port) : m_ip(IP), m_port(port), curPtr(0), freePort(true) {
 
         for (int x = 0; x < serverCount; ++x) {
             serverstorage[x] = new char[UdpDataSize];
@@ -38,13 +38,16 @@ public:
     void savetoS3();
     void savetoDB();
     
+    bool freePort;
+    TcpConnection* tcpConn;
+    
 private:
 
     UdpServer *udpServer;
 
     std::string m_ip;
     int m_port;
-    TcpConnection* tcpConn;
+    
     unsigned int curPtr;
     
     int lastPacketNo{0};
