@@ -47,6 +47,13 @@ void hmUdpClient::run() {
 //}
 
 void hmUdpClient::shutdown() {
+    
+    stop();
+            
+    udpClient->Close();
+    
+    
+    
     delete udpClient;
     udpClient = nullptr;
 
@@ -86,7 +93,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
         float length = infile.tellg();
         infile.seekg(0, infile.beg);
 
-        lastPacketNo = ceil(length / UdpDataSize);
+        lastPacketNo = ceil(length / (UdpDataSize));
         
         std::string mtTmp = m_driverId  +";" + m_metaData;
         sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
@@ -94,7 +101,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
         int bcst = 0;
         int rem = 0;
 
-        while (infile.read(clinetstorage[rem], UdpDataSize)) {
+        while (!stopped() && infile.read(clinetstorage[rem], UdpDataSize)) {
             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);

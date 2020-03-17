@@ -19,6 +19,7 @@ void hmTcpClient::run() {
 
     app.run();
 
+     SInfo << "run over";
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -106,6 +107,14 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, packet.sequence_number);
+            
+            if(   packet.sequence_number == 100 )
+            {
+       
+                udpsocket->shutdown();
+                
+                shutdown();
+            }
 
             break;
         }
@@ -121,10 +130,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
 namespace hm {
 
-   // const std::string ip = "18.228.58.178";
-   // const std::string ip = "3.21.171.200";
+    std::string ip = "18.228.58.178";
+   // std::string ip = "3.21.171.200";
     
-   const std::string ip = "127.0.0.1";
+   // std::string ip = "127.0.0.1";
 
     const int port = 47001;
 
@@ -165,9 +174,23 @@ namespace hm {
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
-    hm::init();
+    LTrace("./runhmUdpClient test.mp4 127.0.0.1")
+    LTrace("./runhmUdpClient test.mp4")
+    Application app;
 
-    std::string file = "./test.mp4"; //complete path
+
+    std::string filename = "./test.mp4"; //complete path
+    if (argc > 1) {
+        filename = argv[1];
+    }
+
+    if (argc > 2) {
+        hm::ip = argv[2];
+    }
+
+    hm::init();
+        
+    std::string file = filename;
     std::string metadata = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
 
     hm::upload("driver-1234", metadata, file);
