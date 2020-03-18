@@ -6,6 +6,7 @@
 #include "net/netInterface.h"
 #include "net/TcpConnection.h"
 #include "hmUdpClient.h"
+#include "base/application.h"
 #include <functional>
 
 using namespace base;
@@ -17,9 +18,10 @@ class hmTcpClient : public TcpConnection, public Thread{
 public:
 
     hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port), udpsocket(nullptr),
-    TcpConnection(this) {
+     TcpConnection(this) {
     }
 
+    ~hmTcpClient();
     void run() ;
     
     void sendPacket(uint8_t type, uint16_t payload);
@@ -46,8 +48,12 @@ private:
     std::string m_metaData;
   
 public:
-   std::function<void(const std::string& , const int&) > fnUpdateProgess; ///< Signals when raw data is received
-
+   uv_async_t async;
+   Application app;
+   std::function<void(const std::string& , const int&) > fnUpdateProgess; 
+   std::function<void(const std::string& , const std::string&) > fnSuccess;
+   std::function<void(const std::string& , const std::string&) > fnFailure;
+   
 };
 
 

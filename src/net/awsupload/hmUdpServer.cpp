@@ -133,10 +133,11 @@ using namespace net;
                 }
                 
              
-                LInfo( curPtr % ((lastPacketNo+1)/10 ))
+               // LInfo( curPtr % ((lastPacketNo+1)/10 ))
                 
                 if(curPtr > lastPacketNo )
                 {  
+                    SInfo <<  "percentage uploaded 100" ;
                     sendTcpPacket(tcpConn, 3, 100);
                 
                     lastPacketLen = packet.payloadlen;
@@ -145,7 +146,12 @@ using namespace net;
                 }
                 else if( !( curPtr % ((lastPacketNo+1)/10))     )
                 {
-                    sendTcpPacket(tcpConn, 3,   10*( curPtr / ((lastPacketNo+1)/10))   );
+                    int per = 10*( curPtr / ((lastPacketNo+1)/10));
+                    if(per !=100)
+                    {
+                        SInfo <<  "percentage uploaded " << per ;
+                        sendTcpPacket(tcpConn, 3, per );
+                    }
                 }
                 break;
             }

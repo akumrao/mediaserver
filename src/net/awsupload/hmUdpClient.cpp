@@ -22,13 +22,9 @@ hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port) {
 
 hmUdpClient::~hmUdpClient() {
 
-
-    for (int x = 0; x < clientCount; ++x) {
-        delete [] clinetstorage[x];
-    }
-
-    delete []send_buffer;
-    delete udpClient;
+    join();
+ 
+    LTrace("~hmUdpClient()" )
 }
 
 void hmUdpClient::run() {
@@ -52,10 +48,14 @@ void hmUdpClient::shutdown() {
             
     udpClient->Close();
     
-    
-    
+    for (int x = 0; x < clientCount; ++x) {
+        delete [] clinetstorage[x];
+    }
+
+    delete []send_buffer;
     delete udpClient;
-    udpClient = nullptr;
+    
+     udpClient = nullptr;
 
 }
 

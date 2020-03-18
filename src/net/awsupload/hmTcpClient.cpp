@@ -12,14 +12,40 @@ using std::endl;
 using namespace base;
 using namespace net;
 
+static void async_cb_upload(uv_async_t* handle) {
+
+    LTrace(" Upload::async_cb_upload")
+
+    hmTcpClient *p = ( hmTcpClient *) handle->data;
+    uv_close((uv_handle_t*)&p->async, nullptr);
+
+    p->Close();
+    p->stop();
+    p->app.stop();
+
+   
+    p->app.uvDestroy();
+
+    LTrace(" Upload::async_cb_upload over")
+
+}
+
+
+ hmTcpClient::~hmTcpClient() {
+    LTrace(" Upload::async_cb_upload over")
+}
 void hmTcpClient::run() {
 
-    Application app;
+  
     Connect(m_IP, m_port);
-
+    
+    async.data = this;
+    int r = uv_async_init(app.uvGetLoop(), &async, async_cb_upload);
+    assert(r == 0);
+    
+    
     app.run();
-
-     SInfo << "run over";
+    SInfo << "run over";
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -50,7 +76,17 @@ void hmTcpClient::on_connect() {
 }
 
 void hmTcpClient::shutdown() {
-    Close();
+    if(udpsocket)
+    {
+        udpsocket->shutdown();
+        delete udpsocket;
+    }
+    int  r = uv_async_send(&async);
+    assert(r == 0);
+    
+    join();
+      
+    STrace << "shutdown ";
 }
 
 void hmTcpClient::on_close(Listener* connection) {
@@ -110,10 +146,9 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             
             if(   packet.sequence_number == 100 )
             {
-       
-                udpsocket->shutdown();
-                
+              
                 shutdown();
+               
             }
 
             break;
@@ -154,7 +189,6 @@ namespace hm {
 
             SInfo << "Percentage uploaded " << progess;
 
-
         };
 
     }
@@ -166,6 +200,7 @@ namespace hm {
     }
 
     void exit() {
+        thread->shutdown();
         delete thread;
     }
 
@@ -197,10 +232,13 @@ int main(int argc, char** argv) {
 
 
 
-    base::sleep(444444444);
+    base::sleep(500);
 
     hm::exit();
 
+    
+    base::sleep(100000);
+        
     return 0;
 }
 
