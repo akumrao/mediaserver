@@ -45,23 +45,26 @@ void hmUdpClient::run() {
 void hmUdpClient::shutdown() {
     
     stop();
-            
-    udpClient->Close();
-    
+
+
     for (int x = 0; x < clientCount; ++x) {
         delete [] clinetstorage[x];
     }
 
-    delete []send_buffer;
-    delete udpClient;
-    
-     udpClient = nullptr;
+    if(udpClient)
+    {
+        udpClient->Close();
+
+        delete []send_buffer;
+        delete udpClient;
+        udpClient = nullptr;
+    }
 
 }
 
 void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
-    if(!( payloadNo % 5))
+    if(!( payloadNo % 10))
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
     Packet packet;
