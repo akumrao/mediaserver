@@ -113,7 +113,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
             SInfo << "UDP Client connect at: " <<  packet.sequence_number;  ;
             
-            udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
+            udpsocket = new hmUdpClient(m_IP, packet.sequence_number, this);
             udpsocket->upload(m_fileName, m_driverId, m_metaData);
             udpsocket->start();
 
@@ -122,6 +122,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 2:
         {
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
+
 
             uint16_t payloadsize = UdpDataSize;
 
@@ -146,9 +147,12 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             
             if(   packet.sequence_number == 100 )
             {
-              
+
+                if (fnSuccess)
+                    fnSuccess(m_fileName, "Upload Completed");
+
                 shutdown();
-               
+
             }
 
             break;
@@ -156,6 +160,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         default:
         {
             LError("Fatal TCP: Not a valid state")
+
         }
     };
 

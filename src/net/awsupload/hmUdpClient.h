@@ -10,11 +10,12 @@
 using namespace base;
 using namespace net;
 
+class hmTcpClient;
 
 class hmUdpClient: public base::Thread {
 public:
 
-    hmUdpClient(std::string IP, int port) ;
+    hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) ;
     ~hmUdpClient();
     
     void run() ;
@@ -50,6 +51,8 @@ private:
     std::string m_fileName;
     std::string m_driverId;
     std::string m_metaData;
+
+    hmTcpClient *tcpClient;
 };
 
 #endif  //HM_UDP_CLIENT

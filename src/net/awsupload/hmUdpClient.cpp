@@ -10,7 +10,7 @@
 using namespace base;
 using namespace net;
 
-hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port) {
+hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc) {
 
     for (int x = 0; x < clientCount; ++x) {
         clinetstorage[x] = new char[UdpDataSize];
@@ -115,6 +115,9 @@ void hmUdpClient::sendFile(const std::string fileName) {
         infile.close();
     } else {
         SError << "Cannot open file: " << fileName ;
+
+        if (tcpClient->fnFailure  )
+            tcpClient->fnFailure(fileName, "Cannot open file"  );
     }
 
     end_time = base::Application::GetTime();
