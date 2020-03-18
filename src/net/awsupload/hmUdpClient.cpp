@@ -61,6 +61,7 @@ void hmUdpClient::shutdown() {
 
 void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
+    if(!( payloadNo % 5))
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
     Packet packet;
@@ -107,7 +108,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
             sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
             rem = (++bcst) % clientCount;
             
-            base::sleep(50);
+            base::sleep(5);
         }
         
         lastPacketLen = infile.gcount();
