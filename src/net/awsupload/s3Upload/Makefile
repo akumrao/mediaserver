@@ -2,7 +2,7 @@
 ### CUSTOMIZE BELOW HERE #######################################################
 
 CC	= clang
-CXX     = clang++
+CXX     = g++
 TARGET=runS3Upload # define the name of the executable
 SOURCES=$(wildcard *.cpp )
 

@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     Aws::InitAPI(options);
     {
         // Assign these values before running the program
-        const Aws::String bucket_name = "ubercloudproject";
+        const Aws::String bucket_name = "uberproject";
         const Aws::String object_name = "test.mp4";
         const std::string file_name = "test.mp4";
         const Aws::String region = "us-east-2"; // Optional

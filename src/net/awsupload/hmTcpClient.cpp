@@ -32,7 +32,7 @@ static void async_cb_upload(uv_async_t* handle) {
 
 
  hmTcpClient::~hmTcpClient() {
-    LTrace(" Upload::async_cb_upload over")
+    LTrace(" Upload::~hmTcpClient ")
 }
 void hmTcpClient::run() {
 
@@ -237,8 +237,9 @@ int main(int argc, char** argv) {
 
 
 
-    base::sleep(500);
+    base::sleep(5000000);
 
+    LTrace("About to exit")
     hm::exit();
 
     
