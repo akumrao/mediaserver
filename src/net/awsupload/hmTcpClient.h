@@ -30,7 +30,7 @@ public:
 
     void shutdown() ;
 
-    void on_close(Listener* connection);
+    void on_close();
 
     void on_read(Listener* connection, const char* data, size_t len) ;
     
@@ -46,6 +46,8 @@ private:
     std::string m_fileName;
     std::string m_driverId;
     std::string m_metaData;
+
+    enum  { Init,Connected,Progess, Done } en_state;
   
 public:
    uv_async_t async;
@@ -53,6 +55,7 @@ public:
    std::function<void(const std::string& , const int&) > fnUpdateProgess; 
    std::function<void(const std::string& , const std::string&) > fnSuccess;
    std::function<void(const std::string& , const std::string&) > fnFailure;
+
    
 };
 

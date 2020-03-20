@@ -22,8 +22,6 @@ static void async_cb_upload(uv_async_t* handle) {
     p->Close();
     p->stop();
     p->app.stop();
-
-   
     p->app.uvDestroy();
 
     LTrace(" Upload::async_cb_upload over")
@@ -36,6 +34,7 @@ static void async_cb_upload(uv_async_t* handle) {
 }
 void hmTcpClient::run() {
 
+    SInfo << "run";
   
     Connect(m_IP, m_port);
     
@@ -73,6 +72,8 @@ void hmTcpClient::sendPacket(uint8_t type, uint16_t payload) {
 void hmTcpClient::on_connect() {
     STrace << "on_connect Send Init: ";
     sendPacket(0, 0);
+
+    en_state = Connected;
 }
 
 void hmTcpClient::shutdown() {
@@ -80,6 +81,7 @@ void hmTcpClient::shutdown() {
     {
         udpsocket->shutdown();
         delete udpsocket;
+        udpsocket = nullptr;
     }
     int  r = uv_async_send(&async);
     assert(r == 0);
@@ -89,8 +91,16 @@ void hmTcpClient::shutdown() {
     STrace << "shutdown ";
 }
 
-void hmTcpClient::on_close(Listener* connection) {
-    std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+void hmTcpClient::on_close() {
+    //std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+    if( en_state < Progess) {
+
+        if (fnFailure)
+            fnFailure(m_fileName, "Network Issue or Media Service not running");
+
+    }
+
+    SInfo << "hmTcpClient::on_close";
 }
 
 void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
@@ -109,28 +119,26 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     switch (packet.type) {
         case 1:
         {
-            //LTrace("First TCP Packet received. ")
-
             SInfo << "UDP Client connect at: " <<  packet.sequence_number;  ;
             
             udpsocket = new hmUdpClient(m_IP, packet.sequence_number, this);
             udpsocket->upload(m_fileName, m_driverId, m_metaData);
             udpsocket->start();
 
+            if (fnUpdateProgess)
+                fnUpdateProgess(m_fileName, 0);
+
             break;
         }
         case 2:
         {
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
-
-
             uint16_t payloadsize = UdpDataSize;
 
             if (packet.sequence_number == udpsocket->lastPacketNo) {
                 payloadsize = udpsocket->lastPacketLen;
                 SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
             }
-
 
             int rem = packet.sequence_number % clientCount;
             udpsocket->sendPacket(1, packet.sequence_number, payloadsize, udpsocket->clinetstorage[rem]);
@@ -139,20 +147,19 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
         case 3:
         {
+            en_state = Progess;
             STrace << "TCP Received type " << packet.type << " payload:" << packet.sequence_number;
-
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, packet.sequence_number);
             
             if(   packet.sequence_number == 100 )
             {
-
+                en_state = Progess;
                 if (fnSuccess)
                     fnSuccess(m_fileName, "Upload Completed");
 
                 shutdown();
-
             }
 
             break;
