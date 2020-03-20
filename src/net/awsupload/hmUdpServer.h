@@ -11,17 +11,11 @@
 using namespace base;
 using namespace net;
 
-
 class hmUdpServer : public UdpServer::Listener, public base::Thread {
 public:
 
-    hmUdpServer( std::string IP, int port) : m_ip(IP), m_port(port), curPtr(0), freePort(true) {
+    hmUdpServer(std::string IP, int port);
 
-        for (int x = 0; x < serverCount; ++x) {
-            serverstorage[x] = new char[UdpDataSize];
-        }
-    }
-    
     ~hmUdpServer();
 
     void run();
@@ -30,33 +24,35 @@ public:
 
     void shutdown();
 
-    void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) ;
+    void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr);
     void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload);
-    
-    char *serverstorage[serverCount];
-    
+
+    char *serverstorage; //[serverCount];
+
     void savetoS3();
     void savetoDB();
-    
+
     bool freePort;
     TcpConnection* tcpConn;
-    
+
 private:
+
+    char *storage_row(unsigned int n);
 
     UdpServer *udpServer;
 
     std::string m_ip;
     int m_port;
-    
+
     unsigned int curPtr;
-    
+
     int lastPacketNo{0};
     int lastPacketLen;
     std::string driverId;
     std::string metadata;
-    
+
     std::string sharedS3File;
-    
+
 };
 
 

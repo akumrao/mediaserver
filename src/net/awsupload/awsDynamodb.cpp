@@ -23,7 +23,7 @@ GetItem to get Item in table
 using namespace base;
 
 Aws::DynamoDB::DynamoDBClient *dynamoClient;
-const Aws::String region = "us-east-2"; // Optional
+const Aws::String region = "sa-east-1" ; //"us-east-2"; // Optional
 Aws::Client::ClientConfiguration clientConfig1;
 
 #define PRIMERYKEY "driverid"

@@ -11,10 +11,10 @@
 #include "udpUpload.h"
 using namespace base;
 
-const Aws::String region = "us-east-2"; // Optional
+const Aws::String region = "sa-east-1" ;   // "us-east-2"; // Optional
 Aws::Client::ClientConfiguration clientConfig;
 
-const Aws::String s3_bucket_name = "uberproject" ;    //ubercloudproject";
+const Aws::String s3_bucket_name = "ubercloudproject"; //"uberproject" ;    //";
 
 // Set up request
 // snippet-start:[s3.cpp.put_object.code]
