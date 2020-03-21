@@ -34,7 +34,13 @@ public:
  
     void sendPacket(uint8_t type, uint16_t payloadNo,  uint16_t payloadsize, char *payload) ;
        
-    char *clinetstorage[clientCount];
+    char *clinetstorage ;//[clientCount];
+
+    size_t size;
+    int fd;
+
+    char* storage_row(unsigned int n) ;
+
     uint16_t lastPacketLen;
     uint16_t lastPacketNo;
 private:
