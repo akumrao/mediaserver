@@ -21,7 +21,7 @@ static void async_cb_upload(uv_async_t* handle) {
 
     p->Close();
     p->stop();
-    p->app.stop();
+   // p->app.stop();
     p->app.uvDestroy();
 
     LTrace(" Upload::async_cb_upload over")
@@ -141,7 +141,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             }
 
             int rem = packet.sequence_number % clientCount;
-            udpsocket->sendPacket(1, packet.sequence_number, payloadsize, udpsocket->clinetstorage[rem]);
+            udpsocket->sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(rem));
             break;
         }
 

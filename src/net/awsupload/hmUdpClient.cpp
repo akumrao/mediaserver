@@ -6,15 +6,27 @@
 #include <math.h>       /* ceil */
 
 
+////////////////////
+#include <stdio.h>
+#include <sys/stat.h>
+
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+//////////////////
+
 //using std::endl;
 using namespace base;
 using namespace net;
 
 hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc) {
+//
+//    for (int x = 0; x < clientCount; ++x) {
+//        clinetstorage[x] = new char[UdpDataSize];
+//    }
 
-    for (int x = 0; x < clientCount; ++x) {
-        clinetstorage[x] = new char[UdpDataSize];
-    }
+    clinetstorage = nullptr;
 
     size_of_packet = sizeof (struct Packet);
     send_buffer = new char[size_of_packet];
@@ -23,7 +35,8 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
 hmUdpClient::~hmUdpClient() {
 
     join();
- 
+
+
     LTrace("~hmUdpClient()" )
 }
 
@@ -47,9 +60,9 @@ void hmUdpClient::shutdown() {
     stop();
 
 
-    for (int x = 0; x < clientCount; ++x) {
-        delete [] clinetstorage[x];
-    }
+//    for (int x = 0; x < clientCount; ++x) {
+//        delete [] clinetstorage[x];
+//    }
 
     if(udpClient)
     {
@@ -57,7 +70,13 @@ void hmUdpClient::shutdown() {
 
         delete []send_buffer;
         delete udpClient;
+
+
+        munmap(clinetstorage, size);
+
+        close(fd);
         udpClient = nullptr;
+
     }
 
 }
@@ -81,23 +100,37 @@ void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloads
 
 }
 
+char *hmUdpClient::storage_row(unsigned int n) {
+    return clinetstorage + (n * UdpDataSize);
+}
+
 
 void hmUdpClient::sendFile(const std::string fileName) {
 
-    int64_t start_time;
-    int64_t end_time;
+   // int64_t start_time;
+   // int64_t end_time;
 
-    start_time = base::Application::GetTime();
-    std::ifstream infile;
-    infile.open(fileName, std::ios::binary | std::ios::in);
+    struct stat st;
+    fd = open(fileName.c_str(), O_RDONLY);
 
-    if (infile.is_open()) {
+    int rc = fstat(fd, &st);
 
-        infile.seekg(0, infile.end);
-        float length = infile.tellg();
-        infile.seekg(0, infile.beg);
 
-        lastPacketNo = ceil(length / (UdpDataSize));
+    size=st.st_size;
+
+
+
+
+    // start_time = base::Application::GetTime();
+   // std::ifstream infile;
+   // infile.open(fileName, std::ios::binary | std::ios::in);
+
+
+    if (fd> 0 ) {
+
+
+
+        lastPacketNo = ceil(size / (UdpDataSize));
         
         std::string mtTmp = m_driverId  +";" + m_metaData;
         sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
@@ -105,18 +138,28 @@ void hmUdpClient::sendFile(const std::string fileName) {
         int bcst = 0;
         int rem = 0;
 
-        while (!stopped() && infile.read(clinetstorage[rem], UdpDataSize)) {
+//        float *inputTensor2Ptr = reinterpret_cast<float *>(mmap(nullptr, tensorSize_ * sizeof(float),
+//                                                                PROT_READ | PROT_WRITE, MAP_SHARED,
+//                                                                inputTensor2Fd_, 0));
+
+        clinetstorage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
+
+
+        while (!stopped() && rem  < lastPacketNo) {
             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
-            sendPacket(1, bcst,UdpDataSize , clinetstorage[rem]);
-            rem = (++bcst) % clientCount;
-            
+            sendPacket(1, rem, UdpDataSize , storage_row(rem));
+            ++rem;
             base::sleep(5);
         }
-        
-        lastPacketLen = infile.gcount();
-        sendPacket(1, bcst, infile.gcount(), clinetstorage[rem]);
-        infile.close();
+
+        if (!stopped() && rem  <= lastPacketNo) {
+
+            int left = size - rem*UdpDataSize;
+
+            sendPacket(1, bcst, left, storage_row(rem));
+        }
+
     } else {
         SError << "Cannot open file: " << fileName ;
 
@@ -124,9 +167,9 @@ void hmUdpClient::sendFile(const std::string fileName) {
             tcpClient->fnFailure(fileName, "Cannot open file" , -2 );
     }
 
-    end_time = base::Application::GetTime();
+   // end_time = base::Application::GetTime();
 
-    STrace << "time_s " << double(end_time - start_time) / 1000.00 ;
+   // STrace << "time_s " << double(end_time - start_time) / 1000.00 ;
 
 }
 
