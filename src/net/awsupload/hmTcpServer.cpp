@@ -41,7 +41,17 @@ public:
     }
 
     void on_close(Listener* connection) {
-        std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+      //  std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+       SInfo << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp();
+       
+       auto search = udpConManager.find((TcpConnection*)connection);
+        if (search != udpConManager.end()) {
+            SInfo << "found " << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp();
+        } else {
+            SInfo << "notfound" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp();
+        }
+       
+        
     }
 
     
@@ -61,7 +71,7 @@ public:
             case 0:
             {
                
-                STrace << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
+                SInfo << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
 //                uint16_t port = 46001;
 //
@@ -78,7 +88,9 @@ public:
                      {
                          it->second->tcpConn = (TcpConnection*)connection;
                          it->second->sendTcpPacket( (TcpConnection*)connection, 1, it->first);
+                         udpConManager[(TcpConnection*)connection] = it->first;
                          it->second->freePort = false;
+                         
                          SInfo << "UDP port allocated: " <<  it->first  ;
                          break;
                      }
@@ -119,12 +131,15 @@ public:
     TcpServer *tcpServer;
 
     std::map<uint16_t, hmUdpServer* > udpPortManager;
+    
+    std::map<TcpConnection*, uint16_t> udpConManager;
+    
     std::string m_ip;
 
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
 
     
     // std::string jsonArray = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
@@ -159,7 +174,6 @@ int main(int argc, char** argv) {
 
 
     app.waitForShutdown([&](void*) {
-
         socket.shutdown();
         awsExit();
     });

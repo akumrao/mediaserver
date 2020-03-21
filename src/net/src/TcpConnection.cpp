@@ -47,7 +47,7 @@ namespace base {
 
         inline static void onClose(uv_handle_t* handle) {
             
-            LTrace("onClose");
+           LInfo("onClose");
            TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
          
             if(obj)
@@ -308,7 +308,7 @@ namespace base {
             else if (written < 0) {
                 LDebug("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-              //  Close();
+                Close();
                 return;
             }
 
@@ -464,6 +464,8 @@ namespace base {
             }
  */
         }
+        
+       
 
         inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
            // LTrace("OnUvRead" )
@@ -540,6 +542,12 @@ namespace base {
             recvBytes+= len;
             listener->on_read(this, data, len);
         }
+        
+         void TcpConnection::on_close() {
+
+            listener->on_close(this);
+        }
+        
 
         void TcpConnection::send(const char* data, size_t len) {
 

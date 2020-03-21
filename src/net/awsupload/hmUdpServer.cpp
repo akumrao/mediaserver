@@ -93,23 +93,23 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
     switch (packet.type) {
         case 0:
         {
-            LTrace("First Packet")
-            STrace << "Received from " << peerIp << ":" << peerPort << " Payload Size:" << packet.payloadlen << " Last Packet NO:" << packet.payload_number - 1;
+            //LTrace("First Packet")
+            SInfo << "Received from " << peerIp << ":" << peerPort << " Payload Size:" << packet.payloadlen << " Last Packet NO:" << packet.payload_number - 1;
 
-            LTrace(packet.payload)
+            //LTrace(packet.payload)
 
 
             std::vector<std::string> tmp = base::util::split(packet.payload, ';', 1);
             if (tmp.size() > 1) {
                 driverId = tmp[0];
                 metadata = tmp[1];
-                sharedS3File = driverId + std::to_string(Application::GetTime()) + ".mp4";
+                sharedS3File = driverId + "_" + std::to_string(Application::GetTime());
             }
 
 
-            STrace << " S3 shared file " << sharedS3File;
-            STrace << "metadata " << metadata;
-            STrace << "driverid " << driverId;
+            SInfo << " S3 shared file " << sharedS3File <<  ".mp4";
+            SInfo << "metadata " << metadata;
+            SInfo << "driverid " << driverId;
 
             if (curPtr) {
                 LError("Fatal error: Two Udp streams are not possible on one port. ")
@@ -177,14 +177,14 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
 
 void hmUdpServer::savetoS3() {
 
-    std::string driverIdTmp = sharedS3File;
+    std::string driverIdTmp = sharedS3File +".mp4";
 
-    LTrace("Saving S3 file ", "https://ubercloudproject.s3.amazonaws.com/", sharedS3File)
+    LInfo("Saving S3 file ", "https://ubercloudproject.s3.amazonaws.com/", sharedS3File,".mp4")
             const Aws::String object_name = driverIdTmp.c_str();
     put_s3_object_async(object_name, serverstorage, lastPacketNo, lastPacketLen);
 }
 
 void hmUdpServer::savetoDB() {
-    PutItem(driverId, metadata);
+    PutItem(driverId,sharedS3File,  metadata);
 }
 

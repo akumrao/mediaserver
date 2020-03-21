@@ -25,7 +25,7 @@ GetItem to get Item in table
 using namespace base;
 
 Aws::DynamoDB::DynamoDBClient *dynamoClient;
-const Aws::String region = "sa-east-1" ; //"us-east-2"; // Optional
+const Aws::String region =  "sa-east-1";               ;//"sa-east-1" ; //"us-east-2"; // Optional
 Aws::Client::ClientConfiguration clientConfig1;
 
 #define PRIMERYKEY "driverid"
@@ -67,7 +67,7 @@ void putItemFinished(const Aws::DynamoDB::DynamoDBClient* client,
         const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
 
     if (result.IsSuccess()) {
-        STrace << "added row item" << std::endl;
+        SInfo << "added row item" << std::endl;
     } else {
         SError << "Failed to create table: " << result.GetError().GetMessage();
     }
@@ -76,61 +76,82 @@ void putItemFinished(const Aws::DynamoDB::DynamoDBClient* client,
 
 }
 
-int PutItem(std::string driverName, std::string jsonArray) {
+int PutItem(std::string driverLoginid, std::string s3file, std::string jsonArray) {
 
     ////////////////////////////////////////////////////////////////////////////////////
-    
-    const Aws::String name(driverName.c_str());
+
+
+    const Aws::String id(s3file.c_str());
 
     Aws::DynamoDB::Model::PutItemRequest pir;
     pir.SetTableName(table);
 
     Aws::DynamoDB::Model::AttributeValue av;
-    av.SetS(name);
+    av.SetS(id);
     pir.AddItem(PRIMERYKEY, av);
-    
-    const Aws::String sharedfile((driverName + ".mp4").c_str());
-    
-    av.SetS(sharedfile);
-    pir.AddItem("sharedfile", av);
 
-   
-    json optr = json::parse(jsonArray.c_str());
+    const Aws::String sharedfile((s3file + ".mp4").c_str());
+    av.SetS(sharedfile);
+    pir.AddItem("s3file", av);
+
+    const Aws::String driverId(driverLoginid.c_str());
+    av.SetS(driverId);
+    pir.AddItem("driverloginid", av);
+
+
     
-   // if( optr.is_array())
-    {
+    try {
+
+        json optr = json::parse(jsonArray.c_str());
         for (json::iterator it = optr.begin(); it != optr.end(); ++it) {
-            
-            std::cout << it.key() << " : " << it.value() << "\n";
-            
+           // std::cout << it.key() << " : " << it.value() << "\n";
             std::string key = it.key();
-            
-            if( it.value().is_array())
-            {
-                Aws::Vector<std::shared_ptr<Aws::DynamoDB::Model::AttributeValue>> emptyList;
-                
-                Aws::DynamoDB::Model::AttributeValue ival;
-                 
+            std::string value;
+            if (it.value().is_array()) {
+                json fileNames = it.value();
+
+                std::string files = "[";
+                for (int x = 0; x < it.value().size(); ++x) {
+                    if (x) {
+                        files = files + ", ";
+                    }
+                    files = files + std::string(fileNames[x].get<std::string>());
+                } //end for
+                files += "]";
+                value = files;
+
+                // Aws::DynamoDB::Model::AttributeValue ival;
+
+                //std::shared_ptr<Aws::DynamoDB::Model::AttributeValue> ival;
                 // emptyList.push_back("arvind");
-               // listValueAttribute.SetL(emptyList);
-               // pir.AddItem(key.c_str(), emptyList); 
+                // listValueAttribute.SetL(emptyList);
+                // pir.AddItem(key.c_str(), emptyList); 
                 // ival.SetS("arvind");
-                 //emptyList.push_back(ival);
-                 Aws::DynamoDB::Model::AttributeValue val;
-                 val.SetL(emptyList);
-                 pir.AddItem(key.c_str(), val);
-                 
-            } 
-            else
-            {    
-                 std::string value = it.value();
-                 Aws::DynamoDB::Model::AttributeValue val;
-                 val.SetS(value.c_str());
-                 pir.AddItem(key.c_str(), val);
+                //emptyList.push_back(ival);
+                //Aws::DynamoDB::Model::AttributeValue val;
+                //val.SetL(emptyList);
+                //pir.AddItem(key.c_str(), val);
+            } else {
+                value = it.value();
             }
 
+
+
+            Aws::DynamoDB::Model::AttributeValue val;
+            val.SetS(value.c_str());
+            pir.AddItem(key.c_str(), val);
+
+
         }
-    }
+      }
+      catch (...) 
+      {
+            std::cout << "wrong josn " << jsonArray;
+            return 0;
+      }
+   
+
+
 
     auto context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
     context->SetUUID("UniqueRequestKey");
@@ -144,8 +165,8 @@ int PutItem(std::string driverName, std::string jsonArray) {
     return 0;
     //  std::cout << "Done!" << std::endl;
     ///////////////////////////////////////////////////////////////////////////////////
-
 }
+
 
 int GetItem(std::string driverName) {
 

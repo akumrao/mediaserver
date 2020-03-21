@@ -272,7 +272,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       assert(op == EPOLL_CTL_ADD);
 
       /* We've reactivated a file descriptor that's been watched before. */
-      printf("EPOLL_CTL_MOD   %d\n", w->fd );
+     // printf("EPOLL_CTL_MOD   %d\n", w->fd ); //arvind
       if (epoll_ctl(loop->backend_fd, EPOLL_CTL_MOD, w->fd, &e))
         abort();
     }
@@ -325,7 +325,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         no_epoll_wait = 1;
     }
 
-    printf( "epoll_wait %d \n", nfds); //arvind
+    //printf( "epoll_wait %d \n", nfds); //arvind
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))

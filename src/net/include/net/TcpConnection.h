@@ -42,7 +42,7 @@ namespace base
             virtual void on_connect() { }
             virtual void on_read(const char* data, size_t len) = 0;
             virtual void on_tls_read(const char* data, size_t len){};
-            virtual void on_close(){}
+            virtual void on_close() =0;
             virtual void Dump() const;
             void Setup(
                   //  Listener* listener,
@@ -170,6 +170,7 @@ namespace base
         public:
             void on_read( const char* data, size_t len) override;
             
+            void on_close() override;
             
             const std::string& GetLocalIp() const;
             uint16_t GetLocalPort() const;

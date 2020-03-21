@@ -6,7 +6,7 @@
 #include <aws/core/Aws.h>
 
 void CreateTable() ;
-int PutItem( std::string driverName, std::string jsonArray  ) ;
+int PutItem( std::string driverName, std::string s3file, std::string jsonArray  ) ;
 int GetItem( std::string driverName  );
 
 void dbInit();
