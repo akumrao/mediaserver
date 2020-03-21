@@ -121,7 +121,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
         SError << "Cannot open file: " << fileName ;
 
         if (tcpClient->fnFailure  )
-            tcpClient->fnFailure(fileName, "Cannot open file"  );
+            tcpClient->fnFailure(fileName, "Cannot open file" , -2 );
     }
 
     end_time = base::Application::GetTime();

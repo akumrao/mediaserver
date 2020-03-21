@@ -96,7 +96,7 @@ void hmTcpClient::on_close() {
     if( en_state < Progess) {
 
         if (fnFailure)
-            fnFailure(m_fileName, "Network Issue or Media Service not running");
+            fnFailure(m_fileName, "Network Issue or Media Service not running", -1);
 
     }
 
