@@ -20,6 +20,8 @@ GetItem to get Item in table
 
 #include <aws/dynamodb/model/GetItemRequest.h>
 
+#include "json/json.h"
+
 using namespace base;
 
 Aws::DynamoDB::DynamoDBClient *dynamoClient;
@@ -86,30 +88,47 @@ int PutItem(std::string driverName, std::string jsonArray) {
     Aws::DynamoDB::Model::AttributeValue av;
     av.SetS(name);
     pir.AddItem(PRIMERYKEY, av);
-    Aws::String args(jsonArray.c_str());
     
-    char delimiter1[] = { '{', 0 };
-    char delimiter2[] = { '}', 0 };
-    char delimiter3[] = { ' ', 0 };
-   
+    const Aws::String sharedfile((driverName + ".mp4").c_str());
     
-    Aws::Utils::StringUtils::Replace(args, delimiter1, "");
-    Aws::Utils::StringUtils::Replace(args, delimiter2, "");
-    Aws::Utils::StringUtils::Replace(args, delimiter3, "");
-        
-   args = args +",sharedfile:" +  driverName.c_str(); 
-    const Aws::Vector<Aws::String>& fldspace = Aws::Utils::StringUtils::Split(args, ',');
+    av.SetS(sharedfile);
+    pir.AddItem("sharedfile", av);
 
-    for (int x = 0; x < fldspace.size(); x++) {
-        const Aws::String arg(fldspace[x]);
-        const Aws::Vector<Aws::String>& flds = Aws::Utils::StringUtils::Split(arg, ':');
-        if (flds.size() == 2) {
-            Aws::DynamoDB::Model::AttributeValue val;
-            val.SetS(flds[1]);
-            pir.AddItem(flds[0], val);
-        } else {
-            std::cout << "Invalid argument: " << arg << std::endl;
-            return 1;
+   
+    json optr = json::parse(jsonArray.c_str());
+    
+   // if( optr.is_array())
+    {
+        for (json::iterator it = optr.begin(); it != optr.end(); ++it) {
+            
+            std::cout << it.key() << " : " << it.value() << "\n";
+            
+            std::string key = it.key();
+            
+            if( it.value().is_array())
+            {
+                Aws::Vector<std::shared_ptr<Aws::DynamoDB::Model::AttributeValue>> emptyList;
+                
+                Aws::DynamoDB::Model::AttributeValue ival;
+                 
+                // emptyList.push_back("arvind");
+               // listValueAttribute.SetL(emptyList);
+               // pir.AddItem(key.c_str(), emptyList); 
+                // ival.SetS("arvind");
+                 //emptyList.push_back(ival);
+                 Aws::DynamoDB::Model::AttributeValue val;
+                 val.SetL(emptyList);
+                 pir.AddItem(key.c_str(), val);
+                 
+            } 
+            else
+            {    
+                 std::string value = it.value();
+                 Aws::DynamoDB::Model::AttributeValue val;
+                 val.SetS(value.c_str());
+                 pir.AddItem(key.c_str(), val);
+            }
+
         }
     }
 
@@ -201,13 +220,17 @@ int main(int argc, char** argv) {
 
         Aws::DynamoDB::DynamoDBClient dynamoClient(clientConfig);
 
-        // CreateTable(dynamoClient);
+       // CreateTable(dynamoClient);
 
-        std::string jsonArray = "file:driver-1234-1232323.mp4 gps-latitude:28.674109 gps-longitude:77.438009 timestamp:20200309194530 uploadmode:normal";
-        std::cout << jsonArray << std::endl << std::flush;
-        PutItem(dynamoClient, "driver12345", jsonArray);
+       // std::string metadata = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
+       // std::string  metadata ="{\"filename\":\"1.mp4\",\"gps-latitude\":\"28.674109\",\"gps-longitude\":\"77.438009\",\"timestamp\":\"20200309194530\",\"uploadmode\":\"normal\"}";
+        std::string  metadata ="{\"filename\":[\"1.mp4\",\"2.mp4\"],\"gps-latitude\":\"28.674109\",\"gps-longitude\":\"77.438009\",\"timestamp\":\"20200309194530\",\"uploadmode\":\"normal\"}";
 
-        GetItem(dynamoClient, "driver1234");
+                        
+        std::cout << metadata << std::endl << std::flush;
+        PutItem(dynamoClient, "driver12345", metadata);
+
+        GetItem(dynamoClient, "driver12345");
 
     }
     Aws::ShutdownAPI(options);
