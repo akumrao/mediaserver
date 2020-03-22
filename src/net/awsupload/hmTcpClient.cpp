@@ -53,7 +53,7 @@ void hmTcpClient::upload(std::string fileName, std::string driverId, std::string
     m_metaData = metaData;
 }
 
-void hmTcpClient::sendPacket(uint8_t type, uint16_t payload) {
+void hmTcpClient::sendPacket(uint8_t type, uint32_t payload) {
 
     STrace << "Send Type" << (int) type << " payload " << payload;
 
@@ -151,15 +151,24 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 2:
         {
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
-            uint16_t payloadsize = UdpDataSize;
+//            uint32_t payloadsize = UdpDataSize;
+//
+//            if (packet.sequence_number == udpsocket->lastPacketNo) {
+//                payloadsize = udpsocket->lastPacketLen;
+//                SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
+//            }
+            
+            
+            udpsocket->stop();
+            udpsocket->join();
+            udpsocket->stop(false);
+            udpsocket->rem = packet.sequence_number;
+            udpsocket->start();
 
-            if (packet.sequence_number == udpsocket->lastPacketNo) {
-                payloadsize = udpsocket->lastPacketLen;
-                SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
-            }
-
-            int rem = packet.sequence_number % clientCount;
-            udpsocket->sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(rem));
+            //int rem = packet.sequence_number % clientCount;
+            //udpsocket->resumefrom( packet.sequence_number );
+            
+            //sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(packet.sequence_number));
             break;
         }
 
@@ -182,6 +191,30 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
             break;
         }
+        
+        case 4:
+        {
+            SInfo << "TCP Received type " << (int) packet.type << " Retransmission of header: " << packet.sequence_number;
+//            uint32_t payloadsize = UdpDataSize;
+//
+//            if (packet.sequence_number == udpsocket->lastPacketNo) {
+//                payloadsize = udpsocket->lastPacketLen;
+//                SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
+//            }
+            
+            
+            udpsocket->stop();
+            udpsocket->join();
+            udpsocket->rem = packet.sequence_number;
+            udpsocket->start();
+
+            //int rem = packet.sequence_number % clientCount;
+            //udpsocket->resumefrom( packet.sequence_number );
+            
+            //sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(packet.sequence_number));
+            break;
+        }
+
         default:
         {
             LError("Fatal TCP: Not a valid state")

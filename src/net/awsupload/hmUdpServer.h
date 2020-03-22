@@ -25,7 +25,7 @@ public:
     void shutdown();
 
     void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr);
-    void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload);
+    void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint32_t payload);
 
     char *serverstorage; //[serverCount];
 
@@ -33,6 +33,8 @@ public:
     void savetoDB();
 
     bool freePort;
+    void resetUdpServer();
+    
     TcpConnection* tcpConn;
 
 private:
@@ -44,7 +46,9 @@ private:
     std::string m_ip;
     int m_port;
 
-    unsigned int curPtr;
+    int curPtr;
+    int waitingPtr;
+    
 
     int lastPacketNo{0};
     int lastPacketLen;

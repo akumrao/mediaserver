@@ -1,6 +1,8 @@
 #ifndef HM_UDP_CLIENT
 #define HM_UDP_CLIENT
 
+//#include <mutex>
+//#include <condition_variable>
 
 #include "base/base.h"
 #include "net/UdpSocket.h"
@@ -28,23 +30,32 @@ public:
    bool upload( std::string fileName, std::string driverId, std::string metaData);
 
 
-    void sendPacket(uint8_t type, uint16_t payloadNo,  uint16_t payloadsize, char *payload) ;
+    void sendPacket(uint8_t type, uint32_t payloadNo,  uint32_t payloadsize, char *payload) ;
        
     //char *clinetstorage [clientCount];
 
     char *storage;
-
-
+    
+    uint32_t rem;
+ 
     size_t size;
     int fd;
 
     char* storage_row(unsigned int n) ;
 
-    uint16_t lastPacketLen;
-    uint16_t lastPacketNo;
+    uint32_t lastPacketLen;
+    uint32_t lastPacketNo;
+    
+
+    //std::atomic<bool> sendheader;
+    ///std::atomic<bool> sendfile;
+        
+    void sendHeader(const std::string fileName) ;
+    void sendFile(const std::string fileName) ;
+
 private:
     
-    void sendFile(const std::string);
+  
     UdpSocket *udpClient;
     std::string IP;
     int port;

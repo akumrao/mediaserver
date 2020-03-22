@@ -38,6 +38,9 @@ hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), cur
     //            serverstorage[x] = new char[UdpDataSize];
     //            
     //        }
+    
+    curPtr = -1;
+    waitingPtr = -1;
 }
 
 
@@ -45,7 +48,15 @@ hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), cur
 //        send((char*) txt.c_str(), txt.length(), ip, port);
 //    }
 
-void hmUdpServer::sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint16_t payload) {
+
+void hmUdpServer::resetUdpServer()
+{
+    freePort = true;
+    curPtr = -1;
+    waitingPtr = -1;
+}
+
+void hmUdpServer::sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint32_t payload) {
 
     STrace << "sendTcpPacket  " << (int) type << " payload " << payload;
 
@@ -111,9 +122,9 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
             SInfo << "metadata " << metadata;
             SInfo << "driverid " << driverId;
 
-            if (curPtr) {
-                LError("Fatal error: Two Udp streams are not possible on one port. ")
-            }
+//            if (curPtr) {
+//                LError("Fatal error: Two Udp streams are not possible on one port. ")
+//            }
 
             curPtr = 0;
             lastPacketNo = packet.payload_number - 1;
@@ -129,10 +140,25 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 // memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
                 memcpy(storage_row(curPtr), packet.payload, packet.payloadlen);
                 ++curPtr;
+                waitingPtr = -1;
             } else {
+                if(waitingPtr > -1)
+                {
+                    return;
+                }
+                
+                if(curPtr == -1)
+                {
+                    sendTcpPacket(tcpConn, 4, 0);
+                    waitingPtr = 0;
+                    return;
+                }
                 while (packet.payload_number > curPtr) {
+                    SInfo << "Packet lost. Sequence No: " << curPtr;
+                    waitingPtr = curPtr;
                     sendTcpPacket(tcpConn, 2, curPtr);
-                    SInfo << "Packet lost. Sequence No: " << curPtr++;
+                    return;
+                    
                 }
                 if (packet.payload_number < curPtr) {
                     SInfo << "Lost Packet found. Sequence No: " << packet.payload_number;
@@ -142,9 +168,9 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 }
 
                 // memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
-                memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
-
-                ++curPtr;
+//                memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
+//
+//                ++curPtr;
             }
 
             // LInfo( curPtr % ((lastPacketNo+1)/10 ))
@@ -155,7 +181,7 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 lastPacketLen = packet.payloadlen;
                 savetoS3();
                 savetoDB();
-                freePort = true;
+                resetUdpServer();
             } else if (!(curPtr % ((lastPacketNo + 1) / 10))) {
                 int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
                 if (per != 100) {

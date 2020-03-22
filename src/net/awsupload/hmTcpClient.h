@@ -24,7 +24,7 @@ public:
     ~hmTcpClient();
     void run() ;
     
-    void sendPacket(uint8_t type, uint16_t payload);
+    void sendPacket(uint8_t type, uint32_t payload);
 
     void on_connect() ;
 
@@ -46,7 +46,7 @@ private:
     std::string m_fileName;
     std::string m_driverId;
     std::string m_metaData;
-
+    
 
   
 public:

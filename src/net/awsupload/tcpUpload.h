@@ -10,9 +10,11 @@
 
 //type 3 Percentage uploaded. From UDP server to TCP client
 
+// type 4 HeaderNot received yet. From UDP server to TCP client
+
 struct TcpPacket{
     uint8_t type;
-    uint16_t sequence_number;
+    uint32_t sequence_number;
   };
 
   

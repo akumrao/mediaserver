@@ -26,7 +26,7 @@ public:
         SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
         
-        for(  uint16_t iport =46001 ;  iport < 46008 ;  ++iport  )  
+        for(  uint32_t iport =46001 ;  iport < 46008 ;  ++iport  )  
         {
             hmUdpServer  *socket  = new hmUdpServer(m_ip, iport);
             socket->start();
@@ -47,7 +47,7 @@ public:
        auto search = udpConManager.find((TcpConnection*)connection);
         if (search != udpConManager.end()) {
             SInfo << "Freeing UDP Port "  << search->second ;
-            udpPortManager[search->second]->freePort = free;
+            udpPortManager[search->second]->resetUdpServer();
             udpConManager.erase (search, udpConManager.end());
 
            
@@ -77,7 +77,7 @@ public:
                
                 SInfo << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
-//                uint16_t port = 46001;
+//                uint32_t port = 46001;
 //
 //                int portmangersize = udpPortManager.size();
 //                for( int i =0 ; i< portmangersize ++ i  )
@@ -86,7 +86,7 @@ public:
 //                    // todo circular port allocation
 //                }
 
-                for ( std::map<uint16_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
+                for ( std::map<uint32_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
                 {
                      if( it->second->freePort)
                      {
@@ -134,9 +134,9 @@ public:
     }
     TcpServer *tcpServer;
 
-    std::map<uint16_t, hmUdpServer* > udpPortManager;
+    std::map<uint32_t, hmUdpServer* > udpPortManager;
     
-    std::map<TcpConnection*, uint16_t> udpConManager;
+    std::map<TcpConnection*, uint32_t> udpConManager;
     
     std::string m_ip;
 

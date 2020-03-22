@@ -26,16 +26,36 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
 //        clinetstorage[x] = new char[UdpDataSize];
 //    }
 
-    udpClient = nullptr;
+
+    udpClient = new UdpSocket(IP, port);
     storage = nullptr;
 
     size_of_packet = sizeof (struct Packet);
     send_buffer = new char[size_of_packet];
+    
+    //sendheader = true;
+   // sendfile= true;
+    
+    rem=0;
+
 }
 
 hmUdpClient::~hmUdpClient() {
 
     join();
+    
+    delete []send_buffer;
+     
+    if(fd  > 0 )
+    {
+      munmap(storage, size);
+      close(fd);
+    }  
+    
+    
+    delete udpClient;
+    udpClient = nullptr;
+
 
     LTrace("~hmUdpClient()" )
 }
@@ -43,10 +63,13 @@ hmUdpClient::~hmUdpClient() {
 void hmUdpClient::run() {
     
     LTrace("start UDP client")
-    udpClient = new UdpSocket(IP, port);
+    
     udpClient->connect();
     
-     sendFile(m_fileName);
+    if( !rem)
+    sendHeader(m_fileName);
+
+    sendFile(m_fileName);
 
 }
 
@@ -57,30 +80,25 @@ void hmUdpClient::run() {
 
 void hmUdpClient::shutdown() {
     
+    LInfo("hmUdpClient::shutdown()::stop");
+    
+    
     stop();
-
-
-//    for (int x = 0; x < clientCount; ++x) {
-//        delete [] clinetstorage[x];
-//    }
-
+    join();
+    
     if(udpClient)
     {
+
         udpClient->Close();
-
-        join();
-
-        delete []send_buffer;
-        delete udpClient;
-
-
-        munmap(storage, size);
-
-        close(fd);
-        udpClient = nullptr;
+        
+        base::sleep(500);
+        
+     
+         LInfo("hmUdpClient::shutdown()::udpClient");
 
     }
-
+    
+    LInfo("hmUdpClient::shutdown()::over");
 }
 
 bool hmUdpClient::upload( std::string fileName, std::string driverId, std::string metaData)
@@ -96,15 +114,17 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
     m_metaData = metaData;
 
     if(fd > 0)
+    {
+        storage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
         return true;
+    }
     else
         return false;
 }
 
-void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
+void hmUdpClient::sendPacket(uint8_t type, uint32_t payloadNo, uint32_t payloadsize, char *payload) {
 
-    if(!( payloadNo % 30))
-    STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
+  
     
     Packet packet;
     packet.type = type;
@@ -125,91 +145,45 @@ char *hmUdpClient::storage_row(unsigned int n) {
 }
 
 
-void hmUdpClient::sendFile(const std::string fileName) {
 
 
-//    {
-//        std::ifstream infile;
-//        infile.open(fileName, std::ios::binary | std::ios::in);
-//
-//        if (infile.is_open()) {
-//
-//            infile.seekg(0, infile.end);
-//            float length = infile.tellg();
-//            infile.seekg(0, infile.beg);
-//
-//            lastPacketNo = ceil(length / (UdpDataSize));
-//
-//            LError(length);
-//
-//            LError(lastPacketNo);
-//
-//            std::string mtTmp = m_driverId + ";" + m_metaData;
-//            //sendPacket(0, lastPacketNo, mtTmp.length() + 1, (char *) mtTmp.c_str());
-//
-//            int bcst = 0;
-//            int rem = 0;
-//
-//            while (!stopped() && infile.read(clinetstorage[rem], UdpDataSize)) {
-//                // char *output = str2md5(data_packet.data, data_size);
-//                //char *output1 = str2md5(buffer[send_count], data_size);
-//                //sendPacket(1, bcst, UdpDataSize, clinetstorage[rem]);
-//
-//                printf("value1 %c", clinetstorage[rem][100]);
-//                printf("value2 %c", clinetstorage[rem][101]);
-//
-//                rem = (++bcst) % clientCount;
-//
-//                //base::sleep(5);
-//               // break;
-//            }
-//
-//            lastPacketLen = infile.gcount();
-//
-//
-//            LError(lastPacketLen);
-//
-//
-//            sendPacket(1, bcst, infile.gcount(), clinetstorage[rem]);
-//            infile.close();
-//        }
-//
-//    }
+void hmUdpClient::sendHeader(const std::string fileName) {
 
-
-
-    // start_time = base::Application::GetTime();
-
+    SInfo << "Send Header";
+            
     if (fd> 0 ) {
 
-
-
-        lastPacketNo = ceil((float)size / (float) (UdpDataSize));
-
-        LError(size);
-
-        LError(lastPacketNo);
-
-        
-        std::string mtTmp = m_driverId  +";" + m_metaData;
-        sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
+         if (!stopped())
+         {
+                 
+            lastPacketNo = ceil((float)size / (float) (UdpDataSize));
+            SInfo << "fileSize: "  <<  size ;
+            SInfo << "Last packet no: "  <<  lastPacketNo ;
+            std::string mtTmp = m_driverId  +";" + m_metaData;
+            sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
+         }
 
         //int bcst = 0;
-        int rem = 0;
-;
+      
 
-        storage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
+    }
+}
+void hmUdpClient::sendFile(const std::string fileName) {
 
-
+  
+    
+    // start_time = base::Application::GetTime();
+    if (fd> 0 ) 
+    {
+   
+        SInfo << "Send File start";
         while (!stopped() && rem  < lastPacketNo-1) {
-
-            char *pppp = storage_row(rem);
-
-            // char *output = str2md5(data_packet.data, data_size);
+            
+             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, rem, UdpDataSize , storage_row(rem));
             ++rem;
-            base::sleep(5);
+            //usleep(10);
 
 
         }
@@ -219,11 +193,11 @@ void hmUdpClient::sendFile(const std::string fileName) {
             lastPacketLen = size - rem*UdpDataSize;
             sendPacket(1, rem, lastPacketLen, storage_row(rem));
         }
+        SInfo << "Send File done ";
+    }
 
-    } else {
+    else {
         SError << "Cannot open file: " << fileName ;
-
-
     }
 
    // end_time = base::Application::GetTime();

@@ -15,8 +15,8 @@
 
 struct Packet{
     uint8_t type;
-    uint16_t payload_number;
-    uint16_t payloadlen;
+    uint32_t payload_number;
+    uint32_t payloadlen;
     char payload[UdpDataSize];
 };
 
