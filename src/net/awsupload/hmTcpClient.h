@@ -47,7 +47,7 @@ private:
     std::string m_driverId;
     std::string m_metaData;
 
-    enum  { Init,Connected,Progess, Done } en_state;
+
   
 public:
    uv_async_t async;
@@ -56,7 +56,7 @@ public:
    std::function<void(const std::string& , const std::string&) > fnSuccess;
    std::function<void(const std::string& , const std::string&, const int&) > fnFailure;
 
-   
+    enum  { Init,Connected,Progess, Done } en_state;
 };
 
 

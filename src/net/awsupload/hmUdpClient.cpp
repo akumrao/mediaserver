@@ -21,12 +21,12 @@ using namespace base;
 using namespace net;
 
 hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc) {
-//
+
 //    for (int x = 0; x < clientCount; ++x) {
 //        clinetstorage[x] = new char[UdpDataSize];
 //    }
 
-    clinetstorage = nullptr;
+    storage = nullptr;
 
     size_of_packet = sizeof (struct Packet);
     send_buffer = new char[size_of_packet];
@@ -35,7 +35,6 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
 hmUdpClient::~hmUdpClient() {
 
     join();
-
 
     LTrace("~hmUdpClient()" )
 }
@@ -72,7 +71,7 @@ void hmUdpClient::shutdown() {
         delete udpClient;
 
 
-        munmap(clinetstorage, size);
+        munmap(storage, size);
 
         close(fd);
         udpClient = nullptr;
@@ -81,9 +80,27 @@ void hmUdpClient::shutdown() {
 
 }
 
+bool hmUdpClient::upload( std::string fileName, std::string driverId, std::string metaData)
+{
+    struct stat st;
+    fd = open(fileName.c_str(), O_RDONLY,1);
+
+    int rc = fstat(fd, &st);
+
+    size=st.st_size;
+    m_fileName = fileName;
+    m_driverId  = driverId;
+    m_metaData = metaData;
+
+    if(fd > 0)
+        return true;
+    else
+        return false;
+}
+
 void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloadsize, char *payload) {
 
-    if(!( payloadNo % 10))
+    if(!( payloadNo % 30))
     STrace << "UpdClient Send Pakcet: Type " << (int) type  << " payload no " <<  payloadNo << " payloadsize " << payloadsize;
     
     Packet packet;
@@ -101,70 +118,110 @@ void hmUdpClient::sendPacket(uint8_t type, uint16_t payloadNo, uint16_t payloads
 }
 
 char *hmUdpClient::storage_row(unsigned int n) {
-    return clinetstorage + (n * UdpDataSize);
+    return storage + (n * UdpDataSize);
 }
 
 
 void hmUdpClient::sendFile(const std::string fileName) {
 
-   // int64_t start_time;
-   // int64_t end_time;
 
-    struct stat st;
-    fd = open(fileName.c_str(), O_RDONLY);
-
-    int rc = fstat(fd, &st);
-
-
-    size=st.st_size;
-
+//    {
+//        std::ifstream infile;
+//        infile.open(fileName, std::ios::binary | std::ios::in);
+//
+//        if (infile.is_open()) {
+//
+//            infile.seekg(0, infile.end);
+//            float length = infile.tellg();
+//            infile.seekg(0, infile.beg);
+//
+//            lastPacketNo = ceil(length / (UdpDataSize));
+//
+//            LError(length);
+//
+//            LError(lastPacketNo);
+//
+//            std::string mtTmp = m_driverId + ";" + m_metaData;
+//            //sendPacket(0, lastPacketNo, mtTmp.length() + 1, (char *) mtTmp.c_str());
+//
+//            int bcst = 0;
+//            int rem = 0;
+//
+//            while (!stopped() && infile.read(clinetstorage[rem], UdpDataSize)) {
+//                // char *output = str2md5(data_packet.data, data_size);
+//                //char *output1 = str2md5(buffer[send_count], data_size);
+//                //sendPacket(1, bcst, UdpDataSize, clinetstorage[rem]);
+//
+//                printf("value1 %c", clinetstorage[rem][100]);
+//                printf("value2 %c", clinetstorage[rem][101]);
+//
+//                rem = (++bcst) % clientCount;
+//
+//                //base::sleep(5);
+//               // break;
+//            }
+//
+//            lastPacketLen = infile.gcount();
+//
+//
+//            LError(lastPacketLen);
+//
+//
+//            sendPacket(1, bcst, infile.gcount(), clinetstorage[rem]);
+//            infile.close();
+//        }
+//
+//    }
 
 
 
     // start_time = base::Application::GetTime();
-   // std::ifstream infile;
-   // infile.open(fileName, std::ios::binary | std::ios::in);
-
 
     if (fd> 0 ) {
 
 
 
-        lastPacketNo = ceil(size / (UdpDataSize));
+        lastPacketNo = ceil((float)size / (float) (UdpDataSize));
+
+        LError(size);
+
+        LError(lastPacketNo);
+
         
         std::string mtTmp = m_driverId  +";" + m_metaData;
         sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
 
-        int bcst = 0;
+        //int bcst = 0;
         int rem = 0;
+;
 
-//        float *inputTensor2Ptr = reinterpret_cast<float *>(mmap(nullptr, tensorSize_ * sizeof(float),
-//                                                                PROT_READ | PROT_WRITE, MAP_SHARED,
-//                                                                inputTensor2Fd_, 0));
-
-        clinetstorage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
+        storage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
 
 
-        while (!stopped() && rem  < lastPacketNo) {
+        while (!stopped() && rem  < lastPacketNo-1) {
+
+            char *pppp = storage_row(rem);
+
             // char *output = str2md5(data_packet.data, data_size);
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, rem, UdpDataSize , storage_row(rem));
             ++rem;
-            base::sleep(5);
+            base::sleep(1);
+
+
         }
 
-        if (!stopped() && rem  <= lastPacketNo) {
+        if (!stopped() && rem  < lastPacketNo) {
 
             int left = size - rem*UdpDataSize;
-
-            sendPacket(1, bcst, left, storage_row(rem));
+            LError(lastPacketLen);
+            sendPacket(1, rem, left, storage_row(rem));
         }
 
     } else {
         SError << "Cannot open file: " << fileName ;
 
-        if (tcpClient->fnFailure  )
-            tcpClient->fnFailure(fileName, "Cannot open file" , -2 );
+
     }
 
    // end_time = base::Application::GetTime();

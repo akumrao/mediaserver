@@ -25,16 +25,15 @@ public:
     void shutdown() ;
     
  
-   void upload( std::string fileName, std::string driverId, std::string metaData)
-    {
-       m_fileName = fileName;
-       m_driverId  = driverId;
-       m_metaData = metaData;
-    }
- 
+   bool upload( std::string fileName, std::string driverId, std::string metaData);
+
+
     void sendPacket(uint8_t type, uint16_t payloadNo,  uint16_t payloadsize, char *payload) ;
        
-    char *clinetstorage ;//[clientCount];
+    //char *clinetstorage [clientCount];
+
+    char *storage;
+
 
     size_t size;
     int fd;

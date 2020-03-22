@@ -103,6 +103,10 @@ void hmTcpClient::on_close() {
     SInfo << "hmTcpClient::on_close";
 }
 
+
+
+
+
 void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     STrace << "TCP on_read " << "len: " << len;
     // connection->send((const char*) send.c_str(), 5);
@@ -122,7 +126,21 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             SInfo << "UDP Client connect at: " <<  packet.sequence_number;  ;
             
             udpsocket = new hmUdpClient(m_IP, packet.sequence_number, this);
-            udpsocket->upload(m_fileName, m_driverId, m_metaData);
+            if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
+            {
+                udpsocket->shutdown();
+                delete udpsocket;
+                udpsocket = nullptr;
+
+                if (fnFailure  ) {
+                    fnFailure(m_fileName, "Cannot open file", -2);
+                    fnFailure = nullptr;
+                    en_state = Done;
+                }
+
+                shutdown();
+                return;
+            }
             udpsocket->start();
 
             if (fnUpdateProgess)
