@@ -26,6 +26,7 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
 //        clinetstorage[x] = new char[UdpDataSize];
 //    }
 
+    udpClient = nullptr;
     storage = nullptr;
 
     size_of_packet = sizeof (struct Packet);
@@ -56,7 +57,7 @@ void hmUdpClient::run() {
 
 void hmUdpClient::shutdown() {
     
-    stop();
+   // stop();
 
 
 //    for (int x = 0; x < clientCount; ++x) {
@@ -66,6 +67,8 @@ void hmUdpClient::shutdown() {
     if(udpClient)
     {
         udpClient->Close();
+
+        join();
 
         delete []send_buffer;
         delete udpClient;
@@ -206,16 +209,15 @@ void hmUdpClient::sendFile(const std::string fileName) {
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, rem, UdpDataSize , storage_row(rem));
             ++rem;
-            base::sleep(1);
+            base::sleep(5);
 
 
         }
 
         if (!stopped() && rem  < lastPacketNo) {
 
-            int left = size - rem*UdpDataSize;
-            LError(lastPacketLen);
-            sendPacket(1, rem, left, storage_row(rem));
+            lastPacketLen = size - rem*UdpDataSize;
+            sendPacket(1, rem, lastPacketLen, storage_row(rem));
         }
 
     } else {

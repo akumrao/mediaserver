@@ -108,7 +108,7 @@ void hmTcpClient::on_close() {
 
 
 void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
-    STrace << "TCP on_read " << "len: " << len;
+   // STrace << "TCP on_read " << "len: " << len;
     // connection->send((const char*) send.c_str(), 5);
 
     if (len != sizeof (struct TcpPacket)) {
@@ -166,7 +166,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 3:
         {
             en_state = Progess;
-            STrace << "TCP Received type " << packet.type << " payload:" << packet.sequence_number;
+            STrace << "TCP Received type " << (int) packet.type << " percentage uploaded:" << packet.sequence_number;
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, packet.sequence_number);
