@@ -46,9 +46,13 @@ public:
        
        auto search = udpConManager.find((TcpConnection*)connection);
         if (search != udpConManager.end()) {
-            SInfo << "found " << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp();
+            SInfo << "Freeing UDP Port "  << search->second ;
+            udpPortManager[search->second]->freePort = free;
+            udpConManager.erase (search, udpConManager.end());
+
+           
         } else {
-            SInfo << "notfound" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp();
+            SError << "Orphan Tcp Connection";
         }
        
         
