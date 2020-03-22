@@ -57,7 +57,7 @@ void hmUdpClient::run() {
 
 void hmUdpClient::shutdown() {
     
-   // stop();
+    stop();
 
 
 //    for (int x = 0; x < clientCount; ++x) {
