@@ -42,7 +42,7 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
 
 hmUdpClient::~hmUdpClient() {
 
-    join();
+//    join();
     
     delete []send_buffer;
      
@@ -52,7 +52,6 @@ hmUdpClient::~hmUdpClient() {
       close(fd);
     }  
     
-    
     delete udpClient;
     udpClient = nullptr;
 
@@ -60,9 +59,10 @@ hmUdpClient::~hmUdpClient() {
     LTrace("~hmUdpClient()" )
 }
 
+
 void hmUdpClient::run() {
     
-    LTrace("start UDP client")
+    LTrace("run start")
     
     udpClient->connect();
     
@@ -70,6 +70,8 @@ void hmUdpClient::run() {
     sendHeader(m_fileName);
 
     sendFile(m_fileName);
+    
+    LTrace("run over")
 
 }
 
@@ -91,7 +93,7 @@ void hmUdpClient::shutdown() {
 
         udpClient->Close();
         
-        base::sleep(500);
+      //  base::sleep(500);
         
      
          LInfo("hmUdpClient::shutdown()::udpClient");
@@ -183,7 +185,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, rem, UdpDataSize , storage_row(rem));
             ++rem;
-            //usleep(10);
+            usleep(2);
 
 
         }

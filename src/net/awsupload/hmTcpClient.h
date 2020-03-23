@@ -8,6 +8,8 @@
 #include "hmUdpClient.h"
 #include "base/application.h"
 #include <functional>
+#include <mutex>
+#include "base/Timer.h"
 
 using namespace base;
 using namespace net;
@@ -17,14 +19,18 @@ using namespace net;
 class hmTcpClient : public TcpConnection, public Thread{
 public:
 
-    hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port), udpsocket(nullptr),
+    hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port),uploadedPacketNO(0), udpsocket(nullptr),shuttingDown(false),
      TcpConnection(this) {
+        
+        m_ping_timeout_timer.cb_timeout = std::bind(&hmTcpClient::timeout_pong, this);
     }
 
     ~hmTcpClient();
     void run() ;
     
     void sendPacket(uint8_t type, uint32_t payload);
+    
+    void timeout_pong();
 
     void on_connect() ;
 
@@ -35,8 +41,12 @@ public:
     void on_read(Listener* connection, const char* data, size_t len) ;
     
     void upload(std::string fileName, std::string driverId, std::string metaData);
-
-
+    
+    std::atomic<bool> shuttingDown;
+    
+    uint32_t uploadedPacketNO;
+    
+    std::mutex g_shutdown_mutex;
 private:
     hmUdpClient *udpsocket;
     std::string m_IP;
@@ -47,6 +57,7 @@ private:
     std::string m_driverId;
     std::string m_metaData;
     
+    Timer m_ping_timeout_timer{ nullptr};
 
   
 public:

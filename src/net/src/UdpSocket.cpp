@@ -52,7 +52,8 @@ namespace base {
         }
 
         inline static void onClose(uv_handle_t* handle) {
-            delete handle;
+            //delete handle;
+            SInfo << "onClose";
         }
 
         /* Instance methods. */
@@ -93,15 +94,14 @@ namespace base {
         
         UdpSocket::~UdpSocket() {
 
-            if (!this->closed)
-                Close();
+          //  if (!this->closed)
+            //    Close();
             
             if (uvHandle)
            delete uvHandle;
         }
 
         void UdpSocket::Close() {
-
 
             if (this->closed)
                 return;

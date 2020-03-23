@@ -52,7 +52,6 @@ hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), cur
 void hmUdpServer::resetUdpServer()
 {
     freePort = true;
-    curPtr = -1;
     waitingPtr = -1;
 }
 
@@ -85,14 +84,13 @@ void hmUdpServer::shutdown() {
 
 void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) {
 
-    int family;
-
-    std::string peerIp;
-    uint16_t peerPort;
-
-    IP::GetAddressInfo(
-            remoteAddr, family, peerIp, peerPort);
-
+//    int family;
+//    std::string peerIp;
+//    uint16_t peerPort;
+//
+//    IP::GetAddressInfo(
+//            remoteAddr, family, peerIp, peerPort);
+    
     if (len != sizeof (struct Packet)) {
         LError("Fatal error: Some part of packet lost. ")
         return;
@@ -105,7 +103,7 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
         case 0:
         {
             //LTrace("First Packet")
-            SInfo << "Received from " << peerIp << ":" << peerPort << " Payload Size:" << packet.payloadlen << " Last Packet NO:" << packet.payload_number - 1;
+            SInfo << "Received from " << " Payload Size:" << packet.payloadlen << " Last Packet NO:" << packet.payload_number - 1;
 
             //LTrace(packet.payload)
 
@@ -134,13 +132,14 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
         case 1:
         {
 
-            STrace << "Received from " << peerIp << ":" << peerPort << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
+            STrace << "Received from " << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
             //LTrace(packet.payload)
             if (packet.payload_number == curPtr) {
                 // memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
                 memcpy(storage_row(curPtr), packet.payload, packet.payloadlen);
                 ++curPtr;
                 waitingPtr = -1;
+                freePort = false;
             } else {
                 if(waitingPtr > -1)
                 {
@@ -177,18 +176,27 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
 
             if (curPtr > lastPacketNo) {
                 SInfo << "percentage uploaded 100";
-                sendTcpPacket(tcpConn, 3, 100);
+                sendTcpPacket(tcpConn, 3, packet.payload_number);
                 lastPacketLen = packet.payloadlen;
                 savetoS3();
                 savetoDB();
                 resetUdpServer();
+                curPtr = -1;
             } else if (!(curPtr % ((lastPacketNo + 1) / 10))) {
                 int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
                 if (per != 100) {
-                    SInfo << "percentage uploaded " << per;
-                    sendTcpPacket(tcpConn, 3, per);
+                    SInfo << "percentage1 uploaded " << per;
+                    sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
             }
+            else if ( curPtr > 5001 && !(curPtr  %  5001)) {
+            int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
+            if (per != 100) {
+                SInfo << "percentage2 uploaded " << per;
+                sendTcpPacket(tcpConn, 3, packet.payload_number);
+            }
+            }
+            
             break;
         }
 

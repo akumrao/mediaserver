@@ -32,7 +32,8 @@ public:
     void savetoS3();
     void savetoDB();
 
-    bool freePort;
+    std::atomic<bool> freePort;
+
     void resetUdpServer();
     
     TcpConnection* tcpConn;

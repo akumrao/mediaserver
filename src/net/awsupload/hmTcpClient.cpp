@@ -7,6 +7,9 @@
 #include "tcpUpload.h"
 #include "base/platform.h"
 #include "hmTcpClient.h"
+#include <future>
+
+#define UPLOADTIMEOUT 10000
 
 using std::endl;
 using namespace base;
@@ -21,17 +24,25 @@ static void async_cb_upload(uv_async_t* handle) {
 
     p->Close();
     p->stop();
-   // p->app.stop();
-    p->app.uvDestroy();
+  
 
-    LTrace(" Upload::async_cb_upload over")
+    SInfo << "Upload::async_cb_upload over" ;
 
 }
 
 
  hmTcpClient::~hmTcpClient() {
-    LTrace(" Upload::~hmTcpClient ")
+     
+//   join();  
+    if(udpsocket)
+    {
+        delete udpsocket;
+        udpsocket = nullptr;
+    }
+   
+    SInfo << " Upload::async_cb_upload over";
 }
+ 
 void hmTcpClient::run() {
 
     SInfo << "run";
@@ -45,6 +56,23 @@ void hmTcpClient::run() {
     
     app.run();
     SInfo << "run over";
+    
+     
+}
+
+void hmTcpClient::timeout_pong()
+{
+    STrace << "TCP Received type " <<  "time Expired";
+    
+    m_ping_timeout_timer.Reset();
+    
+    udpsocket->stop();
+    udpsocket->join();
+    udpsocket->stop(false);
+    udpsocket->rem = uploadedPacketNO +1;
+    udpsocket->start();
+    
+
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -72,23 +100,33 @@ void hmTcpClient::sendPacket(uint8_t type, uint32_t payload) {
 void hmTcpClient::on_connect() {
     STrace << "on_connect Send Init: ";
     sendPacket(0, 0);
-
     en_state = Connected;
 }
 
 void hmTcpClient::shutdown() {
-    if(udpsocket)
-    {
-        udpsocket->shutdown();
-        delete udpsocket;
-        udpsocket = nullptr;
-    }
-    int  r = uv_async_send(&async);
-    assert(r == 0);
     
-    join();
-      
-    STrace << "shutdown ";
+    std::lock_guard<std::mutex> guard(g_shutdown_mutex);
+    
+    if(!shuttingDown )
+    {
+        shuttingDown =true;
+        
+        m_ping_timeout_timer.Stop();
+        m_ping_timeout_timer.Close();
+                 
+        if(udpsocket)
+        {
+            udpsocket->shutdown();
+            
+        }
+        int  r = uv_async_send(&async);
+        assert(r == 0);
+
+//       join();
+       STrace << "shutdown over";
+    }
+
+     
 }
 
 void hmTcpClient::on_close() {
@@ -99,6 +137,12 @@ void hmTcpClient::on_close() {
             fnFailure(m_fileName, "Network Issue or Media Service not running", -1);
 
     }
+    
+    app.stop();
+    app.uvDestroy();
+    
+
+
 
     SInfo << "hmTcpClient::on_close";
 }
@@ -111,6 +155,11 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
    // STrace << "TCP on_read " << "len: " << len;
     // connection->send((const char*) send.c_str(), 5);
 
+    if( shuttingDown )
+    {
+        return;
+    }
+    
     if (len != sizeof (struct TcpPacket)) {
         LTrace(data)
         LError("Fatal error: Some part of packet lost. ")
@@ -123,12 +172,11 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     switch (packet.type) {
         case 1:
         {
-            SInfo << "UDP Client connect at: " <<  packet.sequence_number;  ;
             
             udpsocket = new hmUdpClient(m_IP, packet.sequence_number, this);
             if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
             {
-                udpsocket->shutdown();
+               // udpsocket->shutdown();
                 delete udpsocket;
                 udpsocket = nullptr;
 
@@ -141,7 +189,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
                 shutdown();
                 return;
             }
+            SInfo << "UDP Client connect at: " <<  packet.sequence_number; 
             udpsocket->start();
+            
+            m_ping_timeout_timer.Start(UPLOADTIMEOUT);
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, 0);
@@ -151,13 +202,6 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 2:
         {
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
-//            uint32_t payloadsize = UdpDataSize;
-//
-//            if (packet.sequence_number == udpsocket->lastPacketNo) {
-//                payloadsize = udpsocket->lastPacketLen;
-//                SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
-//            }
-            
             
             udpsocket->stop();
             udpsocket->join();
@@ -165,10 +209,6 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             udpsocket->rem = packet.sequence_number;
             udpsocket->start();
 
-            //int rem = packet.sequence_number % clientCount;
-            //udpsocket->resumefrom( packet.sequence_number );
-            
-            //sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(packet.sequence_number));
             break;
         }
 
@@ -177,16 +217,28 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             en_state = Progess;
             STrace << "TCP Received type " << (int) packet.type << " percentage uploaded:" << packet.sequence_number;
 
-            if (fnUpdateProgess)
-                fnUpdateProgess(m_fileName, packet.sequence_number);
+            uploadedPacketNO = packet.sequence_number;
             
-            if(   packet.sequence_number == 100 )
+            if (fnUpdateProgess)
             {
+                int per = 10 * (packet.sequence_number / ((udpsocket->lastPacketNo) / 10));
+                if (per != 100) {
+                    
+                }
+                fnUpdateProgess(m_fileName, per);
+            }
+           
+            if(   packet.sequence_number == udpsocket->lastPacketNo -1 )
+            {
+                m_ping_timeout_timer.Stop();
                 en_state = Progess;
                 if (fnSuccess)
                     fnSuccess(m_fileName, "Upload Completed");
 
                 shutdown();
+            }else
+            {
+                 m_ping_timeout_timer.Reset();
             }
 
             break;
@@ -195,23 +247,11 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 4:
         {
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission of header: " << packet.sequence_number;
-//            uint32_t payloadsize = UdpDataSize;
-//
-//            if (packet.sequence_number == udpsocket->lastPacketNo) {
-//                payloadsize = udpsocket->lastPacketLen;
-//                SInfo << "Retransmission of lastpacket: " << packet.sequence_number << " size " << payloadsize;
-//            }
-            
-            
             udpsocket->stop();
             udpsocket->join();
+            udpsocket->stop(false);
             udpsocket->rem = packet.sequence_number;
             udpsocket->start();
-
-            //int rem = packet.sequence_number % clientCount;
-            //udpsocket->resumefrom( packet.sequence_number );
-            
-            //sendPacket(1, packet.sequence_number, payloadsize, udpsocket->storage_row(packet.sequence_number));
             break;
         }
 
@@ -240,10 +280,16 @@ namespace hm {
 
     void init() {
 
-
         thread = new hmTcpClient(ip, port);
     }
 
+    void exitit() {
+        SInfo << "hm::exit() ";
+        thread->shutdown();
+        thread->join();
+        delete thread;
+    }
+       
     void upload(const std::string driverId, const std::string metaDataJson, const std::string file) {
         thread->upload(file, driverId, metaDataJson);
         thread->start();
@@ -253,6 +299,26 @@ namespace hm {
             SInfo << "Percentage uploaded " << progess;
 
         };
+        
+         thread->fnSuccess = [&](const std::string& , const std::string&) {
+
+            SInfo << "success ";
+            std::thread th(&exitit) ;
+            th.detach();
+        };
+        
+        thread->fnFailure = [&](const std::string& , const std::string&, const int&) {
+
+            SInfo << "failure " ;
+            
+            std::thread th(&exitit) ;
+            th.detach();
+           
+                 
+           // a1();
+        };
+        
+       
 
     }
 
@@ -262,10 +328,7 @@ namespace hm {
 
     }
 
-    void exit() {
-        thread->shutdown();
-        delete thread;
-    }
+ 
 
 }// end hm
 
@@ -295,10 +358,11 @@ int main(int argc, char** argv) {
 
 
 
-    base::sleep(5000000);
+    base::sleep(20000000);
 
     LTrace("About to exit")
-    hm::exit();
+    std::thread th(&hm::exitit) ;
+            th.detach();
 
     
     base::sleep(100000);

@@ -85,16 +85,18 @@ public:
 //                    port = (--udpPortManager.end())->first + 1;
 //                    // todo circular port allocation
 //                }
-
+                std::lock_guard<std::mutex> guard(g_port_mutex);
                 for ( std::map<uint32_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
                 {
+                    
                      if( it->second->freePort)
                      {
+                         it->second->freePort = false;
+                         
                          it->second->tcpConn = (TcpConnection*)connection;
                          it->second->sendTcpPacket( (TcpConnection*)connection, 1, it->first);
                          udpConManager[(TcpConnection*)connection] = it->first;
-                         it->second->freePort = false;
-                         
+                        
                          SInfo << "UDP port allocated: " <<  it->first  ;
                          break;
                      }
@@ -108,21 +110,7 @@ public:
               
                 break;
             }
-//            case 2:
-//            {
-//                
-//                LTrace("First TCP Packet received")
-//                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
-//                break;
-//            }
-//
-//            case 3:
-//            {
-//                LTrace("First TCP Packet received")
-//                STrace << "TCP Received type " << (int) packet.type << " payload:" << packet.sequence_number;
-//                break;
-//                break;
-//            }
+
             default:
             {
                 LError("Fatal TCP: Not a valid state")
@@ -137,6 +125,8 @@ public:
     std::map<uint32_t, hmUdpServer* > udpPortManager;
     
     std::map<TcpConnection*, uint32_t> udpConManager;
+    
+    std::mutex g_port_mutex;
     
     std::string m_ip;
 
