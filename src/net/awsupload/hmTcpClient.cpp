@@ -19,8 +19,17 @@ static void async_cb_upload(uv_async_t* handle) {
 
     LTrace(" Upload::async_cb_upload")
 
+
+
     hmTcpClient *p = ( hmTcpClient *) handle->data;
+
     uv_close((uv_handle_t*)&p->async, nullptr);
+
+    p->m_ping_timeout_timer->Stop();
+    p->m_ping_timeout_timer->Close();
+
+    delete p->m_ping_timeout_timer;
+
 
     p->Close();
     p->stop();
@@ -52,7 +61,9 @@ void hmTcpClient::run() {
     async.data = this;
     int r = uv_async_init(app.uvGetLoop(), &async, async_cb_upload);
     assert(r == 0);
-    
+
+    m_ping_timeout_timer = new Timer(nullptr);
+    m_ping_timeout_timer->cb_timeout = std::bind(&hmTcpClient::timeout_pong, this);
     
     app.run();
     SInfo << "run over";
@@ -64,7 +75,7 @@ void hmTcpClient::timeout_pong()
 {
     STrace << "TCP Received type " <<  "time Expired";
     
-    m_ping_timeout_timer.Reset();
+    m_ping_timeout_timer->Reset();
     
     udpsocket->stop();
     udpsocket->join();
@@ -111,9 +122,7 @@ void hmTcpClient::shutdown() {
     {
         shuttingDown =true;
         
-        m_ping_timeout_timer.Stop();
-        m_ping_timeout_timer.Close();
-                 
+
         if(udpsocket)
         {
             udpsocket->shutdown();
@@ -161,7 +170,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     }
     
     if (len != sizeof (struct TcpPacket)) {
-        LTrace(data)
+       // LTrace(data)
         LError("Fatal error: Some part of packet lost. ")
         return;
     }
@@ -192,7 +201,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             SInfo << "UDP Client connect at: " <<  packet.sequence_number; 
             udpsocket->start();
             
-            m_ping_timeout_timer.Start(UPLOADTIMEOUT);
+            m_ping_timeout_timer->Start(UPLOADTIMEOUT);
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, 0);
@@ -230,7 +239,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
            
             if(   packet.sequence_number == udpsocket->lastPacketNo -1 )
             {
-                m_ping_timeout_timer.Stop();
+                m_ping_timeout_timer->Stop();
                 en_state = Progess;
                 if (fnSuccess)
                     fnSuccess(m_fileName, "Upload Completed");
@@ -238,7 +247,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
                 shutdown();
             }else
             {
-                 m_ping_timeout_timer.Reset();
+                 m_ping_timeout_timer->Reset();
             }
 
             break;

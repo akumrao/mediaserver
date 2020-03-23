@@ -20,9 +20,9 @@ class hmTcpClient : public TcpConnection, public Thread{
 public:
 
     hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port),uploadedPacketNO(0), udpsocket(nullptr),shuttingDown(false),
-     TcpConnection(this) {
-        
-        m_ping_timeout_timer.cb_timeout = std::bind(&hmTcpClient::timeout_pong, this);
+     TcpConnection(this), m_ping_timeout_timer(nullptr) {
+
+
     }
 
     ~hmTcpClient();
@@ -57,11 +57,12 @@ private:
     std::string m_driverId;
     std::string m_metaData;
     
-    Timer m_ping_timeout_timer{ nullptr};
+
 
   
 public:
    uv_async_t async;
+   Timer *m_ping_timeout_timer;
    Application app;
    std::function<void(const std::string& , const int&) > fnUpdateProgess; 
    std::function<void(const std::string& , const std::string&) > fnSuccess;

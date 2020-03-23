@@ -120,8 +120,10 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
         storage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
         return true;
     }
-    else
+    else {
+        SError << "Cannot open file: " << fileName ;
         return false;
+    }
 }
 
 void hmUdpClient::sendPacket(uint8_t type, uint32_t payloadNo, uint32_t payloadsize, char *payload) {
@@ -185,7 +187,7 @@ void hmUdpClient::sendFile(const std::string fileName) {
             //char *output1 = str2md5(buffer[send_count], data_size);
             sendPacket(1, rem, UdpDataSize , storage_row(rem));
             ++rem;
-            usleep(2);
+            usleep(4000);
 
 
         }
