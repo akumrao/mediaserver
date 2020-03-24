@@ -32,6 +32,10 @@ public:
             socket->start();
             udpPortManager[iport]= socket;
         }
+        
+      //  m_ping_timeout_timer.cb_timeout = std::bind(&hmTcpServer::reset, this);
+       // m_ping_timeout_timer.Start(9000);
+        
     }
 
     void shutdown() {
@@ -58,6 +62,11 @@ public:
         
     }
 
+    void reset() {
+        
+       // m_ping_timeout_timer.Reset();
+        SInfo << "reset Timer"; 
+    }
     
     void on_read(Listener* connection, const char* data, size_t len) {
        // STrace << "TCP server on_read: " << data << "len: " << len;
@@ -129,12 +138,18 @@ public:
     std::mutex g_port_mutex;
     
     std::string m_ip;
+    
+    
+    //Timer m_ping_timeout_timer{nullptr};
 
 };
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
+    
+   // Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
+    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
 
+    Logger::instance().setWriter(new AsyncLogWriter);
     
     // std::string jsonArray = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
     // std::cout << jsonArray << std::endl << std::flush;

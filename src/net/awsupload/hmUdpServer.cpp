@@ -16,6 +16,9 @@ using std::endl;
 using namespace base;
 using namespace net;
 
+#define UPDServerUPloadTimeout 40000
+
+
 void hmUdpServer::run() {
 
     udpServer = new UdpServer(this, m_ip, m_port);
@@ -32,13 +35,15 @@ char *hmUdpServer::storage_row(unsigned int n) {
 
 hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), curPtr(0), freePort(true), serverstorage(nullptr) {
 
-    serverstorage = (char*) mmap(0, serverCount * UdpDataSize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    serverstorage = (char*) mmap(0, serverCount * UdpDataSize, PROT_READ | PROT_WRITE, MAP_PRIVATE| MAP_ANONYMOUS, -1, 0);
 
     //        for (int x = 0; x < ; ++x) {
     //            serverstorage[x] = new char[UdpDataSize];
     //            
     //        }
-    
+     
+    m_ping_timeout_timer.cb_timeout = std::bind(&hmUdpServer::resetUdpServer, this);
+     
     curPtr = -1;
     waitingPtr = -1;
 }
@@ -51,6 +56,8 @@ hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), cur
 
 void hmUdpServer::resetUdpServer()
 {
+    m_ping_timeout_timer.Stop();
+    SInfo << "Reset and free udp port";
     freePort = true;
     waitingPtr = -1;
 }
@@ -79,6 +86,9 @@ void hmUdpServer::shutdown() {
     if (udpServer) {
         delete udpServer;
         udpServer = nullptr;
+        
+        m_ping_timeout_timer.Stop();
+        m_ping_timeout_timer.Close();
     }
 }
 
@@ -126,6 +136,8 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
 
             curPtr = 0;
             lastPacketNo = packet.payload_number - 1;
+            
+            m_ping_timeout_timer.Start(UPDServerUPloadTimeout);
 
             break;
         }
@@ -181,6 +193,7 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 savetoS3();
                 savetoDB();
                 resetUdpServer();
+                m_ping_timeout_timer.Stop();
                 curPtr = -1;
             } else if (!(curPtr % ((lastPacketNo + 1) / 10))) {
                 int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
@@ -188,13 +201,15 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                     SInfo << "percentage1 uploaded " << per;
                     sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
+                m_ping_timeout_timer.Reset();
             }
             else if ( curPtr > 5001 && !(curPtr  %  5001)) {
             int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
             if (per != 100) {
                 SInfo << "percentage2 uploaded " << per;
                 sendTcpPacket(tcpConn, 3, packet.payload_number);
-            }
+                }
+                m_ping_timeout_timer.Reset();
             }
             
             break;
