@@ -155,12 +155,16 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     {
         return;
     }
-    
+
     if (len != sizeof (struct TcpPacket)) {
        // LTrace(data)
         LError("Fatal error: Some part of packet lost. ")
         return;
     }
+
+   // std::thread t(&hmTcpClient::on_read_int, this, data, len );
+   // t.detach();
+
 
     TcpPacket packet;
     memcpy(&packet, (void*) data, len);

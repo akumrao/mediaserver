@@ -215,7 +215,7 @@ void hmUdpClient::sendFile() {
          // char *output = str2md5(data_packet.data, data_size);
         //char *output1 = str2md5(buffer[send_count], data_size);
         sendPacket(1, rem, UdpDataSize , storage_row(rem));
-        usleep(900);
+        usleep(2900); //2900
     }
 
     else if( rem  < lastPacketNo) {
