@@ -16,7 +16,7 @@ using std::endl;
 using namespace base;
 using namespace net;
 
-#define UPDServerUPloadTimeout 40000
+#define UPDServerUPloadTimeout 60000
 
 
 void hmUdpServer::run() {
@@ -137,7 +137,7 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
             curPtr = 0;
             lastPacketNo = packet.payload_number - 1;
             
-            m_ping_timeout_timer.Start(UPDServerUPloadTimeout);
+            m_ping_timeout_timer.Start(UPDServerUPloadTimeout,UPDServerUPloadTimeout);
 
             break;
         }

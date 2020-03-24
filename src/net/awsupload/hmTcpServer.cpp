@@ -26,7 +26,7 @@ public:
         SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
         
-        for(  uint32_t iport =46001 ;  iport < 46008 ;  ++iport  )  
+        for(  uint32_t iport =46001 ;  iport < 46038 ;  ++iport  )  
         {
             hmUdpServer  *socket  = new hmUdpServer(m_ip, iport);
             socket->start();
@@ -86,36 +86,33 @@ public:
                
                 SInfo << "TCP Packet type " <<  (int) packet.type << " Request for UDP port allocation: " ;
 
-//                uint32_t port = 46001;
-//
-//                int portmangersize = udpPortManager.size();
-//                for( int i =0 ; i< portmangersize ++ i  )
-//                if (portmangersize) {
-//                    port = (--udpPortManager.end())->first + 1;
-//                    // todo circular port allocation
-//                }
-                std::lock_guard<std::mutex> guard(g_port_mutex);
-                for ( std::map<uint32_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
-                {
-                    
-                     if( it->second->freePort)
-                     {
-                         it->second->freePort = false;
-                         
-                         it->second->tcpConn = (TcpConnection*)connection;
-                         it->second->sendTcpPacket( (TcpConnection*)connection, 1, it->first);
-                         udpConManager[(TcpConnection*)connection] = it->first;
-                        
-                         SInfo << "UDP port allocated: " <<  it->first  ;
-                         break;
-                     }
-                }
-             //  // std::cout << it->first << " => " << it->second << '\n'
                 
-            ///////////
-               
-               
-                  
+                bool foundFeePort= false;
+                {
+                    std::lock_guard<std::mutex> guard(g_port_mutex);
+                    for ( std::map<uint32_t, hmUdpServer* >::iterator it=udpPortManager.begin(); it!=udpPortManager.end(); ++it)
+                    {
+
+                         if( it->second->freePort)
+                         {
+                             it->second->freePort = false;
+
+                             it->second->tcpConn = (TcpConnection*)connection;
+                             it->second->sendTcpPacket( (TcpConnection*)connection, 1, it->first);
+                             udpConManager[(TcpConnection*)connection] = it->first;
+
+                             foundFeePort= true;
+                             SInfo << "UDP port allocated: " <<  it->first  ;
+                             break;
+                         }
+                    }
+
+                    if(!foundFeePort)
+                    {
+                        SInfo << "No free port available right now";
+                    }
+              
+                }
               
                 break;
             }
@@ -146,8 +143,8 @@ public:
 
 int main(int argc, char** argv) {
     
-   // Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
-    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
+    Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
+   // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
 
     Logger::instance().setWriter(new AsyncLogWriter);
     

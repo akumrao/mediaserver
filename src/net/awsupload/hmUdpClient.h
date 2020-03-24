@@ -8,6 +8,10 @@
 #include "net/UdpSocket.h"
 #include "base/thread.h"
 #include "udpUpload.h"
+#include "uv.h"
+
+#include <mutex>
+
 //using std::endl;
 using namespace base;
 using namespace net;
@@ -25,10 +29,8 @@ public:
    // void send(char* data, unsigned int lent);
 
     void shutdown() ;
-    
- 
-   bool upload( std::string fileName, std::string driverId, std::string metaData);
 
+   bool upload( std::string fileName, std::string driverId, std::string metaData);
 
     void sendPacket(uint8_t type, uint32_t payloadNo,  uint32_t payloadsize, char *payload) ;
        
@@ -37,25 +39,29 @@ public:
     char *storage;
     
     uint32_t rem;
+    std::atomic<uint32_t> uploadedPacketNO;
+    
+    std::atomic<bool>restUpload;
  
     size_t size;
     int fd;
 
     char* storage_row(unsigned int n) ;
 
-    uint32_t lastPacketLen;
-    uint32_t lastPacketNo;
+    //uint32_t lastPacketLen;
+    std::atomic<uint32_t> lastPacketNo;
     
 
     //std::atomic<bool> sendheader;
     ///std::atomic<bool> sendfile;
         
     void sendHeader(const std::string fileName) ;
-    void sendFile(const std::string fileName) ;
+    void sendFile() ;
+
+    void restartUPload(uint32_t uploadedPacket);
 
 private:
-    
-  
+
     UdpSocket *udpClient;
     std::string IP;
     int port;
@@ -67,6 +73,11 @@ private:
     std::string m_fileName;
     std::string m_driverId;
     std::string m_metaData;
+
+
+    std::mutex udp_client_mutex;
+
+    uv_sem_t sem;
 
     hmTcpClient *tcpClient;
 };

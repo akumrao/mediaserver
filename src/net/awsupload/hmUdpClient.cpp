@@ -20,7 +20,7 @@
 using namespace base;
 using namespace net;
 
-hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc) {
+hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc),restUpload(false), uploadedPacketNO(0) {
 
 //    for (int x = 0; x < clientCount; ++x) {
 //        clinetstorage[x] = new char[UdpDataSize];
@@ -35,6 +35,8 @@ hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP)
     
     //sendheader = true;
    // sendfile= true;
+
+    uv_sem_init(&sem, 0);
     
     rem=0;
 
@@ -55,24 +57,55 @@ hmUdpClient::~hmUdpClient() {
     delete udpClient;
     udpClient = nullptr;
 
+    uv_sem_destroy(&sem);
+
 
     LTrace("~hmUdpClient()" )
 }
 
+void hmUdpClient::restartUPload(uint32_t uploaded)
+{
+   // udp_client_mutex.lock();
+    restUpload = true; 
+    rem = uploaded;
+    uv_sem_post(&sem);
+   
+    //udp_client_mutex.unlock();
+
+}
 
 void hmUdpClient::run() {
     
     LTrace("run start")
-    
-    udpClient->connect();
-    
-    if( !rem)
-    sendHeader(m_fileName);
+    SInfo << "Send File start";
 
-    sendFile(m_fileName);
-    
-    LTrace("run over")
+    while( !stopped()  && uploadedPacketNO < lastPacketNo  )
+    {
+        //
+        udp_client_mutex.lock();
 
+        if (!rem){
+            udpClient->connect();
+            sendHeader(m_fileName);
+        }
+
+        if(rem < lastPacketNo )
+            sendFile();
+
+        ++rem;
+        
+        if(restUpload || ( (uploadedPacketNO < lastPacketNo) && (rem >  lastPacketNo)  ))
+        {
+          STrace << "rem" << rem << "uploaded " << uploadedPacketNO << "lastpacketno " <<  lastPacketNo ;
+          uv_sem_wait(&sem); /* should block */
+          restUpload = false; 
+        }
+
+        udp_client_mutex.unlock();
+
+    }
+
+    LTrace("Upload over")
 }
 
 //void hmUdpClient::send(char* data, unsigned int lent) {
@@ -84,8 +117,9 @@ void hmUdpClient::shutdown() {
     
     LInfo("hmUdpClient::shutdown()::stop");
     
-    
+    restUpload =false;
     stop();
+    restartUPload(lastPacketNo);
     join();
     
     if(udpClient)
@@ -117,6 +151,10 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
 
     if(fd > 0)
     {
+        lastPacketNo = ceil((float)size / (float) (UdpDataSize));
+        SInfo << "fileSize: "  <<  size ;
+        SInfo << "Last packet no: "  <<  lastPacketNo ;
+
         storage = (char *)mmap(0, size, PROT_READ ,MAP_SHARED , fd, 0);
         return true;
     }
@@ -159,56 +197,35 @@ void hmUdpClient::sendHeader(const std::string fileName) {
 
          if (!stopped())
          {
-                 
-            lastPacketNo = ceil((float)size / (float) (UdpDataSize));
-            SInfo << "fileSize: "  <<  size ;
-            SInfo << "Last packet no: "  <<  lastPacketNo ;
+
             std::string mtTmp = m_driverId  +";" + m_metaData;
             sendPacket(0, lastPacketNo, mtTmp.length()+1, (char*)mtTmp.c_str());
          }
-
-        //int bcst = 0;
-      
+    
 
     }
 }
-void hmUdpClient::sendFile(const std::string fileName) {
 
-  
-    
-    // start_time = base::Application::GetTime();
-    if (fd> 0 ) 
-    {
-   
-        SInfo << "Send File start";
-        while (!stopped() && rem  < lastPacketNo-1) {
-            
-             // char *output = str2md5(data_packet.data, data_size);
-            //char *output1 = str2md5(buffer[send_count], data_size);
-            sendPacket(1, rem, UdpDataSize , storage_row(rem));
-            ++rem;
-            usleep(4000);
+void hmUdpClient::sendFile() {
 
 
-        }
-
-        if (!stopped() && rem  < lastPacketNo) {
-
-            lastPacketLen = size - rem*UdpDataSize;
-            sendPacket(1, rem, lastPacketLen, storage_row(rem));
-        }
-        SInfo << "Send File done ";
+    if (rem  < lastPacketNo-1) {
+         // char *output = str2md5(data_packet.data, data_size);
+        //char *output1 = str2md5(buffer[send_count], data_size);
+        sendPacket(1, rem, UdpDataSize , storage_row(rem));
+        //usleep(4);
     }
 
-    else {
-        SError << "Cannot open file: " << fileName ;
+    else if( rem  < lastPacketNo) {
+        uint32_t lastPacketLen = size - rem*UdpDataSize;
+        sendPacket(1, rem, lastPacketLen, storage_row(rem));
     }
+}
 
    // end_time = base::Application::GetTime();
 
    // STrace << "time_s " << double(end_time - start_time) / 1000.00 ;
 
-}
 
 #if 0
 

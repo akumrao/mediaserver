@@ -19,9 +19,8 @@ using namespace net;
 class hmTcpClient : public TcpConnection, public Thread{
 public:
 
-    hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port),uploadedPacketNO(0), udpsocket(nullptr),shuttingDown(false),
+    hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port), udpsocket(nullptr),shuttingDown(false),
      TcpConnection(this), m_ping_timeout_timer(nullptr) {
-
 
     }
 
@@ -44,7 +43,7 @@ public:
     
     std::atomic<bool> shuttingDown;
     
-    uint32_t uploadedPacketNO;
+
     
     std::mutex g_shutdown_mutex;
 private:

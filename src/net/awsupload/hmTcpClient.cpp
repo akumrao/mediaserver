@@ -74,16 +74,8 @@ void hmTcpClient::run() {
 void hmTcpClient::timeout_pong()
 {
     STrace << "TCP Received type " <<  "time Expired";
-    
     m_ping_timeout_timer->Reset();
-    
-    udpsocket->stop();
-    udpsocket->join();
-    udpsocket->stop(false);
-    udpsocket->rem = uploadedPacketNO +1;
-    udpsocket->start();
-    
-
+    udpsocket->restartUPload( udpsocket->uploadedPacketNO +1  );
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -121,12 +113,10 @@ void hmTcpClient::shutdown() {
     if(!shuttingDown )
     {
         shuttingDown =true;
-        
 
         if(udpsocket)
         {
             udpsocket->shutdown();
-            
         }
         int  r = uv_async_send(&async);
         assert(r == 0);
@@ -144,14 +134,11 @@ void hmTcpClient::on_close() {
 
         if (fnFailure)
             fnFailure(m_fileName, "Network Issue or Media Service not running", -1);
-
     }
     
     app.stop();
     app.uvDestroy();
     
-
-
 
     SInfo << "hmTcpClient::on_close";
 }
@@ -201,7 +188,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             SInfo << "UDP Client connect at: " <<  packet.sequence_number; 
             udpsocket->start();
             
-            m_ping_timeout_timer->Start(UPLOADTIMEOUT);
+            m_ping_timeout_timer->Start(UPLOADTIMEOUT, UPLOADTIMEOUT);
 
             if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, 0);
@@ -210,13 +197,15 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         }
         case 2:
         {
+
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission: " << packet.sequence_number;
-            
-            udpsocket->stop();
-            udpsocket->join();
-            udpsocket->stop(false);
-            udpsocket->rem = packet.sequence_number;
-            udpsocket->start();
+
+//            udpsocket->stop();
+//            udpsocket->join();
+//            udpsocket->stop(false);
+//            udpsocket->rem = packet.sequence_number;
+//            udpsocket->start();
+              udpsocket->restartUPload(packet.sequence_number );
 
             break;
         }
@@ -226,7 +215,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
             en_state = Progess;
             STrace << "TCP Received type " << (int) packet.type << " percentage uploaded:" << packet.sequence_number;
 
-            uploadedPacketNO = packet.sequence_number;
+            udpsocket->uploadedPacketNO = packet.sequence_number;
             
             if (fnUpdateProgess)
             {
@@ -255,12 +244,14 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         
         case 4:
         {
+
             SInfo << "TCP Received type " << (int) packet.type << " Retransmission of header: " << packet.sequence_number;
-            udpsocket->stop();
-            udpsocket->join();
-            udpsocket->stop(false);
-            udpsocket->rem = packet.sequence_number;
-            udpsocket->start();
+//            udpsocket->stop();
+//            udpsocket->join();
+//            udpsocket->stop(false);
+//            udpsocket->rem = packet.sequence_number;
+//            udpsocket->start();
+              udpsocket->restartUPload(packet.sequence_number );
             break;
         }
 
