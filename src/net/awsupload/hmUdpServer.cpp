@@ -174,8 +174,9 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 if (packet.payload_number < curPtr) {
                     SInfo << "Lost Packet found. Sequence No: " << packet.payload_number;
                     //  memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
+                    waitingPtr = curPtr;
                     memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
-                    break;
+                    return;
                 }
 
                 // memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
@@ -203,7 +204,7 @@ void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data,
                 }
                 m_ping_timeout_timer.Reset();
             }
-            else if ( curPtr > 5001 && !(curPtr  %  5001)) {
+            else if ( curPtr > 1001 && !(curPtr  %  1001)) {
             int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
             if (per != 100) {
                 SInfo << "percentage2 uploaded " << per;

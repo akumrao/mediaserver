@@ -49,12 +49,12 @@ private:
     std::string m_ip;
     int m_port;
 
-    int curPtr;
+    long curPtr;
     int waitingPtr;
     
 
-    int lastPacketNo{0};
-    int lastPacketLen;
+    uint32_t lastPacketNo{0};
+    uint32_t lastPacketLen;
     std::string driverId;
     std::string metadata;
 
