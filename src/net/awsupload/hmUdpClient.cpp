@@ -69,7 +69,7 @@ void hmUdpClient::restartUPload(uint32_t uploaded)
     restUpload = true; 
     rem = uploaded;
     uv_sem_post(&sem);
-   
+
     //udp_client_mutex.unlock();
 
 }
@@ -93,10 +93,12 @@ void hmUdpClient::run() {
             sendFile();
 
         ++rem;
-        
+
+       // STrace << "Read Packet Frame " << rem;
+
         if(restUpload || ( (uploadedPacketNO < lastPacketNo) && (rem >  lastPacketNo)  ))
         {
-          STrace << "rem" << rem << "uploaded " << uploadedPacketNO << "lastpacketno " <<  lastPacketNo ;
+          STrace << "Read Packet Frame " << rem << " Uploaded " << uploadedPacketNO << " Lastpacketno " <<  lastPacketNo ;
           uv_sem_wait(&sem); /* should block */
           restUpload = false; 
         }
@@ -213,7 +215,7 @@ void hmUdpClient::sendFile() {
          // char *output = str2md5(data_packet.data, data_size);
         //char *output1 = str2md5(buffer[send_count], data_size);
         sendPacket(1, rem, UdpDataSize , storage_row(rem));
-        //usleep(4);
+        usleep(900);
     }
 
     else if( rem  < lastPacketNo) {

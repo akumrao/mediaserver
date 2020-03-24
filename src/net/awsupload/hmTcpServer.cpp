@@ -143,8 +143,8 @@ public:
 
 int main(int argc, char** argv) {
     
-    Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
-   // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
+   // Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
+    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
 
     Logger::instance().setWriter(new AsyncLogWriter);
     

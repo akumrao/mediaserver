@@ -37,8 +37,8 @@ public:
     //char *clinetstorage [clientCount];
 
     char *storage;
-    
-    uint32_t rem;
+
+    std::atomic<uint32_t> rem;
     std::atomic<uint32_t> uploadedPacketNO;
     
     std::atomic<bool>restUpload;
