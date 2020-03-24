@@ -6,7 +6,7 @@
 #include "net/UdpSocket.h"
 #include "udpUpload.h"
 #include "net/TcpConnection.h"
-
+#include "base/Timer.h"
 
 using namespace base;
 using namespace net;
@@ -39,6 +39,8 @@ public:
     TcpConnection* tcpConn;
 
 private:
+    
+    Timer m_ping_timeout_timer{nullptr};
 
     char *storage_row(unsigned int n);
 
