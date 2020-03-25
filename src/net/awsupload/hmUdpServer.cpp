@@ -21,8 +21,8 @@ using namespace net;
 
 void hmUdpServer::run() {
 
-    udpServer = new UdpServer(this, m_ip, m_port);
-    udpServer->bind();
+    udpServer = new TcpServer(this, m_ip, m_port);
+   // udpServer->bind();
 }
 
 hmUdpServer::~hmUdpServer() {
@@ -92,15 +92,15 @@ void hmUdpServer::shutdown() {
     }
 }
 
-void hmUdpServer::OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr) {
 
-//    int family;
-//    std::string peerIp;
-//    uint16_t peerPort;
-//
-//    IP::GetAddressInfo(
-//            remoteAddr, family, peerIp, peerPort);
+ void hmUdpServer:: on_close(Listener* connection)
+ {
+      LError(" hmUdpServer:: on_close. ")
+ }
     
+void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
+
+
     if (len != sizeof (struct Packet)) {
         LError("Fatal error: Some part of packet lost. ")
         return;

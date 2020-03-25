@@ -1,8 +1,9 @@
-#include "hmTcpClient.h"
+//#include "hmTcpClient.h"
 #include "hmUdpClient.h"
 #include "base/logger.h"
 #include "base/application.h"
 #include "base/platform.h"
+#include "net/TcpConnection.h"
 #include <math.h>       /* ceil */
 
 
@@ -20,14 +21,16 @@
 using namespace base;
 using namespace net;
 
-hmUdpClient::hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) : IP(IP), port(port), tcpClient(tcpObc),restartPacketNo(0), uploadedPacketNO(0) {
+hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartPacketNo(0), uploadedPacketNO(0) {
 
 //    for (int x = 0; x < clientCount; ++x) {
 //        clinetstorage[x] = new char[UdpDataSize];
 //    }
 
 
-    udpClient = new UdpSocket(IP, port);
+    udpClient = new TcpConnection(this);
+    udpClient->Connect(IP, port);
+    
     storage = nullptr;
 
     size_of_packet = sizeof (struct Packet);
@@ -79,6 +82,21 @@ void hmUdpClient::restartUPload(uint32_t uploaded)
 
 }
 
+
+void hmUdpClient::on_close(Listener* connection) {
+
+
+    std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+
+}
+
+void hmUdpClient::on_read(Listener* connection, const char* data, size_t len) {
+    std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
+    std::string send = "12345";
+    connection->send((const char*) send.c_str(), 5);
+
+}
+    
 void hmUdpClient::run() {
 
     LTrace("run start")
@@ -89,7 +107,7 @@ void hmUdpClient::run() {
         //
 
         if (!rem) {
-            udpClient->connect();
+            //udpClient->connect();
             sendHeader(m_fileName);
         }
 

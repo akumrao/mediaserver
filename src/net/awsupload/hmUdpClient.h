@@ -5,7 +5,8 @@
 //#include <condition_variable>
 
 #include "base/base.h"
-#include "net/UdpSocket.h"
+#include "net/netInterface.h"
+#include "net/TcpConnection.h"
 #include "base/thread.h"
 #include "udpUpload.h"
 #include <semaphore.h>
@@ -17,12 +18,11 @@
 using namespace base;
 using namespace net;
 
-class hmTcpClient;
 
-class hmUdpClient: public base::Thread {
+class hmUdpClient: public TcpConnection::Listener,public base::Thread {
 public:
 
-    hmUdpClient(std::string IP, int port, hmTcpClient *tcpObc) ;
+    hmUdpClient(std::string IP, int port) ;
     ~hmUdpClient();
     
     void run() ;
@@ -65,7 +65,7 @@ public:
 
 private:
 
-    UdpSocket *udpClient;
+    TcpConnection *udpClient;
     std::string IP;
     int port;
 
@@ -83,8 +83,16 @@ private:
     struct timespec tm;
 
     sem_t sem;
+    
+    ///////////////////////////////////////////////////
+    
+    void on_close(Listener* connection);
 
-    hmTcpClient *tcpClient;
+    void on_read(Listener* connection, const char* data, size_t len);
+    
+    /////////////////////////////////////////////////
+
+    //hmTcpClient *tcpClient;
 };
 
 #endif  //HM_UDP_CLIENT

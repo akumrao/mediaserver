@@ -26,7 +26,7 @@ public:
         SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
         
-        for(  uint32_t iport =46001 ;  iport < 46038 ;  ++iport  )  
+        for(  uint32_t iport =47011 ;  iport < 47048 ;  ++iport  )  
         {
             hmUdpServer  *socket  = new hmUdpServer(m_ip, iport);
             socket->start();

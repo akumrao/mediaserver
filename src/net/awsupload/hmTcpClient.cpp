@@ -196,7 +196,7 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 1:
         {
             
-            udpsocket = new hmUdpClient(m_IP, packet.sequence_number, this);
+            udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
             if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
             {
                // udpsocket->shutdown();

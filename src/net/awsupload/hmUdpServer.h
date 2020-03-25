@@ -3,7 +3,7 @@
 
 
 #include "base/base.h"
-#include "net/UdpSocket.h"
+#include "net/TcpServer.h"
 #include "udpUpload.h"
 #include "net/TcpConnection.h"
 #include "base/Timer.h"
@@ -11,7 +11,7 @@
 using namespace base;
 using namespace net;
 
-class hmUdpServer : public UdpServer::Listener, public base::Thread {
+class hmUdpServer : public TcpServer::Listener, public base::Thread {
 public:
 
     hmUdpServer(std::string IP, int port);
@@ -24,7 +24,9 @@ public:
 
     void shutdown();
 
-    void OnUdpSocketPacketReceived(UdpServer* socket, const char* data, size_t len, struct sockaddr* remoteAddr);
+    void on_close(Listener* connection);
+    void on_read(Listener* connection, const char* data, size_t len);
+    
     void sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint32_t payload);
 
     char *serverstorage; //[serverCount];
@@ -44,7 +46,7 @@ private:
 
     char *storage_row(unsigned int n);
 
-    UdpServer *udpServer;
+    TcpServer *udpServer;
 
     std::string m_ip;
     int m_port;
