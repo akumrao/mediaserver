@@ -8,7 +8,8 @@
 #include "net/UdpSocket.h"
 #include "base/thread.h"
 #include "udpUpload.h"
-#include "uv.h"
+#include <semaphore.h>
+#include <time.h>
 
 #include <mutex>
 
@@ -38,10 +39,12 @@ public:
 
     char *storage;
 
-    std::atomic<uint32_t> rem;
+    std::atomic<uint32_t> restartPacketNo;
+    //std::atomic<uint32_t> rem;
+    uint32_t rem;
     std::atomic<uint32_t> uploadedPacketNO;
     
-    std::atomic<bool>restUpload;
+    //std::atomic<bool>restUpload;
  
     size_t size;
     int fd;
@@ -77,7 +80,9 @@ private:
 
     std::mutex udp_client_mutex;
 
-    uv_sem_t sem;
+    struct timespec tm;
+
+    sem_t sem;
 
     hmTcpClient *tcpClient;
 };

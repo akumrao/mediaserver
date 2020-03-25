@@ -75,7 +75,7 @@ void hmTcpClient::timeout_pong()
 {
     STrace << "TCP Received type " <<  "time Expired";
     m_ping_timeout_timer->Reset();
-    udpsocket->restartUPload( udpsocket->uploadedPacketNO +1  );
+    //udpsocket->restartUPload( udpsocket->uploadedPacketNO +1  );
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -156,18 +156,41 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         return;
     }
 
+    TcpPacket packet;
     if (len != sizeof (struct TcpPacket)) {
-       // LTrace(data)
-        LError("Fatal error: Some part of packet lost. ")
+
+
+        for( int i = 0 ;  i < len ; i= i+ sizeof (struct TcpPacket)   )
+        {
+            TcpPacket lpacket;
+            memcpy(&lpacket, (void*) (data+i), sizeof (struct TcpPacket));
+
+            if( lpacket.type < 6)
+            {
+                packet = lpacket;
+            } else
+            {
+                SInfo  << "Recived TCP len " << len    <<  " TCP Pakcet "    <<  sizeof (struct TcpPacket) ;
+                LError("Fatal error: Some part of packet lost. ")
+            }
+
+        }
+
+
+
         return;
+    }
+    else
+    {
+        memcpy(&packet, (void*) data, len);
     }
 
    // std::thread t(&hmTcpClient::on_read_int, this, data, len );
    // t.detach();
 
 
-    TcpPacket packet;
-    memcpy(&packet, (void*) data, len);
+
+
 
     switch (packet.type) {
         case 1:
