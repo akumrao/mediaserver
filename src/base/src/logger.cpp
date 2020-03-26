@@ -358,14 +358,13 @@ namespace base {
 RemoteChannel::RemoteChannel(std::string name, Level level, std::string ip, int port,
             std::string timeFormat)
     : ConsoleChannel(std::move(name), level, std::move(timeFormat)) {
-
-        udpClient = new net::UdpSocket(ip, port);
-        udpClient->connect();
+        //udpClient = new net::UdpSocket(ip, port);
+        //udpClient->connect();
     }
 
     RemoteChannel::~RemoteChannel() {
-        delete udpClient;
-        udpClient = nullptr;
+        //delete udpClient;
+        //udpClient = nullptr;
     }
 
     void RemoteChannel::write(const LogStream& stream) {
@@ -426,7 +425,7 @@ RemoteChannel::RemoteChannel(std::string name, Level level, std::string ip, int 
         // static std::string str = str + ss.str();
         // if(str.length() > 1024)
         {
-            udpClient->send((char*) ss.str().c_str(), ss.str().length());
+            //udpClient->send((char*) ss.str().c_str(), ss.str().length());
             //str.erase();
         }
 #endif

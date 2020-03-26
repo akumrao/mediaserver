@@ -393,7 +393,7 @@ public:
     
     virtual void write(const LogStream& stream) override;
     
-    net::UdpSocket *udpClient;
+   // net::UdpSocket *udpClient;
 };
 
 
