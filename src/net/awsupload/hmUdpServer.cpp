@@ -71,9 +71,9 @@ void hmUdpServer::resetUdpServer() {
         savetoDB();
         curPtr = -1;
         lastPacketNo = 0;
-        freePort = true;
-        
+       
     }
+   freePort = true;
 
 }
 
