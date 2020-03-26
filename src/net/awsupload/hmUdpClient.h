@@ -19,7 +19,7 @@ using namespace base;
 using namespace net;
 
 
-class hmUdpClient: public TcpConnection::Listener,public base::Thread {
+class hmUdpClient: public TcpConnection, public base::Thread {
 public:
 
     hmUdpClient(std::string IP, int port) ;
@@ -33,15 +33,15 @@ public:
 
    bool upload( std::string fileName, std::string driverId, std::string metaData);
 
-    void sendPacket(uint8_t type, uint32_t payloadNo,  uint32_t payloadsize, char *payload) ;
+   void sendPacket(uint8_t type, uint32_t payloadNo,  uint32_t payloadsize, char *payload) ;
        
     //char *clinetstorage [clientCount];
 
     char *storage;
 
     std::atomic<uint32_t> restartPacketNo;
-    //std::atomic<uint32_t> rem;
-    uint32_t rem;
+    std::atomic<uint32_t> rem;
+    //uint32_t rem;
     std::atomic<uint32_t> uploadedPacketNO;
     
     //std::atomic<bool>restUpload;
@@ -54,6 +54,8 @@ public:
     //uint32_t lastPacketLen;
     std::atomic<uint32_t> lastPacketNo;
     
+    
+     void on_writes();
 
     //std::atomic<bool> sendheader;
     ///std::atomic<bool> sendfile;
@@ -62,14 +64,14 @@ public:
     void sendFile() ;
 
     void restartUPload(uint32_t uploadedPacket);
+    
+    void on_connect();
 
 private:
 
-    TcpConnection *udpClient;
     std::string IP;
     int port;
-
-    
+   
     int size_of_packet;
     char *send_buffer;
       
@@ -82,13 +84,13 @@ private:
 
     struct timespec tm;
 
-    sem_t sem;
+    //sem_t sem;
     
     ///////////////////////////////////////////////////
     
-    void on_close(Listener* connection);
+    void on_close( );
 
-    void on_read(Listener* connection, const char* data, size_t len);
+    void on_read( const char* data, size_t len);
     
     /////////////////////////////////////////////////
 

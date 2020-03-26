@@ -41,20 +41,18 @@ public:
     ///
     /// The event loop may be assigned on construction, otherwise the default
     /// event loop will be used.
-    static uv_loop_t* loop;
+
+ 
     
     void  uvInit();
     void  uvDestroy();
     
-    static uv_loop_t* uvGetLoop(    )
-    {
-        return loop;
-    }
-    
+    static uv_loop_t* uvGetLoop();
+   
     static int64_t GetTime()
     {
-         uv_update_time(loop);
-         return uv_now(loop);
+         uv_update_time(uvGetLoop());
+         return uv_now(uvGetLoop());
     }
     //
     // Event Loop

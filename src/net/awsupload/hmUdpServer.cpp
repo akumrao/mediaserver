@@ -16,16 +16,21 @@ using std::endl;
 using namespace base;
 using namespace net;
 
-#define UPDServerUPloadTimeout 60000
-
+#define UPDServerUPloadTimeout 90000
 
 void hmUdpServer::run() {
 
+    Application app;
+    m_ping_timeout_timer = new Timer (nullptr);
+    m_ping_timeout_timer->cb_timeout = std::bind(&hmUdpServer::resetUdpServer, this);
+     
     udpServer = new TcpServer(this, m_ip, m_port);
-   // udpServer->bind();
+    app.run();
+    // udpServer->bind();
 }
 
 hmUdpServer::~hmUdpServer() {
+    
     shutdown();
 }
 
@@ -35,17 +40,15 @@ char *hmUdpServer::storage_row(unsigned int n) {
 
 hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), curPtr(0), freePort(true), serverstorage(nullptr) {
 
-    serverstorage = (char*) mmap(0, serverCount * UdpDataSize, PROT_READ | PROT_WRITE, MAP_PRIVATE| MAP_ANONYMOUS, -1, 0);
+    serverstorage = (char*) mmap(0, serverCount * UdpDataSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
     //        for (int x = 0; x < ; ++x) {
     //            serverstorage[x] = new char[UdpDataSize];
     //            
     //        }
-     
-    m_ping_timeout_timer.cb_timeout = std::bind(&hmUdpServer::resetUdpServer, this);
-     
+
     curPtr = -1;
-    waitingPtr = -1;
+    waitingPtr = false;
 }
 
 
@@ -53,13 +56,25 @@ hmUdpServer::hmUdpServer(std::string IP, int port) : m_ip(IP), m_port(port), cur
 //        send((char*) txt.c_str(), txt.length(), ip, port);
 //    }
 
-
-void hmUdpServer::resetUdpServer()
-{
-    m_ping_timeout_timer.Stop();
+void hmUdpServer::resetUdpServer() {
     SInfo << "Reset and free udp port";
-    freePort = true;
-    waitingPtr = -1;
+    m_ping_timeout_timer->Stop();
+
+    if (!freePort && lastPacketNo && waitingPtr) {
+        waitingPtr = false;
+        uint32_t totalPacket = curPtr / UdpDataSize;
+       
+        SInfo << "Last Packet " << lastPacketNo << " totalPacket " << totalPacket;
+       
+        sendTcpPacket(tcpConn, 3, 100);
+        savetoS3();
+        savetoDB();
+        curPtr = -1;
+        lastPacketNo = 0;
+        freePort = true;
+        
+    }
+
 }
 
 void hmUdpServer::sendTcpPacket(TcpConnection* tcpConn, uint8_t type, uint32_t payload) {
@@ -87,27 +102,84 @@ void hmUdpServer::shutdown() {
         delete udpServer;
         udpServer = nullptr;
         
-        m_ping_timeout_timer.Stop();
-        m_ping_timeout_timer.Close();
+        m_ping_timeout_timer->Stop();
+        m_ping_timeout_timer->Close();
+        delete m_ping_timeout_timer;
     }
 }
 
+void hmUdpServer::on_close(Listener* connection) {
+    LError(" hmUdpServer:: on_close. ")
+}
 
- void hmUdpServer:: on_close(Listener* connection)
- {
-      LError(" hmUdpServer:: on_close. ")
- }
-    
 void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
 
+  
+    if (curPtr >-1 && lastPacketNo > 0) {
+        memcpy(serverstorage + curPtr, data, len);
+        curPtr = curPtr + len;
 
-    if (len != sizeof (struct Packet)) {
-        LError("Fatal error: Some part of packet lost. ")
+
+        uint32_t totalPacket = curPtr / UdpDataSize;
+
+        Packet lpacket;
+        lpacket.type = 1;
+        lpacket.payload_number = totalPacket;
+        on_fill(lpacket);
+
+        if (totalPacket == lastPacketNo) {
+            return;
+        }
         return;
-    }
+    } else {
+        if (len == sizeof (struct Packet)) {
+            Packet packet;
+            memcpy(&packet, (void*) data, len);
+            on_fill(packet);
+        } else {
 
-    Packet packet;
-    memcpy(&packet, (void*) data, len);
+            SError << "Header is two big:" << len << " struct Packet " << sizeof (struct Packet);
+
+            bool foundHeader = false;
+            if (len > sizeof (struct Packet)) {
+
+                for (int i = 0; i < len; i = i + sizeof (struct Packet)) {
+
+                    Packet lpacket;
+                    lpacket.type = 9;
+
+                    if (!foundHeader) {
+                        memcpy(&lpacket, (void*) (data + i), sizeof (struct Packet));
+                    }
+
+                    if (lpacket.type == 0) {
+                        foundHeader = true;
+                        on_fill(lpacket);
+
+                    } else {
+                        if (foundHeader == true) {
+                            memcpy(serverstorage + curPtr, (data + i), len - sizeof (struct Packet));
+                            curPtr = curPtr + len - sizeof (struct Packet);
+                            break;
+                        }
+                        continue;
+                    }
+                }
+                if (!foundHeader) {
+                    SError << "Could not find header";
+                }
+
+            } else {
+
+                SInfo << "Failure TCP len " << len << " TCP Pakcet " << sizeof (struct Packet);
+
+            }
+        }
+
+    }
+}
+
+void hmUdpServer::on_fill(Packet & packet) {
 
     switch (packet.type) {
         case 0:
@@ -117,7 +189,6 @@ void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
 
             //LTrace(packet.payload)
 
-
             std::vector<std::string> tmp = base::util::split(packet.payload, ';', 1);
             if (tmp.size() > 1) {
                 driverId = tmp[0];
@@ -126,93 +197,56 @@ void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
             }
 
 
-            SInfo << " S3 shared file " << sharedS3File <<  ".mp4";
+            SInfo << " S3 shared file " << sharedS3File << ".mp4";
             SInfo << "metadata " << metadata;
             SInfo << "driverid " << driverId;
 
-//            if (curPtr) {
-//                LError("Fatal error: Two Udp streams are not possible on one port. ")
-//            }
+            //            if (curPtr) {
+            //                LError("Fatal error: Two Udp streams are not possible on one port. ")
+            //            }
 
             curPtr = 0;
-            lastPacketNo = packet.payload_number - 1;
-            
-            m_ping_timeout_timer.Start(UPDServerUPloadTimeout,UPDServerUPloadTimeout);
+            waitingPtr = true;
+            lastPacketNo = packet.payload_number ;
+
+            m_ping_timeout_timer->Start(UPDServerUPloadTimeout, UPDServerUPloadTimeout);
 
             break;
         }
         case 1:
         {
 
-            STrace << "Received from " << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
-            //LTrace(packet.payload)
-            if (packet.payload_number == curPtr) {
-                // memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
-                memcpy(storage_row(curPtr), packet.payload, packet.payloadlen);
-                ++curPtr;
-                waitingPtr = -1;
-                freePort = false;
-            } else {
-                if(waitingPtr > -1)
-                {
-                    return;
-                }
-                
-                if(curPtr == -1)
-                {
-                    sendTcpPacket(tcpConn, 4, 0);
-                    waitingPtr = 0;
-                    return;
-                }
-                while (packet.payload_number > curPtr) {
-                    SInfo << "Packet lost. Sequence No: " << curPtr;
-                    waitingPtr = curPtr;
-                    sendTcpPacket(tcpConn, 2, curPtr);
-                    return;
-                    
-                }
-                if (packet.payload_number < curPtr) {
-                    SInfo << "Lost Packet found. Sequence No: " << packet.payload_number;
-                    //  memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
-                    waitingPtr = curPtr;
-                    memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
-                    return;
-                }
-
-                // memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
-//                memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
-//
-//                ++curPtr;
-            }
+            //SInfo << "Received from " << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
+            // memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
+            // memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
+            //   ++curPtr;
+            
+            freePort = false;
 
             // LInfo( curPtr % ((lastPacketNo+1)/10 ))
 
-            if (curPtr > lastPacketNo) {
+            if (packet.payload_number + 1 >= lastPacketNo) {
                 SInfo << "percentage uploaded 100";
                 sendTcpPacket(tcpConn, 3, packet.payload_number);
                 lastPacketLen = packet.payloadlen;
-                savetoS3();
-                savetoDB();
                 resetUdpServer();
-                m_ping_timeout_timer.Stop();
-                curPtr = -1;
-            } else if (!(curPtr % ((lastPacketNo + 1) / 10))) {
-                int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
+                m_ping_timeout_timer->Stop();
+
+            } else if (!((packet.payload_number + 1) % ((lastPacketNo ) / 10))) {
+                int per = 10 * (packet.payload_number / ((lastPacketNo ) / 10));
                 if (per != 100) {
                     SInfo << "percentage1 uploaded " << per;
-                    sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
-                m_ping_timeout_timer.Reset();
-            }
-            else if ( curPtr > 1001 && !(curPtr  %  1001)) {
-            int per = 10 * (curPtr / ((lastPacketNo + 1) / 10));
-            if (per != 100) {
-                SInfo << "percentage2 uploaded " << per;
-                sendTcpPacket(tcpConn, 3, packet.payload_number);
+                m_ping_timeout_timer->Reset();
+            } else if (packet.payload_number > 1001 && !(packet.payload_number % 1001)) {
+                int per = 10 * (packet.payload_number / ((lastPacketNo ) / 10));
+                if (per != 100) {
+                    SInfo << "percentage2 uploaded " << per;
+                    //sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
-                m_ping_timeout_timer.Reset();
+                m_ping_timeout_timer->Reset();
             }
-            
+
             break;
         }
 
@@ -227,14 +261,14 @@ void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
 
 void hmUdpServer::savetoS3() {
 
-    std::string driverIdTmp = sharedS3File +".mp4";
+    std::string driverIdTmp = sharedS3File + ".mp4";
 
-    LInfo("Saving S3 file ", "https://ubercloudproject.s3.amazonaws.com/", sharedS3File,".mp4")
+    LInfo("Saving S3 file ", "https://uberproject.s3.amazonaws.com/", sharedS3File, ".mp4")
             const Aws::String object_name = driverIdTmp.c_str();
-    put_s3_object_async(object_name, serverstorage, lastPacketNo, lastPacketLen);
+    put_s3_object_async(object_name, serverstorage, curPtr, lastPacketLen);
 }
 
 void hmUdpServer::savetoDB() {
-    PutItem(driverId,sharedS3File,  metadata);
+    PutItem(driverId, sharedS3File, metadata);
 }
 

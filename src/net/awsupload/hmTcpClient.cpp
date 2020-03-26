@@ -9,7 +9,7 @@
 #include "hmTcpClient.h"
 #include <future>
 
-#define UPLOADTIMEOUT 10000
+#define UPLOADTIMEOUT 1000
 
 using std::endl;
 using namespace base;
@@ -30,11 +30,9 @@ static void async_cb_upload(uv_async_t* handle) {
 
     delete p->m_ping_timeout_timer;
 
-
     p->Close();
     p->stop();
   
-
     SInfo << "Upload::async_cb_upload over" ;
 
 }
@@ -56,8 +54,10 @@ void hmTcpClient::run() {
 
     SInfo << "run";
   
+    Application app;
+     
     Connect(m_IP, m_port);
-    
+  
     async.data = this;
     int r = uv_async_init(app.uvGetLoop(), &async, async_cb_upload);
     assert(r == 0);
@@ -73,9 +73,45 @@ void hmTcpClient::run() {
 
 void hmTcpClient::timeout_pong()
 {
-    STrace << "TCP Received type " <<  "time Expired";
+    STrace << "Timer Update "  ;
     m_ping_timeout_timer->Reset();
+    
+    if(udpsocket->lastPacketNo < 11)
+    {
+       m_ping_timeout_timer->Stop();
+       return;
+    }
     //udpsocket->restartUPload( udpsocket->uploadedPacketNO +1  );
+    
+     en_state = Progess;
+          
+
+     uint32_t curPack=  udpsocket->rem  ;
+            
+    if (fnUpdateProgess )
+    {
+        int per = 10 * (curPack / ((udpsocket->lastPacketNo) / 10));
+        if (per != 100) {
+
+        }
+        fnUpdateProgess(m_fileName, per);
+    }
+
+    if(  curPack > udpsocket->lastPacketNo -1 )
+    {
+        if (fnUpdateProgess)
+            fnUpdateProgess(m_fileName, 100);
+         
+        m_ping_timeout_timer->Stop();
+        en_state = Done;
+        if (fnSuccess)
+            fnSuccess(m_fileName, "Upload Completed");
+
+        shutdown();
+    }else
+    {
+         m_ping_timeout_timer->Reset();
+    }
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -97,7 +133,7 @@ void hmTcpClient::sendPacket(uint8_t type, uint32_t payload) {
     memset(send_buffer, 0, size_of_packet);
     memcpy(send_buffer, (char*) &tcpPacket, size_of_packet);
     send(send_buffer, size_of_packet);
-    free(send_buffer);
+   // free(send_buffer);
 }
 
 void hmTcpClient::on_connect() {
@@ -136,8 +172,8 @@ void hmTcpClient::on_close() {
             fnFailure(m_fileName, "Network Issue or Media Service not running", -1);
     }
     
-    app.stop();
-    app.uvDestroy();
+    //Application.stop();
+   // app.uvDestroy();
     
 
     SInfo << "hmTcpClient::on_close";
@@ -158,7 +194,6 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
     TcpPacket packet;
     if (len != sizeof (struct TcpPacket)) {
-
 
         for( int i = 0 ;  i < len ; i= i+ sizeof (struct TcpPacket)   )
         {
@@ -189,13 +224,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
    // t.detach();
 
 
-
-
-
     switch (packet.type) {
         case 1:
         {
-            
+
             udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
             if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
             {
@@ -240,31 +272,33 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 3:
         {
             en_state = Progess;
-            STrace << "TCP Received type " << (int) packet.type << " percentage uploaded:" << packet.sequence_number;
+          //  STrace << "TCP Received type " << (int) packet.type << " percentage uploaded:" << packet.sequence_number;
 
-            udpsocket->uploadedPacketNO = packet.sequence_number;
+           // udpsocket->uploadedPacketNO = packet.sequence_number;
             
-            if (fnUpdateProgess)
-            {
-                int per = 10 * (packet.sequence_number / ((udpsocket->lastPacketNo) / 10));
-                if (per != 100) {
-                    
-                }
-                fnUpdateProgess(m_fileName, per);
-            }
+//            if (fnUpdateProgess)
+//            {
+//                int per = 10 * (packet.sequence_number / ((udpsocket->lastPacketNo) / 10));
+//                if (per != 100) {
+//                    
+//                }
+//                fnUpdateProgess(m_fileName, per);
+//            }
            
-            if(   packet.sequence_number == udpsocket->lastPacketNo -1 )
-            {
+            //if(   packet.sequence_number == udpsocket->lastPacketNo -1 )
+           // {
+                if (fnUpdateProgess)
+                fnUpdateProgess(m_fileName, 100);
                 m_ping_timeout_timer->Stop();
                 en_state = Progess;
                 if (fnSuccess)
                     fnSuccess(m_fileName, "Upload Completed");
 
                 shutdown();
-            }else
-            {
-                 m_ping_timeout_timer->Reset();
-            }
+//            }else
+//            {
+//                 m_ping_timeout_timer->Reset();
+//            }
 
             break;
         }
@@ -379,8 +413,9 @@ int main(int argc, char** argv) {
     hm::init();
         
     std::string file = filename;
-    std::string metadata = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
-
+    //std::string metadata = "{filename:driver-1234-1232323.mp4, gps-latitude:28.674109, gps-longitude:77.438009, timestamp:20200309194530, uploadmode:normal}";
+    
+    std::string  metadata ="{\"filename\":\"1.mp4\",\"gps-latitude\":\"28.674109\",\"gps-longitude\":\"77.438009\",\"timestamp\":\"20200309194530\",\"uploadmode\":\"normal\"}";
     hm::upload("driver-1234", metadata, file);
 
 

@@ -21,15 +21,13 @@
 using namespace base;
 using namespace net;
 
-hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartPacketNo(0), uploadedPacketNO(0) {
+hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartPacketNo(0), uploadedPacketNO(0),TcpConnection(this) {
 
 //    for (int x = 0; x < clientCount; ++x) {
 //        clinetstorage[x] = new char[UdpDataSize];
 //    }
 
 
-    udpClient = new TcpConnection(this);
-    udpClient->Connect(IP, port);
     
     storage = nullptr;
 
@@ -40,7 +38,9 @@ hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartP
    // sendfile= true;
 
     //uv_sem_init(&sem, 0);
-    sem_init( &sem, 0, 0);
+   
+//   if (sem_init(&sem, 0, 0) == -1)
+ //      LTrace("handle_error sem_init")  ;
     
     rem=0;
 
@@ -58,13 +58,62 @@ hmUdpClient::~hmUdpClient() {
       close(fd);
     }  
     
-    delete udpClient;
-    udpClient = nullptr;
+   // delete udpClient;
+   // udpClient = nullptr;
 
-    uv_sem_destroy(&sem);
+  //  sem_destroy(&sem);
 
 
     LTrace("~hmUdpClient()" )
+}
+
+
+void hmUdpClient::on_connect() {
+    STrace << "hmUdpClient::on_connect() ";
+
+      while( !stopped()  && rem < lastPacketNo  ) {
+        //
+        //
+        if (!rem) {
+            //udpClient->connect();
+            sendHeader(m_fileName);
+        }
+
+        if (rem < lastPacketNo)
+            sendFile();
+
+        ++rem;
+
+//        udp_client_mutex.lock();
+//        if (restartPacketNo) {
+//            rem = 0;
+//            restartPacketNo = 0;
+//            STrace << "restartPacketNo Frame " << rem << " Uploaded " << uploadedPacketNO << " Lastpacketno " <<  lastPacketNo ;
+//
+//        }
+//        udp_client_mutex.unlock();
+
+       // STrace << "Read Packet Frame " << rem;
+
+//        if( ( (uploadedPacketNO < lastPacketNo) && (rem >  lastPacketNo)  ))
+//        {
+//          STrace << "Read Packet Frame " << rem << " Uploaded " << uploadedPacketNO << " Lastpacketno " <<  lastPacketNo ;
+//         // ; /* should block */
+//           //udpClient->connect();
+//        } else {
+
+          //  clock_gettime(CLOCK_REALTIME, &tm);
+            //tm.tv_nsec += 1000000000L;
+           // tm.tv_sec += 1;
+          // int x = sem_timedwait(&sem, &tm);
+          // SInfo << x;
+        //}
+           usleep(2900); //2900
+
+         //  sem_wait(&sem);
+    }
+    
+    Close();
 }
 
 void hmUdpClient::restartUPload(uint32_t uploaded)
@@ -76,76 +125,47 @@ void hmUdpClient::restartUPload(uint32_t uploaded)
     restartPacketNo = uploaded;
     udp_client_mutex.unlock();
 
-    uv_sem_post(&sem);
+    //sem_post(&sem);
 
     //udp_client_mutex.unlock();
 
 }
 
 
-void hmUdpClient::on_close(Listener* connection) {
+void hmUdpClient::on_close() {
 
 
-    std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+    SInfo<< "hmUdpClient::on_close" ;//<< connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
 }
 
-void hmUdpClient::on_read(Listener* connection, const char* data, size_t len) {
-    std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
-    std::string send = "12345";
-    connection->send((const char*) send.c_str(), 5);
+void hmUdpClient::on_read( const char* data, size_t len) {
+   // std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
+   // std::string send = "12345";
+//    connection->send((const char*) send.c_str(), 5);
 
 }
     
+
+void hmUdpClient::on_writes()
+{
+  LTrace("on_write")
+    
+  //  sem_post(&sem);
+}
 void hmUdpClient::run() {
 
+    Application app;
+    Connect(IP, port);
+  
     LTrace("run start")
     SInfo << "Send File start";
 
-    while( !stopped()  && uploadedPacketNO < lastPacketNo  ) {
-        //
-        //
+  
+    
+    app.run();
 
-        if (!rem) {
-            //udpClient->connect();
-            sendHeader(m_fileName);
-        }
-
-        if (rem < lastPacketNo)
-            sendFile();
-
-
-        ++rem;
-
-
-        udp_client_mutex.lock();
-        if (restartPacketNo) {
-            rem = restartPacketNo;
-            restartPacketNo = 0;
-            STrace << "restartPacketNo Frame " << rem << " Uploaded " << uploadedPacketNO << " Lastpacketno " <<  lastPacketNo ;
-
-        }
-        udp_client_mutex.unlock();
-
-       // STrace << "Read Packet Frame " << rem;
-
-        if( ( (uploadedPacketNO < lastPacketNo) && (rem >  lastPacketNo)  ))
-        {
-          STrace << "Read Packet Frame " << rem << " Uploaded " << uploadedPacketNO << " Lastpacketno " <<  lastPacketNo ;
-          sem_wait(&sem); /* should block */
-           //udpClient->connect();
-        } else {
-
-            clock_gettime(CLOCK_REALTIME, &tm);
-            tm.tv_nsec += 4200;
-            sem_timedwait(&sem, &tm);
-        }
-
-
-
-    }
-
-    LTrace("Upload over")
+    LTrace("hmUdpClient::run() over")
 }
 
 //void hmUdpClient::send(char* data, unsigned int lent) {
@@ -158,20 +178,20 @@ void hmUdpClient::shutdown() {
     LInfo("hmUdpClient::shutdown()::stop");
     
     stop();
-    restartUPload(lastPacketNo);
+    //restartUPload(lastPacketNo);
     join();
     
-    if(udpClient)
-    {
-
-        udpClient->Close();
-        
-      //  base::sleep(500);
-        
-     
-         LInfo("hmUdpClient::shutdown()::udpClient");
-
-    }
+//    if(udpClient)
+//    {
+//
+//        udpClient->Close();
+//        
+//      //  base::sleep(500);
+//        
+//     
+//         LInfo("hmUdpClient::shutdown()::udpClient");
+//
+//    }
     
     LInfo("hmUdpClient::shutdown()::over");
 }
@@ -190,6 +210,8 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
 
     if(fd > 0)
     {
+        
+        
         lastPacketNo = ceil((float)size / (float) (UdpDataSize));
         SInfo << "fileSize: "  <<  size ;
         SInfo << "Last packet no: "  <<  lastPacketNo ;
@@ -206,18 +228,21 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
 void hmUdpClient::sendPacket(uint8_t type, uint32_t payloadNo, uint32_t payloadsize, char *payload) {
 
   
-    
-    Packet packet;
-    packet.type = type;
-    packet.payload_number = payloadNo;
-    packet.payloadlen = payloadsize;
+   // SInfo << "Sending "  <<  (int) type <<  " payloadNo " << payloadNo  << " payloadsize " << payloadsize;
+    if(type == 0)
+    {
+        Packet packet;
+        packet.type = type;
+        packet.payload_number = payloadNo;
+        packet.payloadlen = payloadsize;
 
-            
-    memcpy(packet.payload, payload, payloadsize);
-    memset(send_buffer, 0, size_of_packet);
-    memcpy(send_buffer, (char*) &packet, size_of_packet);
-
-    udpClient->send(send_buffer, size_of_packet);
+        memcpy(packet.payload, payload, payloadsize);
+        memset(send_buffer, 0, size_of_packet);
+        memcpy(send_buffer, (char*) &packet, size_of_packet);
+        send(send_buffer, size_of_packet);
+    }
+    else
+    send(payload, payloadsize);
 
 }
 
@@ -252,7 +277,7 @@ void hmUdpClient::sendFile() {
          // char *output = str2md5(data_packet.data, data_size);
         //char *output1 = str2md5(buffer[send_count], data_size);
         sendPacket(1, rem, UdpDataSize , storage_row(rem));
-        //usleep(400); //2900
+        
     }
 
     else if( rem  < lastPacketNo) {
@@ -265,114 +290,3 @@ void hmUdpClient::sendFile() {
 
    // STrace << "time_s " << double(end_time - start_time) / 1000.00 ;
 
-
-#if 0
-
-    int main(int argc, char** argv) {
-        Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
-
-
-        LTrace("./runhmUdpClient test.mp4 127.0.0.1")
-        LTrace("./runhmUdpClient test.mp4")
-        Application app;
-
-        int port = 51038;
-        std::string ip = "18.228.58.178";
-        std::string filename;
-        if (argc > 1) {
-            filename = argv[1];
-        }
-
-        if (argc > 2) {
-            ip = argv[2];
-        }
-
-        if (argc > 3) {
-            port = atoi(argv[3]);
-        }
-
-
-
-
-
-        start_time = base::Application::GetTime();
-
-        std::ifstream infile;
-        infile.open(filename, std::ios::binary | std::ios::in);
-
-        Packet init_packet;
-
-        int size_of_packet = sizeof (struct Packet);
-
-        init_packet.type = 0;
-        init_packet.sequence_number = -1;
-        init_packet.len = UdpDataSize;
-
-        strncpy(init_packet.data, filename.c_str(), UdpDataSize);
-
-        char *send_buffer = (char*) malloc(size_of_packet);
-
-        memset(send_buffer, 0, size_of_packet);
-        memcpy(send_buffer, (char*) &init_packet, size_of_packet);
-
-        socket.send(send_buffer, size_of_packet);
-
-        free(send_buffer);
-
-
-
-        if (infile.is_open()) {
-
-            int bcst = 0;
-            int rem = 0;
-            Packet packet;
-            send_buffer = (char*) malloc(sizeof (struct Packet));
-
-
-            while (infile.read(clinetstorage[rem], UdpDataSize)) {
-                packet.type = 1;
-                packet.sequence_number = bcst;
-                packet.len = UdpDataSize;
-                memcpy(packet.data, clinetstorage[rem], UdpDataSize);
-
-                memset(send_buffer, 0, size_of_packet);
-                memcpy(send_buffer, (char*) &packet, size_of_packet);
-                // char *output = str2md5(data_packet.data, data_size);
-                //char *output1 = str2md5(buffer[send_count], data_size);
-
-                socket.send(send_buffer, size_of_packet);
-                rem = (++bcst) % clientCount;
-
-            }
-
-            packet.type = 2;
-            packet.sequence_number = bcst;
-            packet.len = infile.gcount();
-            memcpy(packet.data, clinetstorage[rem], infile.gcount());
-
-            memset(send_buffer, 0, size_of_packet);
-            memcpy(send_buffer, (char*) &packet, size_of_packet);
-            socket.send(send_buffer, size_of_packet);
-
-            infile.close();
-        } else {
-            std::cerr << "Cannot open file:" << filename << endl;
-        }
-
-
-        for (int x = 0; x < clientCount; ++x) {
-            delete [] clinetstorage[x];
-        }
-
-        end_time = base::Application::GetTime();
-
-        std::cout << "time_s " << double(end_time - start_time) / 1000.00 << std::endl << std::flush;
-
-
-        app.run();
-
-
-
-        return 0;
-    }
-#endif

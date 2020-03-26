@@ -20,6 +20,8 @@ namespace base {
 
     }
 
+    std::map<long, uv_loop_t*> m_mapLoop;
+       
     Application& Application::getDefault() {
         return *internal::singleton.get();
     }
@@ -29,30 +31,70 @@ namespace base {
         //if(Application::loop == uv_default_loop() )
             uvInit();
     }
+    
+   // uv_loop_t* Application::loop ;
+    
+    //std::map<long, uv_loop_t*> m_mapLoop;
 
-    uv_loop_t* Application::loop = uv_default_loop();
-
-    void Application::uvInit() {
-        LDebug("init")
-
-        if(loop ==nullptr || loop == uv_default_loop()  )
+     uv_loop_t* Application::uvGetLoop()
+    {
+        long x =  uv_thread_self();
+        if( m_mapLoop.find(x) != m_mapLoop.end())
         {
-            loop = new uv_loop_t;
-            int err = uv_loop_init(loop);
-            if (err != 0)
-                LError("libuv initialization failed");
+            return m_mapLoop[x];
         }
+        else
+        {
+            SError << "No possible to come here";
+             throw;
+        }
+       // return loop[x];
+    }
+    
+     
+    void Application::uvInit() {
+        
+        long x =  uv_thread_self();
+        
+        SInfo << " uvInit tidid" << x;
+        
+        if( m_mapLoop.find(x) == m_mapLoop.end())
+        {
+           m_mapLoop[x]=new uv_loop_t;
+            int err = uv_loop_init(uvGetLoop());
+            if (err != 0)
+               LError("libuv initialization failed");
+        }
+        else
+        {  
+            throw;
+            SError << "No possible to come here";
+        }
+        
 
     }
 
     void Application::uvDestroy() {
 
+        long x =  uv_thread_self();
+        
+        SInfo << " uvDestroy tidid " << x;
+       
+        std::map<long, uv_loop_t*>::iterator it=m_mapLoop.find (x);
+        
+        if( it != m_mapLoop.end())
+         {
+            int result = uv_loop_close(m_mapLoop[x]);
+            delete m_mapLoop[x];
+            m_mapLoop.erase (x);    //
+         }
+        else
+         {  
+             throw;
+             SError << "No possible to come here";
+         }
         LTrace("uvDestroy")
-        if (loop != nullptr) {
-            int result = uv_loop_close(loop);
-            delete loop;
-            loop =nullptr;
-        }
+   
 
     }
 
@@ -85,11 +127,11 @@ namespace base {
     }
 
     void Application::run() {
-        uv_run(loop, UV_RUN_DEFAULT);
+        uv_run(uvGetLoop(), UV_RUN_DEFAULT);
     }
 
     void Application::stop() {
-        uv_stop(loop);
+        uv_stop(uvGetLoop());
     }
 
 
@@ -109,7 +151,7 @@ namespace base {
         //uv_unref(handles )
         // Run until handles are closed
         run();
-        assert(loop->active_handles == 0);
+        assert(uvGetLoop()->active_handles == 0);
         //assert(loop->active_reqs == 0);
 
         LDebug("Finalization complete")
@@ -123,7 +165,7 @@ namespace base {
 
         auto sig = new uv_signal_t;
         sig->data = cmd;
-        uv_signal_init(loop, sig);
+        uv_signal_init(uvGetLoop(), sig);
         uv_signal_start(sig, Application::onShutdownSignal, SIGINT);
     }
 

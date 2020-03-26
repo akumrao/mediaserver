@@ -11,10 +11,10 @@
 #include "udpUpload.h"
 using namespace base;
 
-const Aws::String region = "sa-east-1" ;   // "us-east-2"; // Optional
+const Aws::String region =  "sa-east-1";  // "sa-east-1" ;   // "us-east-2"; // Optional
 Aws::Client::ClientConfiguration clientConfig;
 
-const Aws::String s3_bucket_name = "ubercloudproject"; //"uberproject" ;    //";
+const Aws::String s3_bucket_name = "ubercloudproject" ; //"ubercloudproject"; //"uberproject" ;    //";
 
 // Set up request
 // snippet-start:[s3.cpp.put_object.code]
@@ -45,7 +45,7 @@ void put_object_async_finished1(const Aws::S3::S3Client* client,
         const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
     // Output operation status
     if (outcome.IsSuccess()) {
-        STrace << "put_object_async_finished: Finished uploading "
+        SInfo << "put_object_async_finished: Finished uploading "
                 << context->GetUUID();
         
         //system("SendMail"); 
@@ -67,7 +67,7 @@ inline char *storage_row( char*p ,  unsigned int n)
 
 
 bool put_s3_object_async(
-        const Aws::String& s3_object_name, char *serverstorage, int lastPacketNO, int lastPacketLen) {
+        const Aws::String& s3_object_name, char *serverstorage, long curPtr, int lastPacketLen) {
     // Verify file_name exists
     //    if (!file_exists(file_name)) {
     //        std::cout << "ERROR: NoSuchFile: The specified file does not exist"
@@ -102,19 +102,18 @@ bool put_s3_object_async(
     
     std::cout << "**********************************" << std::endl;
     
-    for (int i = 0; i < lastPacketNO; ++i) {
-        
-      //  std::cout << std::string(serverstorage[i], UdpDataSize );
-
-        data->write(reinterpret_cast<char*> ( storage_row(serverstorage, i)), UdpDataSize);
-    }
+//    for (int i = 0; i < lastPacketNO; ++i) {
+//        
+//        std::cout << std::string(serverstorage[i], UdpDataSize );
+//
+//        data->write(reinterpret_cast<char*> ( storage_row(serverstorage, i)), UdpDataSize);
+//    }
      
-    data->write(reinterpret_cast<char*> ( storage_row( serverstorage, lastPacketNO)), lastPacketLen);
-  //  std::cout << std::string(serverstorage[lastPacketNO], lastPacketLen );
+    data->write(reinterpret_cast<char*> (serverstorage), curPtr);
+    //std::cout << std::string(serverstorage, curPtr );
     std::cout << "*************************************" << std::endl;
 
     //    infile.close();
-
 
     // }
     // delete[] buffer;

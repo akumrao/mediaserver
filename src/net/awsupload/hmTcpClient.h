@@ -63,7 +63,7 @@ private:
 public:
    uv_async_t async;
    Timer *m_ping_timeout_timer;
-   Application app;
+  
    std::function<void(const std::string& , const int&) > fnUpdateProgess; 
    std::function<void(const std::string& , const std::string&) > fnSuccess;
    std::function<void(const std::string& , const std::string&, const int&) > fnFailure;

@@ -42,7 +42,7 @@ public:
 
 private:
     
-    Timer m_ping_timeout_timer{nullptr};
+    Timer *m_ping_timeout_timer;
 
     char *storage_row(unsigned int n);
 
@@ -52,9 +52,10 @@ private:
     int m_port;
 
     long curPtr;
-    int waitingPtr;
+     std::atomic<bool> waitingPtr;
     
-
+    void on_fill(Packet &packet);
+    
     uint32_t lastPacketNo{0};
     uint32_t lastPacketLen;
     std::string driverId;

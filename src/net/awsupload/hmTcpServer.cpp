@@ -26,7 +26,7 @@ public:
         SInfo << "Tcp Port listening at " <<  port;
         m_ip = ip;
         
-        for(  uint32_t iport =47011 ;  iport < 47048 ;  ++iport  )  
+        for(  uint32_t iport =47011 ;  iport < 47013 ;  ++iport  )  
         {
             hmUdpServer  *socket  = new hmUdpServer(m_ip, iport);
             socket->start();
@@ -143,8 +143,8 @@ public:
 
 int main(int argc, char** argv) {
     
-   // Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
-    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
+    Logger::instance().add(new ConsoleChannel("mediaserver", Level::Debug));
+   // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
 
     Logger::instance().setWriter(new AsyncLogWriter);
     
