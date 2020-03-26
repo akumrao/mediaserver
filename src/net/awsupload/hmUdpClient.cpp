@@ -108,7 +108,7 @@ void hmUdpClient::on_connect() {
           // int x = sem_timedwait(&sem, &tm);
           // SInfo << x;
         //}
-           usleep(2900); //2900
+           usleep(100); //2900
 
          //  sem_wait(&sem);
     }
