@@ -20,7 +20,7 @@ namespace base {
 
     }
 
-    std::map<long, uv_loop_t*> m_mapLoop;
+    std::map<uv_thread_t, uv_loop_t*> m_mapLoop;
        
     Application& Application::getDefault() {
         return *internal::singleton.get();
@@ -34,11 +34,10 @@ namespace base {
     
    // uv_loop_t* Application::loop ;
     
-    //std::map<long, uv_loop_t*> m_mapLoop;
 
      uv_loop_t* Application::uvGetLoop()
     {
-        long x =  uv_thread_self();
+        uv_thread_t x =  uv_thread_self();
         if( m_mapLoop.find(x) != m_mapLoop.end())
         {
             return m_mapLoop[x];
@@ -48,13 +47,12 @@ namespace base {
             SError << "No possible to come here";
              throw;
         }
-       // return loop[x];
     }
     
      
     void Application::uvInit() {
         
-        long x =  uv_thread_self();
+        uv_thread_t x =  uv_thread_self();
         
         SInfo << " uvInit tidid" << x;
         
@@ -76,11 +74,11 @@ namespace base {
 
     void Application::uvDestroy() {
 
-        long x =  uv_thread_self();
+        uv_thread_t x =  uv_thread_self();
         
         SInfo << " uvDestroy tidid " << x;
        
-        std::map<long, uv_loop_t*>::iterator it=m_mapLoop.find (x);
+        std::map<uv_thread_t, uv_loop_t*>::iterator it=m_mapLoop.find (x);
         
         if( it != m_mapLoop.end())
          {
