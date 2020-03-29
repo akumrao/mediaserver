@@ -532,12 +532,16 @@ skip:
  * will unwind the thread when it's in the cancel state. Work around that
  * by making the system call directly. Musl libc is unaffected.
  */
+
+#if defined(__LP64__)
+extern "C" int close$NOCANCEL(int);
+#endif
+
 int uv__close_nocancel(int fd) {
 #if defined(__APPLE__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdollar-in-identifier-extension"
 #if defined(__LP64__)
-  extern int close$NOCANCEL(int);
   return close$NOCANCEL(fd);
 #else
   extern int close$NOCANCEL$UNIX2003(int);
