@@ -66,7 +66,7 @@ void hmUdpServer::resetUdpServer() {
        
         SInfo << "Last Packet " << lastPacketNo << " totalPacket " << totalPacket;
        
-        sendTcpPacket(tcpConn, 3, 100);
+       // sendTcpPacket(tcpConn, 3, 100);
         savetoS3();
         savetoDB();
         curPtr = -1;
@@ -131,7 +131,7 @@ void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
             return;
         }
         return;
-    } else {
+    } else if(!freePort){
         if (len == sizeof (struct Packet)) {
             Packet packet;
             memcpy(&packet, (void*) data, len);
@@ -222,7 +222,7 @@ void hmUdpServer::on_fill(Packet & packet) {
             //   ++curPtr;
             
             freePort = false;
-
+	    m_ping_timeout_timer->Reset();
             // LInfo( curPtr % ((lastPacketNo+1)/10 ))
 
             if (packet.payload_number + 1 >= lastPacketNo) {
@@ -236,15 +236,16 @@ void hmUdpServer::on_fill(Packet & packet) {
                 int per = 10 * (packet.payload_number / ((lastPacketNo ) / 10));
                 if (per != 100) {
                     SInfo << "percentage1 uploaded " << per;
+		    sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
-                m_ping_timeout_timer->Reset();
+               // m_ping_timeout_timer->Reset();
             } else if (packet.payload_number > 1001 && !(packet.payload_number % 1001)) {
                 int per = 10 * (packet.payload_number / ((lastPacketNo ) / 10));
                 if (per != 100) {
                     SInfo << "percentage2 uploaded " << per;
-                    //sendTcpPacket(tcpConn, 3, packet.payload_number);
+                   sendTcpPacket(tcpConn, 3, packet.payload_number);
                 }
-                m_ping_timeout_timer->Reset();
+                //m_ping_timeout_timer->Reset();
             }
 
             break;
