@@ -20,7 +20,6 @@ static void async_cb_upload(uv_async_t* handle) {
     LTrace(" Upload::async_cb_upload")
 
 
-
     hmTcpClient *p = ( hmTcpClient *) handle->data;
 
     uv_close((uv_handle_t*)&p->async, nullptr);
@@ -37,6 +36,11 @@ static void async_cb_upload(uv_async_t* handle) {
 
 }
 
+ hmTcpClient::hmTcpClient(const std::string ip, int port) : m_IP(ip), m_port(port), udpsocket(nullptr),shuttingDown(false),
+ TcpConnection(this), m_ping_timeout_timer(nullptr) {
+      send_buffer = (char*) malloc(sizeof (struct TcpPacket));
+}
+
 
  hmTcpClient::~hmTcpClient() {
      
@@ -46,7 +50,7 @@ static void async_cb_upload(uv_async_t* handle) {
         delete udpsocket;
         udpsocket = nullptr;
     }
-   
+    free(send_buffer);
     SInfo << " Upload::async_cb_upload over";
 }
  
@@ -67,8 +71,7 @@ void hmTcpClient::run() {
     
     app.run();
     SInfo << "run over";
-    
-     
+  
 }
 
 void hmTcpClient::timeout_pong()
@@ -129,11 +132,10 @@ void hmTcpClient::sendPacket(uint8_t type, uint32_t payload) {
     tcpPacket.type = type;
     tcpPacket.sequence_number = payload;
 
-    char *send_buffer = (char*) malloc(size_of_packet);
     memset(send_buffer, 0, size_of_packet);
     memcpy(send_buffer, (char*) &tcpPacket, size_of_packet);
     send(send_buffer, size_of_packet);
-   // free(send_buffer);
+
 }
 
 void hmTcpClient::on_connect() {
