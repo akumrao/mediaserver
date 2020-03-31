@@ -67,6 +67,8 @@ public:
     
     void on_connect();
 
+    uv_async_t async;
+
 private:
 
     std::string IP;

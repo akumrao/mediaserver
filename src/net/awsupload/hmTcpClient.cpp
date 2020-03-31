@@ -9,7 +9,7 @@
 #include "hmTcpClient.h"
 #include <future>
 
-#define UPLOADTIMEOUT 1000
+#define UPLOADTIMEOUT 20000
 
 using std::endl;
 using namespace base;
@@ -91,30 +91,40 @@ void hmTcpClient::timeout_pong()
 
      uint32_t curPack=  udpsocket->rem  ;
             
-    if (fnUpdateProgess )
-    {
-        int per = 10 * (curPack / ((udpsocket->lastPacketNo) / 10));
-        if (per != 100) {
+//    if (fnUpdateProgess )
+//    {
+//        int per = 10 * (curPack / ((udpsocket->lastPacketNo) / 10));
+//        if (per != 100) {
+//
+//        }
+//        fnUpdateProgess(m_fileName, per);
+//    }
+//
+//    if(  curPack > udpsocket->lastPacketNo -1 )
+//    {
+//        if (fnUpdateProgess)
+//            fnUpdateProgess(m_fileName, 100);
+//
+//        m_ping_timeout_timer->Stop();
+//        en_state = Done;
+//        if (fnSuccess)
+//            fnSuccess(m_fileName, "Upload Completed");
+//
+//        shutdown();
+//    }else
+//    {
+//         m_ping_timeout_timer->Reset();
+//    }
 
-        }
-        fnUpdateProgess(m_fileName, per);
-    }
 
-    if(  curPack > udpsocket->lastPacketNo -1 )
-    {
-        if (fnUpdateProgess)
-            fnUpdateProgess(m_fileName, 100);
-         
         m_ping_timeout_timer->Stop();
         en_state = Done;
-        if (fnSuccess)
-            fnSuccess(m_fileName, "Upload Completed");
+        if (fnFailure)
+            fnFailure(m_fileName, "Upload timed out",  -3);
 
-        shutdown();
-    }else
-    {
-         m_ping_timeout_timer->Reset();
-    }
+         shutdown();
+
+
 }
 
 void hmTcpClient::upload(std::string fileName, std::string driverId, std::string metaData) {
@@ -195,6 +205,8 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
     }
 
     TcpPacket packet;
+
+    packet.type = 9;
     if (len != sizeof (struct TcpPacket)) {
 
         for( int i = 0 ;  i < len ; i= i+ sizeof (struct TcpPacket)   )
@@ -214,8 +226,6 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         }
 
 
-
-        return;
     }
     else
     {
@@ -278,17 +288,17 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
 
            // udpsocket->uploadedPacketNO = packet.sequence_number;
             
-//            if (fnUpdateProgess)
-//            {
-//                int per = 10 * (packet.sequence_number / ((udpsocket->lastPacketNo) / 10));
-//                if (per != 100) {
-//                    
-//                }
-//                fnUpdateProgess(m_fileName, per);
-//            }
+            if (fnUpdateProgess)
+            {
+                int per = 10 * (packet.sequence_number / ((udpsocket->lastPacketNo) / 10));
+                if (per != 100) {
+
+                }
+                fnUpdateProgess(m_fileName, per);
+            }
            
-            //if(   packet.sequence_number == udpsocket->lastPacketNo -1 )
-           // {
+            if(   packet.sequence_number >= udpsocket->lastPacketNo -1 )
+            {
                 if (fnUpdateProgess)
                 fnUpdateProgess(m_fileName, 100);
                 m_ping_timeout_timer->Stop();
@@ -297,10 +307,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
                     fnSuccess(m_fileName, "Upload Completed");
 
                 shutdown();
-//            }else
-//            {
-//                 m_ping_timeout_timer->Reset();
-//            }
+            }else
+            {
+                 m_ping_timeout_timer->Reset();
+            }
 
             break;
         }

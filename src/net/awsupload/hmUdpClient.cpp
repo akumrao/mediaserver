@@ -68,6 +68,23 @@ hmUdpClient::~hmUdpClient() {
 }
 
 
+
+static void async_cb_upload(uv_async_t* handle) {
+
+    LTrace(" Upload::async_cb_upload")
+
+
+    hmUdpClient *p = ( hmUdpClient *) handle->data;
+
+    uv_close((uv_handle_t*)&p->async, nullptr);
+
+    p->Close();
+
+    SInfo << "Upload::async_cb_upload over" ;
+
+}
+
+
 void hmUdpClient::on_connect() {
     STrace << "hmUdpClient::on_connect() ";
 
@@ -113,7 +130,7 @@ void hmUdpClient::on_connect() {
          //  sem_wait(&sem);
     }
     
-    Close();
+   // Close();
 }
 
 void hmUdpClient::restartUPload(uint32_t uploaded)
@@ -161,9 +178,11 @@ void hmUdpClient::run() {
     LTrace("run start")
     SInfo << "Send File start";
 
-  
-    
+
+    async.data = this;
+    int r = uv_async_init(app.uvGetLoop(), &async, async_cb_upload);
     app.run();
+
 
     LTrace("hmUdpClient::run() over")
 }
@@ -178,6 +197,8 @@ void hmUdpClient::shutdown() {
     LInfo("hmUdpClient::shutdown()::stop");
     
     stop();
+    int  r = uv_async_send(&async);
+    assert(r == 0);
     //restartUPload(lastPacketNo);
     join();
     
