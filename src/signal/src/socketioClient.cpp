@@ -12,7 +12,7 @@ pong
  */
 
 #include "socketio/socketioClient.h"
-#include "http/client.h"
+#include "http/HttpsClient.h"
 #include <stdexcept>
 using namespace std::placeholders;
 #include <functional>
@@ -96,11 +96,12 @@ namespace base {
         m_need_ack(need_ack) {
         }
 /****************************************************************************************/
-        SocketioClient::SocketioClient(const std::string& host, uint16_t port) : //, uv::Loop* loop
+        SocketioClient::SocketioClient(const std::string& host, uint16_t port, bool ssl) : //, uv::Loop* loop
         _host(host),
         _port(port),
         m_ping_interval(0),
-        m_ping_timeout(0)
+        m_ping_timeout(0),
+        ssl(ssl)
         {
             // arvind
             //_ws.addReceiver(this);
@@ -344,7 +345,7 @@ namespace base {
             LTrace("sendHandshakeRequest")
 
             //TraceL << "Send handshake request" << endl;	
-            bool ssl = false;
+            //bool ssl = false;
             std::ostringstream url;
             //url << (ssl ? "https://" : "http://")	<< _host << ":" << _port << "/socket.io/1/";
 
@@ -356,7 +357,14 @@ namespace base {
             }
             url << "&t=" << Application::GetTime();
 
-            m_client = new HttpClient("ws", _host, _port, url.str());
+            if(!ssl)
+            {
+                m_client = new HttpClient("ws", _host, _port, url.str());
+            }
+            else
+            {
+                 m_client = new HttpsClient("wss", _host, _port, url.str());
+            }
 
             // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
             m_client->fnComplete = [&](const Response & response) {

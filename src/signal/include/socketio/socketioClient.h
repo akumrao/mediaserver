@@ -83,7 +83,7 @@ namespace base {
                 con_closing,
                 con_closed
             };
-            SocketioClient(const std::string& host, uint16_t port);
+            SocketioClient(const std::string& host, uint16_t port, bool ssl=false);
             virtual ~SocketioClient();
 
             virtual void connect(const std::string& host, uint16_t port);
@@ -129,7 +129,8 @@ namespace base {
             void on_pong();
 
             void clear_timers();
-
+            
+            bool ssl{false};    
 
         protected:
             Socket* get_socket(string const& nsp);
