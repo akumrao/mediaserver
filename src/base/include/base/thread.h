@@ -1,7 +1,15 @@
 
 #ifndef base_Thread_H
 #define base_Thread_H
+/*********************************/
+Please disable libuv thread and enable std::thread
+for thread leak testing 
 
+When you enable std::thread it will give thread resource 
+issue during thread join.
+
+/**********************************/
+#if 1 
 
 #include "base/base.h"
 
@@ -218,6 +226,66 @@ private:
 } // namespace base
 
 
-#endif
 
+#else
+
+//std thread
+
+#include "base/base.h"
+#include <thread> 
+#include <atomic>
+
+
+
+namespace base
+{
+
+
+    typedef void (*entry)(void* arg);
+
+    class Base_API Thread
+    {
+    public:
+
+        Thread() : exit(false),thread_(nullptr) { }
+        virtual ~Thread(void);
+
+        virtual void start();
+
+
+        virtual void run() {
+            printf("Thread\n");
+        };
+
+        void join();
+
+
+
+        std::thread::id GetThreadID(void) const {
+            return std::this_thread::get_id(); //uv_thread_self();
+        }
+
+        virtual void stop(bool flag = true) {
+            exit = flag;
+        }
+
+        /// Returns true when the task has been cancelled.
+
+        virtual bool stopped() const {
+            return exit.load();
+        };
+
+    protected:
+        std::atomic<bool> exit;
+
+    private:
+        std::thread *thread_;
+    };
+
+
+
+} // namespace base
+
+#endif
+#endif
 
