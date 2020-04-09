@@ -187,7 +187,7 @@ namespace base {
         ////////////////////////////////////////////////////////////////////
         
         void SocketioClient::close(int const& code, string const& reason) {
-            LTrace("Close by reason:", reason);
+            LTrace("Close by reason: ", reason);
 
             m_reconn_timer.Stop();
             m_reconn_timer.Close();
@@ -262,7 +262,7 @@ namespace base {
         }
 
         void SocketioClient::on_decode(packet const& p) {
-            STrace << "on_decode" ;
+           // STrace << "on_decode" ;
 
             switch (p.get_frame()) {
                 case packet::frame_message:
@@ -375,13 +375,13 @@ namespace base {
             };
 
             m_client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-                STrace << "client->fnPayload" << std::string(data,sz) ;
+                //STrace << "client->fnPayload " << std::string(data,sz) ;
                 m_ping_timeout_timer.Reset();
                 m_packet_mgr.put_payload(std::string(data,sz));
             };
             
             m_client->fnClose = [&](HttpBase * con, std::string str) {
-                STrace << "client->fnClose" << str ;
+                STrace << "client->fnClose " << str ;
                 close(0,"exit");
                 on_close();
             };

@@ -226,7 +226,7 @@ namespace base {
         }
 
         void SSLAdapter::flush() {
-            LTrace("Flushing")
+            //LTrace("Flushing")
 
                     // Keep trying to handshake until initialized
             if (!ready())
@@ -255,7 +255,7 @@ namespace base {
                 int nread;
                 char buffer[npending];
                 while ((nread = SSL_read(_ssl, buffer, npending)) > 0) {
-                    LTrace("On Read ", buffer)
+                   // LTrace("On Read ", buffer)
                     //  _socket->listener->on_read(_socket, buffer, nread); // arvind
                     _socket->on_read(buffer, nread); // arvind
                 }

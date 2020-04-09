@@ -54,7 +54,7 @@ namespace base {
         
         uv_thread_t x =  uv_thread_self();
         
-        SInfo << " uvInit tidid" << x;
+        SInfo << " uvInit Tidid " << x;
         
         if( m_mapLoop.find(x) == m_mapLoop.end())
         {
@@ -76,7 +76,7 @@ namespace base {
 
         uv_thread_t x =  uv_thread_self();
         
-        SInfo << " uvDestroy tidid " << x;
+        SInfo << " uvDestroy Tidid " << x;
        
         std::map<uv_thread_t, uv_loop_t*>::iterator it=m_mapLoop.find (x);
         

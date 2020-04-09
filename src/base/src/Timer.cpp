@@ -125,7 +125,14 @@ namespace base
         
         // Notify the listener.
         if(this->listener)
-        this->listener->OnTimer(this,timerID);
+        {
+            // if(timerID > 0)
+            // this->listener->OnTimer1(this,timerID);
+            // else
+            // {
+             this->listener->OnTimer(this);
+            //}
+        }
         
         if(cb_timeout)
         cb_timeout();

@@ -17,7 +17,8 @@ namespace base
             virtual ~Listener() = default;
 
         public:
-            virtual void OnTimer(Timer* timer, int timerID) = 0;
+            //virtual void OnTimer1(Timer* timer, int timerID) = 0;
+            virtual void OnTimer(Timer* timer) = 0;
         };
 
     public:

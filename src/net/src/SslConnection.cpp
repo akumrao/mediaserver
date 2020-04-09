@@ -173,8 +173,8 @@ void SslConnection::send(const char* data, size_t len)
 {
  
 
-    LTrace("send: ", len)
-    LTrace("send: ", data)
+   // LTrace("send: ", len)
+   // LTrace("send: ", data)
    // assert(Thread::currentID() == tid());
     // assert(len <= net::MAX_TCP_PACKET_SIZE);
 /*
@@ -197,8 +197,8 @@ void SslConnection::send(const char* data, size_t len)
 
 void SslConnection::on_tls_read(const char* data, size_t len)
 {
-    LTrace("On SSL read: ", len)
-    LTrace("On SSL read: ", data)
+   // LTrace("On SSL read: ", len)
+  //  LTrace("On SSL read: ", data)
 
     // SSL encrypted data is sent to the SSL context
     _sslAdapter.addIncomingData(data, len);
@@ -207,8 +207,8 @@ void SslConnection::on_tls_read(const char* data, size_t len)
 
 void SslConnection::on_read(const char* data, size_t len)
 {
-    LTrace("SslConnection::on_read ", len)
-    LTrace("SslConnection::on_read ", data)
+   // LTrace("SslConnection::on_read ", len)
+   // LTrace("SslConnection::on_read ", data)
 
     listener->on_read(this,data,len );
   

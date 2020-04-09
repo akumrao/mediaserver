@@ -136,7 +136,7 @@ namespace base {
         }
 
         void WebSocketConnection::onSocketRecv(const std::string& buffer) {
-            LTrace("On recv: ", buffer.size())
+            //LTrace("On recv: ", buffer.size())
 
             if (framer.handshakeComplete()) {
 
