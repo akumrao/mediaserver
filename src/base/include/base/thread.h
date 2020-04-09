@@ -1,14 +1,14 @@
 
 #ifndef base_Thread_H
 #define base_Thread_H
-/*********************************/
+/*******************************************************************
 Please disable libuv thread and enable std::thread
 for thread leak testing 
 
 When you enable std::thread it will give thread resource 
 issue during thread join.
 
-/**********************************/
+********************************************************************/
 #if 1 
 
 #include "base/base.h"

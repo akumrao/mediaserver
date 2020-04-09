@@ -13,6 +13,9 @@
 #include <vector>
 
 
+
+
+
 namespace base {
 
 
@@ -41,7 +44,6 @@ public:
     ///
     /// The event loop may be assigned on construction, otherwise the default
     /// event loop will be used.
-
  
     
     void  uvInit();
@@ -57,6 +59,25 @@ public:
     //
     // Event Loop
     //
+
+    static uint64_t GetTimeMs()
+    {
+        return static_cast<uint64_t>(uv_hrtime() / 1000000u);
+    }
+
+    static uint64_t GetTimeUs()
+    {
+        return static_cast<uint64_t>(uv_hrtime() / 1000u);
+    }
+
+    static uint64_t GetTimeNs()
+    {
+        return uv_hrtime();
+    }
+
+
+
+
     
      /// When Run the application event loop in a thread. Call stopAsync to stop
     //void runAsync();

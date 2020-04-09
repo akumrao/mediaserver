@@ -22,7 +22,7 @@ namespace base
     /* Instance methods. */
 
     Timer::Timer(Listener* listener, int timerID) : listener(listener),timerID(timerID) {
-        LOG_CALL;
+        
 
         this->uvHandle = new uv_timer_t;
         this->uvHandle->data = (void*) this;
@@ -39,14 +39,14 @@ namespace base
     }
 
     Timer::~Timer() {
-        LOG_CALL;
+        
 
         if (!this->closed)
             Close();
     }
 
     void Timer::Close() {
-        LOG_CALL;
+        
 
         if (this->closed)
             return;
@@ -57,7 +57,7 @@ namespace base
     }
 
     void Timer::Start(uint64_t timeout, uint64_t repeat) {
-        LOG_CALL;
+        
 
         if (this->closed)
             LError("closed");
@@ -75,7 +75,7 @@ namespace base
     }
 
     void Timer::Stop() {
-        LOG_CALL;
+        
 
         if (this->closed)
             LError("closed");
@@ -87,7 +87,7 @@ namespace base
     }
 
     void Timer::Reset() {
-        LOG_CALL;
+        
 
         if (this->closed)
             LError("closed");
@@ -106,7 +106,7 @@ namespace base
     }
 
     void Timer::Restart() {
-        LOG_CALL;
+        
 
         if (this->closed)
             LError("closed");
@@ -122,7 +122,7 @@ namespace base
     }
 
     inline void Timer::OnUvTimer(int timerID) {
-        LOG_CALL;
+        
         // Notify the listener.
         if(this->listener)
         this->listener->OnTimer(this,timerID);
