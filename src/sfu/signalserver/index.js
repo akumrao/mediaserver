@@ -40,6 +40,9 @@ var consumerTransport;
 var routerCapabilities;
 var producer;
 var consumer;
+
+var listenIps;
+
 var fileServer = new(nodeStatic.Server)();
 // var app = http.createServer(function(req, res) {
 // 	fileServer.serve(req, res);
@@ -82,11 +85,17 @@ async function runWebServer() {
     console.error('starting web server failed:', err.message);
   });
 
+  
   await new Promise((resolve) => {
     const { listenIp, listenPort } = config;
     webServer.listen(listenPort, listenIp, () => {
       console.log('server is running');
       console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
+
+      listenIps = config.webRtcTransport.listenIps;
+      //const ip = listenIps.announcedIp || listenIps.ip;
+      console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
+
       resolve();
     });
   });
@@ -190,6 +199,7 @@ async function runSocketServer() {
 
 			var trans = {"id":2,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":true,"enableTcp":true,"preferUdp":true,"preferTcp":false,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}};
 			trans.internal.transportId = uuidV4();
+			trans.data.listenIps=listenIps;
 
 			console.log("transport " +  JSON.stringify(trans, null, 4));
 
@@ -367,6 +377,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 			console.log('createConsumerTransport ' + JSON.stringify(data, null, 4) );
 			var trans = {"id":6,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":true,"enableTcp":true,"preferUdp":true,"preferTcp":false,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}}
 			trans.internal.transportId = uuidV4();
+			trans.data.listenIps=listenIps;
 
 			console.log("transport " +  JSON.stringify(trans, null, 4));
 

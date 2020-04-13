@@ -23,7 +23,6 @@ namespace RTC
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
 	{
-		
 
 		// Must be a Binding method.
 		if (packet->GetMethod() != RTC::StunPacket::Method::BINDING)

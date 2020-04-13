@@ -303,10 +303,10 @@ namespace base {
         }
 
         void SocketioClient::on_encode(bool isBinary, shared_ptr<const string> const& payload) {
-            STrace << "on_encode" << payload ;
+            //STrace << "on_encode" << payload ;
 
             if (!isBinary) {
-                LTrace("on_encode ", *payload)
+               // LTrace("on_encode ", *payload)
                 m_client->send(*payload);
             } else {
                 LTrace("on_encode:Binary send is still pending to do ")
@@ -407,7 +407,7 @@ namespace base {
 
     
         void SocketioClient::send(packet& p) {
-            STrace << "send " ;
+           // STrace << "send " ;
             m_packet_mgr.encode(p);
         }
 
@@ -568,7 +568,7 @@ namespace base {
                         json name = ptr.at(0);
                         LTrace(str);
                         
-                        LTrace("namespace ", p.get_nsp())
+                        //LTrace("namespace ", p.get_nsp())
                         on_socketio_event(p.get_nsp(), p.get_pack_id(), name, std::move(value));
 
                         break;
@@ -687,7 +687,7 @@ namespace base {
         }
 
         void Socket::send_packet(packet &p) {
-            STrace << "send_packet" ;
+            //STrace << "send_packet" ;
 
             if (m_connected) {
                 while (true) {
@@ -711,7 +711,7 @@ namespace base {
 
         void Socket::on_socketio_event(const std::string& nsp, int msgId, const std::string& name, json && message) {
 
-            STrace << "on_socketio_event " << name ;
+           // STrace << "on_socketio_event " << name ;
             bool needAck = msgId >= 0;
             event ev = event_adapter::create_event(nsp, name, std::move(message), needAck);
             event_listener_aux func = this->get_bind_listener_locked(name);
@@ -732,7 +732,7 @@ namespace base {
         }
 
         void Socket::ack(int msgId, const string &, const json &ack_message) {
-            STrace << "ack " << msgId ;
+            //STrace << "ack " << msgId ;
 
             packet p(m_nsp, ack_message, msgId, true);
             send_packet(p);

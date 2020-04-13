@@ -145,7 +145,7 @@ namespace base {
             if (pos < json_pos)//we've got pack id.
             {//arvind
                 _pack_id = std::stoi(payload_ptr.substr(pos, json_pos - pos));
-                LTrace("packet id ", _pack_id)
+               // LTrace("packet id ", _pack_id)
             }
             if (_frame == frame_message && (_type == type_binary_event || _type == type_binary_ack)) {
                 //parse later when all buffers are arrived.
@@ -205,7 +205,7 @@ namespace base {
                 // payload_ptr.append(buffer.GetString(),buffer.GetSize());
                 payload_ptr.append(cnfg::stringify(_message));
             }
-            LTrace(payload_ptr);
+            //LTrace(payload_ptr);
             return hasBinary;
         }
 

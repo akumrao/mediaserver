@@ -186,7 +186,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	
 
 	MS_DEBUG_DEV(
-	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
+	  "Channel request received method: ", request->method," id:" , request->id);
 
 	switch (request->methodId)
 	{
@@ -230,7 +230,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 
 			this->mapRouters[routerId] = router;
 
-			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+			MS_DEBUG_DEV("Router created [routerId] ", routerId);
 
 			request->Accept();
 
@@ -246,7 +246,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			this->mapRouters.erase(router->id);
 			delete router;
 
-			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+			MS_DEBUG_DEV("Router closed [id:] ", router->id);
 
 			request->Accept();
 
@@ -312,7 +312,7 @@ inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 
 		default:
 		{
-			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
+			MS_WARN_DEV("received a non handled signal [signum:] ", signum);
 		}
 	}
 }
