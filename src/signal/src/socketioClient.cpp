@@ -370,8 +370,8 @@ namespace base {
             m_client->fnComplete = [&](const Response & response) {
                 std::string reason = response.getReason();
                 StatusCode statuscode = response.getStatus();
-                std::string body = m_client->readStream()->str();
-               // STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
+                std::string body = m_client->readStream() ? m_client->readStream()->str():"";
+                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
             };
 
             m_client->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {

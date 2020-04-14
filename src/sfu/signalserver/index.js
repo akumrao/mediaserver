@@ -258,13 +258,13 @@ async function runSocketServer() {
 
 	 try {
 
-			console.log('connectProducerTransport1 ' + JSON.stringify(data, null, 4) );
+			//console.log('connectProducerTransport1 ' + JSON.stringify(data, null, 4) );
 
 			var prodTras = {"id":4,"method":"transport.connect","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"dtlsParameters":{"role":"server","fingerprints":[{"algorithm":"sha-256","value":"30:D3:F2:7C:DB:12:F3:FD:D4:38:31:19:2F:48:B5:ED:85:59:85:99:D2:5C:E8:A5:AE:A2:57:C6:FF:93:57:65"}]}}};
 
 			prodTras.internal.transportId = transport;
 
-			console.log('connectProducerTransport2 ' + JSON.stringify(prodTras, null, 4) );
+			//console.log('connectProducerTransport2 ' + JSON.stringify(prodTras, null, 4) );
 
 			prodTras.data =data;
 
@@ -297,7 +297,7 @@ async function runSocketServer() {
 
 	 try {
 
-			console.log('produce1 ' + JSON.stringify(data, null, 4) );
+			console.log('produce1  data' + JSON.stringify(data, null, 4) );
 
 			const {kind, rtpParameters} = data;
 			const paused = false;
@@ -313,28 +313,13 @@ async function runSocketServer() {
             console.log('reqData ' + JSON.stringify(reqData, null, 4) );
            // console.log('internal ' + JSON.stringify(internal, null, 4) );
 
-            //const status = yield this._channel.request('transport.produce', internal, reqData);
-            // const data = {
-            //     kind,
-            //     rtpParameters,
-            //     type: status.type,
-            //     consumableRtpParameters
-            // };
-            // const producer = new Producer_1.default({
-            //     internal,
-            //     data,
-            //     channel: this._channel,
-            //     appData,
-            //     paused
-            // });
-
 
 			var prod = {"id":5,"method":"transport.produce","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5","producerId":"87c81cfc-b307-4270-a213-4f17e4776931"},"data":{"kind":"video","rtpParameters":{"mid":"0","codecs":[{"mimeType":"video/VP8","clockRate":90000,"payloadType":96,"rtcpFeedback":[{"type":"goog-remb"},{"type":"transport-cc"},{"type":"ccm","parameter":"fir"},{"type":"nack"},{"type":"nack","parameter":"pli"}],"parameters":{}},{"mimeType":"video/rtx","clockRate":90000,"payloadType":97,"rtcpFeedback":[],"parameters":{"apt":96}}],"headerExtensions":[{"uri":"urn:ietf:params:rtp-hdrext:sdes:mid","id":4},{"uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","id":5},{"uri":"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id","id":6},{"uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","id":2},{"uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","id":3},{"uri":"http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07","id":8},{"uri":"urn:3gpp:video-orientation","id":13},{"uri":"urn:ietf:params:rtp-hdrext:toffset","id":14}],"encodings":[{"ssrc":6897981,"rtx":{"ssrc":3637419867}}],"rtcp":{"cname":"d1blHuW4nPAoUtQb"}},"rtpMapping":{"codecs":[{"payloadType":96,"mappedPayloadType":101},{"payloadType":97,"mappedPayloadType":102}],"encodings":[{"mappedSsrc":632915476,"ssrc":6897981}]},"paused":false}};
 			//prod.internal 
 			prod.internal.transportId = transport;
 			prod.internal.producerId =  uuidV4();
 
-			console.log('produce2 ' + JSON.stringify(prod, null, 4) );
+			//console.log('produce2 ' + JSON.stringify(prod, null, 4) );
 
 			//prod.data.kind = data.kind;
 			prod.data = reqData;
@@ -374,7 +359,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 	 try {
 
-			console.log('createConsumerTransport ' + JSON.stringify(data, null, 4) );
+			console.log('createConsumerTransport data' + JSON.stringify(data, null, 4) );
 			var trans = {"id":6,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":true,"enableTcp":true,"preferUdp":true,"preferTcp":false,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}}
 			trans.internal.transportId = uuidV4();
 			trans.data.listenIps=listenIps;
@@ -429,12 +414,12 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 	 try {
 
-			console.log('connectConsumerTransport ' + JSON.stringify(data, null, 4) );
+			console.log('connectConsumerTransport data ' + JSON.stringify(data, null, 4) );
 			var prodTras =  {"id":9,"method":"transport.connect","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"dtlsParameters":{"role":"client","fingerprints":[{"algorithm":"sha-256","value":"D0:75:50:E5:7E:B7:EB:5D:0D:A2:2B:C6:2E:E6:F0:20:66:2E:91:25:3D:3E:DF:F5:F1:0C:62:3A:9E:40:60:C0"}]}}};
 
 			prodTras.internal.transportId = consumerTransport;
 
-			console.log('connectProducerTransport2 ' + JSON.stringify(prodTras, null, 4) );
+			//console.log('connectProducerTransport2 ' + JSON.stringify(prodTras, null, 4) );
 
 			prodTras.data =data;
 
@@ -515,7 +500,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 			consumeData.internal.consumerId =  uuidV4();
 			
 
-			console.log('conumer2 ' + JSON.stringify(consumeData, null, 4) );
+			//console.log('conumer2 ' + JSON.stringify(consumeData, null, 4) );
 
 			consumeData.data = reqData;
 			console.log('consumer3 ' + JSON.stringify(consumeData, null, 4) );

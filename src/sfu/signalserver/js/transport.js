@@ -1490,3 +1490,1156 @@ class Transport extends EnhancedEventEmitter
         });
     }
 }
+
+
+/**********************************************************************************
+handler.js
+
+*************************************/
+
+class utils{
+
+static clone (obj)
+{
+    if (typeof obj !== 'object')
+        return {};
+
+    return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * Generates a random positive integer.
+ *
+ * @returns {Number}
+ */
+static generateRandomNumber()
+{
+    return Math.round(Math.random() * 10000000);
+}
+
+}
+
+class Handler extends EnhancedEventEmitter
+{
+    constructor(
+        {
+            iceParameters,
+            iceCandidates,
+            dtlsParameters,
+            iceServers,
+            iceTransportPolicy,
+            proprietaryConstraints
+        }
+    )
+    {
+        super(logger);
+
+        // Got transport local and remote parameters.
+        // @type {Boolean}
+        this._transportReady = false;
+
+        // Remote SDP handler.
+        // @type {RemoteSdp}
+        this._remoteSdp = new RemoteSdp(
+            {
+                iceParameters,
+                iceCandidates,
+                dtlsParameters
+            });
+
+        // RTCPeerConnection instance.
+        // @type {RTCPeerConnection}
+        this._pc = new RTCPeerConnection(
+            {
+                iceServers         : iceServers || [],
+                iceTransportPolicy : iceTransportPolicy || 'all',
+                bundlePolicy       : 'max-bundle',
+                rtcpMuxPolicy      : 'require',
+                sdpSemantics       : 'unified-plan'
+            },
+            proprietaryConstraints);
+
+        // Map of RTCTransceivers indexed by MID.
+        // @type {Map<String, RTCTransceiver>}
+        this._mapMidTransceiver = new Map();
+
+        // Handle RTCPeerConnection connection status.
+        this._pc.addEventListener('iceconnectionstatechange', () =>
+        {
+            switch (this._pc.iceConnectionState)
+            {
+                case 'checking':
+                    this.emit('@connectionstatechange', 'connecting');
+                    break;
+                case 'connected':
+                case 'completed':
+                    this.emit('@connectionstatechange', 'connected');
+                    break;
+                case 'failed':
+                    this.emit('@connectionstatechange', 'failed');
+                    break;
+                case 'disconnected':
+                    this.emit('@connectionstatechange', 'disconnected');
+                    break;
+                case 'closed':
+                    this.emit('@connectionstatechange', 'closed');
+                    break;
+            }
+        });
+    }
+
+    close()
+    {
+        logger.debug('close()');
+
+        // Close RTCPeerConnection.
+        try { this._pc.close(); }
+        catch (error) {}
+    }
+
+    async getTransportStats()
+    {
+        return this._pc.getStats();
+    }
+
+    async updateIceServers({ iceServers })
+    {
+        logger.debug('updateIceServers()');
+
+        const configuration = this._pc.getConfiguration();
+
+        configuration.iceServers = iceServers;
+
+        this._pc.setConfiguration(configuration);
+    }
+
+    async _setupTransport({ localDtlsRole, localSdpObject = null })
+    {
+        if (!localSdpObject)
+            localSdpObject = parse(this._pc.localDescription.sdp);
+
+        // Get our local DTLS parameters.
+        const dtlsParameters =
+            extractDtlsParameters({ sdpObject: localSdpObject });
+
+        // Set our DTLS role.
+        dtlsParameters.role = localDtlsRole;
+
+        // Update the remote DTLS role in the SDP.
+        this._remoteSdp.updateDtlsRole(
+            localDtlsRole === 'client' ? 'server' : 'client');
+
+        // Need to tell the remote transport about our parameters.
+        await this.safeEmitAsPromise('@connect', { dtlsParameters });
+
+        this._transportReady = true;
+    }
+}
+
+class SendHandler extends Handler
+{
+    constructor(data)
+    {
+        super(data);
+
+        // Generic sending RTP parameters for audio and video.
+        // @type {RTCRtpParameters}
+        this._sendingRtpParametersByKind = data.sendingRtpParametersByKind;
+
+        // Generic sending RTP parameters for audio and video suitable for the SDP
+        // remote answer.
+        // @type {RTCRtpParameters}
+        this._sendingRemoteRtpParametersByKind = data.sendingRemoteRtpParametersByKind;
+
+        // Local stream.
+        // @type {MediaStream}
+        this._stream = new MediaStream();
+    }
+
+    async send({ track, encodings, codecOptions })
+    {
+        logger.debug('send() [kind:%s, track.id:%s]', track.kind, track.id);
+
+        if (encodings && encodings.length > 1)
+        {
+            encodings.forEach((encoding, idx) =>
+            {
+                encoding.rid = `r${idx}`;
+            });
+        }
+
+        const transceiver = this._pc.addTransceiver(
+            track,
+            {
+                direction     : 'sendonly',
+                streams       : [ this._stream ],
+                sendEncodings : encodings
+            });
+        const offer = await this._pc.createOffer();
+        let localSdpObject = parse(offer.sdp);
+        const sendingRtpParameters =
+            utils.clone(this._sendingRtpParametersByKind[track.kind]);
+
+        if (!this._transportReady)
+            await this._setupTransport({ localDtlsRole: 'server', localSdpObject });
+
+   logger.debug(
+      'send() | calling pc.setLocalDescription() [offer:%o]', offer);
+
+        logger.debug(
+            'send() | localSdpObject [offer:%o]', localSdpObject);
+
+        await this._pc.setLocalDescription(offer);
+
+        // We can now get the transceiver.mid.
+        const localId = transceiver.mid;
+
+        // Set MID.
+        sendingRtpParameters.mid = localId;
+
+        localSdpObject = parse(this._pc.localDescription.sdp);
+
+    logger.debug(
+      'send() | localSdpObject after parse [offer:%o]', localSdpObject);
+
+        const offerMediaObject = localSdpObject.media[localSdpObject.media.length - 1];
+
+        logger.debug(
+      'send() | offerMediaObject [offer:%o]', offerMediaObject);
+        console.log( JSON.stringify(offerMediaObject.candidates));
+
+        // Set RTCP CNAME.
+        sendingRtpParameters.rtcp.cname =
+            getCname({ offerMediaObject });
+
+        // Set RTP encodings by parsing the SDP offer if no encodings are given.
+        if (!encodings)
+        {
+            sendingRtpParameters.encodings =
+                sdpUnifiedPlanUtils.getRtpEncodings({ offerMediaObject });
+        }
+        // Set RTP encodings by parsing the SDP offer and complete them with given
+        // one if just a single encoding has been given.
+        else if (encodings.length === 1)
+        {
+            const newEncodings =
+                sdpUnifiedPlanUtils.getRtpEncodings({ offerMediaObject });
+
+            Object.assign(newEncodings[0], encodings[0]);
+
+            sendingRtpParameters.encodings = newEncodings;
+        }
+        // Otherwise if more than 1 encoding are given use them verbatim.
+        else
+        {
+            sendingRtpParameters.encodings = encodings;
+        }
+
+        // If VP8 and there is effective simulcast, add scalabilityMode to each
+        // encoding.
+        if (
+            sendingRtpParameters.encodings.length > 1 &&
+            sendingRtpParameters.codecs[0].mimeType.toLowerCase() === 'video/vp8'
+        )
+        {
+            for (const encoding of sendingRtpParameters.encodings)
+            {
+                encoding.scalabilityMode = 'L1T3';
+            }
+        }
+
+        this._remoteSdp.send(
+            {
+                offerMediaObject,
+                offerRtpParameters  : sendingRtpParameters,
+                answerRtpParameters : this._sendingRemoteRtpParametersByKind[track.kind],
+                codecOptions
+            });
+
+
+
+
+    logger.debug(
+      'send() | sendingRtpParameters [offer:%o]', sendingRtpParameters);
+
+     logger.debug(
+      'send() | answerRtpParameters [offer:%o]', this._sendingRemoteRtpParametersByKind[track.kind]);
+
+        const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'send() | calling pc.setRemoteDescription() [answer:%o]', answer);
+
+        await this._pc.setRemoteDescription(answer);
+
+        // Store in the map.
+        this._mapMidTransceiver.set(localId, transceiver);
+
+        return { localId, rtpParameters: sendingRtpParameters };
+    }
+
+    async stopSending({ localId })
+    {
+        logger.debug('stopSending() [localId:%s]', localId);
+
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        transceiver.sender.replaceTrack(null);
+        this._pc.removeTrack(transceiver.sender);
+        this._remoteSdp.disableMediaSection(transceiver.mid);
+
+        const offer = await this._pc.createOffer();
+
+        logger.debug(
+            'stopSending() | calling pc.setLocalDescription() [offer:%o]', offer);
+
+        await this._pc.setLocalDescription(offer);
+
+        const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'stopSending() | calling pc.setRemoteDescription() [answer:%o]', answer);
+
+        await this._pc.setRemoteDescription(answer);
+    }
+
+    async replaceTrack({ localId, track })
+    {
+        logger.debug('replaceTrack() [localId:%s, track.id:%s]', localId, track.id);
+
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        await transceiver.sender.replaceTrack(track);
+    }
+
+    async setMaxSpatialLayer({ localId, spatialLayer })
+    {
+        logger.debug(
+            'setMaxSpatialLayer() [localId:%s, spatialLayer:%s]',
+            localId, spatialLayer);
+
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        const parameters = transceiver.sender.getParameters();
+
+        parameters.encodings.forEach((encoding, idx) =>
+        {
+            if (idx <= spatialLayer)
+                encoding.active = true;
+            else
+                encoding.active = false;
+        });
+
+        await transceiver.sender.setParameters(parameters);
+    }
+
+    async getSenderStats({ localId })
+    {
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        return transceiver.sender.getStats();
+    }
+
+    async restartIce({ iceParameters })
+    {
+        logger.debug('restartIce()');
+
+        // Provide the remote SDP handler with new remote ICE parameters.
+        this._remoteSdp.updateIceParameters(iceParameters);
+
+        if (!this._transportReady)
+            return;
+
+        const offer = await this._pc.createOffer({ iceRestart: true });
+
+        logger.debug(
+            'restartIce() | calling pc.setLocalDescription() [offer:%o]', offer);
+
+        await this._pc.setLocalDescription(offer);
+
+        const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'restartIce() | calling pc.setRemoteDescription() [answer:%o]', answer);
+
+        await this._pc.setRemoteDescription(answer);
+    }
+}
+
+class RecvHandler extends Handler
+{
+    constructor(data)
+    {
+        super(data);
+
+        // MID value counter. It must be converted to string and incremented for
+        // each new m= section.
+        // @type {Number}
+        this._nextMid = 0;
+    }
+
+    async receive({ id, kind, rtpParameters })
+    {
+        logger.debug('receive() [id:%s, kind:%s]', id, kind);
+
+        const localId = String(this._nextMid);
+
+        this._remoteSdp.receive(
+            {
+                mid                : localId,
+                kind,
+                offerRtpParameters : rtpParameters,
+                streamId           : rtpParameters.rtcp.cname,
+                trackId            : id
+            });
+
+        const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'receive() | calling pc.setRemoteDescription() [offer:%o]', offer);
+
+        await this._pc.setRemoteDescription(offer);
+
+        let answer = await this._pc.createAnswer();
+        const localSdpObject = parse(answer.sdp);
+        const answerMediaObject = localSdpObject.media
+            .find((m) => String(m.mid) === localId);
+
+        // May need to modify codec parameters in the answer based on codec
+        // parameters in the offer.
+        applyCodecParameters(
+            {
+                offerRtpParameters : rtpParameters,
+                answerMediaObject
+            });
+
+        answer = { type: 'answer', sdp: write1(localSdpObject) };
+
+        if (!this._transportReady)
+            await this._setupTransport({ localDtlsRole: 'client', localSdpObject });
+
+        logger.debug(
+            'receive() | calling pc.setLocalDescription() [answer:%o]', answer);
+
+        await this._pc.setLocalDescription(answer);
+
+        const transceiver = this._pc.getTransceivers()
+            .find((t) => t.mid === localId);
+
+        if (!transceiver)
+            throw new Error('new RTCRtpTransceiver not found');
+
+        // Store in the map.
+        this._mapMidTransceiver.set(localId, transceiver);
+
+        // Increase next MID.
+        this._nextMid++;
+
+        return { localId, track: transceiver.receiver.track };
+    }
+
+    async stopReceiving({ localId })
+    {
+        logger.debug('stopReceiving() [localId:%s]', localId);
+
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        this._remoteSdp.disableMediaSection(transceiver.mid);
+
+        const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'stopReceiving() | calling pc.setRemoteDescription() [offer:%o]', offer);
+
+        await this._pc.setRemoteDescription(offer);
+
+        const answer = await this._pc.createAnswer();
+
+        logger.debug(
+            'stopReceiving() | calling pc.setLocalDescription() [answer:%o]', answer);
+
+        await this._pc.setLocalDescription(answer);
+    }
+
+    async getReceiverStats({ localId })
+    {
+        const transceiver = this._mapMidTransceiver.get(localId);
+
+        if (!transceiver)
+            throw new Error('associated RTCRtpTransceiver not found');
+
+        return transceiver.receiver.getStats();
+    }
+
+    async restartIce({ iceParameters })
+    {
+        logger.debug('restartIce()');
+
+        // Provide the remote SDP handler with new remote ICE parameters.
+        this._remoteSdp.updateIceParameters(iceParameters);
+
+        if (!this._transportReady)
+            return;
+
+        const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
+
+        logger.debug(
+            'restartIce() | calling pc.setRemoteDescription() [offer:%o]', offer);
+
+        await this._pc.setRemoteDescription(offer);
+
+        const answer = await this._pc.createAnswer();
+
+        logger.debug(
+            'restartIce() | calling pc.setLocalDescription() [answer:%o]', answer);
+
+        await this._pc.setLocalDescription(answer);
+    }
+}
+
+
+
+/**********************************************************************
+Producer 
+
+***********************************************************************/
+class Producer extends EnhancedEventEmitter
+{
+    /**
+     * @private
+     *
+     * @emits transportclose
+     * @emits trackended
+     * @emits {track: MediaStreamTrack} @replacetrack
+     * @emits {spatialLayer: String} @setmaxspatiallayer
+     * @emits @getstats
+     * @emits @close
+     */
+    constructor({ id, localId, track, rtpParameters, appData })
+    {
+        super(logger);
+
+        // Id.
+        // @type {String}
+        this._id = id;
+
+        // Local id.
+        // @type {String}
+        this._localId = localId;
+
+        // Closed flag.
+        // @type {Boolean}
+        this._closed = false;
+
+        // Local track.
+        // @type {MediaStreamTrack}
+        this._track = track;
+
+        // RTP parameters.
+        // @type {RTCRtpParameters}
+        this._rtpParameters = rtpParameters;
+
+        // Paused flag.
+        // @type {Boolean}
+        this._paused = !track.enabled;
+
+        // Video max spatial layer.
+        // @type {Number|Undefined}
+        this._maxSpatialLayer = undefined;
+
+        // App custom data.
+        // @type {Object}
+        this._appData = appData;
+
+        this._onTrackEnded = this._onTrackEnded.bind(this);
+
+        this._handleTrack();
+    }
+
+    /**
+     * Producer id.
+     *
+     * @returns {String}
+     */
+    get id()
+    {
+        return this._id;
+    }
+
+    /**
+     * Local id.
+     *
+     * @private
+     * @returns {String}
+     */
+    get localId()
+    {
+        return this._localId;
+    }
+
+    /**
+     * Whether the Producer is closed.
+     *
+     * @returns {Boolean}
+     */
+    get closed()
+    {
+        return this._closed;
+    }
+
+    /**
+     * Media kind.
+     *
+     * @returns {String}
+     */
+    get kind()
+    {
+        return this._track.kind;
+    }
+
+    /**
+     * The associated track.
+     *
+     * @returns {MediaStreamTrack}
+     */
+    get track()
+    {
+        return this._track;
+    }
+
+    /**
+     * RTP parameters.
+     *
+     * @returns {RTCRtpParameters}
+     */
+    get rtpParameters()
+    {
+        return this._rtpParameters;
+    }
+
+    /**
+     * Whether the Producer is paused.
+     *
+     * @returns {Boolean}
+     */
+    get paused()
+    {
+        return this._paused;
+    }
+
+    /**
+     * Max spatial layer.
+     *
+     * @type {Number}
+     */
+    get maxSpatialLayer()
+    {
+        return this._maxSpatialLayer;
+    }
+
+    /**
+     * App custom data.
+     *
+     * @returns {Object}
+     */
+    get appData()
+    {
+        return this._appData;
+    }
+
+    /**
+     * Invalid setter.
+     */
+    set appData(appData) // eslint-disable-line no-unused-vars
+    {
+        throw new Error('cannot override appData object');
+    }
+
+    /**
+     * Closes the Producer.
+     */
+    close()
+    {
+        if (this._closed)
+            return;
+
+        logger.debug('close()');
+
+        this._closed = true;
+
+        this._destroyTrack();
+
+        this.emit('@close');
+    }
+
+    /**
+     * Transport was closed.
+     *
+     * @private
+     */
+    transportClosed()
+    {
+        if (this._closed)
+            return;
+
+        logger.debug('transportClosed()');
+
+        this._closed = true;
+
+        this._destroyTrack();
+
+        this.safeEmit('transportclose');
+    }
+
+    /**
+     * Get associated RTCRtpSender stats.
+     *
+     * @promise
+     * @returns {RTCStatsReport}
+     * @throws {InvalidStateError} if Producer closed.
+     */
+    async getStats()
+    {
+        if (this._closed)
+            throw new InvalidStateError('closed');
+
+        return this.safeEmitAsPromise('@getstats');
+    }
+
+    /**
+     * Pauses sending media.
+     */
+    pause()
+    {
+        logger.debug('pause()');
+
+        if (this._closed)
+        {
+            logger.error('pause() | Producer closed');
+
+            return;
+        }
+
+        this._paused = true;
+        this._track.enabled = false;
+    }
+
+    /**
+     * Resumes sending media.
+     */
+    resume()
+    {
+        logger.debug('resume()');
+
+        if (this._closed)
+        {
+            logger.error('resume() | Producer closed');
+
+            return;
+        }
+
+        this._paused = false;
+        this._track.enabled = true;
+    }
+
+    /**
+     * Replaces the current track with a new one.
+     *
+     * @param {MediaStreamTrack} track - New track.
+     *
+     * @async
+     * @throws {InvalidStateError} if Producer closed or track ended.
+     * @throws {TypeError} if wrong arguments.
+     */
+    async replaceTrack({ track } = {})
+    {
+        logger.debug('replaceTrack() [track:%o]', track);
+
+        if (this._closed)
+        {
+            // This must be done here. Otherwise there is no chance to stop the given
+            // track.
+            try { track.stop(); }
+            catch (error) {}
+
+            throw new InvalidStateError('closed');
+        }
+        else if (!track)
+        {
+            throw new TypeError('missing track');
+        }
+        else if (track.readyState === 'ended')
+        {
+            throw new InvalidStateError('track ended');
+        }
+
+        await this.safeEmitAsPromise('@replacetrack', track);
+
+        // Destroy the previous track.
+        this._destroyTrack();
+
+        // Set the new track.
+        this._track = track;
+
+        // If this Producer was paused/resumed and the state of the new
+        // track does not match, fix it.
+        if (!this._paused)
+            this._track.enabled = true;
+        else
+            this._track.enabled = false;
+
+        // Handle the effective track.
+        this._handleTrack();
+    }
+
+    /**
+     * Sets the video max spatial layer to be sent.
+     *
+     * @param {Number} spatialLayer
+     *
+     * @async
+     * @throws {InvalidStateError} if Producer closed.
+     * @throws {UnsupportedError} if not a video Producer.
+     * @throws {TypeError} if wrong arguments.
+     */
+    async setMaxSpatialLayer(spatialLayer)
+    {
+        if (this._closed)
+            throw new InvalidStateError('closed');
+        else if (this._track.kind !== 'video')
+            throw new UnsupportedError('not a video Producer');
+        else if (typeof spatialLayer !== 'number')
+            throw new TypeError('invalid spatialLayer');
+
+        if (spatialLayer === this._maxSpatialLayer)
+            return;
+
+        await this.safeEmitAsPromise('@setmaxspatiallayer', spatialLayer);
+
+        this._maxSpatialLayer = spatialLayer;
+    }
+
+    /**
+     * @private
+     */
+    _onTrackEnded()
+    {
+        logger.debug('track "ended" event');
+
+        this.safeEmit('trackended');
+    }
+
+    /**
+     * @private
+     */
+    _handleTrack()
+    {
+        this._track.addEventListener('ended', this._onTrackEnded);
+    }
+
+    /**
+     * @private
+     */
+    _destroyTrack()
+    {
+        try
+        {
+            this._track.removeEventListener('ended', this._onTrackEnded);
+            this._track.stop();
+        }
+        catch (error)
+        {}
+    }
+}
+
+/***********************************************************************************
+
+consumer.js
+
+**********************************************************************************/
+
+class Consumer extends EnhancedEventEmitter
+{
+    /**
+     * @private
+     *
+     * @emits transportclose
+     * @emits trackended
+     * @emits @getstats
+     * @emits @close
+     */
+    constructor({ id, localId, producerId, track, rtpParameters, appData })
+    {
+        super(logger);
+
+        // Id.
+        // @type {String}
+        this._id = id;
+
+        // Local id.
+        // @type {String}
+        this._localId = localId;
+
+        // Associated Producer id.
+        // @type {String}
+        this._producerId = producerId;
+
+        // Closed flag.
+        // @type {Boolean}
+        this._closed = false;
+
+        // Remote track.
+        // @type {MediaStreamTrack}
+        this._track = track;
+
+        // RTP parameters.
+        // @type {RTCRtpParameters}
+        this._rtpParameters = rtpParameters;
+
+        // Paused flag.
+        // @type {Boolean}
+        this._paused = !track.enabled;
+
+        // App custom data.
+        // @type {Object}
+        this._appData = appData;
+
+        this._onTrackEnded = this._onTrackEnded.bind(this);
+
+        this._handleTrack();
+    }
+
+    /**
+     * Consumer id.
+     *
+     * @returns {String}
+     */
+    get id()
+    {
+        return this._id;
+    }
+
+    /**
+     * Local id.
+     *
+     * @private
+     * @returns {String}
+     */
+    get localId()
+    {
+        return this._localId;
+    }
+
+    /**
+     * Associated Producer id.
+     *
+     * @returns {String}
+     */
+    get producerId()
+    {
+        return this._producerId;
+    }
+
+    /**
+     * Whether the Consumer is closed.
+     *
+     * @returns {Boolean}
+     */
+    get closed()
+    {
+        return this._closed;
+    }
+
+    /**
+     * Media kind.
+     *
+     * @returns {String}
+     */
+    get kind()
+    {
+        return this._track.kind;
+    }
+
+    /**
+     * The associated track.
+     *
+     * @returns {MediaStreamTrack}
+     */
+    get track()
+    {
+        return this._track;
+    }
+
+    /**
+     * RTP parameters.
+     *
+     * @returns {RTCRtpParameters}
+     */
+    get rtpParameters()
+    {
+        return this._rtpParameters;
+    }
+
+    /**
+     * Whether the Consumer is paused.
+     *
+     * @returns {Boolean}
+     */
+    get paused()
+    {
+        return this._paused;
+    }
+
+    /**
+     * App custom data.
+     *
+     * @returns {Object}
+     */
+    get appData()
+    {
+        return this._appData;
+    }
+
+    /**
+     * Invalid setter.
+     */
+    set appData(appData) // eslint-disable-line no-unused-vars
+    {
+        throw new Error('cannot override appData object');
+    }
+
+    /**
+     * Closes the Consumer.
+     */
+    close()
+    {
+        if (this._closed)
+            return;
+
+        logger.debug('close()');
+
+        this._closed = true;
+
+        this._destroyTrack();
+
+        this.emit('@close');
+    }
+
+    /**
+     * Transport was closed.
+     *
+     * @private
+     */
+    transportClosed()
+    {
+        if (this._closed)
+            return;
+
+        logger.debug('transportClosed()');
+
+        this._closed = true;
+
+        this._destroyTrack();
+
+        this.safeEmit('transportclose');
+    }
+
+    /**
+     * Get associated RTCRtpReceiver stats.
+     *
+     * @async
+     * @returns {RTCStatsReport}
+     * @throws {InvalidStateError} if Consumer closed.
+     */
+    async getStats()
+    {
+        if (this._closed)
+            throw new InvalidStateError('closed');
+
+        return this.safeEmitAsPromise('@getstats');
+    }
+
+    /**
+     * Pauses receiving media.
+     */
+    pause()
+    {
+        logger.debug('pause()');
+
+        if (this._closed)
+        {
+            logger.error('pause() | Consumer closed');
+
+            return;
+        }
+
+        this._paused = true;
+        this._track.enabled = false;
+    }
+
+    /**
+     * Resumes receiving media.
+     */
+    resume()
+    {
+        logger.debug('resume()');
+
+        if (this._closed)
+        {
+            logger.error('resume() | Consumer closed');
+
+            return;
+        }
+
+        this._paused = false;
+        this._track.enabled = true;
+    }
+
+    /**
+     * @private
+     */
+    _onTrackEnded()
+    {
+        logger.debug('track "ended" event');
+
+        this.safeEmit('trackended');
+    }
+
+    /**
+     * @private
+     */
+    _handleTrack()
+    {
+        this._track.addEventListener('ended', this._onTrackEnded);
+    }
+
+    /**
+     * @private
+     */
+    _destroyTrack()
+    {
+        try
+        {
+            this._track.removeEventListener('ended', this._onTrackEnded);
+            this._track.stop();
+        }
+        catch (error)
+        {}
+    }
+}
+

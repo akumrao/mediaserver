@@ -44,8 +44,10 @@ namespace base {
 
             SSL_CTX_set_cipher_list(ctx, "ALL:eNULL");
 
-
-
+             //Arvind TBD 
+            //SSL_CTX_set_session_cache_mode (ctx, SSL_SESS_CACHE_BOTH);
+            //SSL_CTX_set_timeout (ctx, 300);  client side check code before enable it
+        
 
             if (server) {
                 //New lines //for server side only 
