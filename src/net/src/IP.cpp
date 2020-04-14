@@ -7,6 +7,68 @@ namespace base
     namespace net
     {
      
+	void IP::NormalizeIp(std::string& ip)
+	{
+		
+
+		static sockaddr_storage addrStorage;
+		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
+		int err;
+
+		switch (IP::GetFamily(ip))
+		{
+			case AF_INET:
+			{
+				err = uv_ip4_addr(
+				  ip.c_str(),
+				  0,
+				  reinterpret_cast<struct sockaddr_in*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip4_name(
+					reinterpret_cast<const struct sockaddr_in*>(std::addressof(addrStorage)),
+					ipBuffer,
+					sizeof(ipBuffer));
+
+				if (err != 0)
+					MS_ABORT("uv_ipv4_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				err = uv_ip6_addr(
+					ip.c_str(),
+					0,
+				  reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip6_name(
+					reinterpret_cast<const struct sockaddr_in6*>(std::addressof(addrStorage)),
+					ipBuffer,
+					sizeof(ipBuffer));
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			default:
+			{
+				base::uv::throwError("invalid ip " +  ip );
+			}
+		}
+	}
         
 
         void IP::GetAddressInfo(struct sockaddr* addr, int& family, std::string& ip, uint16_t& port) {

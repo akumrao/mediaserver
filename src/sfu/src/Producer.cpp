@@ -567,7 +567,7 @@ namespace RTC
 
 		if (rtpStream == nullptr)
 		{
-			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%"  "]", packet->GetSsrc());
 
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
@@ -613,9 +613,8 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(
 			  rtp,
-			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
+			  "key frame received ssrc: ", packet->GetSsrc(), " seq: ", packet->GetSequenceNumber());
+			  
 
 			// Tell the keyFrameRequestManager.
 			if (this->keyFrameRequestManager)
@@ -688,7 +687,7 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
+		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%"  "]", report->GetSsrc());
 	}
 
 	void Producer::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
@@ -699,7 +698,7 @@ namespace RTC
 
 		if (it == this->mapSsrcRtpStream.end())
 		{
-			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
+			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%"  "]", ssrcInfo->GetSsrc());
 
 			return;
 		}
@@ -1019,12 +1018,8 @@ namespace RTC
 		auto& encoding        = this->rtpParameters.encodings[encodingIdx];
 		auto& encodingMapping = this->rtpMapping.encodings[encodingIdx];
 
-		MS_DEBUG_TAG(
-		  rtp,
-		  "[ssrc:%" PRIu32 ", rid:%s, payloadType:%" PRIu8 "]",
-		  ssrc,
-		  encoding.rid.c_str(),
-		  mediaCodec.payloadType);
+		MS_DEBUG_TAG( rtp, "ssrc: " , ssrc, " rid: ", encoding.rid,  " payloadType: ",mediaCodec.payloadType);
+		
 
 		// Set stream params.
 		RTC::RtpStream::Params params;
@@ -1137,7 +1132,7 @@ namespace RTC
 
 			if (it == this->rtpMapping.codecs.end())
 			{
-				MS_WARN_TAG(rtp, "unknown payload type [payloadType:%" PRIu8 "]", payloadType);
+				MS_WARN_TAG(rtp, "unknown payload type [payloadType:%"  "]", payloadType);
 
 				return false;
 			}
@@ -1541,7 +1536,7 @@ namespace RTC
 
 		if (it == this->mapSsrcRtpStream.end())
 		{
-			MS_WARN_2TAGS(rtcp, rtx, "no associated RtpStream found [ssrc:%" PRIu32 "]", ssrc);
+			MS_WARN_2TAGS(rtcp, rtx, "no associated RtpStream found [ssrc:%"  "]", ssrc);
 
 			return;
 		}
