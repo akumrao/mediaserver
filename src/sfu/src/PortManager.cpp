@@ -6,6 +6,7 @@
 #include "LoggerTag.h"
 #include "base/error.h"
 #include "Settings.h"
+#include "net/IP.h"
 #include "Utils.h"
 #include <tuple>   // std:make_tuple()
 #include <utility> // std::piecewise_construct
@@ -35,10 +36,10 @@ namespace RTC
 	{
 
 		// First normalize the IP. This may throw if invalid IP.
-		Utils::IP::NormalizeIp(ip);
+		base::net::IP::NormalizeIp(ip);
 
 		int err;
-		int family = Utils::IP::GetFamily(ip);
+		int family = base::net::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		size_t portIdx;
 		int flags{ 0 };

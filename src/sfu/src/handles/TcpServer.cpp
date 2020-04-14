@@ -4,6 +4,7 @@
 #include "handles/TcpServer.h"
 #include "LoggerTag.h"
 #include "base/error.h"
+#include "net/IP.h"
 #include "Utils.h"
 
 /* Static methods for UV callbacks. */
@@ -156,8 +157,7 @@ bool TcpServer::SetLocalAddress()
 
 	int family;
 
-	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
+	base::net::IP::GetAddressInfo((struct sockaddr*)(&this->localAddr), family, this->localIp, this->localPort);
 
 	return true;
 }

@@ -108,7 +108,7 @@ namespace RTC
 			listenIp.ip.assign(jsonIpIt->get<std::string>());
 
 			// This may throw.
-			Utils::IP::NormalizeIp(listenIp.ip);
+			base::net::IP::NormalizeIp(listenIp.ip);
 
 			auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
 

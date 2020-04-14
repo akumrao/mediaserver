@@ -3,6 +3,7 @@
 
 #include "RTC/StunPacket.h"
 #include "LoggerTag.h"
+#include "net/IP.h"
 #include "Utils.h"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -379,7 +380,7 @@ namespace RTC
 			uint16_t port;
 			std::string ip;
 
-			Utils::IP::GetAddressInfo(this->xorMappedAddress, family, ip, port);
+			base::net::IP::GetAddressInfo((struct sockaddr*)this->xorMappedAddress, family, ip, port);
 
 			MS_DUMP("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
 		}

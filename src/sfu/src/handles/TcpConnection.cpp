@@ -5,8 +5,10 @@
 #include "base/application.h"
 #include "LoggerTag.h"
 #include "base/error.h"
+#include "net/IP.h"
 #include "Utils.h"
 #include <cstring> // std::memcpy()
+
 
 /* Static methods for UV callbacks. */
 
@@ -418,8 +420,7 @@ bool TcpConnection::SetPeerAddress()
 
 	int family;
 
-	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), family, this->peerIp, this->peerPort);
+	base::net::IP::GetAddressInfo((struct sockaddr*)(&this->peerAddr), family, this->peerIp, this->peerPort);
 
 	return true;
 }

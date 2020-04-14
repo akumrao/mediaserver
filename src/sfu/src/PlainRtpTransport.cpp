@@ -34,7 +34,7 @@ namespace RTC
 		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
 
 		// This may throw.
-		Utils::IP::NormalizeIp(this->listenIp.ip);
+		base::net::IP::NormalizeIp(this->listenIp.ip);
 
 		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
 
@@ -259,7 +259,7 @@ namespace RTC
 					ip = jsonIpIt->get<std::string>();
 
 					// This may throw.
-					Utils::IP::NormalizeIp(ip);
+					base::net::IP::NormalizeIp(ip);
 
 					auto jsonPortIt = request->data.find("port");
 
@@ -297,7 +297,7 @@ namespace RTC
 
 					int err;
 
-					switch (Utils::IP::GetFamily(ip))
+					switch (base::net::IP::GetFamily(ip))
 					{
 						case AF_INET:
 						{
@@ -340,7 +340,7 @@ namespace RTC
 
 					if (!this->rtcpMux)
 					{
-						switch (Utils::IP::GetFamily(ip))
+						switch (base::net::IP::GetFamily(ip))
 						{
 							case AF_INET:
 							{

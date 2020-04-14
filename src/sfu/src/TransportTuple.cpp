@@ -3,6 +3,7 @@
 
 #include "RTC/TransportTuple.h"
 #include "LoggerTag.h"
+#include "net/IP.h"
 #include "Utils.h"
 #include <string>
 
@@ -18,7 +19,7 @@ namespace RTC
 		std::string ip;
 		uint16_t port;
 
-		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+		base::net::IP::GetAddressInfo((struct sockaddr*)GetLocalAddress(), family, ip, port);
 
 		// Add localIp.
 		if (this->localAnnouncedIp.empty())
@@ -29,7 +30,7 @@ namespace RTC
 		// Add localPort.
 		jsonObject["localPort"] = port;
 
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
+		base::net::IP::GetAddressInfo((struct sockaddr*)GetRemoteAddress(), family, ip, port);
 
 		// Add remoteIp.
 		jsonObject["remoteIp"] = ip;
@@ -60,12 +61,12 @@ namespace RTC
 		std::string ip;
 		uint16_t port;
 
-		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+		base::net::IP::GetAddressInfo((struct sockaddr*)GetLocalAddress(), family, ip, port);
 
 		MS_DUMP("  localIp    : %s", ip.c_str());
 		MS_DUMP("  localPort  : %" PRIu16, port);
 
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
+		base::net::IP::GetAddressInfo((struct sockaddr*)GetRemoteAddress(), family, ip, port);
 
 		MS_DUMP("  remoteIp   : %s", ip.c_str());
 		MS_DUMP("  remotePort : %" PRIu16, port);

@@ -1,5 +1,5 @@
-#ifndef MS_UTILS_HPP
-#define MS_UTILS_HPP
+#ifndef NET_UTILS_IP
+#define NET_UTILS_IP
 
 #include <uv.h>
 #include <string>
@@ -29,7 +29,10 @@ namespace base
         public:
             static void GetAddressInfo(struct sockaddr* addr, int& family, std::string& ip, uint16_t& port);
             static int GetFamily(const std::string& ip);
-
+	    static void NormalizeIp(std::string& ip);
+	    static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2);
+	    static struct sockaddr_storage CopyAddress(const struct sockaddr* addr);
+	  
         };
 
 

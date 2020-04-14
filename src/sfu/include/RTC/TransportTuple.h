@@ -3,6 +3,8 @@
 
 #include "common.h"
 #include "Utils.h"
+
+#include "net/IP.h"
 #include "RTC/TcpConnection.h"
 #include "RTC/UdpSocket.h"
 #include <json.hpp>
@@ -78,7 +80,7 @@ namespace RTC
 	{
 		// Clone the given address into our address storage and make the sockaddr
 		// pointer point to it.
-		this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
+		this->udpRemoteAddrStorage = base::net::IP::CopyAddress(this->udpRemoteAddr);
 		this->udpRemoteAddr        = (struct sockaddr*)&this->udpRemoteAddrStorage;
 	}
 
@@ -93,7 +95,7 @@ namespace RTC
 		{
 			return (
 			  this->udpSocket == tuple->udpSocket &&
-			  Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
+			  base::net::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
 		}
 		else if (this->protocol == Protocol::TCP && tuple->GetProtocol() == Protocol::TCP)
 		{
