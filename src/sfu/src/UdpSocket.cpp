@@ -3,7 +3,7 @@
 
 #include "RTC/UdpSocket.h"
 #include "LoggerTag.h"
-#include "RTC/PortManager.h"
+#include "net/PortManager.h"
 #include <string>
 
 namespace RTC
@@ -12,7 +12,7 @@ namespace RTC
 
 	UdpSocket::UdpSocket(Listener* listener, std::string& ip)
 	  : // This may throw.
-	    ::UdpSocket::UdpSocket(PortManager::BindUdp(ip)), listener(listener)
+	    ::UdpSocket::UdpSocket(base::net::PortManager::BindUdp(ip)), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -21,7 +21,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		PortManager::UnbindUdp(this->localIp, this->localPort);
+		base::net::PortManager::UnbindUdp(this->localIp, this->localPort);
 	}
 
 	void UdpSocket::UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr)

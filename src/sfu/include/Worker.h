@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "Channel/Request.h"
-#include "Channel/UnixStreamSocket.h"
+//#include "Channel/UnixStreamSocket.h"
 #include "RTC/Router.h"
 #include "handles/SignalsHandler.h"
 #include <json.hpp>
@@ -12,10 +12,10 @@
 
 using json = nlohmann::json;
 
-class Worker : public Channel::UnixStreamSocket::Listener, public SignalsHandler::Listener
+class Worker :  public SignalsHandler::Listener
 {
 public:
-	explicit Worker(Channel::UnixStreamSocket* channel);
+	explicit Worker();
 	~Worker();
 
 private:
@@ -27,8 +27,8 @@ private:
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-	void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
-	void OnChannelClosed(Channel::UnixStreamSocket* channel) override;
+	void OnChannelRequest(Channel::Request* request) ;
+	void OnChannelClosed() ;
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
@@ -36,7 +36,7 @@ public:
 
 private:
 	// Passed by argument.
-	Channel::UnixStreamSocket* channel{ nullptr };
+	//Channel::UnixStreamSocket* channel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
 	std::unordered_map<std::string, RTC::Router*> mapRouters;

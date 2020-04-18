@@ -11,7 +11,7 @@
 #include "Utils.h"
 
 #include "Channel/Notifier.h"
-#include "Channel/UnixStreamSocket.h"
+
 #include "RTC/DtlsTransport.h"
 #include "RTC/SrtpSession.h"
 #include <uv.h>
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    Channel::UnixStreamSocket * channel{ nullptr};
+
 
     // Initialize the Logger.
 
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
         Utils::Crypto::ClassInit();
         RTC::DtlsTransport::ClassInit();
         RTC::SrtpSession::ClassInit();
-        Channel::Notifier::ClassInit(channel, &sig);
+        Channel::Notifier::ClassInit(&sig);
 
         // Ignore some signals.
         IgnoreSignals();

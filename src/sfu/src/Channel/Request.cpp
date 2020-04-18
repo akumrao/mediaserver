@@ -66,7 +66,7 @@ namespace Channel
 
 	/* Instance methods. */
 
-	Request::Request(Channel::UnixStreamSocket* channel, json& jsonRequest) : channel(channel)
+	Request::Request(json& jsonRequest) //: channel(channel)
 	{
 		MS_TRACE();
 

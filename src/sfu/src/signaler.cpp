@@ -11,7 +11,7 @@ namespace base {
 
         Signaler::Signaler() {
             Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
-            worker = new Worker(nullptr);
+            worker = new Worker();
 
         }
 
@@ -52,8 +52,8 @@ namespace base {
 
                     json jsonRequest = data[2];
                     LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req(nullptr, jsonRequest);
-                    worker->OnChannelRequest(nullptr, &req);
+                    Channel::Request req(jsonRequest);
+                    worker->OnChannelRequest( &req);
                     if (isAck) {
                         json arr = json::array();
                                 arr.push_back(req.jsonResponse);
@@ -72,8 +72,8 @@ namespace base {
 
                     json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
                     LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req(nullptr, jsonRequest);
-                    worker->OnChannelRequest(nullptr, &req);
+                    Channel::Request req( jsonRequest);
+                    worker->OnChannelRequest(&req);
                     if (isAck) {
                         json arr = json::array();
                                 arr.push_back(req.jsonResponse);
@@ -92,8 +92,8 @@ namespace base {
 
                     json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
                     LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req(nullptr, jsonRequest);
-                    worker->OnChannelRequest(nullptr, &req);
+                    Channel::Request req( jsonRequest);
+                    worker->OnChannelRequest(&req);
                     if (isAck) {
                         json arr = json::array();
                                 arr.push_back(req.jsonResponse);

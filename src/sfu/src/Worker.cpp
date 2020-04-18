@@ -10,12 +10,12 @@
 
 /* Instance methods. */
 
-Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker() //: channel(channel)
 {
 
 	// Set us as Channel's listener.
-        if(this->channel)
-	this->channel->SetListener(this);
+       // if(this->channel)
+	//this->channel->SetListener(this);
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -60,7 +60,7 @@ void Worker::Close()
 	this->mapRouters.clear();
 
 	// Close the Channel.
-	delete this->channel;
+	//delete this->channel;
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -181,10 +181,9 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+inline void Worker::OnChannelRequest(Channel::Request* request)
 {
-	
-
+    
 	MS_DEBUG_DEV(
 	  "Channel request received method: ", request->method," id:" , request->id);
 
@@ -266,7 +265,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	}
 }
 
-inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
+inline void Worker::OnChannelClosed()
 {
 	MS_TRACE_STD();
 

@@ -15,6 +15,7 @@ public:
 
 	public:
 		virtual void OnSignal(SignalsHandler* signalsHandler, int signum) = 0;
+              //  virtual void OnChannelRequest(Channel::Request* request) =0;
 	};
 
 public:

@@ -1051,7 +1051,7 @@ namespace RTC
 		OnPacketReceived(&tuple, data, len);
 	}
 
-       inline void WebRtcTransport::on_close(base::net1::Listener* conn)
+       inline void WebRtcTransport::on_close(base::net::Listener* conn)
 	{
 		RTC::TcpConnection* connection = (RTC::TcpConnection*) conn;
 
@@ -1061,7 +1061,7 @@ namespace RTC
 	}
 
 
-        void WebRtcTransport::on_read(base::net1::Listener* conn, const char* data, size_t len) {
+        void WebRtcTransport::on_read(base::net::Listener* conn, const char* data, size_t len) {
 
             RTC::TcpConnection* connection = (RTC::TcpConnection*) conn;
             RTC::TransportTuple tuple(connection);
