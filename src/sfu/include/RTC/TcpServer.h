@@ -3,13 +3,13 @@
 
 #include "common.h"
 #include "RTC/TcpConnection.h"
-#include "handles/TcpConnection.h"
-#include "handles/TcpServer.h"
+#include "net/TcpConnection.h"
+#include "net/TcpServer.h"
 #include <string>
 
 namespace RTC
 {
-	class TcpServer : public base::net1::TcpServerBase
+	class TcpServer : public base::net::TcpServerBase
         {
         public:
 
@@ -21,9 +21,9 @@ namespace RTC
 
             /* Pure virtual methods inherited from ::TcpServer. */
         public:
-            void UserOnTcpConnectionAlloc(base::net1::TcpConnectionBase** connection) override;
-            bool UserOnNewTcpConnection(base::net1::TcpConnectionBase* connection) override;
-            void UserOnTcpConnectionClosed(base::net1::TcpConnectionBase* connection) override;
+            void UserOnTcpConnectionAlloc(base::net::TcpConnectionBase** connection) override;
+            bool UserOnNewTcpConnection(base::net::TcpConnectionBase* connection) override;
+            void UserOnTcpConnectionClosed(base::net::TcpConnectionBase* connection) override;
 
         private:
             // Passed by argument.

@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TcpServer.h"
-#include "RTC/PortManager.h"
+#include "net/PortManager.h"
 #include "LoggerTag.h"
 #include <string>
 
@@ -13,7 +13,7 @@ namespace RTC
         /* Instance methods. */
 
         TcpServer::TcpServer(Listener* listener, std::string ip)
-        : TcpServerBase(RTC::PortManager::BindTcp(ip), 256), listener(listener){
+        : base::net::TcpServerBase(base::net::PortManager::BindTcp(ip), 256), listener(listener){
 
         }
 
@@ -21,16 +21,16 @@ namespace RTC
 
             if (uvHandle)
                 delete uvHandle;
-            RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
+            base::net::PortManager::UnbindTcp(this->localIp, this->localPort);
         }
 
   
-        void TcpServer::UserOnTcpConnectionAlloc(base::net1::TcpConnectionBase** connection) {
+        void TcpServer::UserOnTcpConnectionAlloc(base::net::TcpConnectionBase** connection) {
 
              *connection = new RTC::TcpConnection(listener);
         }
 
-        bool TcpServer::UserOnNewTcpConnection(base::net1::TcpConnectionBase* connection) {
+        bool TcpServer::UserOnNewTcpConnection(base::net::TcpConnectionBase* connection) {
 
 
             if (GetNumConnections() >= MaxTcpConnectionsPerServer)
@@ -43,7 +43,7 @@ namespace RTC
             return true;
         }
 
-        void TcpServer::UserOnTcpConnectionClosed(base::net1::TcpConnectionBase* connection) {
+        void TcpServer::UserOnTcpConnectionClosed(base::net::TcpConnectionBase* connection) {
 
             //this->listener->on_close( (TcpConnection*)connection);
         }

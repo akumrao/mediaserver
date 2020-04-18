@@ -35,14 +35,10 @@ namespace base {
             auto* connection = static_cast<TcpConnectionBase*> (handle->data);
 
             // Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
+            if (connection)
+		connection->OnUvWrite(status);
             std::free(writeData);
-
-            if (connection == nullptr)
-                return;
-
-            // Just notify the TcpConnectionBase when error.
-            if (status != 0)
-                connection->OnUvWriteError(status);
+           
         }
 
         inline static void onClose(uv_handle_t* handle) {
@@ -84,10 +80,10 @@ namespace base {
         TcpConnectionBase::~TcpConnectionBase() {
 
 
-           // if (!this->closed)
-              //  Close();
+            if (!this->closed)
+                Close();
 
-           // delete[] this->buffer;
+            delete[] this->buffer;
         }
 
         void TcpConnectionBase::Close() {
@@ -281,7 +277,6 @@ namespace base {
         }
 
         int TcpConnectionBase::Write(const char* data, size_t len) {
-
            
             if (this->closed)
                 return -1;
@@ -336,13 +331,9 @@ namespace base {
                     static_cast<uv_write_cb> (onWrite));
 
             if (err != 0)
-            {
-                LError("uv_write() failed: %s", uv_strerror(err));
-            }
+            {LError("uv_write() failed: %s", uv_strerror(err));}
             else
-            {
-                sentBytes +=  pendingLen;
-            }
+                sentBytes += pendingLen;
             
             return -2;
         }
@@ -416,22 +407,15 @@ namespace base {
                     static_cast<uv_write_cb> (onWrite));
 
             if (err != 0)
-            {
-                LError("uv_write() failed: %s", uv_strerror(err));
-            }
+            { LError("uv_write() failed: %s", uv_strerror(err));}
             else
-            {
-               sentBytes +=  pendingLen;
-            }
+            sentBytes += pendingLen;
             
-            return -2;
+            return -2; 
         }
 
         void TcpConnectionBase::ErrorReceiving() {
-
-
             Close();
-
         }
 
         bool TcpConnectionBase::SetPeerAddress() {
@@ -485,9 +469,7 @@ namespace base {
 
         }
         
-       
-
-        inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
+       inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
            // LTrace("OnUvRead" )
 
             if (this->closed)
@@ -500,7 +482,7 @@ namespace base {
             if (nread > 0) {
                 // Update the buffer data length.
 		// this->bufferDataLen += static_cast<size_t> (nread);
-                this->recvBytes += nread;
+                recvBytes += nread;
                 
                 // Notify the subclass.
                 if(tls)
@@ -528,21 +510,22 @@ namespace base {
 
             }
         }
+        
+        
+        inline void TcpConnectionBase::OnUvWrite(int status)
+        {
 
-        inline void TcpConnectionBase::OnUvWriteError(int error) {
+                if (status == 0)
+                {
+                }
+                else
+                {
+                        if (status != UV_EPIPE && status != UV_ENOTCONN)
+                                this->hasError = true;
 
-
-            if (this->closed)
-                return;
-
-            if (error != UV_EPIPE && error != UV_ENOTCONN)
-                this->hasError = true;
-
-            LDebug("write error, closing the connection: %s", uv_strerror(error));
-
-            Close();
-
-
+                        LDebug("write error, closing the connection: %s", uv_strerror(status));
+                        Close();
+                }
         }
 
         /*************************************************************************************************************/

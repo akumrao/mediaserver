@@ -2,12 +2,12 @@
 #define MS_RTC_TCP_CONNECTION_HPP
 
 #include "common.h"
-#include "handles/netInterface.h"
-#include "handles/TcpConnection.h"
+#include "net/netInterface.h"
+#include "net/TcpConnection.h"
 
 namespace RTC
 {
-	class TcpConnection : public base::net1::TcpConnectionBase
+	class TcpConnection : public base::net::TcpConnectionBase
 	{
 	public:
 //		class Listener

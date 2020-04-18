@@ -3,6 +3,7 @@
 #include "net/TcpServer.h"
 #include "base/logger.h"
 #include "base/application.h"
+#include "net/PortManager.h"
 #include <inttypes.h>
 #include "net/IP.h"
 #include "net/SslConnection.h"
@@ -195,6 +196,11 @@ namespace base
         }
         
         uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int port) {
+	    
+	    if(port == -1)
+            {
+                return PortManager::BindTcp(ip);
+            }
             int bind_flags = 0;
             uv_tcp_t *uvHandle = new uv_tcp_t;
             struct sockaddr_in6 addr6;

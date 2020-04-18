@@ -71,7 +71,7 @@ namespace base
         public:
             void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
             void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-            void OnUvWriteError(int error);
+            void OnUvWrite(int status);
 
           
 
