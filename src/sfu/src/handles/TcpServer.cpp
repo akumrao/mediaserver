@@ -1,197 +1,283 @@
-#define MS_CLASS "TcpServer"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "handles/TcpServer.h"
-#include "LoggerTag.h"
-#include "base/error.h"
+#include "base/logger.h"
+#include "base/application.h"
+#include "RTC/PortManager.h"
+#include <inttypes.h>
 #include "net/IP.h"
-#include "Utils.h"
+//#include "net/SslConnection.h"
 
-/* Static methods for UV callbacks. */
-
-inline static void onConnection(uv_stream_t* handle, int status)
+namespace base
 {
-	auto* server = static_cast<TcpServer*>(handle->data);
+    namespace net1
+    {
 
-	if (server)
-		server->OnUvConnection(status);
-}
+        /* Static methods for UV callbacks. */
 
-inline static void onClose(uv_handle_t* handle)
-{
-	delete handle;
-}
+        inline static void onConnection(uv_stream_t* handle, int status) {
+            auto* server = static_cast<TcpServerBase*> (handle->data);
 
-/* Instance methods. */
+            if (server == nullptr)
+                return;
 
-// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
-{
-	MS_TRACE();
+            server->OnUvConnection(status);
+        }
 
-	int err;
+        inline static void onClose(uv_handle_t* handle) {
+            delete handle;
+        }
 
-	this->uvHandle->data = static_cast<void*>(this);
+        /* Instance methods. */
 
-	err = uv_listen(
-	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  backlog,
-	  static_cast<uv_connection_cb>(onConnection));
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 
-	if (err != 0)
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+        TcpServerBase::TcpServerBase(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle) {
 
-		base::uv::throwError("uv_listen() failed: ", err);
-	}
+            int err;
 
-	// Set local address.
-	if (!SetLocalAddress())
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+            this->uvHandle->data = (void*) this;
 
-		base::uv::throwError("error setting local IP and port");
-	}
-}
+            err = uv_listen(
+                    reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                    backlog,
+                    static_cast<uv_connection_cb> (onConnection));
 
-TcpServer::~TcpServer()
-{
-	MS_TRACE();
+            if (err != 0)
+            {
+                uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
-	if (!this->closed)
-		Close();
-}
+                LError("uv_listen() failed: %s", uv_strerror(err));
+            }
 
-void TcpServer::Close()
-{
-	MS_TRACE();
+            // Set local address.
+            if (!SetLocalAddress())
+            {
+                uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
-	if (this->closed)
-		return;
+                LError("error setting local IP and port");
+            }
+        }
 
-	this->closed = true;
+        TcpServerBase::~TcpServerBase() {
 
-	// Tell the UV handle that the TcpServer has been closed.
-	this->uvHandle->data = nullptr;
 
-	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
+            if (!this->closed)
+                Close();
+        }
 
-	for (auto* connection : this->connections)
-	{
-		delete connection;
-	}
+        void TcpServerBase::Close() {
 
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
-}
 
-void TcpServer::Dump() const
-{
-	MS_DUMP("<TcpServer>");
-	MS_DUMP(
-	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
-	  this->localIp.c_str(),
-	  static_cast<uint16_t>(this->localPort),
-	  (!this->closed) ? "open" : "closed",
-	  this->connections.size());
-	MS_DUMP("</TcpServer>");
-}
+            if (this->closed)
+                return;
 
-void TcpServer::AcceptTcpConnection(TcpConnection* connection)
-{
-	MS_TRACE();
+            this->closed = true;
 
-	assertm(connection != nullptr, "TcpConnection pointer was not allocated by the user");
+            // Tell the UV handle that the TcpServerBase has been closed.
+            this->uvHandle->data = nullptr;
 
-	try
-	{
-		connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
-	}
-	catch (const std::exception& error)
-	{
-		delete connection;
+            LDebug("closing %zu active connections", this->connections.size());
 
-		return;
-	}
+            for (auto* connection : this->connections)
+            {
+                delete connection;
+            }
 
-	// Accept the connection.
-	int err = uv_accept(
-	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
+            uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
+        }
 
-	if (err != 0)
-		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
+        void TcpServerBase::Dump() const {
+            LDebug("<TcpServerBase>");
+            LDebug(
+                    "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+                    this->localIp.c_str(),
+                    static_cast<uint16_t> (this->localPort),
+                    (!this->closed) ? "open" : "closed",
+                    this->connections.size());
+            LDebug("</TcpServerBase>");
+        }
 
-	// Start receiving data.
-	try
-	{
-		// NOTE: This may throw.
-		connection->Start();
-	}
-	catch (const std::exception& error)
-	{
-		delete connection;
+        bool TcpServerBase::SetLocalAddress() {
 
-		return;
-	}
 
-	// Store it.
-	this->connections.insert(connection);
-}
+            int err;
+            int len = sizeof (this->localAddr);
 
-bool TcpServer::SetLocalAddress()
-{
-	MS_TRACE();
+            err =
+                    uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*> (&this->localAddr), &len);
 
-	int err;
-	int len = sizeof(this->localAddr);
+            if (err != 0)
+            {
+                LError("uv_tcp_getsockname() failed: %s", uv_strerror(err));
 
-	err =
-	  uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+                return false;
+            }
 
-	if (err != 0)
-	{
-		MS_ERROR("uv_tcp_getsockname() failed: %s", uv_strerror(err));
+            int family;
 
-		return false;
-	}
+            net::IP::GetAddressInfo(
+                    reinterpret_cast<struct sockaddr*> (&this->localAddr), family, this->localIp, this->localPort);
 
-	int family;
+            return true;
+        }
 
-	base::net::IP::GetAddressInfo((struct sockaddr*)(&this->localAddr), family, this->localIp, this->localPort);
+        inline void TcpServerBase::OnUvConnection(int status) {
 
-	return true;
-}
 
-inline void TcpServer::OnUvConnection(int status)
-{
-	MS_TRACE();
+            if (this->closed)
+                return;
 
-	if (this->closed)
-		return;
+            int err;
 
-	if (status != 0)
-	{
-		MS_ERROR("error while receiving a new TCP connection: %s", uv_strerror(status));
+            if (status != 0)
+            {
+                LError("error while receiving a new TCP connection: %s", uv_strerror(status));
 
-		return;
-	}
+                return;
+            }
 
-	// Notify the subclass about a new TCP connection attempt.
-	UserOnTcpConnectionAlloc();
-}
+            // Notify the subclass so it provides an allocated derived class of TCPConnection.
+            TcpConnectionBase* connection = nullptr;
+            UserOnTcpConnectionAlloc(&connection);
 
-inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection)
-{
-	MS_TRACE();
+            ASSERT(connection != nullptr);
 
-	MS_DEBUG_DEV("TCP connection closed");
+            try
+            {
+                connection->Setup( &(this->localAddr), this->localIp, this->localPort);
+            } catch (const std::exception& error)
+            {
+                delete connection;
 
-	// Remove the TcpConnection from the set.
-	this->connections.erase(connection);
+                return;
+            }
 
-	// Notify the subclass.
-	UserOnTcpConnectionClosed(connection);
+            // Accept the connection.
+            err = uv_accept(
+                    reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                    reinterpret_cast<uv_stream_t*> (connection->GetUvHandle()));
 
-	// Delete it.
-	delete connection;
-}
+            if (err != 0)
+                LError("uv_accept() failed: %s", uv_strerror(err));
+
+            // Start receiving data.
+            try
+            {
+                // NOTE: This may throw.
+                connection->Start();
+            } catch (const std::exception& error)
+            {
+                delete connection;
+
+                return;
+            }
+
+            // Notify the subclass and delete the connection if not accepted by the subclass.
+            if (UserOnNewTcpConnection(connection))
+                this->connections.insert(connection);
+            else
+                delete connection;
+        }
+
+        inline void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
+
+
+            LDebug("TcpServerBase connection closed");
+
+            // Remove the TcpConnectionBase from the set.
+            this->connections.erase(connection);
+
+            // Notify the subclass.
+            UserOnTcpConnectionClosed(connection);
+
+            // Delete it.
+            delete connection;
+        }
+        
+        uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int &port) {
+            
+            if(port == -1)
+            {
+                return RTC::PortManager::BindTcp(ip);
+            }
+                    
+            int bind_flags = 0;
+            uv_tcp_t *uvHandle = new uv_tcp_t;
+            struct sockaddr_in6 addr6;
+            struct sockaddr_in addr;
+         
+            int r;
+
+            r = uv_tcp_init(Application::uvGetLoop(), uvHandle);
+            ASSERT(r == 0);
+
+            if (net::IP::GetFamily(ip) == AF_INET6)
+            {
+                bind_flags = UV_TCP_IPV6ONLY;
+                ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
+                r = uv_tcp_bind(uvHandle, (const struct sockaddr*) &addr6, bind_flags);
+                ASSERT(r == 0);
+            } else
+            {
+                ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
+                r = uv_tcp_bind(uvHandle, (const struct sockaddr*) &addr, bind_flags);
+                ASSERT(r == 0);
+
+            }
+            
+            LTrace("Binded to port ", ip , ":", port);
+
+            return uvHandle;
+        }
+
+        /******************************************************************************************************************/
+        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
+
+        /* Instance methods. */
+
+        TcpServer::TcpServer(Listener* listener, std::string ip, int port, bool ssl)
+        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),ssl(ssl){
+
+        }
+
+        TcpServer::~TcpServer() {
+
+            if (uvHandle)
+                delete uvHandle;
+            //UnbindTcp(this->localIp, this->localPort);
+        }
+
+  
+        void TcpServer::UserOnTcpConnectionAlloc(TcpConnectionBase** connection) {
+
+// condition
+//            // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
+//            if(ssl)
+//             *connection = new SslConnection(listener, true);
+//            else
+            *connection = new TcpConnection(listener);
+            
+            
+        }
+
+        bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
+
+
+            if (GetNumConnections() >= MaxTcpConnectionsPerServer)
+            {
+                LError("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
+
+            //this->listener->on_close( (TcpConnection*)connection);
+        }
+
+    } // namespace net
+} // namespace base

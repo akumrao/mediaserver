@@ -164,7 +164,7 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+					auto* tcpServer = new RTC::TcpServer(this, listenIp.ip);
 
 					this->tcpServers[tcpServer] = listenIp.announcedIp;
 
@@ -1051,25 +1051,24 @@ namespace RTC
 		OnPacketReceived(&tuple, data, len);
 	}
 
-	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
-	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection)
+       inline void WebRtcTransport::on_close(base::net1::Listener* conn)
 	{
-		MS_TRACE();
+		RTC::TcpConnection* connection = (RTC::TcpConnection*) conn;
 
 		RTC::TransportTuple tuple(connection);
 
 		this->iceServer->RemoveTuple(&tuple);
 	}
 
-	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
-	  RTC::TcpConnection* connection, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
 
-		RTC::TransportTuple tuple(connection);
+        void WebRtcTransport::on_read(base::net1::Listener* conn, const char* data, size_t len) {
 
-		OnPacketReceived(&tuple, data, len);
-	}
+            RTC::TcpConnection* connection = (RTC::TcpConnection*) conn;
+            RTC::TransportTuple tuple(connection);
+
+            OnPacketReceived(&tuple, (const uint8_t*)data, len);
+
+        }
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(
 	  const RTC::IceServer* /*iceServer*/, const RTC::StunPacket* packet, RTC::TransportTuple* tuple)

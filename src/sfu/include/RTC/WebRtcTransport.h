@@ -6,6 +6,7 @@
 #include "RTC/IceServer.h"
 #include "RTC/SrtpSession.h"
 #include "RTC/StunPacket.h"
+#include "handles/netInterface.h"
 #include "RTC/TcpConnection.h"
 #include "RTC/TcpServer.h"
 #include "RTC/Transport.h"
@@ -17,8 +18,9 @@ namespace RTC
 {
 	class WebRtcTransport : public RTC::Transport,
 	                        public RTC::UdpSocket::Listener,
-	                        public RTC::TcpServer::Listener,
-	                        public RTC::TcpConnection::Listener,
+	                       // public RTC::TcpServer::Listener,
+	                       // public RTC::TcpConnection::Listener,
+                                public base::net1::Listener,
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener
 	{
@@ -58,13 +60,13 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
-		void OnRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection) override;
-
+		//void OnRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection) override;
+		void on_close( base::net1::Listener* conn);
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
-		void OnTcpConnectionPacketReceived(
-		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
-
+//		void OnTcpConnectionPacketReceived(
+//		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;  //
+                 void on_read( base::net1::Listener* conn, const char* data, size_t len);
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
 		void OnIceServerSendStunPacket(

@@ -196,7 +196,7 @@ namespace base
         
         uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int port) {
             int bind_flags = 0;
-            uvHandle = new uv_tcp_t;
+            uv_tcp_t *uvHandle = new uv_tcp_t;
             struct sockaddr_in6 addr6;
             struct sockaddr_in addr;
          

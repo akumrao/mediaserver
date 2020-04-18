@@ -12,7 +12,7 @@ namespace base
     namespace net
     {
 
-        class TcpServerBase 
+        class TcpServerBase : public Listener
         {
         public:
             /**
@@ -110,7 +110,7 @@ namespace base
         }
 
         /**********************************************************************************************************/
-        class TcpServer : public TcpServerBase, public Listener
+        class TcpServer : public TcpServerBase
         {
         public:
 

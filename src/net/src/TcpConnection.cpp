@@ -280,14 +280,14 @@ namespace base {
                 LError("error setting peer IP and port");
         }
 
-        void TcpConnectionBase::Write(const char* data, size_t len) {
+        int TcpConnectionBase::Write(const char* data, size_t len) {
 
            
             if (this->closed)
-                return;
+                return -1;
 
             if (len == 0)
-                return;
+                return 0;
             
             // LTrace("TcpConnectionBase::Write " , len);
 
@@ -297,9 +297,12 @@ namespace base {
             uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data)), len);
             int written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), &buffer, 1);
 
+            if(written > 0)
+               sentBytes +=  written;
+            
             // All the data was written. Done.
             if (written == static_cast<int> (len)) {
-                return;
+                return written;
             }// Cannot write any data at first time. Use uv_write().
             else if (written == UV_EAGAIN || written == UV_ENOSYS) {
                 // Set written to 0 so pendingLen can be properly calculated.
@@ -309,7 +312,7 @@ namespace base {
                 LDebug("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
                 Close();
-                return;
+                return -1;
             }
 
             // LDebug(
@@ -333,16 +336,24 @@ namespace base {
                     static_cast<uv_write_cb> (onWrite));
 
             if (err != 0)
+            {
                 LError("uv_write() failed: %s", uv_strerror(err));
+            }
+            else
+            {
+                sentBytes +=  pendingLen;
+            }
+            
+            return -2;
         }
-/*
-        void TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2) {
+
+        int TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2) {
 
             if (this->closed)
-                return;
+                return -1;
 
             if (len1 == 0 && len2 == 0)
-                return;
+                return 0;
 
             size_t totalLen = len1 + len2;
             uv_buf_t buffers[2];
@@ -356,9 +367,12 @@ namespace base {
             buffers[1] = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data2)), len2);
             written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), buffers, 2);
 
+            if(written > 0)
+               sentBytes +=  written;
+            
             // All the data was written. Done.
             if (written == static_cast<int> (totalLen)) {
-                return;
+                return written;
             }// Cannot write any data at first time. Use uv_write().
             else if (written == UV_EAGAIN || written == UV_ENOSYS) {
                 // Set written to 0 so pendingLen can be properly calculated.
@@ -369,9 +383,7 @@ namespace base {
 
                 Close();
 
-
-
-                return;
+                return -1;
             }
 
             size_t pendingLen = totalLen - written;
@@ -404,9 +416,17 @@ namespace base {
                     static_cast<uv_write_cb> (onWrite));
 
             if (err != 0)
+            {
                 LError("uv_write() failed: %s", uv_strerror(err));
+            }
+            else
+            {
+               sentBytes +=  pendingLen;
+            }
+            
+            return -2;
         }
-*/
+
         void TcpConnectionBase::ErrorReceiving() {
 
 
@@ -442,11 +462,11 @@ namespace base {
 
             if (this->closed)
                 return;
-             static char slab[65536];
-            assert(suggested_size <= sizeof(slab));
-            buf->base = slab;
-            buf->len = sizeof(slab);
-/*
+//             static char slab[65536];
+//            assert(suggested_size <= sizeof(slab));
+//            buf->base = slab;
+//            buf->len = sizeof(slab);
+
             // If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
             if (this->buffer == nullptr)
                 this->buffer = new char[this->bufferSize];
@@ -462,7 +482,7 @@ namespace base {
 
                 LDebug("no available space in the buffer");
             }
- */
+
         }
         
        
@@ -479,8 +499,8 @@ namespace base {
             // Data received.
             if (nread > 0) {
                 // Update the buffer data length.
-               // this->bufferDataLen += static_cast<size_t> (nread);
-
+		// this->bufferDataLen += static_cast<size_t> (nread);
+                this->recvBytes += nread;
                 
                 // Notify the subclass.
                 if(tls)
@@ -539,7 +559,7 @@ namespace base {
 
         void TcpConnection::on_read(const char* data, size_t len) {
 
-            recvBytes+= len;
+          
             listener->on_read(this, data, len);
         }
         
@@ -553,8 +573,7 @@ namespace base {
 
 
             // Update sent bytes.
-            this->sentBytes += len;
-            
+                  
            // Write according to Framing RFC 4571.
 
             //       char frameLen[2];

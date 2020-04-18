@@ -1,178 +1,227 @@
-#ifndef MS_TCP_CONNECTION_HPP
-#define MS_TCP_CONNECTION_HPP
+#ifndef TCP_CONNECTION1_H
+#define TCP_CONNECTION1_H
 
-#include "common.h"
 #include <uv.h>
 #include <string>
 
-class TcpConnection
+
+namespace base
 {
-protected:
-	using onSendCallback = const std::function<void(bool sent)>;
+    namespace net1
+    {
 
-public:
-	class Listener
-	{
-	public:
-		virtual ~Listener() = default;
+        // Avoid cyclic #include problem by declaring classes instead of including
+        // the corresponding header files.
+        class TcpServerBase;
 
-	public:
-		virtual void OnTcpConnectionClosed(TcpConnection* connection) = 0;
-	};
+        class TcpConnectionBase: public Listener
+        {
+        public:
+        
+        public:
 
-public:
-	/* Struct for the data field of uv_req_t when writing into the connection. */
-	struct UvWriteData
-	{
-		explicit UvWriteData(size_t storeSize)
-		{
-			this->store = new uint8_t[storeSize];
-		}
+            /* Struct for the data field of uv_req_t when writing into the connection. */
+            struct UvWriteData
+            {
+                uv_write_t req;
+                char store[1];
+            };
 
-		// Disable copy constructor because of the dynamically allocated data (store).
-		UvWriteData(const UvWriteData&) = delete;
+            // Let the TcpServerBase class directly call the destructor of TcpConnectionBase.
+            friend class TcpServerBase;
 
-		~UvWriteData()
-		{
-			delete[] this->store;
-			delete this->cb;
-		}
+        public:
+            explicit TcpConnectionBase(bool tls = false);
+            TcpConnectionBase& operator=(const TcpConnectionBase&) = delete;
+            TcpConnectionBase(const TcpConnectionBase&) = delete;
+            virtual ~TcpConnectionBase();
 
-		uv_write_t req;
-		uint8_t* store{ nullptr };
-		TcpConnection::onSendCallback* cb{ nullptr };
-	};
+        public:
+            void Close();
+            void Connect( std::string ip, int port,  addrinfo *addrs = nullptr);
+            virtual void on_connect() { }
+            virtual void on_read(const char* data, size_t len) = 0;
+            virtual void on_tls_read(const char* data, size_t len){};
+            virtual void on_close() {};
+            virtual void Dump() const;
+            void Setup(
+                  //  Listener* listener,
+                    struct sockaddr_storage* localAddr,
+                    const std::string& localIp,
+                    uint16_t localPort);
+            bool IsClosed() const;
+            uv_tcp_t* GetUvHandle() const;
+            void Start();
+            int Write(const char* data, size_t len);
+            int Write(const char* data1, size_t len1, const char* data2, size_t len2);
+            int Write(const std::string& data);
+            void ErrorReceiving();
+            const struct sockaddr* GetLocalAddress() const;
+            int GetLocalFamily() const;
+            const std::string& GetLocalIp() const;
+            uint16_t GetLocalPort() const;
+            const struct sockaddr* GetPeerAddress() const;
+            const std::string& GetPeerIp() const;
+            uint16_t GetPeerPort() const;
 
-public:
-	explicit TcpConnection(size_t bufferSize);
-	TcpConnection& operator=(const TcpConnection&) = delete;
-	TcpConnection(const TcpConnection&)            = delete;
-	virtual ~TcpConnection();
+        private:
+            bool SetPeerAddress();
 
-public:
-	void Close();
-	virtual void Dump() const;
-	void Setup(
-	  Listener* listener,
-	  struct sockaddr_storage* localAddr,
-	  const std::string& localIp,
-	  uint16_t localPort);
-	bool IsClosed() const;
-	uv_tcp_t* GetUvHandle() const;
-	void Start();
-	void Write(const uint8_t* data, size_t len, TcpConnection::onSendCallback* cb);
-	void Write(
-	  const uint8_t* data1,
-	  size_t len1,
-	  const uint8_t* data2,
-	  size_t len2,
-	  TcpConnection::onSendCallback* cb);
-	void ErrorReceiving();
-	const struct sockaddr* GetLocalAddress() const;
-	int GetLocalFamily() const;
-	const std::string& GetLocalIp() const;
-	uint16_t GetLocalPort() const;
-	const struct sockaddr* GetPeerAddress() const;
-	const std::string& GetPeerIp() const;
-	uint16_t GetPeerPort() const;
-	size_t GetRecvBytes() const;
-	size_t GetSentBytes() const;
+            /* Callbacks fired by UV events. */
+        public:
+            void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+            void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+            void OnUvWrite(int status);
 
-private:
-	bool SetPeerAddress();
+          
 
-	/* Callbacks fired by UV events. */
-public:
-	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWrite(int status, onSendCallback* cb);
+        protected:
+            // Passed by argument.
+            size_t bufferSize{ 65536};
+            // Allocated by this.
+            char* buffer{ nullptr};
 
-	/* Pure virtual methods that must be implemented by the subclass. */
-protected:
-	virtual void UserOnTcpConnectionRead() = 0;
+            size_t bufferDataLen{ 0};
+            std::string localIp;
+            uint16_t localPort{ 0};
+            struct sockaddr_storage peerAddr;
+            std::string peerIp;
+            uint16_t peerPort{ 0};
 
-protected:
-	// Passed by argument.
-	size_t bufferSize{ 0 };
-	// Allocated by this.
-	uint8_t* buffer{ nullptr };
-	// Others.
-	size_t bufferDataLen{ 0 };
-	std::string localIp;
-	uint16_t localPort{ 0 };
-	struct sockaddr_storage peerAddr;
-	std::string peerIp;
-	uint16_t peerPort{ 0 };
+        public:
+            
+            size_t GetRecvBytes() const;
+            size_t GetSentBytes() const;
+            
+            size_t recvBytes{ 0};
+            size_t sentBytes{ 0};
+      
+        private:
 
-private:
-	// Passed by argument.
-	Listener* listener{ nullptr };
-	// Allocated by this.
-	uv_tcp_t* uvHandle{ nullptr };
-	// Others.
-	struct sockaddr_storage* localAddr{ nullptr };
-	bool closed{ false };
-	size_t recvBytes{ 0 };
-	size_t sentBytes{ 0 };
-	bool isClosedByPeer{ false };
-	bool hasError{ false };
-};
+            // Allocated by this.
+            uv_tcp_t* uvHandle{ nullptr};
+            // Others.
 
-/* Inline methods. */
+            struct sockaddr_storage* localAddr
+            {
+                nullptr
+            };
+            bool closed{ false};
+            bool isClosedByPeer{ false};
+            bool hasError{ false};
+            
+            bool tls;
+            
+        };
 
-inline bool TcpConnection::IsClosed() const
-{
-	return this->closed;
-}
+        /* Inline methods. */
 
-inline uv_tcp_t* TcpConnection::GetUvHandle() const
-{
-	return this->uvHandle;
-}
+        inline bool TcpConnectionBase::IsClosed() const {
+            return this->closed;
+        }
 
-inline const struct sockaddr* TcpConnection::GetLocalAddress() const
-{
-	return reinterpret_cast<const struct sockaddr*>(this->localAddr);
-}
+        inline uv_tcp_t* TcpConnectionBase::GetUvHandle() const {
+            return this->uvHandle;
+        }
 
-inline int TcpConnection::GetLocalFamily() const
-{
-	return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
-}
+        inline int TcpConnectionBase::Write(const std::string& data) {
+           return Write(reinterpret_cast<const char*> (data.c_str()), data.size());
+        }
 
-inline const std::string& TcpConnection::GetLocalIp() const
-{
-	return this->localIp;
-}
+        inline const struct sockaddr* TcpConnectionBase::GetLocalAddress() const {
+            return reinterpret_cast<const struct sockaddr*> (this->localAddr);
+        }
 
-inline uint16_t TcpConnection::GetLocalPort() const
-{
-	return this->localPort;
-}
+        inline int TcpConnectionBase::GetLocalFamily() const {
+            return reinterpret_cast<const struct sockaddr*> (this->localAddr)->sa_family;
+        }
 
-inline const struct sockaddr* TcpConnection::GetPeerAddress() const
-{
-	return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
-}
+        inline const std::string& TcpConnectionBase::GetLocalIp() const {
+            return this->localIp;
+        }
 
-inline const std::string& TcpConnection::GetPeerIp() const
-{
-	return this->peerIp;
-}
+        inline uint16_t TcpConnectionBase::GetLocalPort() const {
+            return this->localPort;
+        }
 
-inline uint16_t TcpConnection::GetPeerPort() const
-{
-	return this->peerPort;
-}
+        inline const struct sockaddr* TcpConnectionBase::GetPeerAddress() const {
+            return reinterpret_cast<const struct sockaddr*> (&this->peerAddr);
+        }
 
-inline size_t TcpConnection::GetRecvBytes() const
-{
-	return this->recvBytes;
-}
+        inline const std::string& TcpConnectionBase::GetPeerIp() const {
+            return this->peerIp;
+        }
 
-inline size_t TcpConnection::GetSentBytes() const
-{
-	return this->sentBytes;
-}
+        inline uint16_t TcpConnectionBase::GetPeerPort() const {
+            return this->peerPort;
+        }
 
-#endif
+      /*******************************************************************************************************************************************************/
+
+        class TcpConnection : public TcpConnectionBase
+        {
+        public:
+
+
+        public:
+            TcpConnection(Listener* listener, bool tls=false);
+            ~TcpConnection() override;
+
+        public:
+            void send(const char* data, size_t len);
+
+
+            /* Pure virtual methods inherited from ::TcpConnection. */
+        public:
+            void on_read( const char* data, size_t len) override;
+            
+            void on_close() override;
+            
+//            const std::string& GetLocalIp() const;
+//            uint16_t GetLocalPort() const;
+//             const std::string& GetPeerIp() const;
+//            uint16_t GetPeerPort() const;
+
+        public:
+            // Passed by argument.
+            Listener* listener{ nullptr};
+            // Others.
+        public:
+            size_t frameStart{ 0}; // Where the latest frame starts.
+           
+        };
+
+//        inline size_t TcpConnection::GetRecvBytes() const {
+//            return this->recvBytes;
+//        }
+//
+//        inline size_t TcpConnection::GetSentBytes() const {
+//            return this->sentBytes;
+//        }
+//
+//        
+//         inline const std::string& TcpConnection::GetLocalIp() const {
+//            return this->localIp;
+//        }
+//
+//        inline uint16_t TcpConnection::GetLocalPort() const {
+//            return this->localPort;
+//        }
+//
+//    
+//        inline const std::string& TcpConnection::GetPeerIp() const {
+//            return this->peerIp;
+//        }
+//
+//        inline uint16_t TcpConnection::GetPeerPort() const {
+//            return this->peerPort;
+//        }
+        
+        /*******************************************************************************************************************************************************/
+
+
+    } // namespace net
+} // namespace base
+
+
+#endif  //TCP_CONNECTION_H

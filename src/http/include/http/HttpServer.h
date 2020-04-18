@@ -20,7 +20,7 @@ namespace base {
         /*******************************************************************************************************************************************************/
 
 
-        class HttpServerBase : public TcpServerBase, public Listener  {
+        class HttpServerBase : public TcpServerBase  {
         public:
 
         public:

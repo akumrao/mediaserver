@@ -9,30 +9,27 @@
 
 namespace RTC
 {
-	class TcpServer : public ::TcpServer
-	{
-	public:
-		class Listener
-		{
-		public:
-			virtual void OnRtcTcpConnectionClosed(
-			  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection) = 0;
-		};
+	class TcpServer : public base::net1::TcpServerBase
+        {
+        public:
 
-	public:
-		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip);
-		~TcpServer() override;
+     
+        public:
+            TcpServer(Listener* listener, std::string ip);
 
-		/* Pure virtual methods inherited from ::TcpServer. */
-	public:
-		void UserOnTcpConnectionAlloc() override;
-		void UserOnTcpConnectionClosed(::TcpConnection* connection) override;
+            ~TcpServer() override;
 
-	private:
-		// Passed by argument.
-		Listener* listener{ nullptr };
-		RTC::TcpConnection::Listener* connListener{ nullptr };
-	};
+            /* Pure virtual methods inherited from ::TcpServer. */
+        public:
+            void UserOnTcpConnectionAlloc(base::net1::TcpConnectionBase** connection) override;
+            bool UserOnNewTcpConnection(base::net1::TcpConnectionBase* connection) override;
+            void UserOnTcpConnectionClosed(base::net1::TcpConnectionBase* connection) override;
+
+        private:
+            // Passed by argument.
+            Listener* listener{ nullptr};
+            uv_tcp_t* uvHandle{ nullptr};
+        };
 } // namespace RTC
 
 #endif

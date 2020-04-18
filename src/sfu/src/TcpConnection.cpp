@@ -15,28 +15,22 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
-	  : ::TcpConnection::TcpConnection(bufferSize), listener(listener)
+	TcpConnection::TcpConnection(Listener* listener)
+	  : TcpConnectionBase(false), listener(listener)
 	{
-		MS_TRACE();
+		
 	}
 
 	TcpConnection::~TcpConnection()
 	{
-		MS_TRACE();
+		
 	}
 
-	void TcpConnection::UserOnTcpConnectionRead()
+	void TcpConnection::on_read(const char*, size_t len)
 	{
-		MS_TRACE();
 
-		MS_DEBUG_DEV(
-		  "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-		  GetLocalIp().c_str(),
-		  GetLocalPort(),
-		  GetPeerIp().c_str(),
-		  GetPeerPort());
-
+                SDebug << "data received local: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
+                
 		/*
 		 * Framing RFC 4571
 		 *
@@ -53,6 +47,7 @@ namespace RTC
 		 * Zero is a valid value for LENGTH, and it codes the null packet.
 		 */
 
+               bufferDataLen += len;
 		// Be ready to parse more than a single frame in a single TCP chunk.
 		while (true)
 		{
@@ -62,16 +57,16 @@ namespace RTC
 			if (IsClosed())
 				return;
 
-			size_t dataLen = this->bufferDataLen - this->frameStart;
+			size_t dataLen = bufferDataLen - frameStart;
 			size_t packetLen;
 
 			if (dataLen >= 2)
-				packetLen = size_t{ Utils::Byte::Get2Bytes(this->buffer + this->frameStart, 0) };
+				packetLen = size_t{ Utils::Byte::Get2Bytes((const uint8_t*)buffer + frameStart, 0) };
 
 			// We have packetLen bytes.
 			if (dataLen >= 2 && dataLen >= 2 + packetLen)
 			{
-				const uint8_t* packet = this->buffer + this->frameStart + 2;
+				const char* packet = buffer + frameStart + 2;
 
 				// Update received bytes and notify the listener.
 				if (packetLen != 0)
@@ -80,28 +75,28 @@ namespace RTC
 					// later.
 					std::memcpy(ReadBuffer, packet, packetLen);
 
-					this->listener->OnTcpConnectionPacketReceived(this, ReadBuffer, packetLen);
+					listener->on_read(this, (const char*) ReadBuffer, packetLen);//arvind
 				}
 
 				// If there is no more space available in the buffer and that is because
 				// the latest parsed frame filled it, then empty the full buffer.
-				if ((this->frameStart + 2 + packetLen) == this->bufferSize)
+				if ((frameStart + 2 + packetLen) == bufferSize)
 				{
 					MS_DEBUG_DEV("no more space in the buffer, emptying the buffer data");
 
-					this->frameStart    = 0;
-					this->bufferDataLen = 0;
+					frameStart    = 0;
+					bufferDataLen = 0;
 				}
 				// If there is still space in the buffer, set the beginning of the next
 				// frame to the next position after the parsed frame.
 				else
 				{
-					this->frameStart += 2 + packetLen;
+					frameStart += 2 + packetLen;
 				}
 
 				// If there is more data in the buffer after the parsed frame then
 				// parse again. Otherwise break here and wait for more data.
-				if (this->bufferDataLen > this->frameStart)
+				if (bufferDataLen > frameStart)
 				{
 					MS_DEBUG_DEV("there is more data after the parsed frame, continue parsing");
 
@@ -114,20 +109,20 @@ namespace RTC
 			// Incomplete packet.
 
 			// Check if the buffer is full.
-			if (this->bufferDataLen == this->bufferSize)
+			if (bufferDataLen == bufferSize)
 			{
 				// First case: the incomplete frame does not begin at position 0 of
 				// the buffer, so move the frame to the position 0.
-				if (this->frameStart != 0)
+				if (frameStart != 0)
 				{
 					MS_DEBUG_DEV(
 					  "no more space in the buffer, moving parsed bytes to the beginning of "
 					  "the buffer and wait for more data");
 
 					std::memmove(
-					  this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
-					this->bufferDataLen = this->bufferSize - this->frameStart;
-					this->frameStart    = 0;
+					  buffer, buffer + frameStart, bufferSize - frameStart);
+					bufferDataLen = bufferSize - frameStart;
+					frameStart    = 0;
 				}
 				// Second case: the incomplete frame begins at position 0 of the buffer.
 				// The frame is too big, so close the connection.
@@ -155,15 +150,28 @@ namespace RTC
 		}
 	}
 
-	void TcpConnection::Send(const uint8_t* data, size_t len, ::TcpConnection::onSendCallback* cb)
+	void TcpConnection::Send(const uint8_t* data, size_t len, onSendCallback* cb)
 	{
-		MS_TRACE();
+		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
 
 		// Write according to Framing RFC 4571.
 
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		::TcpConnection::Write(frameLen, 2, data, len, cb);
+		int r = base::net1::TcpConnectionBase::Write((const char*)frameLen, 2, (const char*) data, len); //arvind
+                if(r==len && cb)
+                {
+                    (*cb)(true);
+                }else if (cb)
+                    (*cb)(false);
+
 	}
+        
+         void TcpConnection::on_close() {
+
+            listener->on_close(this);
+        }
+        
+        
 } // namespace RTC

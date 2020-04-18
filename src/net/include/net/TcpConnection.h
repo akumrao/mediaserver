@@ -14,7 +14,7 @@ namespace base
         // the corresponding header files.
         class TcpServerBase;
 
-        class TcpConnectionBase
+        class TcpConnectionBase: public Listener
         {
         public:
         
@@ -52,9 +52,9 @@ namespace base
             bool IsClosed() const;
             uv_tcp_t* GetUvHandle() const;
             void Start();
-            void Write(const char* data, size_t len);
-            //void Write(const char* data1, size_t len1, const char* data2, size_t len2);
-            void Write(const std::string& data);
+            int Write(const char* data, size_t len);
+            int Write(const char* data1, size_t len1, const char* data2, size_t len2);
+            int Write(const std::string& data);
             void ErrorReceiving();
             const struct sockaddr* GetLocalAddress() const;
             int GetLocalFamily() const;
@@ -77,11 +77,11 @@ namespace base
 
         protected:
             // Passed by argument.
-            //size_t bufferSize{ 0};
+            size_t bufferSize{ 65536};
             // Allocated by this.
-            //char* buffer{ nullptr};
-            // Others.
-           // size_t bufferDataLen{ 0};
+            char* buffer{ nullptr};
+
+            size_t bufferDataLen{ 0};
             std::string localIp;
             uint16_t localPort{ 0};
             struct sockaddr_storage peerAddr;
@@ -89,6 +89,12 @@ namespace base
             uint16_t peerPort{ 0};
 
         public:
+            
+            size_t GetRecvBytes() const;
+            size_t GetSentBytes() const;
+            
+            size_t recvBytes{ 0};
+            size_t sentBytes{ 0};
       
         private:
 
@@ -118,8 +124,8 @@ namespace base
             return this->uvHandle;
         }
 
-        inline void TcpConnectionBase::Write(const std::string& data) {
-            Write(reinterpret_cast<const char*> (data.c_str()), data.size());
+        inline int TcpConnectionBase::Write(const std::string& data) {
+           return Write(reinterpret_cast<const char*> (data.c_str()), data.size());
         }
 
         inline const struct sockaddr* TcpConnectionBase::GetLocalAddress() const {
@@ -152,7 +158,7 @@ namespace base
 
       /*******************************************************************************************************************************************************/
 
-        class TcpConnection : public TcpConnectionBase, public Listener
+        class TcpConnection : public TcpConnectionBase
         {
         public:
 
@@ -163,8 +169,7 @@ namespace base
 
         public:
             void send(const char* data, size_t len);
-            size_t GetRecvBytes() const;
-            size_t GetSentBytes() const;
+
 
             /* Pure virtual methods inherited from ::TcpConnection. */
         public:
@@ -172,46 +177,45 @@ namespace base
             
             void on_close() override;
             
-            const std::string& GetLocalIp() const;
-            uint16_t GetLocalPort() const;
-             const std::string& GetPeerIp() const;
-            uint16_t GetPeerPort() const;
+//            const std::string& GetLocalIp() const;
+//            uint16_t GetLocalPort() const;
+//             const std::string& GetPeerIp() const;
+//            uint16_t GetPeerPort() const;
 
-        private:
+        public:
             // Passed by argument.
             Listener* listener{ nullptr};
             // Others.
         public:
             size_t frameStart{ 0}; // Where the latest frame starts.
-            size_t recvBytes{ 0};
-            size_t sentBytes{ 0};
+           
         };
 
-        inline size_t TcpConnection::GetRecvBytes() const {
-            return this->recvBytes;
-        }
-
-        inline size_t TcpConnection::GetSentBytes() const {
-            return this->sentBytes;
-        }
-
-        
-         inline const std::string& TcpConnection::GetLocalIp() const {
-            return this->localIp;
-        }
-
-        inline uint16_t TcpConnection::GetLocalPort() const {
-            return this->localPort;
-        }
-
-    
-        inline const std::string& TcpConnection::GetPeerIp() const {
-            return this->peerIp;
-        }
-
-        inline uint16_t TcpConnection::GetPeerPort() const {
-            return this->peerPort;
-        }
+//        inline size_t TcpConnection::GetRecvBytes() const {
+//            return this->recvBytes;
+//        }
+//
+//        inline size_t TcpConnection::GetSentBytes() const {
+//            return this->sentBytes;
+//        }
+//
+//        
+//         inline const std::string& TcpConnection::GetLocalIp() const {
+//            return this->localIp;
+//        }
+//
+//        inline uint16_t TcpConnection::GetLocalPort() const {
+//            return this->localPort;
+//        }
+//
+//    
+//        inline const std::string& TcpConnection::GetPeerIp() const {
+//            return this->peerIp;
+//        }
+//
+//        inline uint16_t TcpConnection::GetPeerPort() const {
+//            return this->peerPort;
+//        }
         
         /*******************************************************************************************************************************************************/
 

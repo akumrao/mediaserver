@@ -2,56 +2,61 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TcpServer.h"
-#include "LoggerTag.h"
 #include "RTC/PortManager.h"
+#include "LoggerTag.h"
 #include <string>
 
 namespace RTC
 {
-	/* Static. */
+	static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
 
-	static constexpr size_t MaxTcpConnectionsPerServer{ 10 };
+        /* Instance methods. */
 
-	/* Instance methods. */
+        TcpServer::TcpServer(Listener* listener, std::string ip)
+        : TcpServerBase(RTC::PortManager::BindTcp(ip), 256), listener(listener){
 
-	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
-	  : // This may throw.
-	    ::TcpServer::TcpServer(RTC::PortManager::BindTcp(ip), 256), listener(listener),
-	    connListener(connListener)
-	{
-		MS_TRACE();
-	}
+        }
 
-	TcpServer::~TcpServer()
-	{
-		MS_TRACE();
+        TcpServer::~TcpServer() {
 
-		RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
-	}
+            if (uvHandle)
+                delete uvHandle;
+            RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
+        }
 
-	void TcpServer::UserOnTcpConnectionAlloc()
-	{
-		MS_TRACE();
+  
+        void TcpServer::UserOnTcpConnectionAlloc(base::net1::TcpConnectionBase** connection) {
 
-		// Allow just MaxTcpConnectionsPerServer.
-		if (GetNumConnections() >= MaxTcpConnectionsPerServer)
-		{
-			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
+             *connection = new RTC::TcpConnection(listener);
+        }
 
-			return;
-		}
+        bool TcpServer::UserOnNewTcpConnection(base::net1::TcpConnectionBase* connection) {
 
-		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		auto* connection = new RTC::TcpConnection(this->connListener, 65536);
 
-		// Accept it.
-		AcceptTcpConnection(connection);
-	}
+            if (GetNumConnections() >= MaxTcpConnectionsPerServer)
+            {
+                LError("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
 
-	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection)
-	{
-		MS_TRACE();
+                return false;
+            }
 
-		this->listener->OnRtcTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection));
-	}
+            return true;
+        }
+
+        void TcpServer::UserOnTcpConnectionClosed(base::net1::TcpConnectionBase* connection) {
+
+            //this->listener->on_close( (TcpConnection*)connection);
+        }
+
+	
+
+        
+        
+//         bool TcpServer::UserOnNewTcpConnection(base::net1::TcpConnectionBase* connection ) 
+//         {
+//             
+//         }
+ 
+     
+             
 } // namespace RTC

@@ -595,7 +595,7 @@ async function getUserMedia1(transport, isWebcam) {
 
 async function subscribe() {
 
-  socket.emit('createConsumerTransport', {  forceTcp: false }, async function (data) {
+  socket.emit('createConsumerTransport', {  forceTcp: true }, async function (data) {
 
   console.log(data);	
 
@@ -680,7 +680,7 @@ async function publish()
 {
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
-  socket.emit('createProducerTransport', {  forceTcp: false,  rtpCapabilities: device.rtpCapabilities,
+  socket.emit('createProducerTransport', {  forceTcp: true,  rtpCapabilities: device.rtpCapabilities,
   }, async function (data) {
 
      console.log(data);

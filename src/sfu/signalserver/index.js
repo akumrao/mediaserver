@@ -34,7 +34,7 @@ let io;
 console.log("https://localhost:8080/");
 
 var roomid;
-var serverSocketid;
+let serverSocketid =null;
 var transport;  //producertranspor
 var consumerTransport;
 var routerCapabilities;
@@ -131,6 +131,16 @@ async function runSocketServer() {
 		socket.broadcast.emit('message', message);
 	});
 
+	socket.on('disconnect', function() {
+	  console.log(socket.id);
+	  if( socket.id == serverSocketid)
+	  {
+	  	serverSocketid = null;
+	  	console.log(serverSocketid);
+	  }
+
+	});
+
 
 	socket.on('create or join', function(room) {
 		log('Received request to create or join room ' + room);
@@ -140,7 +150,7 @@ async function runSocketServer() {
 		log('Room ' + room + ' now has ' + numClients + ' client(s)');
 
 		socket.join(room);
-		if (numClients === 0) {
+		if (numClients === 0 || serverSocketid == null) {
 		 
 			log('Client ID ' + socket.id + ' created room ' + room);
 
@@ -197,7 +207,7 @@ async function runSocketServer() {
 
 			console.log('createProducerTransport ' + JSON.stringify(data, null, 4) );
 
-			var trans = {"id":2,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":true,"enableTcp":true,"preferUdp":true,"preferTcp":false,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}};
+			var trans = {"id":2,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":false,"enableTcp":true,"preferUdp":false,"preferTcp":true,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}};
 			trans.internal.transportId = uuidV4();
 			trans.data.listenIps=listenIps;
 
@@ -360,7 +370,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 	 try {
 
 			console.log('createConsumerTransport data' + JSON.stringify(data, null, 4) );
-			var trans = {"id":6,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":true,"enableTcp":true,"preferUdp":true,"preferTcp":false,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}}
+			var trans = {"id":6,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":false,"enableTcp":true,"preferUdp":false,"preferTcp":true,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}}
 			trans.internal.transportId = uuidV4();
 			trans.data.listenIps=listenIps;
 
