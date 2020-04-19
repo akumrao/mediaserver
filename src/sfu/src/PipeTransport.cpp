@@ -1,5 +1,4 @@
-#define MS_CLASS "RTC::PipeTransport"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "RTC/PipeTransport.h"
 #include "LoggerTag.h"

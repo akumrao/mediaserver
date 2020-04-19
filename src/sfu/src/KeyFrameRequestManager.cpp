@@ -1,5 +1,4 @@
-#define MS_CLASS "KeyFrameRequestManager"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "RTC/KeyFrameRequestManager.h"
 #include "LoggerTag.h"

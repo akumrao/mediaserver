@@ -11,7 +11,6 @@ namespace base {
 
         Signaler::Signaler() {
             Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
-            worker = new Worker();
 
         }
 
@@ -26,6 +25,8 @@ namespace base {
 
         void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
 
+            worker = new Worker();
+             
             room = rm;
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
@@ -35,14 +36,14 @@ namespace base {
 
             socket = client->io();
 
-            socket->on("connection", Socket::event_listener_aux([ = ](string const& name, json const& data, bool isAck, json & ack_resp){
+            socket->on("connection", Socket::event_listener_aux([ & ](string const& name, json const& data, bool isAck, json & ack_resp){
 
-                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                    LTrace(cnfg::stringify(data))
-
-                    LTrace("Server IP address is: ", data)
-                            // updateRoomURL(ipaddr);
-                }));
+//                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+//                    LTrace(cnfg::stringify(data))
+//
+//                    LTrace("Server IP address is: ", data)
+//                            // updateRoomURL(ipaddr);
+//                    }));
 
 
                 socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {

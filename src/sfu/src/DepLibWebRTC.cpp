@@ -1,5 +1,4 @@
-#define MS_CLASS "DepLibWebRTC"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "DepLibWebRTC.h"
 #include "LoggerTag.h"

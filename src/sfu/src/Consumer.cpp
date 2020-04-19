@@ -1,5 +1,4 @@
-#define MS_CLASS "RTC::Consumer"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "RTC/Consumer.h"
 #include "base/application.h"

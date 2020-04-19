@@ -1,5 +1,3 @@
-#define MS_CLASS "RTC::PipeConsumer"
-// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeConsumer.h"
 #include "base/application.h"

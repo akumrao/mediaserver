@@ -206,11 +206,14 @@ namespace base
         }
         
         uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int port) {
-	    
-	    if(port == -1)
-            {
-                return PortManager::BindTcp(ip);
-            }
+            //Arvind
+            //please do not do it here . Drive your own class from TServerBase. 
+            //Use Portmanager there itself. See the sfu example
+            
+//	    if(port == -1)
+//            {
+//                return PortManager::BindTcp(ip);
+//            }
             int bind_flags = 0;
             uv_tcp_t *uvHandle = new uv_tcp_t;
             struct sockaddr_in6 addr6;
@@ -254,7 +257,7 @@ namespace base
 
             if (uvHandle)
                 delete uvHandle;
-            //UnbindTcp(this->localIp, this->localPort);
+            //UnbindTcp(this->localIp, this->localPort); // please do not do it here . Drive your own class from TServerBase.
         }
 
   

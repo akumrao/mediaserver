@@ -1,5 +1,4 @@
-#define MS_CLASS "RTC::IceCandidate"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "RTC/IceCandidate.h"
 #include "LoggerTag.h"

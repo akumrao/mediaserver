@@ -1,5 +1,4 @@
-#define MS_CLASS "SignalsHandler"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "handles/SignalsHandler.h"
 #include "base/application.h"
