@@ -1,10 +1,19 @@
+/* This file is part of mediaserver. A webrtc sfu server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ */
 
-
-#include "handles/SignalsHandler.h"
+#include "base/signalsHandler.h"
 #include "base/application.h"
-#include "LoggerTag.h"
 #include "base/error.h"
 
+namespace base
+{
 /* Static methods for UV callbacks. */
 
 inline static void onSignal(uv_signal_t* handle, int signum)
@@ -21,12 +30,11 @@ inline static void onClose(uv_handle_t* handle)
 
 SignalsHandler::SignalsHandler(Listener* listener) : listener(listener)
 {
-	MS_TRACE();
+	
 }
 
 SignalsHandler::~SignalsHandler()
 {
-	MS_TRACE();
 
 	if (!this->closed)
 		Close();
@@ -34,7 +42,6 @@ SignalsHandler::~SignalsHandler()
 
 void SignalsHandler::Close()
 {
-	MS_TRACE();
 
 	if (this->closed)
 		return;
@@ -49,7 +56,6 @@ void SignalsHandler::Close()
 
 void SignalsHandler::AddSignal(int signum, const std::string& name)
 {
-	MS_TRACE();
 
 	if (this->closed)
 		base::uv::throwError("closed");
@@ -79,8 +85,8 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 
 inline void SignalsHandler::OnUvSignal(int signum)
 {
-	MS_TRACE();
-
 	// Notify the listener.
 	this->listener->OnSignal(this, signum);
 }
+
+}//end namespace base
