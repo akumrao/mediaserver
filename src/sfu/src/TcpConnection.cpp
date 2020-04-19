@@ -1,5 +1,3 @@
-#define MS_CLASS "RTC::TcpConnection"
-// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TcpConnection.h"
 #include "LoggerTag.h"
@@ -153,7 +151,12 @@ namespace RTC
 	void TcpConnection::Send(const uint8_t* data, size_t len, onSendCallback* cb)
 	{
 		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
-
+                 
+//                if (cb)
+//                {
+//                   m_cb =cb;
+//                }
+                 
 		// Write according to Framing RFC 4571.
 
 		uint8_t frameLen[2];

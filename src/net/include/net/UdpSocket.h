@@ -33,6 +33,7 @@ namespace base {
              * uvHandle must be an already initialized and binded uv_udp_t pointer.
              */
             UdpSocket(std::string ip, int port);
+            explicit UdpSocket(uv_udp_t* uvHandle);
             UdpSocket& operator=(const UdpSocket&) = delete;
             UdpSocket(const UdpSocket&) = delete;
             virtual ~UdpSocket();
@@ -55,28 +56,16 @@ namespace base {
             }
 
 
-            void send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
+            int send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
            // void send(const std::string& data, const struct sockaddr* addr);
-            void send(const char* data, unsigned int len, const std::string ip, int port);
-            void send(const std::string& data, const std::string& ip, uint16_t port);
+            int send(const char* data, unsigned int len, const std::string ip, int port);
+            int send(const std::string& data, const std::string& ip, uint16_t port);
             const struct sockaddr* GetLocalAddress() const;
             int GetLocalFamily() const;
             const std::string& GetLocalIp() const;
             uint16_t GetLocalPort() const;
             size_t GetRecvBytes() const;
             size_t GetSentBytes() const;
-
-            //////////////////////
-            /*
-            const struct sockaddr* GetPeerAddress() const;
-            const std::string& GetPeerIp() const;
-            uint16_t GetPeerPort() const;
-            struct sockaddr_storage peerAddr;
-            std::string peerIp;
-            uint16_t peerPort{ 0};
-            bool SetPeerAddress();
-             */
-            /////////////////////
 
         private:
            
@@ -85,7 +74,7 @@ namespace base {
         public:
             void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
             void OnUvRecv(ssize_t nread, const uv_buf_t* buf,  struct sockaddr* addr, unsigned int flags);
-            void OnUvSendError(int error);
+            void OnUvSend(int error);
             void bind();
             void connect();
 
@@ -98,7 +87,7 @@ namespace base {
  
 
         protected:
-            //bool SetLocalAddress();
+            bool SetLocalAddress();
             
             struct sockaddr_storage localAddr;
             std::string localIp;
@@ -119,8 +108,8 @@ namespace base {
 
      
       
-        inline void UdpSocket::send(const std::string& data, const std::string& ip, uint16_t port){
-            send(data.c_str(), data.length(), ip, port );
+        inline int UdpSocket::send(const std::string& data, const std::string& ip, uint16_t port){
+            return send(data.c_str(), data.length(), ip, port );
         }
         inline const struct sockaddr* UdpSocket::GetLocalAddress() const {
             return reinterpret_cast<const struct sockaddr*> (&this->localAddr);

@@ -1,6 +1,3 @@
-#define MS_CLASS "RTC::UdpSocket"
-// #define MS_LOG_DEV_LEVEL 3
-
 #include "RTC/UdpSocket.h"
 #include "LoggerTag.h"
 #include "net/PortManager.h"
@@ -12,30 +9,44 @@ namespace RTC
 
 	UdpSocket::UdpSocket(Listener* listener, std::string& ip)
 	  : // This may throw.
-	    ::UdpSocket::UdpSocket(base::net::PortManager::BindUdp(ip)), listener(listener)
+	    base::net::UdpSocket::UdpSocket(base::net::PortManager::BindUdp(ip)), listener(listener)
 	{
-		MS_TRACE();
+		
 	}
 
 	UdpSocket::~UdpSocket()
 	{
-		MS_TRACE();
-
 		base::net::PortManager::UnbindUdp(this->localIp, this->localPort);
+                LTrace( "rtc::~UdpSocket()")
 	}
 
-	void UdpSocket::UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr)
+	void UdpSocket::UserOnUdpDatagramReceived(const char* data, size_t len, struct sockaddr* addr)
 	{
-		MS_TRACE();
-
-		if (this->listener == nullptr)
+		
+                if (this->listener == nullptr)
 		{
 			MS_ERROR("no listener set");
-
 			return;
 		}
 
 		// Notify the reader.
-		this->listener->OnUdpSocketPacketReceived(this, data, len, addr);
+		this->listener->OnUdpSocketPacketReceived(this, (const uint8_t*)data, len, addr);
 	}
+        
+        void UdpSocket::Send( const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
+        {
+            if (cb)
+            {
+               m_cb =cb;
+            }
+
+            int r = base::net::UdpSocket::send((const char*)data, len, addr); //arvind
+            if(r==len && cb)
+            {
+                (*cb)(true);
+            }else if (cb)
+                (*cb)(false);
+
+	}
+        
 } // namespace RTC

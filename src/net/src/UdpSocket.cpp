@@ -50,19 +50,16 @@ namespace base {
             auto* handle = req->handle;
             auto* socket = static_cast<UdpSocket*> (handle->data);
 
+	    if (socket)
+		socket->OnUvSend(status);
+
             // Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
             std::free(sendData);
 
-            if (socket == nullptr)
-                return;
-
-            // Just notify the UdpSocket when error.
-            if (status != 0)
-                socket->OnUvSendError(status);
         }
 
         inline static void onClose(uv_handle_t* handle) {
-            //delete handle;
+            //delete handle; // moved to destructor
             SInfo << "onClose";
         }
 
@@ -72,7 +69,11 @@ namespace base {
 
         UdpSocket::UdpSocket(std::string ip, int port) : localIp(ip), localPort(port) {
 
-           
+        }
+        
+        UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
+        {
+               startRead();
         }
 
         void UdpSocket::startRead()
@@ -91,21 +92,21 @@ namespace base {
             }
 
             // Set local address.
-           /* if (!SetLocalAddress()) {
+            if (!SetLocalAddress()) {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
                 LError("error setting local IP and port");
             }
-            */
             
-           // SetPeerAddress();
         }
         
         
         UdpSocket::~UdpSocket() {
 
-          //  if (!this->closed)
-            //    Close();
+            LTrace( "base::~UdpSocket()")
+                    
+            if (!this->closed)
+               Close();
             
             if (uvHandle)
            delete uvHandle;
@@ -139,13 +140,13 @@ namespace base {
             LInfo("</UdpSocket>");
         }
 
-        void UdpSocket::send( const char* data, unsigned int len, const struct sockaddr* addr ) {
+        int UdpSocket::send( const char* data, unsigned int len, const struct sockaddr* addr ) {
 
             if (this->closed)
-                return;
+                return  -1;
 
             if (len == 0)
-                return;
+                return 0;
            
           //  if(!addr)
             // addr = GetLocalAddress();
@@ -161,21 +162,23 @@ namespace base {
                 // Update sent bytes.
                 this->sentBytes += sent;
 
-                return;
+                return sent;
             }
             if (sent >= 0) {
-             //   LWarn("datagram truncated (just %d of %zu bytes were sent)", sent, len); // will cause recursion lock
-                  printf("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+                // LWarn("datagram truncated (just %d of %zu bytes were sent)", sent, len); // will cause recursion lock
+                 // printf("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+                 SWarn << "datagram truncated (just " << sent << " of " << len << " bytes were sent)";
                 // Update sent bytes.
                 this->sentBytes += sent;
 
-                return;
+                return sent;
             }
             // Error,
             if (sent != UV_EAGAIN) {
               //  LWarn("uv_udp_try_send() failed: %s", uv_strerror(sent)); // will cause recursion lock
-                printf("uv_udp_try_send() failed: %s", uv_strerror(sent ));
-                return;
+                SWarn << "uv_udp_try_send() failed UV_EAGAIN: " << uv_strerror(sent);
+                //printf("uv_udp_try_send() failed: %s", uv_strerror(sent ));
+                return -1;
             }
             // Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
 
@@ -195,8 +198,8 @@ namespace base {
             if (err != 0) {
                 // NOTE: uv_udp_send() returns error if a wrong INET family is given
                 // (IPv6 destination on a IPv4 binded socket), so be ready.
-               // LWarn("uv_udp_send() failed: %s", uv_strerror(err));// will cause recursion lock
-                printf("uv_udp_send() failed: %s", uv_strerror(err));
+                LWarn("uv_udp_send() failed: ", uv_strerror(err));// will cause recursion lock
+               // printf("uv_udp_send() failed: %s", uv_strerror(err));
 
                 // Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
                 std::free(sendData);
@@ -204,40 +207,22 @@ namespace base {
                 // Update sent bytes.
                 this->sentBytes += len;
             }
+            
+            return -2;
         }
 
-        /*
-        bool UdpSocket::SetPeerAddress() {
-
-
-            int err;
-            int len = sizeof (this->peerAddr);
-
-            err = uv_udp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*> (&this->peerAddr), &len);
-
-            if (err != 0) {
-                LError("uv_tcp_getpeername() failed: %s", uv_strerror(err));
-
-                return false;
-            }
-
-            int family;
-
-            IP::GetAddressInfo(
-                    reinterpret_cast<struct sockaddr*> (&this->peerAddr), family, this->peerIp, this->peerPort);
-
-            return true;
-        }
-        */ 
-        void UdpSocket::send(const char* data, unsigned int len, const std::string ip, int port) {
+        
+    
+        
+        int UdpSocket::send(const char* data, unsigned int len, const std::string ip, int port) {
 
             if (this->closed)
-                return;
+                return -1;
 
             int err;
 
             if (len == 0)
-                return;
+                return 0;
 
             struct sockaddr_storage addr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -248,7 +233,7 @@ namespace base {
                             ip.c_str(), static_cast<int> (port), reinterpret_cast<struct sockaddr_in*> (&addr));
 
                     if (err != 0)
-                        LError("uv_ip4_addr() failed: %s", uv_strerror(err));
+                        LError("uv_ip4_addr() failed: ", uv_strerror(err));
 
                     break;
                 }
@@ -259,24 +244,24 @@ namespace base {
                             ip.c_str(), static_cast<int> (port), reinterpret_cast<struct sockaddr_in6*> (&addr));
 
                     if (err != 0)
-                        LError("uv_ip6_addr() failed: %s", uv_strerror(err));
+                        LError("uv_ip6_addr() failed: ", uv_strerror(err));
 
                     break;
                 }
 
                 default:
                 {
-                    LError("invalid destination IP '%s'", ip.c_str());
+                    LError("invalid destination IP ", ip);
 
-                    return;
+                    return -1;
                 }
             }
 
-            send(data, len, reinterpret_cast<struct sockaddr*> (&addr));
+            return send(data, len, reinterpret_cast<struct sockaddr*> (&addr));
         }
 
-      /*
-       *   bool UdpSocket::SetLocalAddress() {
+      
+         bool UdpSocket::SetLocalAddress() {
 
 
             int err;
@@ -298,7 +283,7 @@ namespace base {
 
             return true;
         }
-       */
+       
 
         inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf) {
 
@@ -337,19 +322,23 @@ namespace base {
                 UserOnUdpDatagramReceived(reinterpret_cast<char*> (buf->base), nread, addr);
             }// Some error.
             else {
-                LTrace("read error: %s", uv_strerror(nread));
+                LTrace("read error: ", uv_strerror(nread));
             }
         }
 
-        inline void UdpSocket::OnUvSendError(int error) // NOLINT(misc-unused-parameters)
+        inline void UdpSocket::OnUvSend(int status) // NOLINT(misc-unused-parameters)
         {
 
-            if (this->closed)
+	   if (this->closed)
                 return;
 
-            LTrace("send error: %s", uv_strerror(error));
+	   if (status == 0)
+           {
+               //on_send()
+           }
+           else
+            LTrace("send error: ", uv_strerror(status));
         }
-        
         
        void UdpSocket::bind() {
             int bind_flags = 0;

@@ -1,5 +1,4 @@
-#define MS_CLASS "RTC::Transport"
-// #define MS_LOG_DEV_LEVEL 3
+
 
 #include "RTC/Transport.h"
 #include "LoggerTag.h"

@@ -1,5 +1,3 @@
-#define MS_CLASS "RTC::TcpServer"
-// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TcpServer.h"
 #include "net/PortManager.h"
