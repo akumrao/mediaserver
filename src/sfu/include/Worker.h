@@ -5,14 +5,14 @@
 #include "Channel/Request.h"
 //#include "Channel/UnixStreamSocket.h"
 #include "RTC/Router.h"
-#include "handles/SignalsHandler.h"
+#include "base/signalsHandler.h"
 #include <json.hpp>
 #include <string>
 #include <unordered_map>
 
 using json = nlohmann::json;
 
-class Worker :  public SignalsHandler::Listener
+class Worker :  public base::SignalsHandler::Listener
 {
 public:
 	 Worker();

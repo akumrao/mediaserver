@@ -208,6 +208,13 @@ async function runSocketServer() {
 			console.log('createProducerTransport ' + JSON.stringify(data, null, 4) );
 
 			var trans = {"id":2,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":false,"enableTcp":true,"preferUdp":false,"preferTcp":true,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}};
+			
+			if(!data.forceTcp)
+			{
+				trans.data.enableUdp =true;
+				trans.data.preferUdp =true;
+			}
+
 			trans.internal.transportId = uuidV4();
 			trans.data.listenIps=listenIps;
 
@@ -371,6 +378,13 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 			console.log('createConsumerTransport data' + JSON.stringify(data, null, 4) );
 			var trans = {"id":6,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"4ca62904-639c-4b5a-86e8-f0bc84bfe776"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":false,"enableTcp":true,"preferUdp":false,"preferTcp":true,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}}
+
+			if(!data.forceTcp)
+			{
+				trans.data.enableUdp =true;
+				trans.data.preferUdp =true;
+			}
+			
 			trans.internal.transportId = uuidV4();
 			trans.data.listenIps=listenIps;
 

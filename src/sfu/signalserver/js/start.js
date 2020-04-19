@@ -595,7 +595,12 @@ async function getUserMedia1(transport, isWebcam) {
 
 async function subscribe() {
 
-  socket.emit('createConsumerTransport', {  forceTcp: true }, async function (data) {
+  var parser = new URL(window.location.href); 
+  var istcp = parser.searchParams;
+  const tcpValue = istcp.get('forceTcp') ? true : false;
+
+
+  socket.emit('createConsumerTransport', {  forceTcp: tcpValue }, async function (data) {
 
   console.log(data);	
 
@@ -680,7 +685,13 @@ async function publish()
 {
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
-  socket.emit('createProducerTransport', {  forceTcp: true,  rtpCapabilities: device.rtpCapabilities,
+
+  var parser = new URL(window.location.href); 
+  var istcp = parser.searchParams;
+  const tcpValue = istcp.get('forceTcp') ? true : false;
+
+
+  socket.emit('createProducerTransport', {  forceTcp: tcpValue,  rtpCapabilities: device.rtpCapabilities,
   }, async function (data) {
 
      console.log(data);
