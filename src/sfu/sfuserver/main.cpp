@@ -59,8 +59,6 @@ int main(int argc, char* argv[]) {
 
 
 
-
-
     // Initialize the Logger.
 
     Logger::instance().add(new ConsoleChannel("mediaserver", Level::Trace));
@@ -93,7 +91,6 @@ int main(int argc, char* argv[]) {
 #endif
 
   
-
     Settings::PrintConfiguration();
    
     try {
@@ -118,7 +115,6 @@ int main(int argc, char* argv[]) {
         //std::string sourceFile(sampleDataDir("test.mp4"));
 
         //sig.startStreaming(sourceFile, true);
-
         sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 
 

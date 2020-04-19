@@ -15,7 +15,7 @@ using json = nlohmann::json;
 class Worker :  public SignalsHandler::Listener
 {
 public:
-	explicit Worker();
+	 Worker();
 	~Worker();
 
 private:

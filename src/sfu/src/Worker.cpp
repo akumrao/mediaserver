@@ -1,8 +1,6 @@
-#define MS_CLASS "Worker"
-// #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.h"
-#include "base/application.h"
+//#include "base/application.h"
 #include "LoggerTag.h"
 #include "base/error.h"
 #include "Settings.h"
@@ -34,8 +32,8 @@ Worker::~Worker()
 {
 	
 
-	if (!this->closed)
-		Close();
+    if (!this->closed)
+            Close();
 }
 
 void Worker::Close()
@@ -65,8 +63,6 @@ void Worker::Close()
 
 void Worker::FillJson(json& jsonObject) const
 {
-	
-
 	const int64_t pid{ static_cast<int64_t>(uv_os_getpid()) }; //arvind
 
 	// Add pid.
@@ -181,9 +177,8 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::Request* request)
+ void Worker::OnChannelRequest(Channel::Request* request)
 {
-    
 	MS_DEBUG_DEV(
 	  "Channel request received method: ", request->method," id:" , request->id);
 
@@ -265,7 +260,7 @@ inline void Worker::OnChannelRequest(Channel::Request* request)
 	}
 }
 
-inline void Worker::OnChannelClosed()
+ void Worker::OnChannelClosed()
 {
 	MS_TRACE_STD();
 
@@ -276,7 +271,7 @@ inline void Worker::OnChannelClosed()
 	Close();
 }
 
-inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
+ void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	
 
