@@ -1,4 +1,4 @@
-//const logger = new Logger('RemoteSdp');
+
 
 class RemoteSdp
 {
@@ -92,7 +92,7 @@ class RemoteSdp
 
     updateIceParameters(iceParameters)
     {
-        logger.debug(
+        console.debug(
             'updateIceParameters() [iceParameters:%o]',
             iceParameters);
 
@@ -107,7 +107,7 @@ class RemoteSdp
 
     updateDtlsRole(role)
     {
-        logger.debug('updateDtlsRole() [role:%s]', role);
+        console.debug('updateDtlsRole() [role:%s]', role);
 
         this._dtlsParameters.role = role;
 

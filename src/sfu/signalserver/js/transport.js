@@ -767,55 +767,7 @@ function enabled(name) {
 
 
 
-
-
 //////////////////////////////////////debuger end
-//Logger
-////////////////////////////////////////////////////////////////////////////////////////////
-const APP_NAME = 'mediaserver-client';
-class Logger
-{
-    constructor(prefix)
-    {
-        if (prefix)
-        {
-            this._debug = createDebug(`${APP_NAME}:${prefix}`);
-            this._warn = createDebug(`${APP_NAME}:WARN:${prefix}`);
-            this._error = createDebug(`${APP_NAME}:ERROR:${prefix}`);
-        }
-        else
-        {
-            this._debug = createDebug(APP_NAME);
-            this._warn = createDebug(`${APP_NAME}:WARN`);
-            this._error = createDebug(`${APP_NAME}:ERROR`);
-        }
-
-        /* eslint-disable no-console */
-        this._debug.log = console.info.bind(console);
-        this._warn.log = console.warn.bind(console);
-        this._error.log = console.error.bind(console);
-        /* eslint-enable no-console */
-    }
-
-    get debug()
-    {
-        return this._debug;
-    }
-
-    get warn()
-    {
-        return this._warn;
-    }
-
-    get error()
-    {
-        return this._error;
-    }
-}
-
-
-const logger = new Logger('Producer');
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 class AwaitQueue
@@ -924,12 +876,11 @@ class AwaitQueue
 
 class EnhancedEventEmitter extends EventEmitter
 {
-    constructor(logger)
+    constructor()
     {
         super();
         this.setMaxListeners(Infinity);
 
-        this._logger = logger || new Logger('EnhancedEventEmitter');
     }
 
     safeEmit(event, ...args)
@@ -940,7 +891,7 @@ class EnhancedEventEmitter extends EventEmitter
         }
         catch (error)
         {
-            this._logger.error(
+            this._console.error(
                 'safeEmit() | event listener threw an error [event:%s]:%o',
                 event, error);
         }
@@ -984,9 +935,9 @@ class Transport extends EnhancedEventEmitter
         }
     )
     {
-        super(logger);
+        super();
 
-        logger.debug('constructor() [id:%s, direction:%s]', id, direction);
+        console.debug('constructor() [id:%s, direction:%s]', id, direction);
 
         // Id.
         // @type {String}
@@ -1123,7 +1074,7 @@ class Transport extends EnhancedEventEmitter
         if (this._closed)
             return;
 
-        logger.debug('close()');
+        console.debug('close()');
 
         this._closed = true;
 
@@ -1174,7 +1125,7 @@ class Transport extends EnhancedEventEmitter
      */
     async restartIce({ iceParameters } = {})
     {
-        logger.debug('restartIce()');
+        console.debug('restartIce()');
 
         if (this._closed)
             throw new InvalidStateError('closed');
@@ -1198,7 +1149,7 @@ class Transport extends EnhancedEventEmitter
      */
     async updateIceServers({ iceServers } = {})
     {
-        logger.debug('updateIceServers()');
+        console.debug('updateIceServers()');
 
         if (this._closed)
             throw new InvalidStateError('closed');
@@ -1234,7 +1185,7 @@ class Transport extends EnhancedEventEmitter
         } = {}
     )
     {
-        logger.debug('produce() [track:%o]', track);
+        console.debug('produce() [track:%o]', track);
 
         if (!track)
             throw new TypeError('missing track');
@@ -1413,7 +1364,7 @@ class Transport extends EnhancedEventEmitter
             if (connectionState === this._connectionState)
                 return;
 
-            logger.debug('connection state changed to %s', connectionState);
+            console.debug('connection state changed to %s', connectionState);
 
             this._connectionState = connectionState;
 
@@ -1433,7 +1384,7 @@ class Transport extends EnhancedEventEmitter
 
             this._awaitQueue.push(
                 async () => this._handler.stopSending({ localId: producer.localId }))
-                .catch((error) => logger.warn('producer.close() failed:%o', error));
+                .catch((error) => console.warn('producer.close() failed:%o', error));
         });
 
         producer.on('@replacetrack', (track, callback, errback) =>
@@ -1532,7 +1483,7 @@ class Handler extends EnhancedEventEmitter
         }
     )
     {
-        super(logger);
+        super();
 
         // Got transport local and remote parameters.
         // @type {Boolean}
@@ -1590,7 +1541,7 @@ class Handler extends EnhancedEventEmitter
 
     close()
     {
-        logger.debug('close()');
+        console.debug('close()');
 
         // Close RTCPeerConnection.
         try { this._pc.close(); }
@@ -1604,7 +1555,7 @@ class Handler extends EnhancedEventEmitter
 
     async updateIceServers({ iceServers })
     {
-        logger.debug('updateIceServers()');
+        console.debug('updateIceServers()');
 
         const configuration = this._pc.getConfiguration();
 
@@ -1658,7 +1609,7 @@ class SendHandler extends Handler
 
     async send({ track, encodings, codecOptions })
     {
-        logger.debug('send() [kind:%s, track.id:%s]', track.kind, track.id);
+        console.debug('send() [kind:%s, track.id:%s]', track.kind, track.id);
 
         if (encodings && encodings.length > 1)
         {
@@ -1683,10 +1634,10 @@ class SendHandler extends Handler
         if (!this._transportReady)
             await this._setupTransport({ localDtlsRole: 'server', localSdpObject });
 
-   logger.debug(
+   console.debug(
       'send() | calling pc.setLocalDescription() [offer:%o]', offer);
 
-        logger.debug(
+        console.debug(
             'send() | localSdpObject [offer:%o]', localSdpObject);
 
         await this._pc.setLocalDescription(offer);
@@ -1699,12 +1650,12 @@ class SendHandler extends Handler
 
         localSdpObject = parse(this._pc.localDescription.sdp);
 
-    logger.debug(
+    console.debug(
       'send() | localSdpObject after parse [offer:%o]', localSdpObject);
 
         const offerMediaObject = localSdpObject.media[localSdpObject.media.length - 1];
 
-        logger.debug(
+        console.debug(
       'send() | offerMediaObject [offer:%o]', offerMediaObject);
         console.log( JSON.stringify(offerMediaObject.candidates));
 
@@ -1759,15 +1710,15 @@ class SendHandler extends Handler
 
 
 
-    logger.debug(
+    console.debug(
       'send() | sendingRtpParameters [offer:%o]', sendingRtpParameters);
 
-     logger.debug(
+     console.debug(
       'send() | answerRtpParameters [offer:%o]', this._sendingRemoteRtpParametersByKind[track.kind]);
 
         const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'send() | calling pc.setRemoteDescription() [answer:%o]', answer);
 
         await this._pc.setRemoteDescription(answer);
@@ -1780,7 +1731,7 @@ class SendHandler extends Handler
 
     async stopSending({ localId })
     {
-        logger.debug('stopSending() [localId:%s]', localId);
+        console.debug('stopSending() [localId:%s]', localId);
 
         const transceiver = this._mapMidTransceiver.get(localId);
 
@@ -1793,14 +1744,14 @@ class SendHandler extends Handler
 
         const offer = await this._pc.createOffer();
 
-        logger.debug(
+        console.debug(
             'stopSending() | calling pc.setLocalDescription() [offer:%o]', offer);
 
         await this._pc.setLocalDescription(offer);
 
         const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'stopSending() | calling pc.setRemoteDescription() [answer:%o]', answer);
 
         await this._pc.setRemoteDescription(answer);
@@ -1808,7 +1759,7 @@ class SendHandler extends Handler
 
     async replaceTrack({ localId, track })
     {
-        logger.debug('replaceTrack() [localId:%s, track.id:%s]', localId, track.id);
+        console.debug('replaceTrack() [localId:%s, track.id:%s]', localId, track.id);
 
         const transceiver = this._mapMidTransceiver.get(localId);
 
@@ -1820,7 +1771,7 @@ class SendHandler extends Handler
 
     async setMaxSpatialLayer({ localId, spatialLayer })
     {
-        logger.debug(
+        console.debug(
             'setMaxSpatialLayer() [localId:%s, spatialLayer:%s]',
             localId, spatialLayer);
 
@@ -1854,7 +1805,7 @@ class SendHandler extends Handler
 
     async restartIce({ iceParameters })
     {
-        logger.debug('restartIce()');
+        console.debug('restartIce()');
 
         // Provide the remote SDP handler with new remote ICE parameters.
         this._remoteSdp.updateIceParameters(iceParameters);
@@ -1864,14 +1815,14 @@ class SendHandler extends Handler
 
         const offer = await this._pc.createOffer({ iceRestart: true });
 
-        logger.debug(
+        console.debug(
             'restartIce() | calling pc.setLocalDescription() [offer:%o]', offer);
 
         await this._pc.setLocalDescription(offer);
 
         const answer = { type: 'answer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'restartIce() | calling pc.setRemoteDescription() [answer:%o]', answer);
 
         await this._pc.setRemoteDescription(answer);
@@ -1892,7 +1843,7 @@ class RecvHandler extends Handler
 
     async receive({ id, kind, rtpParameters })
     {
-        logger.debug('receive() [id:%s, kind:%s]', id, kind);
+        console.debug('receive() [id:%s, kind:%s]', id, kind);
 
         const localId = String(this._nextMid);
 
@@ -1907,7 +1858,7 @@ class RecvHandler extends Handler
 
         const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'receive() | calling pc.setRemoteDescription() [offer:%o]', offer);
 
         await this._pc.setRemoteDescription(offer);
@@ -1930,7 +1881,7 @@ class RecvHandler extends Handler
         if (!this._transportReady)
             await this._setupTransport({ localDtlsRole: 'client', localSdpObject });
 
-        logger.debug(
+        console.debug(
             'receive() | calling pc.setLocalDescription() [answer:%o]', answer);
 
         await this._pc.setLocalDescription(answer);
@@ -1952,7 +1903,7 @@ class RecvHandler extends Handler
 
     async stopReceiving({ localId })
     {
-        logger.debug('stopReceiving() [localId:%s]', localId);
+        console.debug('stopReceiving() [localId:%s]', localId);
 
         const transceiver = this._mapMidTransceiver.get(localId);
 
@@ -1963,14 +1914,14 @@ class RecvHandler extends Handler
 
         const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'stopReceiving() | calling pc.setRemoteDescription() [offer:%o]', offer);
 
         await this._pc.setRemoteDescription(offer);
 
         const answer = await this._pc.createAnswer();
 
-        logger.debug(
+        console.debug(
             'stopReceiving() | calling pc.setLocalDescription() [answer:%o]', answer);
 
         await this._pc.setLocalDescription(answer);
@@ -1988,7 +1939,7 @@ class RecvHandler extends Handler
 
     async restartIce({ iceParameters })
     {
-        logger.debug('restartIce()');
+        console.debug('restartIce()');
 
         // Provide the remote SDP handler with new remote ICE parameters.
         this._remoteSdp.updateIceParameters(iceParameters);
@@ -1998,14 +1949,14 @@ class RecvHandler extends Handler
 
         const offer = { type: 'offer', sdp: this._remoteSdp.getSdp() };
 
-        logger.debug(
+        console.debug(
             'restartIce() | calling pc.setRemoteDescription() [offer:%o]', offer);
 
         await this._pc.setRemoteDescription(offer);
 
         const answer = await this._pc.createAnswer();
 
-        logger.debug(
+        console.debug(
             'restartIce() | calling pc.setLocalDescription() [answer:%o]', answer);
 
         await this._pc.setLocalDescription(answer);
@@ -2032,7 +1983,7 @@ class Producer extends EnhancedEventEmitter
      */
     constructor({ id, localId, track, rtpParameters, appData })
     {
-        super(logger);
+        super();
 
         // Id.
         // @type {String}
@@ -2178,7 +2129,7 @@ class Producer extends EnhancedEventEmitter
         if (this._closed)
             return;
 
-        logger.debug('close()');
+        console.debug('close()');
 
         this._closed = true;
 
@@ -2197,7 +2148,7 @@ class Producer extends EnhancedEventEmitter
         if (this._closed)
             return;
 
-        logger.debug('transportClosed()');
+        console.debug('transportClosed()');
 
         this._closed = true;
 
@@ -2226,11 +2177,11 @@ class Producer extends EnhancedEventEmitter
      */
     pause()
     {
-        logger.debug('pause()');
+        console.debug('pause()');
 
         if (this._closed)
         {
-            logger.error('pause() | Producer closed');
+            console.error('pause() | Producer closed');
 
             return;
         }
@@ -2244,11 +2195,11 @@ class Producer extends EnhancedEventEmitter
      */
     resume()
     {
-        logger.debug('resume()');
+        console.debug('resume()');
 
         if (this._closed)
         {
-            logger.error('resume() | Producer closed');
+            console.error('resume() | Producer closed');
 
             return;
         }
@@ -2268,7 +2219,7 @@ class Producer extends EnhancedEventEmitter
      */
     async replaceTrack({ track } = {})
     {
-        logger.debug('replaceTrack() [track:%o]', track);
+        console.debug('replaceTrack() [track:%o]', track);
 
         if (this._closed)
         {
@@ -2339,7 +2290,7 @@ class Producer extends EnhancedEventEmitter
      */
     _onTrackEnded()
     {
-        logger.debug('track "ended" event');
+        console.debug('track "ended" event');
 
         this.safeEmit('trackended');
     }
@@ -2385,7 +2336,7 @@ class Consumer extends EnhancedEventEmitter
      */
     constructor({ id, localId, producerId, track, rtpParameters, appData })
     {
-        super(logger);
+        super();
 
         // Id.
         // @type {String}
@@ -2531,7 +2482,7 @@ class Consumer extends EnhancedEventEmitter
         if (this._closed)
             return;
 
-        logger.debug('close()');
+        console.debug('close()');
 
         this._closed = true;
 
@@ -2550,7 +2501,7 @@ class Consumer extends EnhancedEventEmitter
         if (this._closed)
             return;
 
-        logger.debug('transportClosed()');
+        console.debug('transportClosed()');
 
         this._closed = true;
 
@@ -2579,11 +2530,11 @@ class Consumer extends EnhancedEventEmitter
      */
     pause()
     {
-        logger.debug('pause()');
+        console.debug('pause()');
 
         if (this._closed)
         {
-            logger.error('pause() | Consumer closed');
+            console.error('pause() | Consumer closed');
 
             return;
         }
@@ -2597,11 +2548,11 @@ class Consumer extends EnhancedEventEmitter
      */
     resume()
     {
-        logger.debug('resume()');
+        console.debug('resume()');
 
         if (this._closed)
         {
-            logger.error('resume() | Consumer closed');
+            console.error('resume() | Consumer closed');
 
             return;
         }
@@ -2615,7 +2566,7 @@ class Consumer extends EnhancedEventEmitter
      */
     _onTrackEnded()
     {
-        logger.debug('track "ended" event');
+        console.debug('track "ended" event');
 
         this.safeEmit('trackended');
     }

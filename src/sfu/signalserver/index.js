@@ -606,16 +606,16 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 
 
-	socket.on('ipaddr', function() {
-		var ifaces = os.networkInterfaces();
-		for (var dev in ifaces) {
-			ifaces[dev].forEach(function(details) {
-				if (details.family === 'IPv4' && details.address !== '127.0.0.1') {
-					socket.emit('ipaddr', details.address);
-				}
-			});
-		}
-	});
+	// socket.on('ipaddr', function() {
+	// 	var ifaces = os.networkInterfaces();
+	// 	for (var dev in ifaces) {
+	// 		ifaces[dev].forEach(function(details) {
+	// 			if (details.family === 'IPv4' && details.address !== '127.0.0.1') {
+	// 				socket.emit('ipaddr', details.address);
+	// 			}
+	// 		});
+	// 	}
+	// });
 
 	socket.on('bye', function(){
 		console.log('received bye');
