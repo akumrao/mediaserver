@@ -95,7 +95,7 @@ private:
 };
 
 
-} // namespace scy
+} // 
 
 
 #endif // Random_H

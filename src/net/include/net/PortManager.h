@@ -11,11 +11,13 @@
 #ifndef PORT_MANAGER_H
 #define PORT_MANAGER_H
 
-#include <json.hpp>
+#include <json/json.hpp>
 #include <uv.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cstdlib>
+
 using json = nlohmann::json;
 namespace base
 {
@@ -29,6 +31,12 @@ namespace net
 			UDP = 1,
 			TCP
 		};
+
+
+
+	int static randint(int Min, int Max) {
+		    return std::rand() % (Max + 1 - Min) + Min;
+		}
 
 	public:
 		static uv_udp_t* BindUdp(std::string& ip);
@@ -45,6 +53,9 @@ namespace net
 	private:
 		static std::unordered_map<std::string, std::vector<bool>> mapUdpIpPorts;
 		static std::unordered_map<std::string, std::vector<bool>> mapTcpIpPorts;
+
+		static uint16_t rtcMinPort;
+   		static uint16_t rtcMaxPort;
 	};
 
 	/* Inline static methods. */

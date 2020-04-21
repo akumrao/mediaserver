@@ -12,11 +12,11 @@
 
 #include "net/PortManager.h"
 #include "base/application.h"
-#include "Settings.h"
+//#include "Settings.h"
 #include "base/error.h"
 #include "base/logger.h"
 #include "net/IP.h"
-#include "Utils.h"
+//#include "Utils.h"
 #include <tuple>   // std:make_tuple()
 #include <utility> // std::piecewise_construct
 
@@ -32,6 +32,7 @@ inline static void onFakeConnection(uv_stream_t* /*handle*/, int /*status*/)
 	// Do nothing.
 }
 
+
 namespace base
 {
  
@@ -41,6 +42,10 @@ namespace base
 
 	std::unordered_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
 	std::unordered_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
+
+
+	uint16_t PortManager::rtcMinPort = 10000 ;
+    uint16_t PortManager::rtcMaxPort = 59999 ;
 
 	/* Class methods. */
 
@@ -107,8 +112,7 @@ namespace base
 		}
 
 		// Choose a random port index to start from.
-		portIdx = static_cast<size_t>(Utils::Crypto::GetRandomUInt(
-		  static_cast<uint32_t>(0), static_cast<uint32_t>(ports.size() - 1)));
+		portIdx = static_cast<size_t>(randint(0, ports.size() - 1));
 
 		// Iterate all ports until getting one available. Fail if none found and also
 		// if bind() fails N times in theorically available ports.
@@ -127,7 +131,7 @@ namespace base
 			portIdx = (portIdx + 1) % ports.size();
 
 			// So the corresponding port is the vector position plus the RTC minimum port.
-			port = static_cast<uint16_t>(portIdx + Settings::configuration.rtcMinPort);
+			port = static_cast<uint16_t>(portIdx + rtcMinPort);
 
                         SDebug <<  "testing port [transport:] " << transportStr << " ip: " << ip << " port " << port << " attempt " << attempt << "/" <<  numAttempts;
 
@@ -278,14 +282,14 @@ namespace base
 		
 
 		if (
-		  (static_cast<size_t>(port) < Settings::configuration.rtcMinPort) ||
-		  (static_cast<size_t>(port) > Settings::configuration.rtcMaxPort))
+		  (static_cast<size_t>(port) < rtcMinPort) ||
+		  (static_cast<size_t>(port) > rtcMaxPort))
 		{
 			SError << "given port is out of range " <<  port ;
 			return;
 		}
 
-		size_t portIdx = static_cast<size_t>(port) - Settings::configuration.rtcMinPort;
+		size_t portIdx = static_cast<size_t>(port) - rtcMinPort;
 
 		switch (transport)
 		{
@@ -344,7 +348,7 @@ namespace base
 
 				// Otherwise add an entry in the map and return it.
 				uint16_t numPorts =
-				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
+				  rtcMaxPort - rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
 				// all ports are available.
@@ -371,7 +375,7 @@ namespace base
 
 				// Otherwise add an entry in the map and return it.
 				uint16_t numPorts =
-				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
+				  rtcMaxPort - rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
 				// all ports are available.
@@ -408,7 +412,7 @@ namespace base
 				if (!ports[i])
 					continue;
 
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
+				auto port = static_cast<uint16_t>(i + rtcMinPort);
 
 				jsonIpIt->push_back(port);
 			}
@@ -431,7 +435,7 @@ namespace base
 				if (!ports[i])
 					continue;
 
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
+				auto port = static_cast<uint16_t>(i + rtcMinPort);
 
 				jsonIpIt->emplace_back(port);
 			}
