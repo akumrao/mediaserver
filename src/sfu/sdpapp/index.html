@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/png" href="mediaserver.png" />
+  <title>SFUServer Sample App</title>
+</head>
+<style>
+  body {
+    font: .9rem arial, serif;
+  }
+  table {
+    width: 100%;
+    max-width: 800px;
+  }
+  table td {
+    width: 33.33%;
+    vertical-align: top;
+  }
+  fieldset {
+    min-height: 100%;
+    border: 1px solid silver;
+    padding: 10px;
+  }
+  button {
+    padding: 5px;
+    margin: 5px;
+  }
+  video {
+    width: 100%;
+  }
+  span {
+    font-family: monospace;
+  }
+</style>
+<body>
+  <table>
+    <tr>
+      <td>
+        <div>Local</div>
+        <video id="local_video" controls autoplay playsinline></video>
+      </td>
+      <td>
+        <div>Remote</div>
+        <video id="remote_video" controls autoplay playsinline></video>
+      </td>
+    </tr>
+  </table>
+  <br>
+  <table>
+    <tr>
+      <td>
+        <fieldset id="fs_connection">
+          <legend>Connection</legend>
+          <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
+        </fieldset>
+      </td>
+      <td>
+        <fieldset id="fs_publish">
+          <legend>Publishing</legend>
+          <div><label><input type="checkbox" id="chk_simulcast"> Use Simulcast</label></div>
+          <div>
+            <button id="btn_webcam">Start Webcam</button>
+            <span id="webcam_status"></span>
+          </div>
+          <div>
+            <button id="btn_screen">Share Screen</button>
+            <span id="screen_status"></span>
+          </div>
+        </fieldset>
+      </td>
+      <td>
+        <fieldset id="fs_subscribe" >
+          <legend>Subscription</legend>
+          <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span></div>
+        </fieldset>
+      </td>
+    </tr>
+  </table>
+
+<div id="div1"><h2>Let jQuery AJAX Change This Text</h2></div>
+
+<button id="btn2">Get External Content</button>
+
+</body>
+<script>
+  // window.localStorage.setItem('debug', 'mediaserver-client:WARN* mediaserver-client:ERROR*');
+  window.localStorage.setItem('debug', 'mediaserver-client:*');
+</script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+
+  <script src="js/MediaSection.js" async  ></script>
+  <script src="js/sdpUnifiedPlanUtils.js" async  ></script>
+  <script src="js/transport.js" async  ></script>
+  <script src="js/commonUtils.js" async  ></script>
+<!--   <script src="js/handler.js" async  ></script> -->
+  <script src="js/remoteSdp.js" async  ></script>
+  <script src="js/ortc.js" async  ></script>
+  <script src="js/grammar.js" async  ></script>
+  <script src="js/sdpparser.js" async  ></script>
+  <script src="js/start.js" async  ></script>
+  <script src="js/main.js" async></script>
+<!--   <script src="js/producer.js" async  ></script>
+  <script src="js/consumer.js" async  ></script> -->
+
+
+</html>
