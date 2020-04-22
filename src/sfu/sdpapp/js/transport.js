@@ -1641,10 +1641,13 @@ class SendHandler extends Handler
                 sendEncodings : encodings
             });
          
-         console.log("arvind " + "_pc createoffer send" );
+         
 
         const offer = await this._pc.createOffer();
         let localSdpObject = parse(offer.sdp);
+
+        console.log("arvind _pc createoffer send :%o", offer );
+
         const sendingRtpParameters =
             utils.clone(this._sendingRtpParametersByKind[track.kind]);
 
@@ -1664,13 +1667,19 @@ class SendHandler extends Handler
         // We can now get the transceiver.mid.
         const localId = transceiver.mid;
 
+        console.log("arvind transceiver.mid " + transceiver.mid);
+
         // Set MID.
         sendingRtpParameters.mid = localId;
 
         localSdpObject = parse(this._pc.localDescription.sdp);
 
+
+console.log(
+      ' arvind this._pc.localDescription.sdp [local des offer:%o]', this._pc.localDescription.sdp);
+
     console.log(
-      'send() | localSdpObject after parse [offer:%o]', localSdpObject);
+      ' arvind send() | localSdpObject after parse [offer:%o]', localSdpObject);
 
         const offerMediaObject = localSdpObject.media[localSdpObject.media.length - 1];
 
@@ -1681,6 +1690,9 @@ class SendHandler extends Handler
         // Set RTCP CNAME.
         sendingRtpParameters.rtcp.cname =
             getCname({ offerMediaObject });
+
+
+        console.log("arvind sendingRtpParameters.rtcp.cname " + sendingRtpParameters.rtcp.cname);
 
         // Set RTP encodings by parsing the SDP offer if no encodings are given.
         if (!encodings)
