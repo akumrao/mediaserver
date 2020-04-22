@@ -46,31 +46,31 @@ namespace base {
 
             // Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
             if (connection)
-		connection->OnUvWrite(status);
+                connection->OnUvWrite(status);
             std::free(writeData);
-           
+
         }
 
         inline static void onClose(uv_handle_t* handle) {
-            
-           LInfo("onClose");
-           TcpConnectionBase *obj=  (TcpConnectionBase *)handle->data;
-         
-            if(obj)
-            obj->on_close();
+
+            LInfo("onClose");
+            TcpConnectionBase *obj = (TcpConnectionBase *) handle->data;
+
+            if (obj)
+                obj->on_close();
             delete handle;
             handle = nullptr;
         }
 
         inline static void onShutdown(uv_shutdown_t* req, int /*status*/) {
-            
-            LTrace( "onShutdown");
-            
+
+            LTrace("onShutdown");
+
             auto* handle = req->handle;
             handle->data = req->data;
-          //  delete handle;
+            //  delete handle;
             delete req;
-           
+
             // Now do close the handle.
             uv_close(reinterpret_cast<uv_handle_t*> (handle), static_cast<uv_close_cb> (onClose));
         }
@@ -107,7 +107,7 @@ namespace base {
             this->closed = true;
 
             this->uvHandle->data = this;
-            
+
             // Tell the UV handle that the TcpConnectionBase has been closed.
             /*this->uvHandle->data = nullptr;
 
@@ -135,7 +135,8 @@ namespace base {
                     LError("uv_shutdown() failed: %s", uv_strerror(err));
                 //on_close();
             }// Otherwise directly close the socket.
-            else*/ {
+            else*/
+            {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
             }
         }
@@ -153,7 +154,7 @@ namespace base {
         }
 
         void TcpConnectionBase::Setup(
-                 struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
+                struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
 
 
             // Set the UV handle.
@@ -174,20 +175,20 @@ namespace base {
         }
 
         inline void onconnect(uv_connect_t* req, int /*status*/) {
-            TcpConnectionBase *obj=  (TcpConnectionBase *)req->data;
+            TcpConnectionBase *obj = (TcpConnectionBase *) req->data;
             obj->Start();
             obj->on_connect();
 
             delete req;
         }
 
-        void TcpConnectionBase::Connect(std::string ip, int port,  addrinfo *addrs) { //for client
+        void TcpConnectionBase::Connect(std::string ip, int port, addrinfo *addrs) { //for client
 
 
             struct sockaddr_in6 addr6;
             struct sockaddr_in addr;
-          
-            
+
+
             /////////////////////////////////////////////////////////////
             int err = uv_tcp_init(Application::uvGetLoop(), this->uvHandle);
 
@@ -199,25 +200,24 @@ namespace base {
             }
 
             // Set the listener.
-           // this->listener = listener;
+            // this->listener = listener;
 
             // Set the local address.
-     
+
             this->localIp = ip;
             this->localPort = port;
-            
-            
+
+
             int r;
-            
+
             auto req = new uv_connect_t();
             req->data = this;
 
-            if( !addrs)
-            {
+            if (!addrs) {
                 if (IP::GetFamily(ip) == AF_INET6) {
                     ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
 
-                   // this->localAddr = (sockaddr_storage *) addr6;
+                    // this->localAddr = (sockaddr_storage *) addr6;
                     err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
 
 
@@ -227,44 +227,41 @@ namespace base {
                     err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
 
                 }
-            }
-            else
-            {
-                
+            } else {
+
                 for (addrinfo* ai = addrs; ai != NULL; ai = ai->ai_next) {
                     if (ai->ai_family != AF_INET && ai->ai_family != AF_INET6) {
-                      continue;
+                        continue;
                     }
                     if (ai->ai_family == AF_INET6) {
-                      addr6 = *(const struct sockaddr_in6 *) ai->ai_addr;
-                      addr6.sin6_port = htons(port);
-                      err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
-                      if( !err) break;
-                      //addrv = &s.addr4.sin_addr;
+                        addr6 = *(const struct sockaddr_in6 *) ai->ai_addr;
+                        addr6.sin6_port = htons(port);
+                        err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
+                        if (!err) break;
+                        //addrv = &s.addr4.sin_addr;
                     } else if (ai->ai_family == AF_INET) {
-                      addr = *(const struct sockaddr_in *) ai->ai_addr;
-                      addr.sin_port = htons(port);
-                      err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
-                      if( !err) break;
-                     // addrv = &s.addr6.sin6_addr;
+                        addr = *(const struct sockaddr_in *) ai->ai_addr;
+                        addr.sin_port = htons(port);
+                        err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
+                        if (!err) break;
+                        // addrv = &s.addr6.sin6_addr;
                     }
                 }
-                
+
             }
-            
-            
-            if (err != 0)
-            {
+
+
+            if (err != 0) {
                 uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
                 LError("uv_tcp_connect() failed: %s", uv_strerror(err));
-                
+
                 LError("uv_tcp_connect() failed for ip:port ", ip, ":", port);
             }
             ////////////////////////////////////////////
 
-           
-         
+
+
         }
 
         void TcpConnectionBase::Start() {
@@ -287,24 +284,24 @@ namespace base {
         }
 
         int TcpConnectionBase::Write(const char* data, size_t len) {
-           
+
             if (this->closed)
                 return -1;
 
             if (len == 0)
                 return 0;
-            
+
             // LTrace("TcpConnectionBase::Write " , len);
 
-             // First try uv_try_write(). In case it can not directly write all the given
+            // First try uv_try_write(). In case it can not directly write all the given
             // data then build a uv_req_t and use uv_write().
 
             uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data)), len);
             int written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), &buffer, 1);
 
-            if(written > 0)
-               sentBytes +=  written;
-            
+            if (written > 0)
+                sentBytes += written;
+
             // All the data was written. Done.
             if (written == static_cast<int> (len)) {
                 return written;
@@ -340,11 +337,11 @@ namespace base {
                     1,
                     static_cast<uv_write_cb> (onWrite));
 
-            if (err != 0)
-            {LError("uv_write() failed: %s", uv_strerror(err));}
-            else
+            if (err != 0) {
+                LError("uv_write() failed: %s", uv_strerror(err));
+            } else
                 sentBytes += pendingLen;
-            
+
             return -2;
         }
 
@@ -368,9 +365,9 @@ namespace base {
             buffers[1] = uv_buf_init(reinterpret_cast<char*> (const_cast<char*> (data2)), len2);
             written = uv_try_write(reinterpret_cast<uv_stream_t*> (this->uvHandle), buffers, 2);
 
-            if(written > 0)
-               sentBytes +=  written;
-            
+            if (written > 0)
+                sentBytes += written;
+
             // All the data was written. Done.
             if (written == static_cast<int> (totalLen)) {
                 return written;
@@ -416,12 +413,12 @@ namespace base {
                     1,
                     static_cast<uv_write_cb> (onWrite));
 
-            if (err != 0)
-            { LError("uv_write() failed: %s", uv_strerror(err));}
-            else
-            sentBytes += pendingLen;
-            
-            return -2; 
+            if (err != 0) {
+                LError("uv_write() failed: %s", uv_strerror(err));
+            } else
+                sentBytes += pendingLen;
+
+            return -2;
         }
 
         void TcpConnectionBase::ErrorReceiving() {
@@ -447,7 +444,7 @@ namespace base {
             IP::GetAddressInfo(
                     reinterpret_cast<struct sockaddr*> (&this->peerAddr), family, this->peerIp, this->peerPort);
 
-            LTrace("PeerIP ", this->peerIp,":", this->peerPort)
+            LTrace("PeerIP ", this->peerIp, ":", this->peerPort)
             return true;
         }
 
@@ -456,10 +453,10 @@ namespace base {
 
             if (this->closed)
                 return;
-//             static char slab[65536];
-//            assert(suggested_size <= sizeof(slab));
-//            buf->base = slab;
-//            buf->len = sizeof(slab);
+            //             static char slab[65536];
+            //            assert(suggested_size <= sizeof(slab));
+            //            buf->base = slab;
+            //            buf->len = sizeof(slab);
 
             // If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
             if (this->buffer == nullptr)
@@ -478,9 +475,9 @@ namespace base {
             }
 
         }
-        
-       inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
-           // LTrace("OnUvRead" )
+
+        inline void TcpConnectionBase::OnUvRead(ssize_t nread, const uv_buf_t* buf) {
+            // LTrace("OnUvRead" )
 
             if (this->closed)
                 return;
@@ -491,15 +488,15 @@ namespace base {
             // Data received.
             if (nread > 0) {
                 // Update the buffer data length.
-		// this->bufferDataLen += static_cast<size_t> (nread);
+                // this->bufferDataLen += static_cast<size_t> (nread);
                 recvBytes += nread;
-                
+
                 // Notify the subclass.
-                if(tls)
-                on_tls_read((const char*) buf->base, nread);
+                if (tls)
+                    on_tls_read((const char*) buf->base, nread);
                 else
-                on_read((const char*) buf->base, nread);
-                
+                    on_read((const char*) buf->base, nread);
+
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {
                 LDebug("connection closed by peer, closing server side");
@@ -520,28 +517,25 @@ namespace base {
 
             }
         }
-        
-        
-        inline void TcpConnectionBase::OnUvWrite(int status)
-        {
 
-                if (status == 0)
-                {
-                }
-                else
-                {
-                        if (status != UV_EPIPE && status != UV_ENOTCONN)
-                                this->hasError = true;
+        inline void TcpConnectionBase::OnUvWrite(int status) {
 
-                        LDebug("write error, closing the connection: %s", uv_strerror(status));
-                        Close();
-                }
+            if (status == 0) {
+            } else {
+                if (status != UV_EPIPE && status != UV_ENOTCONN)
+                    this->hasError = true;
+
+                LDebug("write error, closing the connection: %s", uv_strerror(status));
+                Close();
+            }
         }
 
         /*************************************************************************************************************/
 
+        static constexpr size_t ReadBufferSize{ 65536 };
+	static uint8_t ReadBuffer[ReadBufferSize];
 
-        TcpConnection::TcpConnection(Listener* listener,bool tls)
+        TcpConnection::TcpConnection(Listener* listener, bool tls)
         : TcpConnectionBase(tls), listener(listener) {
 
         }
@@ -552,33 +546,132 @@ namespace base {
 
         void TcpConnection::on_read(const char* data, size_t len) {
 
-          
-            listener->on_read(this, data, len);
+            /*
+             * Framing RFC 4571
+             *
+             *     0                   1                   2                   3
+             *     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             *     ---------------------------------------------------------------
+             *     |             LENGTH            |  packet  |
+             *     ---------------------------------------------------------------
+             *
+             */
+
+            bufferDataLen += len;
+            // Be ready to parse more than a single frame in a single TCP chunk.
+            while (true) {
+                // We may receive multiple packets in the same TCP chunk. If one of them is
+                // a DTLS Close Alert this would be closed (Close() called) so we cannot call
+                // our listeners anymore.
+                if (IsClosed())
+                    return;
+
+                size_t dataLen = bufferDataLen - frameStart;
+                size_t packetLen;
+
+                if (dataLen >= 2)
+                    packetLen = size_t{base::util::Byte::Get2Bytes((const uint8_t*) buffer + frameStart, 0)};
+
+                // We have packetLen bytes.
+                if (dataLen >= 2 && dataLen >= 2 + packetLen) {
+                    const char* packet = buffer + frameStart + 2;
+
+                    // Update received bytes and notify the listener.
+                    if (packetLen != 0) {
+                        // Copy the received packet into the static buffer so it can be expanded
+                        // later.
+                        std::memcpy(ReadBuffer, packet, packetLen);
+
+                        listener->on_read(this, (const char*) ReadBuffer, packetLen); //arvind
+                      //   listener->on_read(this, data, len);
+                    }
+
+                    // If there is no more space available in the buffer and that is because
+                    // the latest parsed frame filled it, then empty the full buffer.
+                    if ((frameStart + 2 + packetLen) == bufferSize) {
+                        LDebug("no more space in the buffer, emptying the buffer data");
+
+                        frameStart = 0;
+                        bufferDataLen = 0;
+                    }                        // If there is still space in the buffer, set the beginning of the next
+                        // frame to the next position after the parsed frame.
+                    else {
+                        frameStart += 2 + packetLen;
+                    }
+
+                    // If there is more data in the buffer after the parsed frame then
+                    // parse again. Otherwise break here and wait for more data.
+                    if (bufferDataLen > frameStart) {
+                        LDebug("there is more data after the parsed frame, continue parsing");
+
+                        continue;
+                    }
+
+                    break;
+                }
+
+                // Incomplete packet.
+
+                // Check if the buffer is full.
+                if (bufferDataLen == bufferSize) {
+                    // First case: the incomplete frame does not begin at position 0 of
+                    // the buffer, so move the frame to the position 0.
+                    if (frameStart != 0) {
+                        LDebug(
+                                "no more space in the buffer, moving parsed bytes to the beginning of "
+                                "the buffer and wait for more data");
+
+                        std::memmove(
+                                buffer, buffer + frameStart, bufferSize - frameStart);
+                        bufferDataLen = bufferSize - frameStart;
+                        frameStart = 0;
+                    }                        // Second case: the incomplete frame begins at position 0 of the buffer.
+                        // The frame is too big, so close the connection.
+                    else {
+                        LWarn(
+                                "no more space in the buffer for the unfinished frame being parsed, closing the "
+                                "connection");
+
+                        // Close the socket.
+                        ErrorReceiving();
+
+                        // And exit fast since we are supposed to be deallocated.
+                        return;
+                    }
+                }                    // The buffer is not full.
+                else {
+                    LDebug("frame not finished yet, waiting for more data");
+                }
+
+                // Exit the parsing loop.
+                break;
+            }
+
+           
         }
-        
-         void TcpConnection::on_close() {
+
+        void TcpConnection::on_close() {
 
             listener->on_close(this);
         }
-        
 
         void TcpConnection::send(const char* data, size_t len) {
 
 
             // Update sent bytes.
-                  
-           // Write according to Framing RFC 4571.
 
-            //       char frameLen[2];
+            // Write according to Framing RFC 4571.
 
-            // Utils::Byte::Set2Bytes(frameLen, 0, len);
-            // TcpConnectionBase::Write(frameLen, 2, data, len);
-            TcpConnectionBase::Write(data, len);
+            uint8_t frameLen[2];
+
+            base::util::Byte::Set2Bytes(frameLen, 0, len);
+            TcpConnectionBase::Write((const char*)frameLen, 2, data, len);
+           //TcpConnectionBase::Write(data, len);
         }
 
 
 
-      
+
 
         /**************************************************************************************************************/
 
