@@ -30,7 +30,7 @@
 using namespace base;
 using namespace net;
 
-hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartPacketNo(0), uploadedPacketNO(0),TcpConnection(this) {
+hmUdpClient::hmUdpClient():restartPacketNo(0), uploadedPacketNO(0),TcpConnection(this) {
 
 //    for (int x = 0; x < clientCount; ++x) {
 //        clinetstorage[x] = new char[UdpDataSize];
@@ -53,6 +53,14 @@ hmUdpClient::hmUdpClient(std::string IP, int port) : IP(IP), port(port),restartP
     
     rem=0;
 
+}
+
+void hmUdpClient::start(std::string ip, int prt)
+{
+
+    IP = ip;
+    port = prt;
+    Thread::start();
 }
 
 hmUdpClient::~hmUdpClient() {
@@ -240,8 +248,6 @@ bool hmUdpClient::upload( std::string fileName, std::string driverId, std::strin
 
     if(fd > 0)
     {
-        
-        
         lastPacketNo = ceil((float)size / (float) (UdpDataSize));
         SInfo << "fileSize: "  <<  size ;
         SInfo << "Last packet no: "  <<  lastPacketNo ;

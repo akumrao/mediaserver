@@ -32,14 +32,16 @@ using namespace net;
 class hmUdpClient: public TcpConnection, public base::Thread {
 public:
 
-    hmUdpClient(std::string IP, int port) ;
+    hmUdpClient() ;
     ~hmUdpClient();
     
     void run() ;
 
    // void send(char* data, unsigned int lent);
 
-    void shutdown() ;
+   void shutdown() ;
+
+   void start(std::string IP, int port);
 
    bool upload( std::string fileName, std::string driverId, std::string metaData);
 

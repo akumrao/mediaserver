@@ -19,7 +19,7 @@
 #include "hmTcpClient.h"
 #include <future>
 
-#define UPLOADTIMEOUT 20000
+#define UPLOADTIMEOUT 90000
 
 using std::endl;
 using namespace base;
@@ -159,8 +159,29 @@ void hmTcpClient::sendPacket(uint8_t type, uint32_t payload) {
 }
 
 void hmTcpClient::on_connect() {
+
     STrace << "on_connect Send Init: ";
-    sendPacket(0, 0);
+
+    udpsocket = new hmUdpClient();
+    if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
+    {
+        // udpsocket->shutdown();
+        delete udpsocket;
+        udpsocket = nullptr;
+
+        if (fnFailure  ) {
+            fnFailure(m_fileName, "Cannot open file", -2);
+            fnFailure = nullptr;
+            en_state = Done;
+        }
+
+        shutdown();
+        return;
+    }
+
+
+    sendPacket(0, udpsocket->lastPacketNo);
+
     en_state = Connected;
 }
 
@@ -250,24 +271,10 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         case 1:
         {
 
-            udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
-            if(!udpsocket->upload(m_fileName, m_driverId, m_metaData))
-            {
-               // udpsocket->shutdown();
-                delete udpsocket;
-                udpsocket = nullptr;
+            //udpsocket = new hmUdpClient(m_IP, packet.sequence_number);
 
-                if (fnFailure  ) {
-                    fnFailure(m_fileName, "Cannot open file", -2);
-                    fnFailure = nullptr;
-                    en_state = Done;
-                }
-
-                shutdown();
-                return;
-            }
             SInfo << "UDP Client connect at: " <<  packet.sequence_number; 
-            udpsocket->start();
+            udpsocket->start(m_IP, packet.sequence_number);
             
             m_ping_timeout_timer->Start(UPLOADTIMEOUT, UPLOADTIMEOUT);
 
