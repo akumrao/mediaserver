@@ -265,8 +265,8 @@ void hmUdpClient::sendPacket(uint8_t type, uint32_t payloadNo, uint32_t payloads
 
   
    // SInfo << "Sending "  <<  (int) type <<  " payloadNo " << payloadNo  << " payloadsize " << payloadsize;
-    if(type == 0)
-    {
+    //if(type == 0)
+   // {
         Packet packet;
         packet.type = type;
         packet.payload_number = payloadNo;
@@ -276,9 +276,9 @@ void hmUdpClient::sendPacket(uint8_t type, uint32_t payloadNo, uint32_t payloads
         memset(send_buffer, 0, size_of_packet);
         memcpy(send_buffer, (char*) &packet, size_of_packet);
         send(send_buffer, size_of_packet);
-    }
-    else
-    send(payload, payloadsize);
+   // }
+    //else
+    //send(payload, payloadsize);
 
 }
 

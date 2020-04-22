@@ -235,33 +235,16 @@ void hmTcpClient::on_read(Listener* connection, const char* data, size_t len) {
         return;
     }
 
-    TcpPacket packet;
 
-    packet.type = 9;
     if (len != sizeof (struct TcpPacket)) {
 
-        for( int i = 0 ;  i < len ; i= i+ sizeof (struct TcpPacket)   )
-        {
-            TcpPacket lpacket;
-            memcpy(&lpacket, (void*) (data+i), sizeof (struct TcpPacket));
-
-            if( lpacket.type < 6)
-            {
-                packet = lpacket;
-            } else
-            {
-                SInfo  << "Recived TCP len " << len    <<  " TCP Pakcet "    <<  sizeof (struct TcpPacket) ;
-                LError("Fatal error: Some part of packet lost. ")
-            }
-
-        }
-
-
+        LError("Fatal error: Some part of packet lost. ")
+        return;
     }
-    else
-    {
-        memcpy(&packet, (void*) data, len);
-    }
+
+    TcpPacket packet;
+    memcpy(&packet, (void*) data, len);
+
 
    // std::thread t(&hmTcpClient::on_read_int, this, data, len );
    // t.detach();
