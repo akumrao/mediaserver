@@ -62,11 +62,11 @@ private:
     int m_port;
 
     long curPtr;
-     std::atomic<bool> waitingPtr;
+    std::atomic<long> waitingPtr;
     
-    void on_fill(Packet &packet);
-    
-    uint32_t lastPacketNo{0};
+    void on_fill(Packet & packet);
+
+    std::atomic< uint32_t> lastPacketNo;
     uint32_t lastPacketLen;
     std::string driverId;
     std::string metadata;

@@ -72,9 +72,9 @@ void hmUdpServer::resetUdpServer() {
 
     if (!freePort && lastPacketNo && waitingPtr) {
         waitingPtr = false;
-        uint32_t totalPacket = curPtr / UdpDataSize;
+       // uint32_t totalPacket = curPtr / UdpDataSize;
        
-        SInfo << "Last Packet " << lastPacketNo << " totalPacket " << totalPacket;
+       // SInfo << "Last Packet " << lastPacketNo << " totalPacket " << totalPacket;
        
        // sendTcpPacket(tcpConn, 3, 100);
         savetoS3();
@@ -124,69 +124,17 @@ void hmUdpServer::on_close(Listener* connection) {
 
 void hmUdpServer::on_read(Listener* connection, const char* data, size_t len) {
 
-  
-    if (curPtr >-1 && lastPacketNo > 0) {
-        memcpy(serverstorage + curPtr, data, len);
-        curPtr = curPtr + len;
+    if (len != sizeof (struct Packet)) {
 
-
-        uint32_t totalPacket = curPtr / UdpDataSize;
-
-        Packet lpacket;
-        lpacket.type = 1;
-        lpacket.payload_number = totalPacket;
-        on_fill(lpacket);
-
-        if (totalPacket == lastPacketNo) {
-            return;
-        }
+        SError << "Fatal error: Some part of packet lost. "  << "Received len " << len << " . But packet size is " <<  sizeof (struct TcpPacket );
         return;
-    } else if(!freePort){
-        if (len == sizeof (struct Packet)) {
-            Packet packet;
-            memcpy(&packet, (void*) data, len);
-            on_fill(packet);
-        } else {
-
-            SError << "Header is two big:" << len << " struct Packet " << sizeof (struct Packet);
-
-            bool foundHeader = false;
-            if (len > sizeof (struct Packet)) {
-
-                for (int i = 0; i < len; i = i + sizeof (struct Packet)) {
-
-                    Packet lpacket;
-                    lpacket.type = 9;
-
-                    if (!foundHeader) {
-                        memcpy(&lpacket, (void*) (data + i), sizeof (struct Packet));
-                    }
-
-                    if (lpacket.type == 0) {
-                        foundHeader = true;
-                        on_fill(lpacket);
-
-                    } else {
-                        if (foundHeader == true) {
-                            memcpy(serverstorage + curPtr, (data + i), len - sizeof (struct Packet));
-                            curPtr = curPtr + len - sizeof (struct Packet);
-                            break;
-                        }
-                        continue;
-                    }
-                }
-                if (!foundHeader) {
-                    SError << "Could not find header";
-                }
-
-            } else {
-
-                SInfo << "Failure TCP len " << len << " TCP Pakcet " << sizeof (struct Packet);
-
-            }
-        }
-
     }
+
+    Packet packet;
+    memcpy(&packet, (void*) data, len);
+    on_fill(packet);  	
+  
+   
 }
 
 void hmUdpServer::on_fill(Packet & packet) {
@@ -233,6 +181,51 @@ void hmUdpServer::on_fill(Packet & packet) {
             
             freePort = false;
 	    m_ping_timeout_timer->Reset();
+
+
+  	    //SInfo << "Received from " << " size:" << packet.payloadlen << " sequence:" << packet.payload_number;
+            //LTrace(packet.payload)
+            if (packet.payload_number == curPtr) {
+                // memcpy(serverstorage[curPtr++], packet.payload, packet.payloadlen);
+                memcpy(storage_row(curPtr), packet.payload, packet.payloadlen);
+                ++curPtr;
+                waitingPtr = -1;
+                freePort = false;
+            } else {
+                if(waitingPtr > -1)
+                {
+                    SInfo << "waitingPtr for " << " size:" << packet.payloadlen << " sequence:" << waitingPtr;
+                    return;
+                }
+                if (packet.payload_number < curPtr) {
+                    SInfo << "Get Packet already saved : " << packet.payload_number;
+                    waitingPtr = curPtr;
+                    sendTcpPacket(tcpConn, 3, curPtr);
+                    //  memcpy(serverstorage[ packet.payload_number], packet.payload, packet.payloadlen);
+                    //curPtr = packet.payload_number;
+                    // memcpy(storage_row(packet.payload_number), packet.payload, packet.payloadlen);
+                    return;
+                }
+
+                if(curPtr == -1 || lastPacketNo ==0)
+                {
+                    SInfo << "Header not found " << " size:" << packet.payloadlen << " sequence:" << waitingPtr;
+                    sendTcpPacket(tcpConn, 4, 0);
+                    waitingPtr = 0;
+                    return;
+                }
+                if (packet.payload_number > curPtr) {
+                    SInfo << "Packet lost. Sequence No: " << curPtr;
+                    waitingPtr = curPtr;
+                    sendTcpPacket(tcpConn, 2, curPtr);
+                    return;
+                    
+                }
+ 
+            }
+
+
+
             // LInfo( curPtr % ((lastPacketNo+1)/10 ))
 
             if (packet.payload_number + 1 >= lastPacketNo) {
@@ -276,7 +269,7 @@ void hmUdpServer::savetoS3() {
 
     LInfo("Saving S3 file ", "https://uberproject.s3.amazonaws.com/", sharedS3File, ".mp4")
             const Aws::String object_name = driverIdTmp.c_str();
-    put_s3_object_async(object_name, serverstorage, curPtr, lastPacketLen);
+    put_s3_object_async(object_name, serverstorage, lastPacketNo-1, lastPacketLen);
 }
 
 void hmUdpServer::savetoDB() {

@@ -589,7 +589,7 @@ namespace base {
                     // If there is no more space available in the buffer and that is because
                     // the latest parsed frame filled it, then empty the full buffer.
                     if ((frameStart + 2 + packetLen) == bufferSize) {
-                        LDebug("no more space in the buffer, emptying the buffer data");
+                        LTrace("no more space in the buffer, emptying the buffer data");
 
                         frameStart = 0;
                         bufferDataLen = 0;
@@ -602,7 +602,7 @@ namespace base {
                     // If there is more data in the buffer after the parsed frame then
                     // parse again. Otherwise break here and wait for more data.
                     if (bufferDataLen > frameStart) {
-                        LDebug("there is more data after the parsed frame, continue parsing");
+                        LTrace("there is more data after the parsed frame, continue parsing");
 
                         continue;
                     }
@@ -617,7 +617,7 @@ namespace base {
                     // First case: the incomplete frame does not begin at position 0 of
                     // the buffer, so move the frame to the position 0.
                     if (frameStart != 0) {
-                        LDebug(
+                        LTrace(
                                 "no more space in the buffer, moving parsed bytes to the beginning of "
                                 "the buffer and wait for more data");
 
@@ -640,7 +640,7 @@ namespace base {
                     }
                 }                    // The buffer is not full.
                 else {
-                    LDebug("frame not finished yet, waiting for more data");
+                    LTrace("frame not finished yet, waiting for more data");
                 }
 
                 // Exit the parsing loop.

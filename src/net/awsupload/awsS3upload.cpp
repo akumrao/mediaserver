@@ -77,7 +77,7 @@ inline char *storage_row( char*p ,  unsigned int n)
 
 
 bool put_s3_object_async(
-        const Aws::String& s3_object_name, char *serverstorage, long curPtr, int lastPacketLen) {
+        const Aws::String& s3_object_name, char *serverstorage, int lastPacketNO, int lastPacketLen) {
     // Verify file_name exists
     //    if (!file_exists(file_name)) {
     //        std::cout << "ERROR: NoSuchFile: The specified file does not exist"
@@ -112,16 +112,16 @@ bool put_s3_object_async(
     
     std::cout << "**********************************" << std::endl;
     
-//    for (int i = 0; i < lastPacketNO; ++i) {
-//        
-//        std::cout << std::string(serverstorage[i], UdpDataSize );
-//
-//        data->write(reinterpret_cast<char*> ( storage_row(serverstorage, i)), UdpDataSize);
-//    }
+    for (int i = 0; i < lastPacketNO; ++i) {
+        
+      //  std::cout << std::string(serverstorage[i], UdpDataSize );
+
+        data->write(reinterpret_cast<char*> ( storage_row(serverstorage, i)), UdpDataSize);
+    }
      
-    data->write(reinterpret_cast<char*> (serverstorage), curPtr);
-    //std::cout << std::string(serverstorage, curPtr );
-    std::cout << "*************************************" << std::endl;
+    data->write(reinterpret_cast<char*> ( storage_row( serverstorage, lastPacketNO)), lastPacketLen);
+  //  std::cout << std::string(serverstorage[lastPacketNO], lastPacketLen );
+    //std::cout << "*************************************" << std::endl;
 
     //    infile.close();
 

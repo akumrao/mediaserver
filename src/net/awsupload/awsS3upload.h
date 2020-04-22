@@ -14,7 +14,7 @@
 
 #include <aws/core/Aws.h>
 
-bool put_s3_object_async( const Aws::String& s3_object_name,  char *serverstorage , long curPtr, int lastPacketLen) ;
+bool put_s3_object_async( const Aws::String& s3_object_name,  char *serverstorage , int lastPacketNO, int lastPacketLen) ;
 void awsInit();
 void awsExit();
 
