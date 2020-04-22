@@ -119,5 +119,6 @@ The answerer is not allowed to add new m= sections in the answer SDP. This means
 In Plan B, the legacy createOffer()-constraints offerToReceiveAudio/offerToReceiveVideo would create m= sections for it to be possible to receive any number of tracks. In Unified Plan this constraint only works for a single track per kind as it only creates one audio and/or video transceiver; the spec advises using addTransceiver() instead. Chrome only partially supports this constraint; it works for offering but the createOffer()-transceiver is not immediately visible, leading to some unexpected behavior.
 
 The Unified Plan way of offering to receive media is to use addTransceiver() to create as many “recvonly”-transceiver as you are willing to receive.
-
 [SDP]: https://www.diffchecker.com/8Dmr2vmP "SDP code snippet "
+
+*****************************************************************************************************************************
