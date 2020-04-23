@@ -21,6 +21,7 @@
     [
       '<!@(ls -1 src/*.cpp)',
       '<!@(ls -1 src/RTCP/*.cpp)',
+      '<!@(ls -1 src/sdp/*.cpp)',
       '<!@(ls -1 src/Codecs/*.cpp)',
       '<!@(ls -1 src/SctpDictionaries/*.cpp)',
       '<!@(ls -1 src/Channel/*.cpp)',
@@ -37,7 +38,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann',
+      'deps/libsdptransform/include/',
       '../../src/libuv/include/',
       '../../src/libuv/src/',
       '../../src/signal/include/',

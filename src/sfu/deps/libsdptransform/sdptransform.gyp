@@ -13,7 +13,8 @@
       ],
       'include_dirs': 
       [
-        'include/'
+        'include/',
+        '../../../json/include/json/'
       ],
       'direct_dependent_settings':
       {

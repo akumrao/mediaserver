@@ -228,13 +228,13 @@ namespace SdpParse
 
 			// preferredEncrypt is optional. If unset set it to false.
 			if (preferredEncryptIt != ext.end() && !preferredEncryptIt->is_boolean())
-				MS_ABORT("invalid ext.preferredEncrypt");
+                        {MS_ABORT("invalid ext.preferredEncrypt");}
 			else if (preferredEncryptIt == ext.end())
 				ext["preferredEncrypt"] = false;
 
 			// direction is optional. If unset set it to sendrecv.
 			if (directionIt != ext.end() && !directionIt->is_string())
-				MS_ABORT("invalid ext.direction");
+                        {MS_ABORT("invalid ext.direction");}
 			else if (directionIt == ext.end())
 				ext["direction"] = "sendrecv";
 		}
@@ -434,11 +434,11 @@ namespace SdpParse
 
 			// id is mandatory.
 			if (idIt == ext.end() || !idIt->is_number_integer())
-				MS_ABORT("missing ext.id");
+                        {MS_ABORT("missing ext.id");}
 
 			// encrypt is optional. If unset set it to false.
 			if (encryptIt != ext.end() && !encryptIt->is_boolean())
-				MS_ABORT("invalid ext.encrypt");
+                        {MS_ABORT("invalid ext.encrypt");}
 			else if (encryptIt == ext.end())
 				ext["encrypt"] = false;
 
@@ -454,7 +454,7 @@ namespace SdpParse
 				auto& value = it.value();
 
 				if (!value.is_string() && !value.is_number())
-					MS_ABORT("invalid header extension parameter");
+                                {MS_ABORT("invalid header extension parameter");}
 			}
 		}
 
