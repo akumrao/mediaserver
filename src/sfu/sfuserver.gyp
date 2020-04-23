@@ -6,8 +6,10 @@
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp',
+      'deps/libsdptransform/sdptransform.gyp:sdptransform',
       'deps/libwebrtc/libwebrtc.gyp:libwebrtc',
       'deps/libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
+      
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
@@ -20,7 +22,6 @@
       '<!@(ls -1 src/*.cpp)',
       '<!@(ls -1 src/RTCP/*.cpp)',
       '<!@(ls -1 src/Codecs/*.cpp)',
-      '<!@(ls -1 src/handles/*.cpp)',
       '<!@(ls -1 src/SctpDictionaries/*.cpp)',
       '<!@(ls -1 src/Channel/*.cpp)',
       '<!@(ls -1 src/Utils/*.cpp)',
