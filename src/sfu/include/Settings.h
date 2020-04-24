@@ -40,7 +40,7 @@ public:
 	};
 
 public:
-	static void SetConfiguration(int argc, char* argv[]);
+	static void SetConfiguration(json &config);
 	static void PrintConfiguration();
 	static void HandleRequest(Channel::Request* request);
 

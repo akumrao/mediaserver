@@ -146,6 +146,18 @@ bool Configuration::getRaw(const std::string& key, std::string& value) const
 }
 
 
+bool Configuration::getRaw(const std::string& key, json& value) const
+{
+    std::lock_guard<std::mutex> guard(_mutex);
+
+    if (root.find(key) != root.end()) {
+        value = root[key];
+        return true;
+    }
+    return false;
+}
+
+
 void Configuration::setRaw(const std::string& key, const std::string& value)
 {
     {

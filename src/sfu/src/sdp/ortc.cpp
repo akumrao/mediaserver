@@ -416,7 +416,6 @@ namespace SdpParse
 		 */
 		void validateRtpHeaderExtensionParameters(json& ext)
 		{
-			
 
 			if (!ext.is_object())
 				MS_ABORT("ext is not an object");
@@ -463,9 +462,11 @@ namespace SdpParse
 		 * fields with default values.
 		 * It throws if invalid.
 		 */
+                /**
+                Only used for an RTCRtpSender whose kind is audio, this property indicates whether or not to use discontinuous transmission (a feature by which a phone is turned off or the microphone muted automatically in the absence of voice activity). The value is taken from the enumerated string type RTCDtxStatus.
+                **/
 		void validateRtpEncodingParameters(json& encoding)
 		{
-			
 
 			if (!encoding.is_object())
 				MS_ABORT("encoding is not an object");

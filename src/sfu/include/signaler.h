@@ -35,14 +35,28 @@ namespace base {
 
         public:
             void postMessage(const json& m);
+            void postAppMessage(const json& m);
             //void syncMessage(const ipc::Action& action);
 
            // void onPeerConnected(std::string& peerID);
             void onPeerMessage(json const& m);
            // void onPeerDiconnected(std::string& peerID);
 
-
-
+           
+            
+                /// PeerManager interface
+            //void sendSDP(wrtc::Peer* conn, const std::string& type, const std::string& sdp) override;
+           // void sendCandidate(wrtc::Peer* conn, const std::string& mid, int mlineindex, const std::string& sdp) override;
+      
+            void recvSDP(const std::string& token, const json& data);
+            void recvCandidate(const std::string& token, const json& data);
+            
+            void onPeerConnected(std::string& peerID);
+           
+            void onPeerDiconnected(std::string& peerID);
+            
+            
+            
 
 
         protected:

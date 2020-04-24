@@ -4,7 +4,7 @@
 CC	= clang
 CXX     = clang++
 TARGET=sfu # define the name of the executable
-SOURCES=$(wildcard *.cpp ../src/*.cpp ../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/sdp/*.cpp ../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp ../src/Utils/*.cpp ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../http_parser/*.cpp ../../signal/src/*.cpp)
+SOURCES=$(wildcard *.cpp ../src/*.cpp ../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/sdp/*.cpp ../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp ../src/Utils/*.cpp ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../http_parser/*.cpp ../../json/src/*.cpp ../../signal/src/*.cpp)
 
 CXXFLAGS   := -g -std=c++11 -Wno-inconsistent-missing-override -Wno-uninitialized
 

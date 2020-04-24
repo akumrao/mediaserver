@@ -17,12 +17,185 @@ namespace base {
         Signaler::~Signaler() {
         }
 
-        void Signaler::postMessage(const json& m) {
+        void Signaler::postAppMessage(const json& m) {
 
-            LTrace("postMessage", cnfg::stringify(m));
-            socket->emit("message", m);
+            LTrace("postAppMessage", cnfg::stringify(m));
+            socket->emit("postAppMessage", m);
+        }
+        ////////////////////////////////////////////////////////////////////
+ /*       
+         void Signaler::sendSDP(wrtc::Peer* conn, const std::string& type,
+                const std::string& sdp) {
+            assert(type == "offer" || type == "answer");
+            //smpl::Message m;
+            json desc;
+            desc[wrtc::kSessionDescriptionTypeName] = type;
+            desc[wrtc::kSessionDescriptionSdpName] = sdp;
+
+            json m;
+
+            m[wrtc::kSessionDescriptionTypeName] = type;
+            m["desc"] = desc;
+            m["from"] = peerID;
+            m["to"]=remotePeerID;
+            // smpl::Message m({ type, {
+            //     { wrtc::kSessionDescriptionTypeName, type },
+            //     { wrtc::kSessionDescriptionSdpName, sdp} }
+            // });
+
+            postMessage(m);
         }
 
+        void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
+                int mlineindex, const std::string& sdp) {
+            //smpl::Message m;
+            json desc;
+            desc[wrtc::kCandidateSdpMidName] = mid;
+            desc[wrtc::kCandidateSdpMlineIndexName] = mlineindex;
+            desc[wrtc::kCandidateSdpName] = sdp;
+
+            json m;
+            m[wrtc::kSessionDescriptionTypeName] = "candidate";
+            m["candidate"] = desc;
+            m["from"] = peerID;
+            m["to"]=remotePeerID;
+
+            // smpl::Message m({ "candidate", {
+            //     { wrtc::kCandidateSdpMidName, mid },
+            //     { wrtc::kCandidateSdpMlineIndexName, mlineindex},
+            //     { wrtc::kCandidateSdpName, sdp} }
+            // });
+
+            LTrace( "send candidate ",  cnfg::stringify(m))
+            postMessage(m);
+        }
+*/
+        void Signaler::onPeerConnected(std::string& peerID) {
+
+            LDebug("Peer connected: ", peerID)
+
+//            if (wrtc::PeerManager::exists(peerID)) {
+//                LDebug("Peer already has session: ", peerID)
+//                return;
+//            }
+
+//            // Create the Peer Peer
+//            auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
+//            conn->constraints().SetMandatoryReceiveAudio(false);
+//            conn->constraints().SetMandatoryReceiveVideo(false);
+//            conn->constraints().SetAllowDtlsSctpDataChannels();
+//
+//            // Create the media stream and attach decoder
+//            // output to the peer connection
+//            _capturer.addMediaTracks(_context.factory, conn->createMediaStream());
+//
+//            // Send the Offer SDP
+//            conn->createConnection();
+//            conn->createOffer();
+//
+//            wrtc::PeerManager::add(peerID, conn);
+        }
+
+        void Signaler::onPeerMessage(json const& m) {
+
+            if (std::string("got user media") == m) {
+                return;
+            }
+
+            std::string from;
+            std::string type;
+
+            if (m.find("from") != m.end()) {
+                from = m["from"].get<std::string>();
+            }
+            if (m.find("type") != m.end()) {
+                type = m["type"].get<std::string>();
+            }
+
+            LDebug("Peer message: ", from)
+
+            if (std::string("offer") == type) {
+                //assert(0 && "offer not supported");
+                remotePeerID = from;
+                onPeerConnected(from);
+                
+            } else if (std::string("answer") == type) {
+                recvSDP(from, m["desc"]);
+            } else if (std::string("candidate") == type) {
+                recvCandidate(from, m["candidate"]);
+            } else if (std::string("bye") == type) {
+                onPeerDiconnected(from);
+            }
+
+        }
+        
+        
+        void Signaler::recvSDP(const std::string& token, const json& data)
+        {
+            SDebug << "recvSDP " <<  token  << "  " << data;
+
+//        webrtc::SdpParseError error;
+//        webrtc::SessionDescriptionInterface* desc(
+//            webrtc::CreateSessionDescription(type, sdp, &error));
+//        if (!desc) {
+//            throw std::runtime_error("Can't parse remote SDP: " + error.description);
+//        }
+//        _peerConnection->SetRemoteDescription(
+//            DummySetSessionDescriptionObserver::Create(), desc);
+//        if (type == "offer") {
+//            assert(_mode == Answer);
+//            _peerConnection->CreateAnswer(this, &_constraints);
+//        } else {
+//            assert(_mode == Offer);
+//        }
+        }
+        
+        void Signaler::recvCandidate(const std::string& token, const json& data)
+        {
+            SDebug << "recvCandidate " <<  token  << "  " << data;
+            
+        }
+
+
+//        void Signaler::recvCandidate(const std::string& mid, int mlineindex,
+ //                                      const std::string& sdp)
+ //       {
+//             LDebug("recvCandidate mid: ", mid, " mlineindex: ", mlineindex, " sdp : ", sdp)
+//            
+//        webrtc::SdpParseError error;
+//        std::unique_ptr<webrtc::IceCandidateInterface> candidate(
+//            webrtc::CreateIceCandidate(mid, mlineindex, sdp, &error));
+//        if (!candidate) {
+//            throw std::runtime_error("Can't parse remote candidate: " + error.description);
+//        }
+//        _peerConnection->AddIceCandidate(candidate.get());
+//        }
+
+        void Signaler::onPeerDiconnected(std::string& peerID) {
+            LDebug("Peer disconnected ", peerID)
+
+//                    auto conn = wrtc::PeerManager::remove(peerID);
+//            if (conn) {
+//                LDebug("Deleting peer connection: ", peerID)
+//                        // async delete not essential, but to be safe
+//                        delete conn;
+//                //deleteLater<wrtc::Peer>(conn);
+//            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////////////
         void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
 
             worker = new Worker();
@@ -81,7 +254,6 @@ namespace base {
                                 ack_resp = arr;
                     }
 
-
                 }));
 
 
@@ -125,7 +297,7 @@ namespace base {
                 }));
 
 
-//
+//onPeerMessage
 //                socket->on("ready", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 //                    LTrace(cnfg::stringify(data))
 //                            // LTrace('Socket is ready');
@@ -137,16 +309,15 @@ namespace base {
 //                    LTrace(cnfg::stringify(data))
 //                }));
 //
-//                socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
-//                    LTrace(cnfg::stringify(m));
-//                    LTrace('SocketioClient received message:', cnfg::stringify(m));
-//
-//                    //  onPeerMessage(m);
-//                    // signalingMessageCallback(message);
-//
-//
-//
-//                }));
+                socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(m));
+                    LTrace('SocketioClient received message:', cnfg::stringify(m));
+
+                      onPeerMessage(m);
+                    // signalingMessageCallback(message);
+
+
+                }));
 
 
 

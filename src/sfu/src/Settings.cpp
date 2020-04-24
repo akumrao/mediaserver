@@ -1,6 +1,3 @@
-#define MS_CLASS "Settings"
-// #define MS_LOG_DEV_LEVEL 3
-
 #include "Settings.h"
 #include "LoggerTag.h"
 #include "base/error.h"
@@ -10,10 +7,10 @@
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
-extern "C"
-{
-#include <getopt.h>
-}
+//extern "C"
+//{
+//#include <getopt.h>
+//}
 
 /* Class variables. */
 
@@ -37,121 +34,62 @@ struct Settings::Configuration Settings::configuration;
 
 /* Class methods. */
 
-void Settings::SetConfiguration(int argc, char* argv[])
+void Settings::SetConfiguration(json &cnfg)
 {
-	
-
-	/* Variables for getopt. */
-
-	int c;
-	int optionIdx{ 0 };
-
-	struct option options[] =
-	{
-		{ "logLevel",            optional_argument, nullptr, 'l' },
-		{ "logTags",             optional_argument, nullptr, 't' },
-		{ "rtcMinPort",          optional_argument, nullptr, 'm' },
-		{ "rtcMaxPort",          optional_argument, nullptr, 'M' },
-		{ "dtlsCertificateFile", optional_argument, nullptr, 'c' },
-		{ "dtlsPrivateKeyFile",  optional_argument, nullptr, 'p' },
-		{ nullptr, 0, nullptr, 0 }
-	};
 
 	std::string stringValue;
 	std::vector<std::string> logTags;
 
-	/* Parse command line options. */
+        if (cnfg.find("logTags") != cnfg.end()) {
+          // there is an entry with key "foo"
+            json &j =  cnfg["logTags"];
+            if(j.is_array())
+            {
+                for (json::iterator it = j.begin(); it != j.end(); ++it) {
+                    logTags.push_back(it->get<std::string>());
+                }
+            }
+        }
+        
+        
+        if (cnfg.find("rtcMinPort") != cnfg.end()) {
+            Settings::configuration.rtcMinPort = cnfg["rtcMinPort"].get<uint16_t>();
+        }
+            
+        if (cnfg.find("rtcMaxPort") != cnfg.end()) {
+            Settings::configuration.rtcMaxPort = cnfg["rtcMaxPort"].get<uint16_t>();
+        }
+            
+            
+        if (cnfg.find("logLevel") != cnfg.end()) {
+            //TBD // Move logger setting from main to here
+                // Initialize the Logger.
+            
+            std::string loglevel = cnfg["dtlsCertificateFile"].get<std::string>();
+            
+            Level ld = getLevelFromString(loglevel.c_str());
+            
+            Logger::instance().add(new ConsoleChannel("mediaserver", ld));
+           // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", ld));
+            Logger::instance().setWriter(new AsyncLogWriter);
+   
+            
+        }
+        
+   
+            
+        if (cnfg.find("dtlsCertificateFile") != cnfg.end()) {
+          Settings::configuration.dtlsCertificateFile = cnfg["dtlsCertificateFile"].get<std::string>();
+        }
+            
+            
+        if (cnfg.find("dtlsPrivateKeyFile") != cnfg.end()) {
+           Settings::configuration.dtlsCertificateFile = cnfg["dtlsPrivateKeyFile"].get<std::string>();
+        }
 
-	opterr = 0; // Don't allow getopt to print error messages.
-	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
-	{
-		if (optarg == nullptr)
-			base::uv::throwError(std::string("unknown configuration parameter: ") + optarg);
 
-		switch (c)
-		{
-			case 'l':
-			{
-				stringValue = std::string(optarg);
-//				SetLogLevel(stringValue);
 
-				break;
-			}
-
-			case 't':
-			{
-				stringValue = std::string(optarg);
-				logTags.push_back(stringValue);
-
-				break;
-			}
-
-			case 'm':
-			{
-				try
-				{
-					Settings::configuration.rtcMinPort = static_cast<uint16_t>(std::stoi(optarg));
-				}
-				catch (const std::exception& error)
-				{
-					base::uv::throwError( error.what());
-				}
-
-				break;
-			}
-
-			case 'M':
-			{
-				try
-				{
-					Settings::configuration.rtcMaxPort = static_cast<uint16_t>(std::stoi(optarg));
-				}
-				catch (const std::exception& error)
-				{
-					base::uv::throwError( error.what());
-				}
-
-				break;
-			}
-
-			case 'c':
-			{
-				stringValue                                 = std::string(optarg);
-				Settings::configuration.dtlsCertificateFile = stringValue;
-
-				break;
-			}
-
-			case 'p':
-			{
-				stringValue                                = std::string(optarg);
-				Settings::configuration.dtlsPrivateKeyFile = stringValue;
-
-				break;
-			}
-
-			// Invalid option.
-			case '?':
-			{
-				if (isprint(optopt) != 0)
-					base::uv::throwError("invalid option ", (char)optopt);
-				else
-					base::uv::throwError("unknown long option given as argument");
-			}
-
-			// Valid option, but it requires and argument that is not given.
-			case ':':
-			{
-				base::uv::throwError("option requires an argument", (char)optopt);
-			}
-
-			// This should never happen.
-			default:
-			{
-				base::uv::throwError("'default' should never happen");
-			}
-		}
-	}
+	
 
 	/* Post configuration. */
 

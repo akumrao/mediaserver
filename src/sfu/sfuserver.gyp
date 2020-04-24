@@ -13,10 +13,6 @@
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
-          #../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/handles/*.cpp 
-      #../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp 
-      #../src/Utils/*.cpp  ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../http_parser/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../signal/src/*.cpp
-      #SOURCES=$(wildcard *.cpp ../src/*.cpp ../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/handles/*.cpp ../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp ../src/Utils/*.cpp  ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../http_parser/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../signal/src/*.cpp )
     'sources':
     [
       '<!@(ls -1 src/*.cpp)',
@@ -28,6 +24,7 @@
       '<!@(ls -1 src/Utils/*.cpp)',
       '<!@(ls -1 src/RtpDictionaries/*.cpp)',
       '<!@(ls -1 ../../src/net/src/*.cpp)',
+      '<!@(ls -1 ../../src/json/src/*.cpp)',
       '<!@(ls -1 ../../src/http_parser/*.cpp)', 
       '<!@(ls -1 ../../src/http/src/*.cpp)',
       '<!@(ls -1 ../../src/signal/src/*.cpp)',
