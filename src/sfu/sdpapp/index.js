@@ -584,7 +584,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 	io.sockets.connected[serverSocketid].emit('rest', roomid, socket.id, resume, function (data1) {
 			
-		console.log("ack consume resume " + JSON.stringify(data1, null, 4)); // data will be 'woot'
+	console.log("ack consume resume " + JSON.stringify(data1, null, 4)); // data will be 'woot'
 		
 		//fn();
 
@@ -598,12 +598,23 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 
 //////////////////////////////////////////////////////////////////////////
-	socket.on('message', function(data) {
+	socket.on('message', function(message) {
+
+		//console.log('notification ' + JSON.stringify(data, null, 4) );
+
+
+	 log('Client said: ', message);
+    // for a real app, would be room-only (not broadcast)
+    	socket.broadcast.emit('message', message);
+
+	});
+
+
+	socket.on('postAppMessage', function(data) {
 
 		console.log('notification ' + JSON.stringify(data, null, 4) );
 
 	});
-
 
 
 	// socket.on('ipaddr', function() {
