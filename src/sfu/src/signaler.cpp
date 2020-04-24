@@ -116,6 +116,11 @@ namespace base {
 
             if (std::string("offer") == type) {
                 //assert(0 && "offer not supported");
+                
+                json sdp =  m["desc"];
+                
+                LTrace("offer sdp:", cnfg::stringify(sdp));
+                        
                 remotePeerID = from;
                 onPeerConnected(from);
                 
@@ -310,8 +315,8 @@ namespace base {
 //                }));
 //
                 socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
-                    LTrace(cnfg::stringify(m));
-                    LTrace('SocketioClient received message:', cnfg::stringify(m));
+                  //  LTrace(cnfg::stringify(m));
+                   // LTrace('SocketioClient received message:', cnfg::stringify(m));
 
                       onPeerMessage(m);
                     // signalingMessageCallback(message);

@@ -7,29 +7,11 @@
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
-//extern "C"
-//{
-//#include <getopt.h>
-//}
 
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
 
-// std::map<std::string, LogLevel> Settings::string2LogLevel =
-// {
-// 	{ "debug", LogLevel::LOG_DEBUG },
-// 	{ "warn",  LogLevel::LOG_WARN  },
-// 	{ "error", LogLevel::LOG_ERROR },
-// 	{ "none",  LogLevel::LOG_NONE  }
-// };
-// std::map<LogLevel, std::string> Settings::logLevel2String =
-// {
-// 	{ LogLevel::LOG_DEBUG, "debug" },
-// 	{ LogLevel::LOG_WARN,  "warn"  },
-// 	{ LogLevel::LOG_ERROR, "error" },
-// 	{ LogLevel::LOG_NONE,  "none"  }
-// };
 
 
 /* Class methods. */
@@ -65,14 +47,13 @@ void Settings::SetConfiguration(json &cnfg)
             //TBD // Move logger setting from main to here
                 // Initialize the Logger.
             
-            std::string loglevel = cnfg["dtlsCertificateFile"].get<std::string>();
+            std::string loglevel = cnfg["logLevel"].get<std::string>();
             
             Level ld = getLevelFromString(loglevel.c_str());
             
             Logger::instance().add(new ConsoleChannel("mediaserver", ld));
            // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", ld));
             Logger::instance().setWriter(new AsyncLogWriter);
-   
             
         }
         
@@ -88,7 +69,10 @@ void Settings::SetConfiguration(json &cnfg)
         }
 
 
-
+        if (cnfg.find("routerCapabilities") != cnfg.end()) {
+           Settings::configuration.routerCapabilities = cnfg["routerCapabilities"];
+        }
+        
 	
 
 	/* Post configuration. */

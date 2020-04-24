@@ -1,8 +1,7 @@
-#ifndef MS_SETTINGS_HPP
-#define MS_SETTINGS_HPP
+#ifndef SFU_SETTINGS_HPP
+#define SFU_SETTINGS_HPP
 
 #include "common.h"
-//#include "LogLevel.h"
 #include "Channel/Request.h"
 #include <map>
 #include <string>
@@ -37,6 +36,7 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
+                json routerCapabilities;
 	};
 
 public:
@@ -53,8 +53,7 @@ public:
 	static struct Configuration configuration;
 
 private:
-	//static std::map<std::string, LogLevel> string2LogLevel;
-	//static std::map<LogLevel, std::string> logLevel2String;
+	
 };
 
 #endif
