@@ -3,6 +3,7 @@
 #include <string>
 
 #include "signaler.h"
+#include "base/uuid.h"
 
 using std::endl;
 
@@ -70,6 +71,24 @@ namespace base {
             postMessage(m);
         }
 */
+        
+        void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
+
+           SInfo << name  << ":" << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+
+           json jsonRequest = data[2];
+           LTrace("arvind ", cnfg::stringify(jsonRequest))
+           Channel::Request req(jsonRequest);
+           worker->OnChannelRequest( &req);
+           if (isAck) {
+               json arr = json::array();
+                       arr.push_back(req.jsonResponse);
+                       ack_resp = arr;
+           }
+
+       }           
+                    
+
         void Signaler::onPeerConnected(std::string& peerID) {
 
             LDebug("Peer connected: ", peerID)
@@ -188,16 +207,7 @@ namespace base {
 //            }
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+  
         
         
 //////////////////////////////////////////////////////////////////////////////////////
@@ -224,60 +234,38 @@ namespace base {
 //                    }));
 
 
-                socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+            socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
+               SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+               request(name,data, isAck ,ack_resp );
+                isInitiator = true;
+                //grabWebCamVideo();
+            }));
 
-                    SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-
-                    json jsonRequest = data[2];
-                    LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req(jsonRequest);
-                    worker->OnChannelRequest( &req);
-                    if (isAck) {
-                        json arr = json::array();
-                                arr.push_back(req.jsonResponse);
-                                ack_resp = arr;
-                    }
-
-
-                    isInitiator = true;
-                    //grabWebCamVideo();
-                }));
-
-
-                socket->on("createWebRtcTransport", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-
-                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-
-                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
-                    LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req( jsonRequest);
-                    worker->OnChannelRequest(&req);
-                    if (isAck) {
-                        json arr = json::array();
-                                arr.push_back(req.jsonResponse);
-                                ack_resp = arr;
-                    }
-
-                }));
+//
+//                socket->on("createWebRtcTransport", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+//
+//                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+//
+//                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
+//                    LTrace("arvind ", cnfg::stringify(jsonRequest))
+//                    Channel::Request req( jsonRequest);
+//                    worker->OnChannelRequest(&req);
+//                    if (isAck) {
+//                        json arr = json::array();
+//                                arr.push_back(req.jsonResponse);
+//                                ack_resp = arr;
+//                    }
+//
+//                }));
 
 
 
 
                 socket->on("rest", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
-                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-
-                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
-                    LTrace("arvind ", cnfg::stringify(jsonRequest))
-                    Channel::Request req( jsonRequest);
-                    worker->OnChannelRequest(&req);
-                    if (isAck) {
-                        json arr = json::array();
-                                arr.push_back(req.jsonResponse);
-                                ack_resp = arr;
-                    }
-
+                    //SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+                    request(name,data, isAck ,ack_resp );
 
                 }));
 
@@ -302,18 +290,6 @@ namespace base {
                 }));
 
 
-//onPeerMessage
-//                socket->on("ready", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-//                    LTrace(cnfg::stringify(data))
-//                            // LTrace('Socket is ready');
-//                            // createPeerConnection(isInitiator, configuration);
-//                }));
-//
-//                socket->on("log", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-//                    // LTrace(cnfg::stringify(data))
-//                    LTrace(cnfg::stringify(data))
-//                }));
-//
                 socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
                   //  LTrace(cnfg::stringify(m));
                    // LTrace('SocketioClient received message:', cnfg::stringify(m));

@@ -564,7 +564,7 @@ namespace base {
                         }
                         
                         json name = ptr.at(0);
-                        LTrace(str);
+                       // LTrace(str);
                         
                         //LTrace("namespace ", p.get_nsp())
                         on_socketio_event(p.get_nsp(), p.get_pack_id(), name, std::move(value));

@@ -21,6 +21,7 @@ namespace base {
             void connect(const std::string& host, const uint16_t port, const std::string room);
             
             Worker *worker{nullptr};
+            
 
         protected:
 
@@ -57,7 +58,7 @@ namespace base {
             
             
             
-
+            void request(string const& name, json const& data, bool isAck, json & ack_resp);
 
         protected:
 #if USE_SSL

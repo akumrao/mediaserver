@@ -9,6 +9,7 @@
  */
 
 #include "basetests.h"
+#include "base/uuid.h"
 
 using std::cout;
 using std::cerr;
@@ -64,6 +65,21 @@ int main(int argc, char** argv) {
 
 
     test::init();
+
+
+     // =========================================================================
+    // Thread
+    //
+    describe("uuid4", []()
+    {
+        
+        for(int i = 0; i < 20 ; ++i )
+        {
+            LDebug( "uuid: ", uuid4::uuid());
+        }
+        
+    });
+
 
     // =========================================================================
     // Thread

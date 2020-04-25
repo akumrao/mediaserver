@@ -225,7 +225,7 @@ async function runSocketServer() {
 			{ 
 
 
-					io.sockets.connected[serverSocketid].emit('createWebRtcTransport', roomid, socket.id, trans, function (data1) {
+					io.sockets.connected[serverSocketid].emit('rest', roomid, socket.id, trans, function (data1) {
 					console.log("ack"); // data will be 'woot'
 					
 					transport = trans.internal.transportId;
@@ -394,7 +394,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 			{ 
 
 
-					io.sockets.connected[serverSocketid].emit('createWebRtcTransport', roomid, socket.id, trans, function (data1) {
+					io.sockets.connected[serverSocketid].emit('rest', roomid, socket.id, trans, function (data1) {
 					console.log("consumer transport create ack"); // data will be 'woot'
 					
 					consumerTransport = trans.internal.transportId;
