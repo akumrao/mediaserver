@@ -5,6 +5,7 @@
 #include "signaler.h"
 #include "Settings.h"
 #include "base/uuid.h"
+#include "sdp/ortc.h"
 
 using std::endl;
 
@@ -154,11 +155,11 @@ namespace base {
                 
                 
             // This may throw.
-                auto rtpMapping = ortc::getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
+                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping((json& )device.GetRtpCapabilities(), Settings::configuration.routerCapabilities);
             // This may throw.
             
                 
-                json data = json::object();
+                //json data = json::object();
                 
 		trans["data"] =device.dtlsParameters;
                 data.push_back(trans);

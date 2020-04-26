@@ -26,6 +26,10 @@ namespace SdpParse
 		void validateDtlsParameters(nlohmann::json& params);
 		void validateProducerCodecOptions(nlohmann::json& params);
 		nlohmann::json getExtendedRtpCapabilities(nlohmann::json& localCaps, nlohmann::json& remoteCaps);
+                nlohmann::json getProducerRtpParametersMapping(nlohmann::json& rtpParameters, nlohmann::json& routerRtpCapabilities);
+                
+                nlohmann::json getConsumableRtpParameters(std::string kind, nlohmann::json& params, nlohmann::json& caps, nlohmann::json& rtpMapping); 
+                
 		nlohmann::json getRecvRtpCapabilities(const nlohmann::json& extendedRtpCapabilities);
 		nlohmann::json getSendingRtpParameters(
 		  const std::string& kind, const nlohmann::json& extendedRtpCapabilities);
