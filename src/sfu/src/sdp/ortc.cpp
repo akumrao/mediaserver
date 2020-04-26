@@ -27,6 +27,33 @@ namespace SdpParse
 {
 	namespace ortc
 	{
+            
+            
+               json getProducerRtpParametersMapping(json&  rtpParameters, json& routerRtpCapabilities)
+               {
+                   
+                   // This may throw.
+			validateRtpCapabilities(localCaps);
+			validateRtpCapabilities(remoteCaps);
+
+			static const std::regex MimeTypeRegex(
+			  "^(audio|video)/(.+)", std::regex_constants::ECMAScript | std::regex_constants::icase);
+
+			// clang-format off
+			json extendedRtpCapabilities =
+			{
+				{ "codecs",           json::array() },
+				{ "headerExtensions", json::array() }
+			};
+			// clang-format on
+
+			// Match media codecs and keep the order preferred by remoteCaps.
+			auto remoteCapsCodecsIt = remoteCaps.find("codecs");
+                   
+                   
+               }
+                
+            
 		/**
 		 * Validates RtpCapabilities. It may modify given data by adding missing
 		 * fields with default values.

@@ -5,7 +5,7 @@
 
 #include "Worker.h"
 #include "socketio/socketioClient.h"
-
+#include "sdp/Device.h"
 
 using namespace base::sockio;
 
@@ -52,7 +52,7 @@ namespace base {
             void recvSDP(const std::string& token, const json& data);
             void recvCandidate(const std::string& token, const json& data);
             
-            void onPeerConnected(std::string& peerID);
+            void onPeerConnected(std::string& peerID, const json &sdp);
            
             void onPeerDiconnected(std::string& peerID);
             
@@ -78,6 +78,9 @@ namespace base {
             bool isChannelReady{false};
             bool isInitiator{false};
             bool isStarted{false};
+            
+            SdpParse::Device device;
+            
 
         };
 

@@ -37,6 +37,10 @@ public:
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
                 json routerCapabilities;
+                json createWebRtcTransport;
+                json maxbitrate;
+                json transport_connect;
+                json transport_produce;
 	};
 
 public:

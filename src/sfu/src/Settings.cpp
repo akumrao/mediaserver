@@ -73,6 +73,23 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.routerCapabilities = cnfg["routerCapabilities"];
         }
         
+        
+        if (cnfg.find("createWebRtcTransport") != cnfg.end()) {
+           Settings::configuration.createWebRtcTransport = cnfg["createWebRtcTransport"];
+        }
+        
+        
+        if (cnfg.find("maxbitrate") != cnfg.end()) {
+           Settings::configuration.maxbitrate = cnfg["maxbitrate"];
+        }
+        
+        if (cnfg.find("transport_connect") != cnfg.end()) {
+           Settings::configuration.transport_connect = cnfg["transport_connect"];
+        }
+        
+          if (cnfg.find("createWebRtcTransport") != cnfg.end()) {
+           Settings::configuration.transport_produce = cnfg["transport_produce"];
+        }
 	
 
 	/* Post configuration. */

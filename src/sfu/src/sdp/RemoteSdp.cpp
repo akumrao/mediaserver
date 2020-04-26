@@ -218,8 +218,6 @@ namespace SdpParse
 
 	std::string Sdp::RemoteSdp::GetSdp()
 	{
-		
-
 		// Increase SDP version.
 		auto version = this->sdpObject["origin"]["sessionVersion"].get<uint32_t>();
 

@@ -72,7 +72,7 @@ namespace SdpParse {
 
 
 
-        auto dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
+        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
         // Set our DTLS role.
         dtlsParameters["role"] = "server";
 
@@ -134,7 +134,7 @@ namespace SdpParse {
         return caps;
     }
 
-    void Device::GetAnswer(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
+    std::string Device::GetAnswer(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
         json sendingRtpParametersByKind = {
             { "audio", ortc::getSendingRtpParameters("audio", extendedRtpCapabilities)},
             { "video", ortc::getSendingRtpParameters("video", extendedRtpCapabilities)}
@@ -167,8 +167,9 @@ namespace SdpParse {
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();
-
-
+        
+        STrace << "andwer: " <<  answer ;
+        return answer;
     }
 
     //	SendTransport* Device::CreateSendTransport(

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "signaler.h"
+#include "Settings.h"
 #include "base/uuid.h"
 
 using std::endl;
@@ -84,14 +85,88 @@ namespace base {
                json arr = json::array();
                        arr.push_back(req.jsonResponse);
                        ack_resp = arr;
+                       LTrace(ack_resp.dump(4))
            }
 
        }           
                     
 
-        void Signaler::onPeerConnected(std::string& peerID) {
+        void Signaler::onPeerConnected(std::string& peerID , const json &sdp){
 
-            LDebug("Peer connected: ", peerID)
+            std::string transportId;
+            LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
+            std::string answer;
+            device.Load( Settings::configuration.routerCapabilities , sdp["sdp"].get<std::string>());
+            {
+                json ack_resp;
+
+                json data = json::array();
+                data.push_back("createWebRtcTransport");
+                data.push_back(peerID);
+                
+                json &trans = Settings::configuration.createWebRtcTransport;
+                transportId = uuid4::uuid();
+                trans["internal"]["transportId"] =transportId;
+                
+                data.push_back(trans);
+              
+
+                request("createWebRtcTransport", data, true, ack_resp) ;
+                
+                answer = device.GetAnswer(ack_resp["iceParameters"],ack_resp["iceCandidates"], ack_resp["dtlsParameters"]);
+            }
+            
+            {
+            
+                json ack_resp;
+                json data = json::array();
+                data.push_back("maxbitrate");
+                data.push_back(peerID);
+                json &trans = Settings::configuration.maxbitrate;
+                trans["internal"]["transportId"] =transportId;
+                data.push_back(trans);
+                request("maxbitrate", data, true, ack_resp) ;
+            }
+            
+            {
+            
+                json ack_resp;
+                json data = json::array();
+                data.push_back("transport.connect");
+                data.push_back(peerID);
+                json &trans = Settings::configuration.transport_connect;
+                trans["internal"]["transportId"] =transportId;
+		trans["data"] =device.dtlsParameters;
+                data.push_back(trans);
+                request("transport.connect", data, true, ack_resp) ;
+            }
+            
+            
+            {
+            
+                json ack_resp;
+                json data = json::array();
+                data.push_back("transport.produce");
+                data.push_back(peerID);
+                json &trans = Settings::configuration.transport_produce;
+                trans["internal"]["transportId"] =transportId;
+                trans["internal"]["producerId"] =  uuid4::uuid();
+                
+                
+            // This may throw.
+                auto rtpMapping = ortc::getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
+            // This may throw.
+            
+                
+                json data = json::object();
+                
+		trans["data"] =device.dtlsParameters;
+                data.push_back(trans);
+                request("transport.produce", data, true, ack_resp) ;
+            }
+           
+            
+           
 
 //            if (wrtc::PeerManager::exists(peerID)) {
 //                LDebug("Peer already has session: ", peerID)
@@ -136,12 +211,8 @@ namespace base {
             if (std::string("offer") == type) {
                 //assert(0 && "offer not supported");
                 
-                json sdp =  m["desc"];
-                
-                LTrace("offer sdp:", cnfg::stringify(sdp));
-                        
                 remotePeerID = from;
-                onPeerConnected(from);
+                onPeerConnected(from, m["desc"]);
                 
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);
