@@ -78,7 +78,7 @@ namespace SdpParse {
 
 
 
-        LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
+       // LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(nativeRtpCapabilities);
@@ -87,7 +87,7 @@ namespace SdpParse {
         this->extendedRtpCapabilities =
                 ortc::getExtendedRtpCapabilities(nativeRtpCapabilities, routerRtpCapabilities);
 
-        LDebug("got extended RTP capabilities: ", this->extendedRtpCapabilities.dump(4));
+        //LDebug("got extended RTP capabilities: ", this->extendedRtpCapabilities.dump(4));
 
         // Check whether we can produce audio/video.
         this->canProduceByKind["audio"] = ortc::canSend("audio", this->extendedRtpCapabilities);
@@ -96,7 +96,7 @@ namespace SdpParse {
         // Generate our receiving RTP capabilities for receiving media.
         this->recvRtpCapabilities = ortc::getRecvRtpCapabilities(this->extendedRtpCapabilities);
 
-        LDebug("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
+       // LDebug("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(this->recvRtpCapabilities);

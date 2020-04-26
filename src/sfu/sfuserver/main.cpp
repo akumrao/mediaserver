@@ -45,7 +45,11 @@ int main(int argc, char* argv[]) {
     config.load("./config.js");
   
     json cnfg;
-    config.getRaw("webrtc", cnfg);
+   
+    if( !config.getRaw("webrtc", cnfg))
+    {
+        std::cout << "Could not parse config file";
+    }
             
 
     try {

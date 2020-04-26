@@ -26,29 +26,34 @@ namespace base {
             socket->emit("postAppMessage", m);
         }
         ////////////////////////////////////////////////////////////////////
- /*       
-         void Signaler::sendSDP(wrtc::Peer* conn, const std::string& type,
+       
+         void Signaler::sendSDP( const std::string& type,
                 const std::string& sdp) {
             assert(type == "offer" || type == "answer");
             //smpl::Message m;
             json desc;
-            desc[wrtc::kSessionDescriptionTypeName] = type;
-            desc[wrtc::kSessionDescriptionSdpName] = sdp;
+            desc["type"] = type;
+            desc["sdp"] = sdp;
 
             json m;
 
-            m[wrtc::kSessionDescriptionTypeName] = type;
+            m["type"] = type;
             m["desc"] = desc;
             m["from"] = peerID;
             m["to"]=remotePeerID;
-            // smpl::Message m({ type, {
-            //     { wrtc::kSessionDescriptionTypeName, type },
-            //     { wrtc::kSessionDescriptionSdpName, sdp} }
-            // });
+
 
             postMessage(m);
         }
+         
+        
+        void Signaler::postMessage(const json& m) {
 
+            LTrace("postMessage", cnfg::stringify(m));
+            socket->emit("message", m);
+        }
+ 
+/*
         void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
                 int mlineindex, const std::string& sdp) {
             //smpl::Message m;
@@ -86,7 +91,7 @@ namespace base {
                json arr = json::array();
                        arr.push_back(req.jsonResponse);
                        ack_resp = arr;
-                       LTrace(ack_resp.dump(4))
+                       STrace << ack_resp.dump(4) ;//
            }
 
        }           
@@ -101,54 +106,60 @@ namespace base {
             {
                 json ack_resp;
 
-                json data = json::array();
-                data.push_back("createWebRtcTransport");
-                data.push_back(peerID);
+                json param = json::array();
+                param.push_back("createWebRtcTransport");
+                param.push_back(peerID);
                 
                 json &trans = Settings::configuration.createWebRtcTransport;
                 transportId = uuid4::uuid();
                 trans["internal"]["transportId"] =transportId;
                 
-                data.push_back(trans);
+                param.push_back(trans);
               
 
-                request("createWebRtcTransport", data, true, ack_resp) ;
+                request("createWebRtcTransport", param, true, ack_resp) ;
                 
-                answer = device.GetAnswer(ack_resp["iceParameters"],ack_resp["iceCandidates"], ack_resp["dtlsParameters"]);
+                json &ackdata= ack_resp.at(0)["data"];
+                answer = device.GetAnswer(ackdata["iceParameters"],ackdata["iceCandidates"], ackdata["dtlsParameters"]);
             }
             
             {
             
                 json ack_resp;
-                json data = json::array();
-                data.push_back("maxbitrate");
-                data.push_back(peerID);
+                json param = json::array();
+                param.push_back("maxbitrate");
+                param.push_back(peerID);
                 json &trans = Settings::configuration.maxbitrate;
                 trans["internal"]["transportId"] =transportId;
-                data.push_back(trans);
-                request("maxbitrate", data, true, ack_resp) ;
+                param.push_back(trans);
+                request("maxbitrate", param, true, ack_resp) ;
             }
             
             {
             
                 json ack_resp;
-                json data = json::array();
-                data.push_back("transport.connect");
-                data.push_back(peerID);
+                json param = json::array();
+                param.push_back("transport.connect");
+                param.push_back(peerID);
                 json &trans = Settings::configuration.transport_connect;
                 trans["internal"]["transportId"] =transportId;
-		trans["data"] =device.dtlsParameters;
-                data.push_back(trans);
-                request("transport.connect", data, true, ack_resp) ;
+                STrace << "device.dtlsParameters " << device.dtlsParameters;
+		trans["data"]["dtlsParameters"] = device.dtlsParameters;
+                param.push_back(trans);
+                request("transport.connect", param, true, ack_resp) ;
             }
             
             
+            sendSDP( "answer",answer );
+            
             {
+                STrace << "rtpParameters " << device.GetRtpCapabilities();
+                
             
                 json ack_resp;
-                json data = json::array();
-                data.push_back("transport.produce");
-                data.push_back(peerID);
+                json param = json::array();
+                param.push_back("transport.produce");
+                param.push_back(peerID);
                 json &trans = Settings::configuration.transport_produce;
                 trans["internal"]["transportId"] =transportId;
                 trans["internal"]["producerId"] =  uuid4::uuid();
@@ -156,14 +167,20 @@ namespace base {
                 
             // This may throw.
                 auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping((json& )device.GetRtpCapabilities(), Settings::configuration.routerCapabilities);
-            // This may throw.
-            
                 
-                //json data = json::object();
+                STrace << "rtpMapping " << rtpMapping;
                 
-		trans["data"] =device.dtlsParameters;
+                
+                json data = {
+                    {"kind", "video"   },
+                    {"paused", false},
+                    {"rtpMapping", rtpMapping},
+                    {"rtpParameters", device.GetRtpCapabilities()},
+                };
+                
+		trans["data"]=data;
                 data.push_back(trans);
-                request("transport.produce", data, true, ack_resp) ;
+                request("transport.produce", param, true, ack_resp) ;
             }
            
             

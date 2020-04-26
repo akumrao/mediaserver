@@ -2,7 +2,7 @@
 
 #include "json/configuration.h"
 #include "base/logger.h"
-
+#include "base/error.h"
 
 using std::endl;
 
@@ -50,9 +50,9 @@ void Configuration::loadIt(bool create)
         //    fs::createFile(_path);
 
         loadFile(_path, root);
-    } catch (...) {
-        // The config file may be empty,
-        // but the path is set so we can save.
+    } catch (std::exception& error) {
+        
+        std::cout << "Parser failse " <<  _path  << error.what();
     }
 
     _loaded = true;

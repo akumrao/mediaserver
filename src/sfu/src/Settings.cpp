@@ -21,6 +21,8 @@ void Settings::SetConfiguration(json &cnfg)
 
 	std::string stringValue;
 	std::vector<std::string> logTags;
+        
+        //std::cout << cnfg.dump(4) << std::flush;
 
         if (cnfg.find("logTags") != cnfg.end()) {
           // there is an entry with key "foo"
@@ -87,7 +89,7 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.transport_connect = cnfg["transport_connect"];
         }
         
-          if (cnfg.find("createWebRtcTransport") != cnfg.end()) {
+          if (cnfg.find("transport_produce") != cnfg.end()) {
            Settings::configuration.transport_produce = cnfg["transport_produce"];
         }
 	
