@@ -4,6 +4,7 @@ var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
 var localStream;
+var track;
 var pc;
 var remoteStream;
 var turnReady;
@@ -130,7 +131,7 @@ var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 navigator.mediaDevices.getUserMedia({
-  audio: true,
+  audio: false,
   video: true
 })
 .then(gotStream)
@@ -149,11 +150,6 @@ function gotStream(stream) {
   }
 }
 
-var constraints = {
-  video: true
-};
-
-console.log('Getting user media with constraints', constraints);
 
 // if (location.hostname !== 'localhost') {
 //   requestTurn(
@@ -205,9 +201,18 @@ function createPeerConnection() {
       });
 
 
-      pc.addTransceiver('audio');
-      pc.addTransceiver('video');
+     // pc.addTransceiver('audio');
+      //pc.addTransceiver('video');
+    // _stream = new MediaStream();
 
+
+    // const transceiver = pc.addTransceiver(
+    //     track,
+    //     {
+    //         direction     : 'sendonly',
+    //         streams       : [ _stream ],
+    //         sendEncodings : encodings
+    //     });
 
 
     pc.onicecandidate = handleIceCandidate;

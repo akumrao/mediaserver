@@ -135,8 +135,8 @@ namespace SdpParse {
         json getProducerRtpParametersMapping(json& params, json& caps) {
 
             // This may throw.
-            validateRtpCapabilities(params);
-            validateRtpCapabilities(caps);
+          //  validateRtpCapabilities(params);
+           // validateRtpCapabilities(caps);
 
             //static const std::regex MimeTypeRegex(
             //  "^(audio|video)/(.+)", std::regex_constants::ECMAScript | std::regex_constants::icase);

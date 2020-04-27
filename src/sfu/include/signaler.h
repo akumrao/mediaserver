@@ -79,7 +79,7 @@ namespace base {
             bool isInitiator{false};
             bool isStarted{false};
             
-            SdpParse::Device device;
+            SdpParse::Device *device{nullptr};
             
 
         };

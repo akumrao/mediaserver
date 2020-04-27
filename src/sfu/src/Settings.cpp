@@ -55,7 +55,7 @@ void Settings::SetConfiguration(json &cnfg)
             
             Logger::instance().add(new ConsoleChannel("mediaserver", ld));
            // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", ld));
-            Logger::instance().setWriter(new AsyncLogWriter);
+            //Logger::instance().setWriter(new AsyncLogWriter);
             
         }
         

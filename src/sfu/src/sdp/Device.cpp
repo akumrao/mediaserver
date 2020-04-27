@@ -5,7 +5,7 @@
 #include "sdp/ortc.h"
 #include "sdptransform.hpp"
 #include "sdp/Utils.h"
-#include "sdp/RemoteSdp.h"
+
 
 using json = nlohmann::json;
 
@@ -55,8 +55,8 @@ namespace SdpParse {
      */
     void Device::Load(json routerRtpCapabilities, std::string sdp) {
 
-        if (this->loaded)
-            MS_ABORT("already loaded");
+        //if (this->loaded)
+           // MS_ABORT("already loaded");
 
         // This may throw.
         ortc::validateRtpCapabilities(routerRtpCapabilities);
@@ -65,20 +65,14 @@ namespace SdpParse {
         //auto nativeRtpCapabilities = Handler::GetNativeRtpCapabilities(peerConnectionOptions);
         sdpObject = sdptransform::parse(sdp);
 
-
-
+        
+        //LDebug("got sdpObject: ", sdpObject.dump(4));
 
         auto nativeRtpCapabilities = Sdp::Utils::extractRtpCapabilities(sdpObject);
 
 
 
-        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
-        // Set our DTLS role.
-        dtlsParameters["role"] = "server";
-
-
-
-       // LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
+        //LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(nativeRtpCapabilities);
@@ -104,12 +98,12 @@ namespace SdpParse {
         // Generate our SCTP capabilities.
         this->sctpCapabilities = GetNativeSctpCapabilities();
 
-        LDebug("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
+        //LDebug("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateSctpCapabilities(this->sctpCapabilities);
 
-        LDebug("succeeded");
+       // LDebug("succeeded");
 
         this->loaded = true;
     }
@@ -133,6 +127,27 @@ namespace SdpParse {
         caps["numStreams"] = SctpNumStreams;
         return caps;
     }
+    
+     void Device::_setupTransport(const std::string localDtlsRole  )
+    {
+   
+        // Get our local DTLS parameters.
+        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
+        // Set our DTLS role.
+        dtlsParameters["role"] = localDtlsRole;
+
+       
+
+        // Update the remote DTLS role in the SDP.
+        remoteSdp->UpdateDtlsRole(
+            localDtlsRole == "client" ? "server" : "client");
+
+        // Need to tell the remote transport about our parameters.
+       // await this.safeEmitAsPromise('@connect', { dtlsParameters });
+
+       // this._transportReady = true;
+    }
+     
 
     std::string Device::GetAnswer(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
         json sendingRtpParametersByKind = {
@@ -145,19 +160,47 @@ namespace SdpParse {
             { "video", ortc::getSendingRemoteRtpParameters("video", extendedRtpCapabilities)}
         };
 
-        json& sendingRtpParameters = sendingRtpParametersByKind["video"];
-
-
-
-
-        Sdp::RemoteSdp *remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
+        sendingRtpParameters = sendingRtpParametersByKind["video"];
+        
+        remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
 
         const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
+        
+       json& offerMediaObject = sdpObject["media"][mediaSectionIdx.idx];
+          
+       auto midIt   = offerMediaObject.find("mid");
+        
+       if( midIt == offerMediaObject.end())
+       {
+            SError << "Found no mid in SDP";
+            throw "Found no mid in SDP";
+       }
+        
+       sendingRtpParameters["mid"] = *midIt;
+        
+       sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
+       sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+        
+        
+        // If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
+       auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
 
-        json& offerMediaObject = sdpObject["media"][mediaSectionIdx.idx];
+       std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
+
+       if (
+                sendingRtpParameters["encodings"].size() > 1 &&
+                (mimeType == "video/vp8" || mimeType == "video/h264")
+        )
+        {
+                for (auto& encoding : sendingRtpParameters["encodings"])
+                {
+                        encoding["scalabilityMode"] = "S1T3";
+                }
+        }
 
         json *codecOptions = nullptr;
-
+        
+        _setupTransport("server");
 
         remoteSdp->Send(
                 offerMediaObject,

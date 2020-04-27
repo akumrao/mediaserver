@@ -99,10 +99,12 @@ namespace base {
 
         void Signaler::onPeerConnected(std::string& peerID , const json &sdp){
 
+            
+            device = new SdpParse::Device();
             std::string transportId;
-            LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
+           // LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
             std::string answer;
-            device.Load( Settings::configuration.routerCapabilities , sdp["sdp"].get<std::string>());
+            device->Load( Settings::configuration.routerCapabilities , sdp["sdp"].get<std::string>());
             {
                 json ack_resp;
 
@@ -120,7 +122,7 @@ namespace base {
                 request("createWebRtcTransport", param, true, ack_resp) ;
                 
                 json &ackdata= ack_resp.at(0)["data"];
-                answer = device.GetAnswer(ackdata["iceParameters"],ackdata["iceCandidates"], ackdata["dtlsParameters"]);
+                answer = device->GetAnswer(ackdata["iceParameters"],ackdata["iceCandidates"], ackdata["dtlsParameters"]);
             }
             
             {
@@ -143,17 +145,17 @@ namespace base {
                 param.push_back(peerID);
                 json &trans = Settings::configuration.transport_connect;
                 trans["internal"]["transportId"] =transportId;
-                STrace << "device.dtlsParameters " << device.dtlsParameters;
-		trans["data"]["dtlsParameters"] = device.dtlsParameters;
+                STrace << "device->dtlsParameters " << device->dtlsParameters;
+		trans["data"]["dtlsParameters"] = device->dtlsParameters;
                 param.push_back(trans);
                 request("transport.connect", param, true, ack_resp) ;
             }
             
             
-            sendSDP( "answer",answer );
+        
             
             {
-                STrace << "rtpParameters " << device.GetRtpCapabilities();
+                STrace << "sendingRtpParameters " << device->sendingRtpParameters;
                 
             
                 json ack_resp;
@@ -166,7 +168,7 @@ namespace base {
                 
                 
             // This may throw.
-                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping((json& )device.GetRtpCapabilities(), Settings::configuration.routerCapabilities);
+                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping((json& )device->sendingRtpParameters, Settings::configuration.routerCapabilities);
                 
                 STrace << "rtpMapping " << rtpMapping;
                 
@@ -175,16 +177,19 @@ namespace base {
                     {"kind", "video"   },
                     {"paused", false},
                     {"rtpMapping", rtpMapping},
-                    {"rtpParameters", device.GetRtpCapabilities()},
+                    {"rtpParameters", device->sendingRtpParameters},
                 };
                 
 		trans["data"]=data;
-                data.push_back(trans);
+                param.push_back(trans);
                 request("transport.produce", param, true, ack_resp) ;
             }
            
-            
-           
+                sendSDP( "answer",answer );
+                
+                
+                delete device;
+                device = nullptr;
 
 //            if (wrtc::PeerManager::exists(peerID)) {
 //                LDebug("Peer already has session: ", peerID)
