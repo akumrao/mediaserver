@@ -41,6 +41,7 @@ public:
                 json maxbitrate;
                 json transport_connect;
                 json transport_produce;
+                json transport_consume;
 	};
 
 public:

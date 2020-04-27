@@ -27,6 +27,160 @@ static std::string getVP9ProfileId(const json& codec);
 namespace SdpParse {
     namespace ortc {
 
+        json getConsumerRtpParameters(json &consumableParams, json &caps) {
+            json consumerParams = {
+                {"codecs", json::array()},
+                 {"headerExtensions", json::array()},
+                {"encodings", json::array()},
+                {"rtcp", consumableParams["rtcp"]}
+            };
+       
+            
+            for (auto & capCodec : caps["codecs"]) {
+                validateRtpCodecCapability(capCodec);
+            }
+            //const consumableCodecs = utils.clone(consumableParams.codecs);
+            
+            json consumableCodecs = consumableParams["codecs"];
+            
+            bool rtxSupported = false;
+            for (auto & codec : consumableCodecs) 
+            {
+                
+                json & capCodecs = caps["codecs"];
+                
+                auto matchedCapCodec =
+                std::find_if(capCodecs.begin(), capCodecs.end(), [&codec](json & capCodec) {
+                    return matchCodecs(capCodec, codec, /*strict*/ true);
+                });
+                
+                if (matchedCapCodec == capCodecs.end())
+                continue;
+                
+                codec["rtcpFeedback"] = (*matchedCapCodec)["rtcpFeedback"];
+                consumerParams["codecs"].push_back(codec);
+                if (!rtxSupported && isRtxCodec(codec))
+                    rtxSupported = true;
+            }
+            // Ensure there is at least one media codec.
+            if (consumerParams["codecs"].size() ==  0 || isRtxCodec(consumerParams["codecs"].at(0))) {
+                SError << "no compatible media codecs";
+                throw ("no compatible media codecs");
+            }
+            
+            std::copy_if( consumableParams["headerExtensions"].begin(), consumableParams["headerExtensions"].end(), consumerParams["headerExtensions"].begin(), [&caps](json &ext)
+            {
+                
+               return std::any_of( caps["headerExtensions"].begin(), caps["headerExtensions"].end(), [&ext](json &capExt){ return ((capExt["preferredId"] == ext["id"]) && (capExt["uri"] == ext["uri"])); })? true : false;
+            
+            } 
+            
+            ); 
+            
+            
+            if( std::any_of( consumerParams["headerExtensions"].begin(), consumerParams["headerExtensions"].end(), [](json &ext){ return (ext["uri"] == "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"); }))
+            {
+                for (auto& codec : consumerParams["codecs"]) 
+                {
+                    
+                     std::copy_if( codec["rtcpFeedback"].begin(), codec["rtcpFeedback"].end(), codec["rtcpFeedback"].begin(), [](json &fb)
+                    {
+                       return  (fb["type"] != "goog-remb" );
+                    } 
+                    ); 
+                
+                }
+            }
+            else if( std::any_of( consumerParams["headerExtensions"].begin(), consumerParams["headerExtensions"].end(), [](json &ext){ return (ext["uri"] == "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"); }))
+            {
+
+                for (auto& codec : consumerParams["codecs"]) 
+                {
+                    
+                     std::copy_if( codec["rtcpFeedback"].begin(), codec["rtcpFeedback"].end(), codec["rtcpFeedback"].begin(), [](json &fb)
+                    {
+                       return  (fb["type"] != "transport-cc" );
+                    } 
+                    ); 
+                
+                }
+                
+            }
+            else 
+            {
+                for (auto& codec : consumerParams["codecs"]) 
+                {
+                    ///////
+                     std::copy_if( codec["rtcpFeedback"].begin(), codec["rtcpFeedback"].end(), codec["rtcpFeedback"].begin(), [](json &fb)
+                    {
+                       return  (fb["type"] == "transport-cc" &&  fb["type"] != "goog-remb");
+                    } 
+                    ); 
+                    //////
+                    
+                }
+            }
+            
+//            consumerParams["headerExtensions"] = consumableParams["headerExtensions"]
+//                    .filter((ext) = > (caps.headerExtensions
+//                    .some((capExt) = > (capExt.preferredId == = ext.id &&
+//                    capExt.uri == = ext.uri))));
+            
+            // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
+//            if (consumerParams.headerExtensions.some((ext) = > (ext.uri == = 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'))) {
+//                for (const codec of consumerParams.codecs) {
+//                    codec.rtcpFeedback = (codec.rtcpFeedback)
+//                            .filter((fb) = > fb.type != = 'goog-remb');
+//                }
+//            } else if (consumerParams.headerExtensions.some((ext) = > (ext.uri == = 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time'))) {
+//                for (const codec of consumerParams.codecs) {
+//                    
+//                    codec.rtcpFeedback = (codec.rtcpFeedback)
+//                            .filter((fb) = > fb.type != = 'transport-cc');
+//                    
+//                }
+//            } else {
+//                for (const codec of consumerParams.codecs) {
+//                    codec.rtcpFeedback = (codec.rtcpFeedback)
+//                            .filter((fb) = > (fb.type != = 'transport-cc' &&
+//                            fb.type != = 'goog-remb'));
+//                }
+//            }
+            
+            
+            
+            
+            json consumerEncoding = {
+                "ssrc", utils.generateRandomNumber()
+            };
+            
+            if (rtxSupported)
+                consumerEncoding.rtx = {ssrc : utils.generateRandomNumber()};
+            // If any of the consumableParams.encodings has scalabilityMode, process it
+            // (assume all encodings have the same value).
+            const encodingWithScalabilityMode = consumableParams.encodings.find((encoding) = > encoding.scalabilityMode);
+            let scalabilityMode = encodingWithScalabilityMode
+                    ? encodingWithScalabilityMode.scalabilityMode
+                    : undefined;
+            // If there is simulast, mangle spatial layers in scalabilityMode.
+            if (consumableParams.encodings.length > 1) {
+                const
+                {
+                    temporalLayers
+                }
+                = scalabilityModes_1.parse(scalabilityMode);
+                scalabilityMode = `S${consumableParams.encodings.length}
+                T${temporalLayers}`;
+            }
+            if (scalabilityMode)
+                consumerEncoding.scalabilityMode = scalabilityMode;
+            // Set a single encoding for the Consumer.
+            consumerParams.encodings.push(consumerEncoding);
+            // Copy verbatim.
+            consumerParams.rtcp = consumableParams.rtcp;
+            return consumerParams;
+        }
+
         json getConsumableRtpParameters(std::string kind, json& params, json& caps, json& rtpMapping) {
             json consumableParams = {
                 {"codecs", json::array()},
@@ -34,7 +188,6 @@ namespace SdpParse {
                 {"encodings", json::array()},
                 {"rtcp", json::object()}
             };
-
 
             for (auto& codec : params["codecs"]) {
                 if (isRtxCodec(codec))
@@ -109,15 +262,16 @@ namespace SdpParse {
             json consumableEncodings = params["encodings"]; //arvind TBD to check if clone is required
 
             for (int i = 0; i < consumableEncodings.size(); ++i) {
-                auto consumableEncoding = consumableEncodings.at(i);
-                //                const { mappedSsrc } = rtpMapping["encodings"].at(i);
-                //                // Remove useless fields.
-                //                delete consumableEncoding.rid;
-                //                delete consumableEncoding.rtx;
-                //                delete consumableEncoding.codecPayloadType;
-                //                // Set the mapped ssrc.
-                //                consumableEncoding.ssrc = mappedSsrc;
-                //                consumableParams["encodings"].push_back(consumableEncoding);
+                auto &consumableEncoding = consumableEncodings.at(i);
+               //const { mappedSsrc } = rtpMapping["encodings"].at(i);
+                auto mappedSsrc = rtpMapping["encodings"].at(i);
+                // Remove useless fields.
+                consumableEncoding.erase("rid");
+                consumableEncoding.erase("rtx");
+                consumableEncoding.erase("codecPayloadType");
+                // Set the mapped ssrc.
+                 consumableEncoding["ssrc"] =mappedSsrc;
+                consumableParams["encodings"].push_back(consumableEncoding);
             }
             consumableParams["rtcp"] ={
                 {"cname", params["rtcp"]["cname"]},

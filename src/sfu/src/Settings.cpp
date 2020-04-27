@@ -89,10 +89,15 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.transport_connect = cnfg["transport_connect"];
         }
         
-          if (cnfg.find("transport_produce") != cnfg.end()) {
+        if (cnfg.find("transport_produce") != cnfg.end()) {
            Settings::configuration.transport_produce = cnfg["transport_produce"];
         }
 	
+        if (cnfg.find("transport_consume") != cnfg.end()) {
+           Settings::configuration.transport_consume = cnfg["transport_consume"];
+        }
+	
+         
 
 	/* Post configuration. */
 

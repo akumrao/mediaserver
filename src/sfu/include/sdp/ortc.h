@@ -29,6 +29,7 @@ namespace SdpParse
                 nlohmann::json getProducerRtpParametersMapping(nlohmann::json& rtpParameters, nlohmann::json& routerRtpCapabilities);
                 
                 nlohmann::json getConsumableRtpParameters(std::string kind, nlohmann::json& params, nlohmann::json& caps, nlohmann::json& rtpMapping); 
+                nlohmann::json getConsumerRtpParameters(nlohmann::json &consumableParams, nlohmann::json &caps);
                 
 		nlohmann::json getRecvRtpCapabilities(const nlohmann::json& extendedRtpCapabilities);
 		nlohmann::json getSendingRtpParameters(
