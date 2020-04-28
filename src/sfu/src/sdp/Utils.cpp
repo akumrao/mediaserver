@@ -377,9 +377,9 @@ namespace SdpParse
 
 			std::string getCname(const json& offerMediaObject)
 			{
-				
+				//SError << "offerMediaObject "  << offerMediaObject ;
 
-				auto jsonMssrcsIt = offerMediaObject.find("ssrc");
+				auto jsonMssrcsIt = offerMediaObject.find("ssrcs");
 
 				if (jsonMssrcsIt == offerMediaObject.end())
 					return "";

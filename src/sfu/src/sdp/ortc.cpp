@@ -30,6 +30,9 @@ namespace SdpParse {
     namespace ortc {
 
         json getConsumerRtpParameters(json &consumableParams, json &caps) {
+            
+          //  STrace << "consumableParams " << consumableParams.dump(4);
+            
             json consumerParams = {
                 {"codecs", json::array()},
                  {"headerExtensions", json::array()},
@@ -70,15 +73,30 @@ namespace SdpParse {
                 throw ("no compatible media codecs");
             }
             
-            std::copy_if( consumableParams["headerExtensions"].begin(), consumableParams["headerExtensions"].end(), consumerParams["headerExtensions"].begin(), [&caps](json &ext)
+            
+            
+             STrace << "caps[headerExtensions] " << caps["headerExtensions"].dump(4);
+          
+            STrace << "consumerParams[headerExtensions] " << consumableParams["headerExtensions"].dump(4);
+            
+            
+            consumerParams["headerExtensions"]= json::array();
+                    
+            std::copy_if( consumableParams["headerExtensions"].begin(), consumableParams["headerExtensions"].end(),  std::back_inserter( consumerParams["headerExtensions"]), [&caps](json &ext)
             {
                 
-               return std::any_of( caps["headerExtensions"].begin(), caps["headerExtensions"].end(), [&ext](json &capExt){ return ((capExt["preferredId"] == ext["id"]) && (capExt["uri"] == ext["uri"])); })? true : false;
+               return std::any_of( caps["headerExtensions"].begin(), caps["headerExtensions"].end(), [&ext](json &capExt)
+                  {
+                   return ((capExt["preferredId"] == ext["id"]) && (capExt["uri"] == ext["uri"]));
+                  })? true : false;
             
             } 
             
             ); 
             
+            STrace << "consumerParams[headerExtensions] " << consumerParams["headerExtensions"].dump(4);
+            
+            STrace << "codec[rtcpFeedback]" << consumerParams["codecs"].dump(4);
             
             if( std::any_of( consumerParams["headerExtensions"].begin(), consumerParams["headerExtensions"].end(), [](json &ext){ return (ext["uri"] == "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"); }))
             {
@@ -122,7 +140,7 @@ namespace SdpParse {
                     
                 }
             }
-            
+             STrace << "codec[rtcpFeedback] " << consumerParams["codecs"].dump(4);
 //            consumerParams["headerExtensions"] = consumableParams["headerExtensions"]
 //                    .filter((ext) = > (caps.headerExtensions
 //                    .some((capExt) = > (capExt.preferredId == = ext.id &&
@@ -153,11 +171,11 @@ namespace SdpParse {
             
             
             json consumerEncoding = {
-                "ssrc", SdpParse::Utils::getRandomInteger(2000000, 2999999)
+                {"ssrc", SdpParse::Utils::getRandomInteger(2000000, 2999999)}
             };
             
             if (rtxSupported)
-                consumerEncoding["rtx"] = {"ssrc" , SdpParse::Utils::getRandomInteger(3000000, 3999999)};
+                consumerEncoding["rtx"] = {{"ssrc" , SdpParse::Utils::getRandomInteger(3000000, 3999999)}};
             // If any of the consumableParams.encodings has scalabilityMode, process it
             // (assume all encodings have the same value).
             
@@ -208,7 +226,8 @@ namespace SdpParse {
                 {"rtcp", json::object()}
             };
 
-            for (auto& codec : params["codecs"]) {
+            for (auto& codec : params["codecs"]) 
+            {
                 if (isRtxCodec(codec))
                     continue;
 
@@ -238,19 +257,20 @@ namespace SdpParse {
                     {"rtcpFeedback", matchedCapCodec["rtcpFeedback"]}
                 };
 
+                if (consumableCodec["channels"] == nullptr)
+                         consumableCodec.erase("channels");
+                
                 consumableParams["codecs"].push_back(consumableCodec);
 
                 json &capRtxCodecs = caps["codecs"];
 
-
-
-
-                auto consumableCapRtxCodecItr = std::find_if(capRtxCodecs.begin(), capRtxCodecs.end(), [&consumableParams](json & capRtxCodec) {
-                    return (isRtxCodec(capRtxCodec) && capRtxCodec["parameters"]["apt"] == consumableParams["payloadType"]);
+                auto consumableCapRtxCodecItr = std::find_if(capRtxCodecs.begin(), capRtxCodecs.end(), [&consumableCodec](json & capRtxCodec) {
+                    return (isRtxCodec(capRtxCodec) && (capRtxCodec["parameters"]["apt"] == consumableCodec["payloadType"]));
                 });
 
-                auto consumableCapRtxCodec = *consumableCapRtxCodecItr;
-                if (consumableCapRtxCodecItr->size()) {
+                
+                if (consumableCapRtxCodecItr != capRtxCodecs.end()) {
+                    auto consumableCapRtxCodec = *consumableCapRtxCodecItr;
                     json consumableRtxCodec = {
                         {"mimeType", consumableCapRtxCodec["mimeType"]},
                         {"payloadType", consumableCapRtxCodec["preferredPayloadType"]},
@@ -258,9 +278,16 @@ namespace SdpParse {
                         {"parameters", consumableCapRtxCodec["parameters"]},
                         {"rtcpFeedback", consumableCapRtxCodec["rtcpFeedback"]}
                     };
+                    
+                     if (consumableRtxCodec["channels"]  == nullptr )
+                         consumableRtxCodec.erase("channels");
+                    
                     consumableParams["codecs"].push_back(consumableRtxCodec);
                 }
             }
+            
+            
+            
             for (auto& capExt : caps["headerExtensions"]) {
                 // Just take RTP header extension that can be used in Consumers.
                 if (capExt["kind"] != kind ||
@@ -268,11 +295,10 @@ namespace SdpParse {
                     continue;
                 }
                 json consumableExt = {
-                    "uri", capExt["uri"],
-                    "id", capExt["preferredId"],
-                    "encrypt", capExt["preferredEncrypt"],
-                    "parameters",
-                    {}
+                    {"uri", capExt["uri"]},
+                    {"id", capExt["preferredId"]}
+                   // {"encrypt", capExt["preferredEncrypt"]},
+                   // {"parameters",{})}
                 };
                 consumableParams["headerExtensions"].push_back(consumableExt);
             }
@@ -289,7 +315,7 @@ namespace SdpParse {
                 consumableEncoding.erase("rtx");
                 consumableEncoding.erase("codecPayloadType");
                 // Set the mapped ssrc.
-                 consumableEncoding["ssrc"] =mappedSsrc;
+                 consumableEncoding["ssrc"] =mappedSsrc["mappedSsrc"];
                 consumableParams["encodings"].push_back(consumableEncoding);
             }
             consumableParams["rtcp"] ={

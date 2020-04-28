@@ -149,7 +149,7 @@ namespace Channel
 		if (data.is_structured())
 		jsonResponse["data"] = data;
 
-           MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));      
+          // MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));      
 		//this->channel->Send(jsonResponse);
 	}
 

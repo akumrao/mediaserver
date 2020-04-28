@@ -152,7 +152,6 @@ namespace SdpParse {
     void Device::createSdp(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) 
     {
         remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
-        
     }
            
     std::string Device::GetAnswer() {
@@ -201,6 +200,8 @@ namespace SdpParse {
                         encoding["scalabilityMode"] = "S1T3";
                 }
         }
+       
+      // STrace << "sendingRtpParameters "  <<  sendingRtpParameters ;
 
         json *codecOptions = nullptr;
         
