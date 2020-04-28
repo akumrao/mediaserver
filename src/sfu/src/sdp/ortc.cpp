@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <string>
 #include "Utils.h"
+#include "sdp/Utils.h"
+
 
 using json = nlohmann::json;
 using namespace SdpParse;
@@ -151,33 +153,50 @@ namespace SdpParse {
             
             
             json consumerEncoding = {
-                "ssrc", utils.generateRandomNumber()
+                "ssrc", SdpParse::Utils::getRandomInteger(2000000, 2999999)
             };
             
             if (rtxSupported)
-                consumerEncoding.rtx = {ssrc : utils.generateRandomNumber()};
+                consumerEncoding["rtx"] = {"ssrc" , SdpParse::Utils::getRandomInteger(3000000, 3999999)};
             // If any of the consumableParams.encodings has scalabilityMode, process it
             // (assume all encodings have the same value).
-            const encodingWithScalabilityMode = consumableParams.encodings.find((encoding) = > encoding.scalabilityMode);
-            let scalabilityMode = encodingWithScalabilityMode
-                    ? encodingWithScalabilityMode.scalabilityMode
-                    : undefined;
-            // If there is simulast, mangle spatial layers in scalabilityMode.
-            if (consumableParams.encodings.length > 1) {
-                const
+            
+            json& encodings =  consumableParams["encodings"];
+            
+            auto encodingWithScalabilityMode =
+                std::find_if(encodings.begin(), encodings.end(), [](json & encoding) {
+                    return (encoding.find("scalabilityMode" ) != encoding.end()) ;
+                });
+
+                        
+            
+            
+            
+                if(encodingWithScalabilityMode != encodings.end())
                 {
-                    temporalLayers
+                    /*
+                    std::string scalabilityMode = (*encodingWithScalabilityMode)["scalabilityMode"];
+                          
+                    // TBD //arvind
+                    // If there is simulast, mangle spatial layers in scalabilityMode.
+                    if (consumableParams["encodings"].size() > 1) {
+        //                const
+        //                {
+        //                    temporalLayers
+        //                }
+        //                = scalabilityModes_1.parse(scalabilityMode);
+
+        //                scalabilityMode = `S${consumableParams.encodings.length}
+        //                T${temporalLayers}`;
+                    }
+                    if (scalabilityMode)
+                        consumerEncoding["scalabilityMode"] = scalabilityMode;
+                    */
                 }
-                = scalabilityModes_1.parse(scalabilityMode);
-                scalabilityMode = `S${consumableParams.encodings.length}
-                T${temporalLayers}`;
-            }
-            if (scalabilityMode)
-                consumerEncoding.scalabilityMode = scalabilityMode;
             // Set a single encoding for the Consumer.
-            consumerParams.encodings.push(consumerEncoding);
+            consumerParams["encodings"].push_back(consumerEncoding);
             // Copy verbatim.
-            consumerParams.rtcp = consumableParams.rtcp;
+            consumerParams["rtcp"] = consumableParams["rtcp"];
             return consumerParams;
         }
 
@@ -397,7 +416,7 @@ namespace SdpParse {
 
 
             // Generate encodings mapping.
-            int mappedSsrc = Utils::Crypto::GetRandomUInt(100000, 999999);
+            int mappedSsrc = SdpParse::Utils::getRandomInteger(100000, 999999);
             for (auto& encoding : params["encodings"]) {
                 json mappedEncoding = {};
                 mappedEncoding["mappedSsrc"] = mappedSsrc++;

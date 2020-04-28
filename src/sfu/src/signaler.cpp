@@ -26,8 +26,8 @@ namespace base {
             socket->emit("postAppMessage", m);
         }
         ////////////////////////////////////////////////////////////////////
-       
-         void Signaler::sendSDP( const std::string& type,
+
+        void Signaler::sendSDP(const std::string& type,
                 const std::string& sdp) {
             assert(type == "offer" || type == "answer");
             //smpl::Message m;
@@ -40,278 +40,312 @@ namespace base {
             m["type"] = type;
             m["desc"] = desc;
             m["from"] = peerID;
-            m["to"]=remotePeerID;
+            m["to"] = remotePeerID;
 
 
             postMessage(m);
         }
-         
-        
+
         void Signaler::postMessage(const json& m) {
 
             LTrace("postMessage", cnfg::stringify(m));
             socket->emit("message", m);
         }
- 
-/*
-        void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
-                int mlineindex, const std::string& sdp) {
-            //smpl::Message m;
-            json desc;
-            desc[wrtc::kCandidateSdpMidName] = mid;
-            desc[wrtc::kCandidateSdpMlineIndexName] = mlineindex;
-            desc[wrtc::kCandidateSdpName] = sdp;
 
-            json m;
-            m[wrtc::kSessionDescriptionTypeName] = "candidate";
-            m["candidate"] = desc;
-            m["from"] = peerID;
-            m["to"]=remotePeerID;
+                /*
+                void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
+                        int mlineindex, const std::string& sdp) {
+                    //smpl::Message m;
+                    json desc;
+                    desc[wrtc::kCandidateSdpMidName] = mid;
+                    desc[wrtc::kCandidateSdpMlineIndexName] = mlineindex;
+                    desc[wrtc::kCandidateSdpName] = sdp;
 
-            // smpl::Message m({ "candidate", {
-            //     { wrtc::kCandidateSdpMidName, mid },
-            //     { wrtc::kCandidateSdpMlineIndexName, mlineindex},
-            //     { wrtc::kCandidateSdpName, sdp} }
-            // });
+                    json m;
+                    m[wrtc::kSessionDescriptionTypeName] = "candidate";
+                    m["candidate"] = desc;
+                    m["from"] = peerID;
+                    m["to"]=remotePeerID;
 
-            LTrace( "send candidate ",  cnfg::stringify(m))
-            postMessage(m);
-        }
-*/
-        
+                    // smpl::Message m({ "candidate", {
+                    //     { wrtc::kCandidateSdpMidName, mid },
+                    //     { wrtc::kCandidateSdpMlineIndexName, mlineindex},
+                    //     { wrtc::kCandidateSdpName, sdp} }
+                    // });
+
+                    LTrace( "send candidate ",  cnfg::stringify(m))
+                    postMessage(m);
+                }
+         */
+
         void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
 
-           SInfo << name  << ":" << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+            SInfo << name << ":" << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
 
-           json jsonRequest = data[2];
-           LTrace("arvind ", cnfg::stringify(jsonRequest))
-           Channel::Request req(jsonRequest);
-           worker->OnChannelRequest( &req);
-           if (isAck) {
-               json arr = json::array();
-                       arr.push_back(req.jsonResponse);
-                       ack_resp = arr;
-                       STrace << ack_resp.dump(4) ;//
-           }
+            json jsonRequest = data[2];
+            LTrace("arvind ", cnfg::stringify(jsonRequest))
+            Channel::Request req(jsonRequest);
+            worker->OnChannelRequest(&req);
+            if (isAck) {
+                json arr = json::array();
+                arr.push_back(req.jsonResponse);
+                ack_resp = arr;
+                STrace << ack_resp.dump(4); //
+            }
 
-       }           
-                    
+        }
 
-        void Signaler::onPeerConnected(std::string& peerID , const json &sdp){
+        void Signaler::onPeerConnected(std::string& peerID, const json &sdp) {
 
             json producer;
+            json consumer;
             {
-            device = new SdpParse::Device();
-            std::string transportId;
-           // LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
-            std::string answer;
-            device->Load( Settings::configuration.routerCapabilities , sdp["sdp"].get<std::string>());
-            {
-                json ack_resp;
+                device = new SdpParse::Device();
+                std::string transportId;
+                // LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
+                std::string answer;
+                device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+                {
+                    json ack_resp;
 
-                json param = json::array();
-                param.push_back("createWebRtcTransport");
-                param.push_back(peerID);
-                
-                json &trans = Settings::configuration.createWebRtcTransport;
-                transportId = uuid4::uuid();
-                trans["internal"]["transportId"] =transportId;
-                
-                param.push_back(trans);
-              
+                    json param = json::array();
+                    param.push_back("createWebRtcTransport");
+                    param.push_back(peerID);
 
-                request("createWebRtcTransport", param, true, ack_resp) ;
-                
-                json &ackdata= ack_resp.at(0)["data"];
-                answer = device->GetAnswer(ackdata["iceParameters"],ackdata["iceCandidates"], ackdata["dtlsParameters"]);
-            }
-            
-            {
-            
-                json ack_resp;
-                json param = json::array();
-                param.push_back("maxbitrate");
-                param.push_back(peerID);
-                json &trans = Settings::configuration.maxbitrate;
-                trans["internal"]["transportId"] =transportId;
-                param.push_back(trans);
-                request("maxbitrate", param, true, ack_resp) ;
-            }
-            
-            {
-            
-                json ack_resp;
-                json param = json::array();
-                param.push_back("transport.connect");
-                param.push_back(peerID);
-                json &trans = Settings::configuration.transport_connect;
-                trans["internal"]["transportId"] =transportId;
-                STrace << "device->dtlsParameters " << device->dtlsParameters;
-		trans["data"]["dtlsParameters"] = device->dtlsParameters;
-                param.push_back(trans);
-                request("transport.connect", param, true, ack_resp) ;
-            }
-            
-            
-        
-            
-            {
-                STrace << "sendingRtpParameters " << device->sendingRtpParameters;
-                
-            
-                json ack_resp;
-                json param = json::array();
-                param.push_back("transport.produce");
-                param.push_back(peerID);
-                json &trans = Settings::configuration.transport_produce;
-                trans["internal"]["transportId"] =transportId;
-                trans["internal"]["producerId"] =  uuid4::uuid();
-                
-                
-            // This may throw.
-                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(device->sendingRtpParameters, Settings::configuration.routerCapabilities);
-                
-                auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters("video", device->sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
+                    json &trans = Settings::configuration.createWebRtcTransport;
+                    transportId = uuid4::uuid();
+                    trans["internal"]["transportId"] = transportId;
 
-                
-                STrace << "rtpMapping " << rtpMapping;
-                
-                
-                json data = {
-                    {"kind", "video"   },
-                    {"paused", false},
-                    {"rtpMapping", rtpMapping},
-                    {"rtpParameters", device->sendingRtpParameters},
-                };
-                
-		trans["data"]=data;
-                param.push_back(trans);
-                request("transport.produce", param, true, ack_resp) ;
-                
-                
-                
-                producer = {
-                        { "id", trans["internal"]["producerId"] },
-                         {"kind", "video" },
-                         {"rtpParameters", device->sendingRtpParameters},
-                         {"type", ack_resp.at(0)["data"]["type"]},
-                         { "consumableRtpParameters",consumableRtpParameters}
-                        
-                         };
-                
-                
+                    param.push_back(trans);
+
+
+                    request("createWebRtcTransport", param, true, ack_resp);
+
+                    json &ackdata = ack_resp.at(0)["data"];
+                    device->createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
+                    answer = device->GetAnswer();
+                }
+
+                {
+
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("maxbitrate");
+                    param.push_back(peerID);
+                    json &trans = Settings::configuration.maxbitrate;
+                    trans["internal"]["transportId"] = transportId;
+                    param.push_back(trans);
+                    request("maxbitrate", param, true, ack_resp);
+                }
+
+                {
+
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("transport.connect");
+                    param.push_back(peerID);
+                    json &trans = Settings::configuration.transport_connect;
+                    trans["internal"]["transportId"] = transportId;
+                    STrace << "device->dtlsParameters " << device->dtlsParameters;
+                    trans["data"]["dtlsParameters"] = device->dtlsParameters;
+                    param.push_back(trans);
+                    request("transport.connect", param, true, ack_resp);
+                }
+
+
+
+
+                {
+                    STrace << "sendingRtpParameters " << device->sendingRtpParameters;
+
+
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("transport.produce");
+                    param.push_back(peerID);
+                    json &trans = Settings::configuration.transport_produce;
+                    trans["internal"]["transportId"] = transportId;
+                    trans["internal"]["producerId"] = uuid4::uuid();
+
+
+                    // This may throw.
+                    auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(device->sendingRtpParameters, Settings::configuration.routerCapabilities);
+
+                    auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters("video", device->sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
+
+
+                    STrace << "rtpMapping " << rtpMapping;
+
+
+                    json data = {
+                        {"kind", "video"},
+                        {"paused", false},
+                        {"rtpMapping", rtpMapping},
+                        {"rtpParameters", device->sendingRtpParameters},
+                    };
+
+                    trans["data"] = data;
+                    param.push_back(trans);
+                    request("transport.produce", param, true, ack_resp);
+
+
+
+                    producer = {
+                        { "id", trans["internal"]["producerId"]},
+                        {"kind", "video"},
+                        {"rtpParameters", device->sendingRtpParameters},
+                        {"type", ack_resp.at(0)["data"]["type"]},
+                        { "consumableRtpParameters", consumableRtpParameters}
+
+                    };
+
+
+                }
+
+                sendSDP("answer", answer);
+
+
+                //  delete device;
+                // device = nullptr;
             }
-           
-            sendSDP( "answer",answer );
-                
-                
-          //  delete device;
-           // device = nullptr;
-        }
-            
+
             // for offer
             {
-              std::string offer;
-              std::string transportId;
-            device->Load( Settings::configuration.routerCapabilities , sdp["sdp"].get<std::string>());
-            {
-                json ack_resp;
+                std::string offer;
+                std::string transportId;
+                device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+                {
+                    json ack_resp;
 
-                json param = json::array();
-                param.push_back("createWebRtcTransport");
-                param.push_back(peerID);
-                
-                json &trans = Settings::configuration.createWebRtcTransport;
-                transportId = uuid4::uuid();
-                trans["internal"]["transportId"] =transportId;
-                trans["id"]=6;
-                param.push_back(trans);
-              
+                    json param = json::array();
+                    param.push_back("createWebRtcTransport");
+                    param.push_back(peerID);
 
-                request("createWebRtcTransport", param, true, ack_resp) ;
-                
-               // json &ackdata= ack_resp.at(0)["data"];
-               // offer = device->GetOffer(ackdata["iceParameters"],ackdata["iceCandidates"], ackdata["dtlsParameters"]);
+                    json &trans = Settings::configuration.createWebRtcTransport;
+                    transportId = uuid4::uuid();
+                    trans["internal"]["transportId"] = transportId;
+                    trans["id"] = 6;
+                    param.push_back(trans);
+
+
+                    request("createWebRtcTransport", param, true, ack_resp);
+
+                    json &ackdata = ack_resp.at(0)["data"];
+                    device->createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
+                }
+
+                {
+
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("maxbitrate");
+                    param.push_back(peerID);
+                    json &trans = Settings::configuration.maxbitrate;
+                    trans["internal"]["transportId"] = transportId;
+                    trans["id"] = 6;
+                    param.push_back(trans);
+                    request("maxbitrate", param, true, ack_resp);
+                }
+
+
+                {
+
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("transport.consume");
+                    param.push_back(peerID);
+                    json &trans = Settings::configuration.transport_consume;
+                    trans["internal"]["transportId"] = transportId;
+                    trans["id"] = 8;
+
+                    trans["internal"]["producerId"] = producer["id"];
+                    trans["internal"]["consumerId"] = uuid4::uuid();
+
+
+
+                    json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) device->GetRtpCapabilities());
+                    //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
+                    bool paused = producer["kind"] == "video" ? true : false;
+
+                    json reqData = {
+                        {"kind", producer["kind"]},
+                        {"rtpParameters", rtpParameters},
+                        {"type", producer["type"]},
+                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
+                        {"paused", paused}
+                    };
+
+                    trans["data"] = reqData;
+                    param.push_back(trans);
+                    request("transport.consume", param, true, ack_resp);
+
+                    json &ackdata = ack_resp.at(0)["data"];
+
+                    consumer = {
+
+                        {"id", trans["internal"]["consumerId"]},
+                        {"kind", trans["data"]["kind"]},
+                        {"rtpParameters", trans["data"]["rtpParameters"]},
+                        {"type", trans["data"]["type"]},
+                        {"paused", ackdata["paused"]},
+                        {"producerPaused", ackdata["producerPaused"]},
+                        {"score", ackdata["score"]},
+                        {"preferredLayers", ackdata["preferredLayers"]}
+
+                    };
+
+
+                    ///////////////////
+
+                    std::string offer = device->GetOffer(consumer["id"], consumer["kind"], consumer["rtpParameters"]);
+
+                    /////////////////////
+
+                }
+
+
+
+
+
+                //            {
+                //            
+                //                json ack_resp;
+                //                json param = json::array();
+                //                param.push_back("transport.connect");
+                //                param.push_back(peerID);
+                //                json &trans = Settings::configuration.transport_connect;
+                //                trans["internal"]["transportId"] =transportId;
+                //                trans["id"]=6;
+                //                STrace << "device->dtlsParameters " << device->dtlsParameters;
+                //		trans["data"]["dtlsParameters"] = device->dtlsParameters;
+                //                param.push_back(trans);
+                //                request("transport.connect", param, true, ack_resp) ;
+                //            }
+
+
+
             }
-            
-            {
-            
-                json ack_resp;
-                json param = json::array();
-                param.push_back("maxbitrate");
-                param.push_back(peerID);
-                json &trans = Settings::configuration.maxbitrate;
-                trans["internal"]["transportId"] =transportId;
-                trans["id"]=6;
-                param.push_back(trans);
-                request("maxbitrate", param, true, ack_resp) ;
-            }
-            
-            
-             {
-            
-                json ack_resp;
-                json param = json::array();
-                param.push_back("transport.consume");
-                param.push_back(peerID);
-                json &trans = Settings::configuration.transport_consume;
-                trans["internal"]["transportId"] =transportId;
-                trans["id"]=8;
 
-                trans["internal"]["producerId"] =  producer["id"];
-                trans["internal"]["consumerId"] =  uuid4::uuid();
-                
-                
-                device->GetRtpCapabilities();
-                
-                        
-                param.push_back(trans);
-                request("transport.consume", param, true, ack_resp) ;
-            }
-            
-            
-            
-            
-            
-//            {
-//            
-//                json ack_resp;
-//                json param = json::array();
-//                param.push_back("transport.connect");
-//                param.push_back(peerID);
-//                json &trans = Settings::configuration.transport_connect;
-//                trans["internal"]["transportId"] =transportId;
-//                trans["id"]=6;
-//                STrace << "device->dtlsParameters " << device->dtlsParameters;
-//		trans["data"]["dtlsParameters"] = device->dtlsParameters;
-//                param.push_back(trans);
-//                request("transport.connect", param, true, ack_resp) ;
-//            }
-            
-                
-                
-            }
+            //            if (wrtc::PeerManager::exists(peerID)) {
+            //                LDebug("Peer already has session: ", peerID)
+            //                return;
+            //            }
 
-//            if (wrtc::PeerManager::exists(peerID)) {
-//                LDebug("Peer already has session: ", peerID)
-//                return;
-//            }
-
-//            // Create the Peer Peer
-//            auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
-//            conn->constraints().SetMandatoryReceiveAudio(false);
-//            conn->constraints().SetMandatoryReceiveVideo(false);
-//            conn->constraints().SetAllowDtlsSctpDataChannels();
-//
-//            // Create the media stream and attach decoder
-//            // output to the peer connection
-//            _capturer.addMediaTracks(_context.factory, conn->createMediaStream());
-//
-//            // Send the Offer SDP
-//            conn->createConnection();
-//            conn->createOffer();
-//
-//            wrtc::PeerManager::add(peerID, conn);
+            //            // Create the Peer Peer
+            //            auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
+            //            conn->constraints().SetMandatoryReceiveAudio(false);
+            //            conn->constraints().SetMandatoryReceiveVideo(false);
+            //            conn->constraints().SetAllowDtlsSctpDataChannels();
+            //
+            //            // Create the media stream and attach decoder
+            //            // output to the peer connection
+            //            _capturer.addMediaTracks(_context.factory, conn->createMediaStream());
+            //
+            //            // Send the Offer SDP
+            //            conn->createConnection();
+            //            conn->createOffer();
+            //
+            //            wrtc::PeerManager::add(peerID, conn);
         }
 
         void Signaler::onPeerMessage(json const& m) {
@@ -334,10 +368,10 @@ namespace base {
 
             if (std::string("offer") == type) {
                 //assert(0 && "offer not supported");
-                
+
                 remotePeerID = from;
                 onPeerConnected(from, m["desc"]);
-                
+
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);
             } else if (std::string("candidate") == type) {
@@ -347,69 +381,67 @@ namespace base {
             }
 
         }
-        
-        
-        void Signaler::recvSDP(const std::string& token, const json& data)
-        {
-            SDebug << "recvSDP " <<  token  << "  " << data;
 
-//        webrtc::SdpParseError error;
-//        webrtc::SessionDescriptionInterface* desc(
-//            webrtc::CreateSessionDescription(type, sdp, &error));
-//        if (!desc) {
-//            throw std::runtime_error("Can't parse remote SDP: " + error.description);
-//        }
-//        _peerConnection->SetRemoteDescription(
-//            DummySetSessionDescriptionObserver::Create(), desc);
-//        if (type == "offer") {
-//            assert(_mode == Answer);
-//            _peerConnection->CreateAnswer(this, &_constraints);
-//        } else {
-//            assert(_mode == Offer);
-//        }
+        void Signaler::recvSDP(const std::string& token, const json& data) {
+            SDebug << "recvSDP " << token << "  " << data;
+
+            //        webrtc::SdpParseError error;
+            //        webrtc::SessionDescriptionInterface* desc(
+            //            webrtc::CreateSessionDescription(type, sdp, &error));
+            //        if (!desc) {
+            //            throw std::runtime_error("Can't parse remote SDP: " + error.description);
+            //        }
+            //        _peerConnection->SetRemoteDescription(
+            //            DummySetSessionDescriptionObserver::Create(), desc);
+            //        if (type == "offer") {
+            //            assert(_mode == Answer);
+            //            _peerConnection->CreateAnswer(this, &_constraints);
+            //        } else {
+            //            assert(_mode == Offer);
+            //        }
         }
-        
-        void Signaler::recvCandidate(const std::string& token, const json& data)
-        {
-            SDebug << "recvCandidate " <<  token  << "  " << data;
-            
+
+        void Signaler::recvCandidate(const std::string& token, const json& data) {
+            SDebug << "recvCandidate " << token << "  " << data;
+
         }
 
 
-//        void Signaler::recvCandidate(const std::string& mid, int mlineindex,
- //                                      const std::string& sdp)
- //       {
-//             LDebug("recvCandidate mid: ", mid, " mlineindex: ", mlineindex, " sdp : ", sdp)
-//            
-//        webrtc::SdpParseError error;
-//        std::unique_ptr<webrtc::IceCandidateInterface> candidate(
-//            webrtc::CreateIceCandidate(mid, mlineindex, sdp, &error));
-//        if (!candidate) {
-//            throw std::runtime_error("Can't parse remote candidate: " + error.description);
-//        }
-//        _peerConnection->AddIceCandidate(candidate.get());
-//        }
+        //        void Signaler::recvCandidate(const std::string& mid, int mlineindex,
+        //                                      const std::string& sdp)
+        //       {
+        //             LDebug("recvCandidate mid: ", mid, " mlineindex: ", mlineindex, " sdp : ", sdp)
+        //            
+        //        webrtc::SdpParseError error;
+        //        std::unique_ptr<webrtc::IceCandidateInterface> candidate(
+        //            webrtc::CreateIceCandidate(mid, mlineindex, sdp, &error));
+        //        if (!candidate) {
+        //            throw std::runtime_error("Can't parse remote candidate: " + error.description);
+        //        }
+        //        _peerConnection->AddIceCandidate(candidate.get());
+        //        }
 
         void Signaler::onPeerDiconnected(std::string& peerID) {
             LDebug("Peer disconnected ", peerID)
 
-//                    auto conn = wrtc::PeerManager::remove(peerID);
-//            if (conn) {
-//                LDebug("Deleting peer connection: ", peerID)
-//                        // async delete not essential, but to be safe
-//                        delete conn;
-//                //deleteLater<wrtc::Peer>(conn);
-//            }
+                    //                    auto conn = wrtc::PeerManager::remove(peerID);
+                    //            if (conn) {
+                    //                LDebug("Deleting peer connection: ", peerID)
+                    //                        // async delete not essential, but to be safe
+                    //                        delete conn;
+                    //                //deleteLater<wrtc::Peer>(conn);
+                    //            }
         }
-        
-  
-        
-        
-//////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+        //////////////////////////////////////////////////////////////////////////////////////
+
         void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
 
             worker = new Worker();
-             
+
             room = rm;
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
@@ -419,40 +451,40 @@ namespace base {
 
             socket = client->io();
 
-            socket->on("connection", Socket::event_listener_aux([ & ](string const& name, json const& data, bool isAck, json & ack_resp){
+            socket->on("connection", Socket::event_listener_aux([ & ](string const& name, json const& data, bool isAck, json & ack_resp) {
 
-//                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-//                    LTrace(cnfg::stringify(data))
-//
-//                    LTrace("Server IP address is: ", data)
-//                            // updateRoomURL(ipaddr);
-//                    }));
+                //                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                //                    LTrace(cnfg::stringify(data))
+                //
+                //                    LTrace("Server IP address is: ", data)
+                //                            // updateRoomURL(ipaddr);
+                //                    }));
 
 
-            socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
-               SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-               request(name,data, isAck ,ack_resp );
-                isInitiator = true;
-                //grabWebCamVideo();
-            }));
+                    SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+                    request(name, data, isAck, ack_resp);
+                    isInitiator = true;
+                    //grabWebCamVideo();
+                }));
 
-//
-//                socket->on("createWebRtcTransport", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-//
-//                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-//
-//                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
-//                    LTrace("arvind ", cnfg::stringify(jsonRequest))
-//                    Channel::Request req( jsonRequest);
-//                    worker->OnChannelRequest(&req);
-//                    if (isAck) {
-//                        json arr = json::array();
-//                                arr.push_back(req.jsonResponse);
-//                                ack_resp = arr;
-//                    }
-//
-//                }));
+                //
+                //                socket->on("createWebRtcTransport", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                //
+                //                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+                //
+                //                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
+                //                    LTrace("arvind ", cnfg::stringify(jsonRequest))
+                //                    Channel::Request req( jsonRequest);
+                //                    worker->OnChannelRequest(&req);
+                //                    if (isAck) {
+                //                        json arr = json::array();
+                //                                arr.push_back(req.jsonResponse);
+                //                                ack_resp = arr;
+                //                    }
+                //
+                //                }));
 
 
 
@@ -460,7 +492,7 @@ namespace base {
                 socket->on("rest", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
                     //SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-                    request(name,data, isAck ,ack_resp );
+                    request(name, data, isAck, ack_resp);
 
                 }));
 
@@ -486,10 +518,10 @@ namespace base {
 
 
                 socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
-                  //  LTrace(cnfg::stringify(m));
-                   // LTrace('SocketioClient received message:', cnfg::stringify(m));
+                    //  LTrace(cnfg::stringify(m));
+                    // LTrace('SocketioClient received message:', cnfg::stringify(m));
 
-                      onPeerMessage(m);
+                    onPeerMessage(m);
                     // signalingMessageCallback(message);
 
 

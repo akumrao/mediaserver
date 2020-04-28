@@ -128,7 +128,7 @@ namespace SdpParse {
         return caps;
     }
     
-     void Device::_setupTransport(const std::string localDtlsRole  )
+    void Device::_setupTransport(const std::string localDtlsRole  )
     {
    
         // Get our local DTLS parameters.
@@ -149,7 +149,13 @@ namespace SdpParse {
     }
      
 
-    std::string Device::GetAnswer(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
+    void Device::createSdp(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) 
+    {
+        remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
+        
+    }
+           
+    std::string Device::GetAnswer() {
         json sendingRtpParametersByKind = {
             { "audio", ortc::getSendingRtpParameters("audio", extendedRtpCapabilities)},
             { "video", ortc::getSendingRtpParameters("video", extendedRtpCapabilities)}
@@ -162,8 +168,6 @@ namespace SdpParse {
 
         sendingRtpParameters = sendingRtpParametersByKind["video"];
         
-        remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
-
         const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
         
        json& offerMediaObject = sdpObject["media"][mediaSectionIdx.idx];
@@ -210,76 +214,42 @@ namespace SdpParse {
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();
+        
+        if (remoteSdp) {
+                delete remoteSdp;
+                remoteSdp = nullptr;
+            }
         
         STrace << "andwer: " <<  answer ;
         return answer;
     }
 
     
-    std::string Device::GetOffer(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
-        json sendingRtpParametersByKind = {
-            { "audio", ortc::getSendingRtpParameters("audio", extendedRtpCapabilities)},
-            { "video", ortc::getSendingRtpParameters("video", extendedRtpCapabilities)}
-        };
+    std::string Device::GetOffer(const std::string& id, const std::string& kind, const json& rtpParameters) {
+       std::string localId;
+       
+       static int mid=0;  // wrong TBD
 
-        json sendingRemoteRtpParametersByKind = {
-            { "audio", ortc::getSendingRemoteRtpParameters("audio", extendedRtpCapabilities)},
-            { "video", ortc::getSendingRemoteRtpParameters("video", extendedRtpCapabilities)}
-        };
+		// mid is optional, check whether it exists and is a non empty string.
+        auto midIt = rtpParameters.find("mid");
+        if (midIt != rtpParameters.end() && (midIt->is_string() && !midIt->get<std::string>().empty()))
+            localId = midIt->get<std::string>();
+        else
+            localId = std::to_string(mid++);
 
-        sendingRtpParameters = sendingRtpParametersByKind["video"];
-        
-        remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
+        auto& cname = rtpParameters["rtcp"]["cname"];
 
-        const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
-        
-       json& offerMediaObject = sdpObject["media"][mediaSectionIdx.idx];
-          
-       auto midIt   = offerMediaObject.find("mid");
-        
-       if( midIt == offerMediaObject.end())
-       {
-            SError << "Found no mid in SDP";
-            throw "Found no mid in SDP";
-       }
-        
-       sendingRtpParameters["mid"] = *midIt;
-        
-       sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
-       sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
-        
-        
-        // If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
-       auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
+        this->remoteSdp->Receive(localId, kind, rtpParameters, cname, id);
 
-       std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
-
-       if (
-                sendingRtpParameters["encodings"].size() > 1 &&
-                (mimeType == "video/vp8" || mimeType == "video/h264")
-        )
-        {
-                for (auto& encoding : sendingRtpParameters["encodings"])
-                {
-                        encoding["scalabilityMode"] = "S1T3";
-                }
-        }
-
-        json *codecOptions = nullptr;
+        auto offer = this->remoteSdp->GetSdp();
         
-        _setupTransport("server");
-
-        remoteSdp->Send(
-                offerMediaObject,
-                mediaSectionIdx.reuseMid,
-                sendingRtpParameters,
-                sendingRemoteRtpParametersByKind["video"],
-                codecOptions);
-
-        auto answer = remoteSdp->GetSdp();
+        if (remoteSdp) {
+                delete remoteSdp;
+                remoteSdp = nullptr;
+            }
         
-        STrace << "andwer: " <<  answer ;
-        return answer;
+        STrace << "offer: " <<  offer ;
+        return offer;
     } 
     
     //	SendTransport* Device::CreateSendTransport(
