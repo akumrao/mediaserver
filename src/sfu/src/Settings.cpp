@@ -97,7 +97,10 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.transport_consume = cnfg["transport_consume"];
         }
 	
-         
+        if (cnfg.find("consumer_resume") != cnfg.end()) {
+           Settings::configuration.consumer_resume = cnfg["consumer_resume"];
+        }
+	
 
 	/* Post configuration. */
 

@@ -4,8 +4,9 @@
 
 #include "signaler.h"
 #include "Settings.h"
-#include "base/uuid.h"
-#include "sdp/ortc.h"
+#include "sdp/Handler.h"
+
+//#include "sdp/ortc.h"
 
 using std::endl;
 
@@ -52,31 +53,6 @@ namespace base {
             socket->emit("message", m);
         }
 
-                /*
-                void Signaler::sendCandidate(wrtc::Peer* conn, const std::string& mid,
-                        int mlineindex, const std::string& sdp) {
-                    //smpl::Message m;
-                    json desc;
-                    desc[wrtc::kCandidateSdpMidName] = mid;
-                    desc[wrtc::kCandidateSdpMlineIndexName] = mlineindex;
-                    desc[wrtc::kCandidateSdpName] = sdp;
-
-                    json m;
-                    m[wrtc::kSessionDescriptionTypeName] = "candidate";
-                    m["candidate"] = desc;
-                    m["from"] = peerID;
-                    m["to"]=remotePeerID;
-
-                    // smpl::Message m({ "candidate", {
-                    //     { wrtc::kCandidateSdpMidName, mid },
-                    //     { wrtc::kCandidateSdpMlineIndexName, mlineindex},
-                    //     { wrtc::kCandidateSdpName, sdp} }
-                    // });
-
-                    LTrace( "send candidate ",  cnfg::stringify(m))
-                    postMessage(m);
-                }
-         */
 
         void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
 
@@ -97,255 +73,20 @@ namespace base {
 
         void Signaler::onPeerConnected(std::string& peerID, const json &sdp) {
 
-            json producer;
-            json consumer;
-            {
-                device = new SdpParse::Device();
-                std::string transportId;
-                // LDebug("Peer connect on offer: ", peerID, " sdp: ", cnfg::stringify(sdp))
-                std::string answer;
-                device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
-                {
-                    json ack_resp;
-
-                    json param = json::array();
-                    param.push_back("createWebRtcTransport");
-                    param.push_back(peerID);
-
-                    json &trans = Settings::configuration.createWebRtcTransport;
-                    transportId = uuid4::uuid();
-                    trans["internal"]["transportId"] = transportId;
-
-                    param.push_back(trans);
-
-
-                    request("createWebRtcTransport", param, true, ack_resp);
-
-                    json &ackdata = ack_resp.at(0)["data"];
-                    device->createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
-                    answer = device->GetAnswer();
-                }
-
-                {
-
-                    json ack_resp;
-                    json param = json::array();
-                    param.push_back("maxbitrate");
-                    param.push_back(peerID);
-                    json &trans = Settings::configuration.maxbitrate;
-                    trans["internal"]["transportId"] = transportId;
-                    param.push_back(trans);
-                    request("maxbitrate", param, true, ack_resp);
-                }
-
-                {
-
-                    json ack_resp;
-                    json param = json::array();
-                    param.push_back("transport.connect");
-                    param.push_back(peerID);
-                    json &trans = Settings::configuration.transport_connect;
-                    trans["internal"]["transportId"] = transportId;
-                    STrace << "device->dtlsParameters " << device->dtlsParameters;
-                    trans["data"]["dtlsParameters"] = device->dtlsParameters;
-                    param.push_back(trans);
-                    request("transport.connect", param, true, ack_resp);
-                }
-
-
-
-
-                {
-                    STrace << "sendingRtpParameters " << device->sendingRtpParameters;
-
-
-                    json ack_resp;
-                    json param = json::array();
-                    param.push_back("transport.produce");
-                    param.push_back(peerID);
-                    json &trans = Settings::configuration.transport_produce;
-                    trans["internal"]["transportId"] = transportId;
-                    trans["internal"]["producerId"] = uuid4::uuid();
-
-
-                    // This may throw.
-                    auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(device->sendingRtpParameters, Settings::configuration.routerCapabilities);
-
-                    auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters("video", device->sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
-
-
-                    STrace << "rtpMapping " << rtpMapping;
-
-
-                    json data = {
-                        {"kind", "video"},
-                        {"paused", false},
-                        {"rtpMapping", rtpMapping},
-                        {"rtpParameters", device->sendingRtpParameters},
-                    };
-
-                    trans["data"] = data;
-                    param.push_back(trans);
-                    request("transport.produce", param, true, ack_resp);
-
-
-
-                    producer = {
-                        { "id", trans["internal"]["producerId"]},
-                        {"kind", "video"},
-                        {"rtpParameters", device->sendingRtpParameters},
-                        {"type", ack_resp.at(0)["data"]["type"]},
-                        { "consumableRtpParameters", consumableRtpParameters}
-
-                    };
-
-
-                }
-
-                sendSDP("answer", answer);
-
-
-                //  delete device;
-                // device = nullptr;
-            }
-
-            // for offer
-            {
-                std::string offer;
-                std::string transportId;
-                device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
-                {
-                    json ack_resp;
-
-                    json param = json::array();
-                    param.push_back("createWebRtcTransport");
-                    param.push_back(peerID);
-
-                    json &trans = Settings::configuration.createWebRtcTransport;
-                    transportId = uuid4::uuid();
-                    trans["internal"]["transportId"] = transportId;
-                    trans["id"] = 6;
-                    param.push_back(trans);
-
-
-                    request("createWebRtcTransport", param, true, ack_resp);
-
-                    json &ackdata = ack_resp.at(0)["data"];
-                    device->createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
-                }
-
-                {
-
-                    json ack_resp;
-                    json param = json::array();
-                    param.push_back("maxbitrate");
-                    param.push_back(peerID);
-                    json &trans = Settings::configuration.maxbitrate;
-                    trans["internal"]["transportId"] = transportId;
-                    trans["id"] = 6;
-                    param.push_back(trans);
-                    request("maxbitrate", param, true, ack_resp);
-                }
-
-
-                {
-
-                    json ack_resp;
-                    json param = json::array();
-                    param.push_back("transport.consume");
-                    param.push_back(peerID);
-                    json &trans = Settings::configuration.transport_consume;
-                    trans["internal"]["transportId"] = transportId;
-                    trans["id"] = 8;
-
-                    trans["internal"]["producerId"] = producer["id"];
-                    trans["internal"]["consumerId"] = uuid4::uuid();
-
-
-
-                    json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) device->GetRtpCapabilities());
-                    //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
-                    bool paused = producer["kind"] == "video" ? true : false;
-
-                    json reqData = {
-                        {"kind", producer["kind"]},
-                        {"rtpParameters", rtpParameters},
-                        {"type", producer["type"]},
-                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
-                        {"paused", paused}
-                    };
-
-                    trans["data"] = reqData;
-                    param.push_back(trans);
-                    request("transport.consume", param, true, ack_resp);
-
-                    json &ackdata = ack_resp.at(0)["data"];
-
-                    consumer = {
-
-                        {"id", trans["internal"]["consumerId"]},
-                        {"kind", trans["data"]["kind"]},
-                        {"rtpParameters", trans["data"]["rtpParameters"]},
-                        {"type", trans["data"]["type"]},
-                        {"paused", ackdata["paused"]},
-                        {"producerPaused", ackdata["producerPaused"]},
-                        {"score", ackdata["score"]},
-                        {"preferredLayers", ackdata["preferredLayers"]}
-
-                    };
-
-
-                    ///////////////////
-
-                    std::string offer = device->GetOffer(consumer["id"], consumer["kind"], consumer["rtpParameters"]);
-
-                    /////////////////////
-
-                }
-
-
-
-
-
-                //            {
-                //            
-                //                json ack_resp;
-                //                json param = json::array();
-                //                param.push_back("transport.connect");
-                //                param.push_back(peerID);
-                //                json &trans = Settings::configuration.transport_connect;
-                //                trans["internal"]["transportId"] =transportId;
-                //                trans["id"]=6;
-                //                STrace << "device->dtlsParameters " << device->dtlsParameters;
-                //		trans["data"]["dtlsParameters"] = device->dtlsParameters;
-                //                param.push_back(trans);
-                //                request("transport.connect", param, true, ack_resp) ;
-                //            }
-
-
-
-            }
-
-            //            if (wrtc::PeerManager::exists(peerID)) {
-            //                LDebug("Peer already has session: ", peerID)
-            //                return;
-            //            }
-
-            //            // Create the Peer Peer
-            //            auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
-            //            conn->constraints().SetMandatoryReceiveAudio(false);
-            //            conn->constraints().SetMandatoryReceiveVideo(false);
-            //            conn->constraints().SetAllowDtlsSctpDataChannels();
-            //
-            //            // Create the media stream and attach decoder
-            //            // output to the peer connection
-            //            _capturer.addMediaTracks(_context.factory, conn->createMediaStream());
-            //
-            //            // Send the Offer SDP
-            //            conn->createConnection();
-            //            conn->createOffer();
-            //
-            //            wrtc::PeerManager::add(peerID, conn);
+            device = new SdpParse::Device();
+            device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+            
+            producer =  new SdpParse::Producer(device, peerID );
+            producer->runit(this);
+          
+            sendSDP("answer", producer->answer);
+            
+            consumer =  new SdpParse::Consumer(device, peerID );
+            
+            consumer->runit(this , producer->producer);
+            
+            sendSDP("offer", consumer->offer);
+            
         }
 
         void Signaler::onPeerMessage(json const& m) {
@@ -382,23 +123,18 @@ namespace base {
 
         }
 
-        void Signaler::recvSDP(const std::string& token, const json& data) {
-            SDebug << "recvSDP " << token << "  " << data;
+        void Signaler::recvSDP(const std::string& from, const json& sdp) { // answer
+           
+           SDebug << "recvSDP " << from ;
+            
+           SDebug << sdp["sdp"].get<std::string>();
+           
+           consumer->LoadAnswer(this, sdp["sdp"].get<std::string>(), producer->producer );    
 
-            //        webrtc::SdpParseError error;
-            //        webrtc::SessionDescriptionInterface* desc(
-            //            webrtc::CreateSessionDescription(type, sdp, &error));
-            //        if (!desc) {
-            //            throw std::runtime_error("Can't parse remote SDP: " + error.description);
-            //        }
-            //        _peerConnection->SetRemoteDescription(
-            //            DummySetSessionDescriptionObserver::Create(), desc);
-            //        if (type == "offer") {
-            //            assert(_mode == Answer);
-            //            _peerConnection->CreateAnswer(this, &_constraints);
-            //        } else {
-            //            assert(_mode == Offer);
-            //        }
+      //  const answerMediaObject = localSdpObject.media
+        //    .find((m) => String(m.mid) === localId);
+            
+
         }
 
         void Signaler::recvCandidate(const std::string& token, const json& data) {

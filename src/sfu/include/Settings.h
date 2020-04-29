@@ -42,6 +42,7 @@ public:
                 json transport_connect;
                 json transport_produce;
                 json transport_consume;
+                json consumer_resume;
 	};
 
 public:

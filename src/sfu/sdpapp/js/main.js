@@ -6,6 +6,7 @@ var isStarted = false;
 var localStream;
 var track;
 var pc;
+var pc2;
 var remoteStream;
 var turnReady;
 
@@ -103,13 +104,15 @@ socket.on('message', function(message) {
   if (message === 'got user media') {
     maybeStart();
   } else if (message.type === 'offer') {
-    if (!isInitiator && !isStarted) {
-      maybeStart();
-    }
+   // if (!isInitiator && !isStarted) {
+   //   maybeStart();
+   // }
     remotePeerID=message.from;
     log('got offfer from remotePeerID: ' + remotePeerID);
-
-    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
+     
+     console.log( " Pc2 offers %o", message.desc);
+     
+    pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
     doAnswer();
   } else if (message.type === 'answer' && isStarted) {
     pc.setRemoteDescription(new RTCSessionDescription(message.desc));
@@ -189,9 +192,19 @@ window.onbeforeunload = function() {
 
 function createPeerConnection() {
   try {
-    pc = new RTCPeerConnection(null);
+    //pc = new RTCPeerConnection(null);
 
     pc = new RTCPeerConnection(
+      {
+        iceServers         : [],
+        iceTransportPolicy : 'all',
+        bundlePolicy       : 'max-bundle',
+        rtcpMuxPolicy      : 'require',
+        sdpSemantics       : 'unified-plan'
+      });
+
+
+    pc2 = new RTCPeerConnection(
       {
         iceServers         : [],
         iceTransportPolicy : 'all',
@@ -251,11 +264,51 @@ function doCall() {
 
 function doAnswer() {
   console.log('Sending answer to peer.');
-  pc.createAnswer().then(
-    setLocalAndSendMessage,
+
+  pc2.createAnswer().then(
+    setLocalAndSendMessage2,
     onCreateSessionDescriptionError
   );
 }
+
+function setLocalAndSendMessage2(sessionDescription) {
+  pc2.setLocalDescription(sessionDescription);
+  console.log('Pc2 answer %o', sessionDescription);
+
+    sendMessage ({
+      from: peerID,
+      to: remotePeerID,
+      type: sessionDescription.type,
+      desc:sessionDescription
+    });
+
+    alert('hi');
+
+   const transceiver = pc2.getTransceivers()
+            .find((t) => t.mid === "0");
+
+    if (!transceiver)
+            throw new Error('new RTCRtpTransceiver not found');
+
+
+     const track = transceiver.receiver.track ;
+
+       const stream = new MediaStream();
+        stream.addTrack(track);
+
+       // socket.emit('resume');
+
+        //document.querySelector('#remote_video').srcObject = stream;
+
+      remoteVideo.srcObject = stream;
+
+
+
+
+
+
+}
+
 
 function setLocalAndSendMessage(sessionDescription) {
   pc.setLocalDescription(sessionDescription);

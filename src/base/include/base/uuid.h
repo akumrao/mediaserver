@@ -61,7 +61,7 @@ namespace uuid4 {
 constexpr char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-std::string byteTohex(unsigned char *data, int len)
+static std::string byteTohex(unsigned char *data, int len)
 {
   std::string s(len * 2, ' ');
   for (int i = 0; i < len; ++i) {
@@ -71,7 +71,7 @@ std::string byteTohex(unsigned char *data, int len)
   return s;
 }
 
-std::string uuid()
+static std::string uuid()
 {
     char uuid[maxchars];
 

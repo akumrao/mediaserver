@@ -27,7 +27,7 @@ namespace RTC
 	void TcpConnection::on_read(const char*, size_t len)
 	{
 
-                SDebug << "data received local: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
+               // SDebug << "data received local: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
                 
 		/*
 		 * Framing RFC 4571
@@ -96,7 +96,7 @@ namespace RTC
 				// parse again. Otherwise break here and wait for more data.
 				if (bufferDataLen > frameStart)
 				{
-					MS_DEBUG_DEV("there is more data after the parsed frame, continue parsing");
+					//MS_DEBUG_DEV("there is more data after the parsed frame, continue parsing");
 
 					continue;
 				}
@@ -113,9 +113,9 @@ namespace RTC
 				// the buffer, so move the frame to the position 0.
 				if (frameStart != 0)
 				{
-					MS_DEBUG_DEV(
-					  "no more space in the buffer, moving parsed bytes to the beginning of "
-					  "the buffer and wait for more data");
+//					MS_DEBUG_DEV(
+//					  "no more space in the buffer, moving parsed bytes to the beginning of "
+//					  "the buffer and wait for more data");
 
 					std::memmove(
 					  buffer, buffer + frameStart, bufferSize - frameStart);
@@ -150,7 +150,7 @@ namespace RTC
 
 	void TcpConnection::Send(const uint8_t* data, size_t len, onSendCallback* cb)
 	{
-		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
+//		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
                  
 //                if (cb)
 //                {

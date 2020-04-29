@@ -6,8 +6,14 @@
 #include "Worker.h"
 #include "socketio/socketioClient.h"
 #include "sdp/Device.h"
+//#include "sdp/Handler.h"
 
 using namespace base::sockio;
+namespace SdpParse
+{
+    class Producer;
+    class Consumer;
+}
 
 namespace base {
     namespace wrtc {
@@ -80,8 +86,9 @@ namespace base {
             bool isStarted{false};
             
             SdpParse::Device *device{nullptr};
-            
-
+            SdpParse::Producer *producer{nullptr};
+            SdpParse::Consumer *consumer{nullptr};
+            //consumer *cons{nullptr};
         };
 
     }
