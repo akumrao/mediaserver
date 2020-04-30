@@ -119,10 +119,10 @@ async function runSocketServer() {
 
 	// convenience function to log server messages on the client
 	function log() {
-		var array = ['Message from server:'];
-		array.push.apply(array, arguments);
-		socket.emit('log', array);
-		console.log(array);
+		// var array = ['Message from server:'];
+		// array.push.apply(array, arguments);
+		// socket.emit('log', array);
+		// console.log(array);
 	}
 
 	// socket.on('message', function(message) {

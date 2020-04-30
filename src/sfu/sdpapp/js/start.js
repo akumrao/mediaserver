@@ -92,9 +92,10 @@ socket.on('message', function(message) {
      
      console.log( " Pc2 offers %o", message.desc);
      
-   // pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
-   // doAnswer();
+     pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
+    doAnswer();
   } else if (message.type === 'answer' && isStarted) {
+    remotePeerID=message.from;
     console.log("publish andwer %o", message)
     pc1.setRemoteDescription(new RTCSessionDescription(message.desc));
   } else if (message.type === 'candidate' && isStarted) {
@@ -109,8 +110,56 @@ socket.on('message', function(message) {
   }
 });
 
-////////////////////////////////////////////////////
+function doAnswer() {
+  console.log('Sending answer to peer.');
 
+  pc2.createAnswer().then(
+    setLocalAndSendMessage2,
+    onCreateSessionDescriptionError
+  );
+}
+
+////////////////////////////////////////////////////
+function setLocalAndSendMessage2(sessionDescription) {
+  pc2.setLocalDescription(sessionDescription);
+  console.log('Pc2 answer %o', sessionDescription);
+
+    sendMessage ({
+      from: peerID,
+      to: remotePeerID,
+      type: sessionDescription.type,
+      desc:sessionDescription
+    });
+
+   const transceiver = pc2.getTransceivers() 
+            .find((t) => t.mid === "0");
+
+   if (!transceiver)
+            throw new Error('new RTCRtpTransceiver not found');
+
+
+   const track = transceiver.receiver.track ;
+
+   const stream = new MediaStream();
+   stream.addTrack(track);
+
+       // socket.emit('resume');
+
+    document.querySelector('#remote_video').srcObject = stream;
+
+
+    //alert('hi');
+
+   // remoteVideo.srcObject = stream;
+}
+
+
+function onCreateSessionDescriptionError(error) {
+  log('Failed to create session description: ' + error.toString());
+  console.log('Failed to create session description: ' + error.toString());
+  
+}
+////////////////////////////////////////////////////////////
 
 async function getUserMedia1( isWebcam) {
 
@@ -131,6 +180,14 @@ async function getUserMedia1( isWebcam) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+async function btn_subscribe_resume() {
+
+    sendMessage ({
+          from: peerID,
+          to: remotePeerID,
+          type: "subscribe-start",
+        });
+}
 
 async function subscribe() {
 
@@ -139,82 +196,95 @@ async function subscribe() {
   const tcpValue = istcp.get('forceTcp') ? true : false;
 
 
-  socket.emit('createConsumerTransport', {  forceTcp: tcpValue }, async function (data) {
+  sendMessage ({
+          from: peerID,
+          to: remotePeerID,
+          type: "subscribe",
+        });
 
-  console.log(data);	
 
-  const transport = device.createRecvTransport(data);
+ ////////////////
+  pc2 = new RTCPeerConnection(
+      {
+        iceServers         : [],
+        iceTransportPolicy : 'all',
+        bundlePolicy       : 'max-bundle',
+        rtcpMuxPolicy      : 'require',
+        sdpSemantics       : 'unified-plan'
+      });
 
-  //////////////////
-  transport.on('connect', async ({ dtlsParameters }, callback, errback) => {
-    socket.emit('connectConsumerTransport', { transportId: transport.id, dtlsParameters }, async function () {
-    	 console.log("connectConsumerTransport");
-    	  callback();
-    });
-    
+        // Handle RTCPeerConnection connection status.
+        pc2.addEventListener('iceconnectionstatechange', () =>
+        {
+            switch (pc2.iceConnectionState)
+            {
+                case 'checking':
+                     console.log( 'subscribing...');
+                    break;
+                case 'connected':
+                case 'completed':
+                  //  document.querySelector('#local_video').srcObject = stream;
+                  // $txtPublish.innerHTML = 'published';
+                  // $fsPublish.disabled = true;
+                  // $fsSubscribe.disabled = false;
+                   console.log( 'subscribed...');
+                    break;
+                case 'failed':
+                    pc2.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+                case 'disconnected':
+                                         pc2.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+                case 'closed':
+                     pc2.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+            }
+        });
 
-  });
-  //////////////////
-  transport.on('connectionstatechange', (state) => {
-    switch (state) {
-      case 'connecting':
-        // $txtSubscription.innerHTML = 'subscribing...';
-        // $fsSubscribe.disabled = true;
-        console.log('consume subscribing...');
-        break;
-
-      case 'connected':
-       // document.querySelector('#remote_video').srcObject = stream;
-        // $txtSubscription.innerHTML = 'subscribed';
-        // $fsSubscribe.disabled = true;
-        console.log('consume subscribed.');
-        break;
-
-      case 'failed':
-        transport.close();
-        // $txtSubscription.innerHTML = 'failed';
-        // $fsSubscribe.disabled = false;
-        console.log('consumer failed');
-        break;
-
-      default: break;
-    }
-  });
-
-  const stream = await consume(transport);
 
   /////////////////
 
-});//end createconsumer
  
 }//end subscribe 
 
-async function consume(transport) {
-  const { rtpCapabilities } = device;
+// async function consume(transport) {
+//   const { rtpCapabilities } = device;
 
-   socket.emit('consume', {rtpCapabilities }, async function (data) {
-    	 console.log("consume");
-    	  const {    producerId,   id,   kind,   rtpParameters,  } = data;
+//    socket.emit('consume', {rtpCapabilities }, async function (data) {
+//     	 console.log("consume");
+//     	  const {    producerId,   id,   kind,   rtpParameters,  } = data;
 
-    	    let codecOptions = {};
-			  const consumer = await transport.consume({
-			    id,
-			    producerId,
-			    kind,
-			    rtpParameters,
-			    codecOptions,
-			  });
-			  const stream = new MediaStream();
-			  stream.addTrack(consumer.track);
+//     	    let codecOptions = {};
+// 			  const consumer = await transport.consume({
+// 			    id,
+// 			    producerId,
+// 			    kind,
+// 			    rtpParameters,
+// 			    codecOptions,
+// 			  });
+// 			  const stream = new MediaStream();
+// 			  stream.addTrack(consumer.track);
 
-			  socket.emit('resume');
+// 			  socket.emit('resume');
 
-			  document.querySelector('#remote_video').srcObject = stream;
+// 			  document.querySelector('#remote_video').srcObject = stream;
 
-			  return stream;
-    });
+// 			  return stream;
+//     });
 
-}
+// }
     
 
 ///////////////////////////////////////////////////////////////////////////

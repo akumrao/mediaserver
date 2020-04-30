@@ -17,7 +17,7 @@ namespace SdpParse {
     void Producer::_setupTransport(const json & sdpObject, const std::string localDtlsRole) {
 
         // Get our local DTLS parameters.
-        dtlsParameters = Sdp::Utils::extractDtlsParameters(device->sdpObject);
+        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
         // Set our DTLS role.
         dtlsParameters["role"] = localDtlsRole;
 
@@ -199,7 +199,7 @@ namespace SdpParse {
     void Consumer::_setupTransport(const json & sdpObject, const std::string localDtlsRole) {
 
         // Get our local DTLS parameters.
-        dtlsParameters = Sdp::Utils::extractDtlsParameters(device->sdpObject);
+        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
         // Set our DTLS role.
         dtlsParameters["role"] = localDtlsRole;
 
