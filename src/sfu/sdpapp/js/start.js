@@ -145,7 +145,7 @@ function setLocalAndSendMessage2(sessionDescription) {
 
        // socket.emit('resume');
 
-    document.querySelector('#remote_video').srcObject = stream;
+  document.querySelector('#remote_video').srcObject = stream;
 
 
     //alert('hi');
@@ -382,6 +382,7 @@ async function publish()
 
         isStarted = true;
 
+        //document.querySelector('#local_video').srcObject = stream;
 
 
         sendMessage ({
