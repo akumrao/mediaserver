@@ -1,20 +1,3 @@
-'use strict';
-
-var isChannelReady = true;
-var isInitiator = false;
-var isStarted = false;
-var localStream;
-var track;
-var pc;
-var pc2;
-var remoteStream;
-var turnReady;
-
-var room = 'foo'; /*think as a group  peerName@room */
-var  remotePeerID;
-var  peerID;
-var  remotePeerName;
-var  peerName;
 
 
 var pcConfig = {
@@ -35,112 +18,20 @@ var pcConfig = {
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 
-var socket = io.connect();
 
 
-socket.on('created', function(room) {
-  console.log('Created room ' + room);
-  isInitiator = true;
-});
 
-socket.on('full', function(room) {
-  console.log('Room ' + room + ' is full');
-});
+//var localVideo = document.querySelector('#localVideo');
+//var remoteVideo = document.querySelector('#remoteVideo');
 
-socket.on('join', function (room){
-  console.log('Another peer made a request to join room ' + room);
-  console.log('This peer is the initiator of room ' + room + '!');
-  isChannelReady = true;
-});
-
-socket.on('joined', function(room, id) {
- console.log('joined: ' + room + ' with peerID: ' + id);
- log('joined: ' + room + ' with peerID: ' + id);
-  isChannelReady = true;
-  peerID = id;
-
-
-  if (isInitiator) {
-
-    // when working with web enable bellow line
-     doCall();
-    // disable  send message 
-    //  sendMessage ({
-    //   from: peerID,
-    //   to: remotePeerID,
-    //   type: 'offer',
-    //   desc:'sessionDescription'
-    // });
-
-  }
-
-});
-
-socket.on('log', function(array) {
-  console.log.apply(console, array);
-});
-
-////////////////////////////////////////////////
-
-function sendMessage(message) {
-  console.log('Client sending message: ', message);
-  log('Client sending message: ', message);
-  socket.emit('message', message);
-}
-
-// This client receives a message
-socket.on('message', function(message) {
-  console.log('Client received message:', message);
-  log('Client received message:', message);
-
-
-  if (!message.offer && remotePeerID && remotePeerID != message.from) {
-      console.log('Dropping message from unknown peer', message);
-      log('Dropping message from unknown peer', message);
-      return;
-  }
-
-
-  if (message === 'got user media') {
-    maybeStart();
-  } else if (message.type === 'offer') {
-   // if (!isInitiator && !isStarted) {
-   //   maybeStart();
-   // }
-    remotePeerID=message.from;
-    log('got offfer from remotePeerID: ' + remotePeerID);
-     
-     console.log( " Pc2 offers %o", message.desc);
-     
-    pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
-    doAnswer();
-  } else if (message.type === 'answer' && isStarted) {
-    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
-  } else if (message.type === 'candidate' && isStarted) {
-    var candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.candidate.sdpMLineIndex,
-      sdpMid: message.candidate.sdpMid,
-      candidate: message.candidate.candidate
-    });
-    pc.addIceCandidate(candidate);
-  } else if (message.type === 'bye' && isStarted) {
-    handleRemoteHangup();
-  }
-});
-
-////////////////////////////////////////////////////
-
-var localVideo = document.querySelector('#localVideo');
-var remoteVideo = document.querySelector('#remoteVideo');
-
-navigator.mediaDevices.getUserMedia({
-  audio: false,
-  video: true
-})
-.then(gotStream)
-.catch(function(e) {
-  alert('getUserMedia() error: ' + e.name);
-});
+// navigator.mediaDevices.getUserMedia({
+//   audio: true,
+//   video: true
+// })
+// .then(gotStream)
+// .catch(function(e) {
+//   alert('getUserMedia() error: ' + e.name);
+// });
 
 function gotStream(stream) {
   console.log('Adding local stream.');
@@ -282,29 +173,27 @@ function setLocalAndSendMessage2(sessionDescription) {
       desc:sessionDescription
     });
 
-    alert('hi');
 
-   const transceiver = pc2.getTransceivers()
+   const transceiver = pc2.getTransceivers() 
             .find((t) => t.mid === "0");
 
-    if (!transceiver)
+   if (!transceiver)
             throw new Error('new RTCRtpTransceiver not found');
 
 
-     const track = transceiver.receiver.track ;
+   const track = transceiver.receiver.track ;
 
        const stream = new MediaStream();
-        stream.addTrack(track);
+   stream.addTrack(track);
 
        // socket.emit('resume');
 
         //document.querySelector('#remote_video').srcObject = stream;
 
-      remoteVideo.srcObject = stream;
 
+    alert('hi');
 
-
-
+    remoteVideo.srcObject = stream;
 
 
 }
@@ -389,3 +278,40 @@ function stop() {
   pc = null;
   localStream=null;
 }
+
+
+
+
+
+$(document).ready(function(){
+ 
+
+  $("#btn_connect").click(function(){
+
+    console.log("arvind");
+          $("#div1").html("<h2>btn_connect!</h2>");
+   socket.emit('create or join', room);
+ // const data = await socket.request('getRouterRtpCapabilities');
+
+  });
+
+
+  $("#btn_webcam").click(function(){
+
+    console.log("btn_webcam click");
+          $("#div1").html("<h2>btn_webcam</h2>");
+
+   publish();
+  });
+
+
+  $("#btn_subscribe").click(function(){
+
+    console.log("btn_subscribe click");
+          $("#div1").html("<h2>btn_subscribe</h2>");
+
+   subscribe();
+  });
+
+
+ });

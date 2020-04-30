@@ -169,11 +169,6 @@ function gotStream(stream) {
   }
 }
 
-var constraints = {
-  video: true
-};
-
-console.log('Getting user media with constraints', constraints);
 
 // if (location.hostname !== 'localhost') {
 //   requestTurn(

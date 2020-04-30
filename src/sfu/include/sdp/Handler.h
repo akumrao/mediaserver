@@ -53,7 +53,9 @@ namespace SdpParse {
 
         std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
 
-        void LoadAnswer(base::wrtc::Signaler *signal, std::string sdp, json & producer);
+        void loadAnswer(base::wrtc::Signaler *signal, std::string sdp, json & producer);
+        void resume(base::wrtc::Signaler *signal , json & producer);
+        
 
         std::string offer;
     private:

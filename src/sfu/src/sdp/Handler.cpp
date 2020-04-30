@@ -235,29 +235,11 @@ namespace SdpParse {
         return offer;
     }
 
-    /**
-     * Load andwer SDP.
-     */
-    void Consumer::LoadAnswer(base::wrtc::Signaler *signal, std::string sdp,  json& producer ) {
-        ////////////////////////
-        json ansdpObject = sdptransform::parse(sdp);
-        SDebug << "answer " << ansdpObject.dump(4);
-        _setupTransport(ansdpObject, "client");
-
-        {
-            json ack_resp;
-            json param = json::array();
-            param.push_back("transport.connect");
-            param.push_back(peerID);
-            json &trans = Settings::configuration.transport_connect;
-            trans["internal"]["transportId"] = transportId;
-            trans["id"] = 9;
-            STrace << "device->dtlsParameters " << dtlsParameters;
-            trans["data"]["dtlsParameters"] = dtlsParameters;
-            param.push_back(trans);
-            signal->request("transport.connect", param, true, ack_resp);
-        }
-        {
+    
+    
+    void Consumer::resume(base::wrtc::Signaler *signal,  json& producer ) {
+        
+         {
             json ack_resp;
             json param = json::array();
             param.push_back("consumer.resume");
@@ -273,6 +255,32 @@ namespace SdpParse {
             param.push_back(trans);
             signal->request("consumer.resume", param, true, ack_resp);
         }
+    
+    }
+    
+    /**
+     * Load andwer SDP.
+     */
+    void Consumer::loadAnswer(base::wrtc::Signaler *signal, std::string sdp,  json& producer ) {
+        ////////////////////////
+        json ansdpObject = sdptransform::parse(sdp);
+        //SDebug << "answer " << ansdpObject.dump(4);
+        _setupTransport(ansdpObject, "client");
+
+        {
+            json ack_resp;
+            json param = json::array();
+            param.push_back("transport.connect");
+            param.push_back(peerID);
+            json &trans = Settings::configuration.transport_connect;
+            trans["internal"]["transportId"] = transportId;
+            trans["id"] = 9;
+            STrace << "device->dtlsParameters " << dtlsParameters;
+            trans["data"]["dtlsParameters"] = dtlsParameters;
+            param.push_back(trans);
+            signal->request("transport.connect", param, true, ack_resp);
+        }
+       
 
     }
 

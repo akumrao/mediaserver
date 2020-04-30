@@ -81,11 +81,11 @@ namespace base {
           
             sendSDP("answer", producer->answer);
             
-            consumer =  new SdpParse::Consumer(device, peerID );
-            
-            consumer->runit(this , producer->producer);
-            
-            sendSDP("offer", consumer->offer);
+//            consumer =  new SdpParse::Consumer(device, peerID );
+//            
+//            consumer->runit(this , producer->producer);
+//            
+//            sendSDP("offer", consumer->offer);
             
         }
 
@@ -119,7 +119,19 @@ namespace base {
                 recvCandidate(from, m["candidate"]);
             } else if (std::string("bye") == type) {
                 onPeerDiconnected(from);
+            }else if (std::string("subscribe") == type) {
+                
+            consumer =  new SdpParse::Consumer(device, peerID );
+            consumer->runit(this , producer->producer);
+            sendSDP("offer", consumer->offer);
+                
             }
+            else if (std::string("subscribe-start") == type) {
+                
+             consumer->resume(this , producer->producer);
+               
+            }
+            
 
         }
 
@@ -129,7 +141,7 @@ namespace base {
             
            SDebug << sdp["sdp"].get<std::string>();
            
-           consumer->LoadAnswer(this, sdp["sdp"].get<std::string>(), producer->producer );    
+           consumer->loadAnswer(this, sdp["sdp"].get<std::string>(), producer->producer );    
 
       //  const answerMediaObject = localSdpObject.media
         //    .find((m) => String(m.mid) === localId);

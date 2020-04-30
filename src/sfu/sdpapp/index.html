@@ -1,66 +1,113 @@
 <!DOCTYPE html>
-<html>
-
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-
-  <title>Realtime communication with WebRTC</title>
-
-  <link rel="stylesheet" href="/css/main.css" />
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/png" href="mediaserver.png" />
+  <title>SFUServer Sample App</title>
 </head>
-
+<style>
+  body {
+    font: .9rem arial, serif;
+  }
+  table {
+    width: 100%;
+    max-width: 800px;
+  }
+  table td {
+    width: 33.33%;
+    vertical-align: top;
+  }
+  fieldset {
+    min-height: 100%;
+    border: 1px solid silver;
+    padding: 10px;
+  }
+  button {
+    padding: 5px;
+    margin: 5px;
+  }
+  video {
+    width: 100%;
+  }
+  span {
+    font-family: monospace;
+  }
+</style>
 <body>
-
-  <h1>Realtime communication with WebRTC</h1>
-
-   <script>
-
-        // Intercept Symple log messages
-    log = function () {
-        var args = Array.prototype.slice.call(arguments);
-        $('#webrtc-logs').append(JSON.stringify(args)).append('\n');
-        console.log.apply(console, arguments);
-    }
-    </script>
-
-<div class="videos">
-      <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <strong>Live Streaming!</strong> WebRTC video feed for webrtcstreamer</code> sample.
-      </div>
-
-      <div class="row">
-        <div class="col">
-         <video id="localVideo" autoplay muted playsinline></video>
-         <video id="remoteVideo" autoplay playsinline></video>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <div class="card">
-            <div class="card-header">
-              Logs
-            </div>
-            <div class="card-block">
-              <pre id="webrtc-logs"></pre>
-            </div>
+  <table>
+    <tr>
+      <td>
+        <div>Local</div>
+        <video id="local_video" controls autoplay playsinline></video>
+      </td>
+      <td>
+        <div>Remote</div>
+        <video id="remote_video" controls autoplay playsinline></video>
+      </td>
+    </tr>
+  </table>
+  <br>
+  <table>
+    <tr>
+      <td>
+        <fieldset id="fs_connection">
+          <legend>Connection</legend>
+          <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
+        </fieldset>
+      </td>
+      <td>
+        <fieldset id="fs_publish">
+          <legend>Publishing</legend>
+          <div><label><input type="checkbox" id="chk_simulcast"> Use Simulcast</label></div>
+          <div>
+            <button id="btn_webcam">Start Webcam</button>
+            <span id="webcam_status"></span>
           </div>
-        </div>
-      </div>
-    </div>
+          <div>
+            <button id="btn_screen">Share Screen</button>
+            <span id="screen_status"></span>
+          </div>
+        </fieldset>
+      </td>
+      <td>
+        <fieldset id="fs_subscribe" >
+          <legend>Subscription</legend>
+          <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span></div>
+        </fieldset>
+      </td>
+    </tr>
+  </table>
 
+<div id="div1"><h2>Let jQuery AJAX Change This Text</h2></div>
 
+<button id="btn2">Get External Content</button>
 
-  <!-- This file is automatically added/served when running "node index.js". -->
+</body>
+<script>
+  // window.localStorage.setItem('debug', 'mediaserver-client:WARN* mediaserver-client:ERROR*');
+  window.localStorage.setItem('debug', 'mediaserver-client:*');
+</script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-  <script src="js/main.js"></script>
 
-</body>
+  <script src="js/MediaSection.js" async  ></script>
+  <script src="js/sdpUnifiedPlanUtils.js" async  ></script>
+  <script src="js/transport.js" async  ></script>
+  <script src="js/commonUtils.js" async  ></script>
+<!--   <script src="js/handler.js" async  ></script> -->
+  <script src="js/remoteSdp.js" async  ></script>
+  <script src="js/ortc.js" async  ></script>
+  <script src="js/grammar.js" async  ></script>
+  <script src="js/sdpparser.js" async  ></script>
+  <script src="js/start.js" async  ></script>
+  <script src="js/main.js" async></script>
+<!--   <script src="js/producer.js" async  ></script>
+  <script src="js/consumer.js" async  ></script> -->
+
 
 </html>

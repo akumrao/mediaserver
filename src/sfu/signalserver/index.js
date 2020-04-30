@@ -55,7 +55,7 @@ async function runExpressApp() {
 
   expressApp.use((error, req, res, next) => {
     if (error) {
-      console.warn('Express app error,', error.message);
+      console.log('Express app error,', error.message);
 
       error.status = error.status || (error.name === 'TypeError' ? 400 : 500);
 
@@ -125,11 +125,11 @@ async function runSocketServer() {
 		console.log(array);
 	}
 
-	socket.on('message', function(message) {
-		log('Client said: ', message);
-		// for a real app, would be room-only (not broadcast)
-		socket.broadcast.emit('message', message);
-	});
+	// socket.on('message', function(message) {
+	// 	log('Client said: ', message);
+	// 	// for a real app, would be room-only (not broadcast)
+	// 	socket.broadcast.emit('message', message);
+	// });
 
 	socket.on('disconnect', function() {
 	  console.log(socket.id);
@@ -205,7 +205,7 @@ async function runSocketServer() {
 
 	 try {
 
-			console.log('createProducerTransport ' + JSON.stringify(data, null, 4) );
+			console.log('createProducerTransport data' + JSON.stringify(data, null, 4) );
 
 			var trans = {"id":2,"method":"router.createWebRtcTransport","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef","transportId":"e5302612-283c-4532-8acb-8f3cbb87a8a5"},"data":{"listenIps":[{"ip":"127.0.0.1"}],"enableUdp":false,"enableTcp":true,"preferUdp":false,"preferTcp":true,"initialAvailableOutgoingBitrate":1000000,"enableSctp":false,"numSctpStreams":{"OS":1024,"MIS":1024},"maxSctpMessageSize":262144,"isDataChannel":true}};
 			
@@ -584,7 +584,7 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 	io.sockets.connected[serverSocketid].emit('rest', roomid, socket.id, resume, function (data1) {
 			
-		console.log("ack consume resume " + JSON.stringify(data1, null, 4)); // data will be 'woot'
+	console.log("ack consume resume " + JSON.stringify(data1, null, 4)); // data will be 'woot'
 		
 		//fn();
 
@@ -598,12 +598,23 @@ socket.on('createConsumerTransport', function (data, fn) {
 
 
 //////////////////////////////////////////////////////////////////////////
-	socket.on('message', function(data) {
+	socket.on('message', function(message) {
+
+		//console.log('notification ' + JSON.stringify(data, null, 4) );
+
+
+	 console.log('app message: ', message);
+    // for a real app, would be room-only (not broadcast)
+    	socket.broadcast.emit('message', message);
+
+	});
+
+
+	socket.on('postAppMessage', function(data) {
 
 		console.log('notification ' + JSON.stringify(data, null, 4) );
 
 	});
-
 
 
 	// socket.on('ipaddr', function() {
