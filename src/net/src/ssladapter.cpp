@@ -11,6 +11,8 @@
 
 #include "net/ssladapter.h"
 #include "base/logger.h"
+#include "Settings.h"
+
 //#include "net/sslmanager.h"
 #include "net/netInterface.h"
 #include "net/SslConnection.h"
@@ -33,8 +35,8 @@ namespace base {
             const SSL_METHOD *method;
             SSL_CTX *ctx;
 
-            char CertFile[] = "/var/tmp/key/certificate.crt";
-            char KeyFile[] = "/var/tmp/key/private_key.pem";
+          //  char CertFile[] = "/var/tmp/key/certificate.crt";
+          //  char KeyFile[] = "/var/tmp/key/private_key.pem";
 
             SSL_library_init();
 
@@ -59,33 +61,74 @@ namespace base {
             //SSL_CTX_set_timeout (ctx, 300);  client side check code before enable it
         
 
-            if (server) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            if (SSL_CTX_load_verify_locations(ctx, Settings::configuration.dtlsCertificateFile.c_str(), nullptr) != 1)
+                    ERR_print_errors_fp(stderr);
+
+            if (SSL_CTX_set_default_verify_paths(ctx) != 1)
+                    ERR_print_errors_fp(stderr);
+                
+                    /* set the local certificate from CertFile */
+            if (SSL_CTX_use_certificate_file(ctx, Settings::configuration.dtlsCertificateFile.c_str(), SSL_FILETYPE_PEM) <= 0) {
+                ERR_print_errors_fp(stderr);
+                abort();
+            }
+            
+            
+//                
+
+           if (server) {
                 //New lines //for server side only 
 
-                if (SSL_CTX_load_verify_locations(ctx, CertFile, KeyFile) != 1)
+                
+                SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) "12345678");
+                
+                if (SSL_CTX_use_PrivateKey_file(ctx, Settings::configuration.dtlsPrivateKeyFile.c_str(), SSL_FILETYPE_PEM) <= 0) {
                     ERR_print_errors_fp(stderr);
+                    abort();
+                }
+            
+                if (!SSL_CTX_check_private_key(ctx)) {
+                    fprintf(stderr, "Private key does not match the public certificate\n");
+                    abort();
+                }
 
-                if (SSL_CTX_set_default_verify_paths(ctx) != 1)
-                    ERR_print_errors_fp(stderr);
+            
             }
-            //End new lines
 
-            /* set the local certificate from CertFile */
-            if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
-                ERR_print_errors_fp(stderr);
-                abort();
-            }
-            /* set the private key from KeyFile (may be the same as CertFile) */
-            SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) "12345678");
-            if (SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0) {
-                ERR_print_errors_fp(stderr);
-                abort();
-            }
-            /* verify private key */
-            if (!SSL_CTX_check_private_key(ctx)) {
-                fprintf(stderr, "Private key does not match the public certificate\n");
-                abort();
-            }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+            // if (server) {
+            //     //New lines //for server side only 
+
+            //     if (SSL_CTX_load_verify_locations(ctx, CertFile, KeyFile) != 1)
+            //         ERR_print_errors_fp(stderr);
+
+            //     if (SSL_CTX_set_default_verify_paths(ctx) != 1)
+            //         ERR_print_errors_fp(stderr);
+            // }
+            // //End new lines
+
+            // /* set the local certificate from CertFile */
+            // if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
+            //     ERR_print_errors_fp(stderr);
+            //     abort();
+            // }
+            // /* set the private key from KeyFile (may be the same as CertFile) */
+            // SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) "12345678");
+            // if (SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0) {
+            //     ERR_print_errors_fp(stderr);
+            //     abort();
+            // }
+            // /* verify private key */
+            // if (!SSL_CTX_check_private_key(ctx)) {
+            //     fprintf(stderr, "Private key does not match the public certificate\n");
+            //     abort();
+            // }
 
             //New lines - Force the client-side have a certificate
             //SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);

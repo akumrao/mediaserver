@@ -9,20 +9,50 @@
 #include <string>
 
 namespace SdpParse {
+    
+    
+    class Handler
+    {
+    
+    public:
+                
+        Handler(Device * device, std::string &peerID): device(device), peerID(peerID) 
+        {
+            
+        }
+        ~Handler()
+        {
+            if (remoteSdp) {
+                delete remoteSdp;
+                remoteSdp = nullptr;
+            }
+        }
+        
+        void transportCreate(base::wrtc::Signaler *signal);
+        void transportConnect(base::wrtc::Signaler *signal);
+       
 
-    class Producer
+        Sdp::RemoteSdp *remoteSdp{nullptr};
+        void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
+        void _setupTransport(const nlohmann::json & sdpObject, const std::string localDtlsRole);
+        
+        
+    protected:
+        Device * device;
+        std::string peerID;
+        std::string transportId;
+        nlohmann::json dtlsParameters;
+        bool forceTcp{false};
+        static int ids;
+        
+    };
+
+    class Producer:public Handler
     {
        
         public:
         
         Producer(Device * device, std::string &peerID);
-
-        Sdp::RemoteSdp *remoteSdp{nullptr};
-
-
-        void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
-
-        void _setupTransport(const nlohmann::json & sdpObject, const std::string localDtlsRole);
 
         void runit(base::wrtc::Signaler *signal);
         std::string answer;
@@ -32,39 +62,30 @@ namespace SdpParse {
     private:
         std::string GetAnswer();
         nlohmann::json sendingRtpParameters;
-        Device * device;
-        std::string peerID;
-        std::string transportId;
-        nlohmann::json dtlsParameters;
+    
         
     };
 
-    class Consumer {
+    class Consumer : public Handler
+    {
         
     public:
         Consumer(Device * device, std::string &peerID);
-        std::string transportId;
-        Sdp::RemoteSdp *remoteSdp{nullptr};
-
-
-        void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
-        void _setupTransport(const nlohmann::json & sdpObject, const std::string localDtlsRole);
+      
         void runit(base::wrtc::Signaler *signal,  nlohmann::json & producer);
 
         std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
 
-        void loadAnswer(base::wrtc::Signaler *signal, std::string sdp, json & producer);
+        void loadAnswer(base::wrtc::Signaler *signal, std::string sdp);
         void resume(base::wrtc::Signaler *signal , json & producer);
         
 
         std::string offer;
     private:
         int mid{0};
-        Device * device;
-        std::string peerID;
-        nlohmann::json dtlsParameters;
+      
         json consumer;
-        
+
     };
     
     

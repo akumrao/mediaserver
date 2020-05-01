@@ -57,9 +57,10 @@ namespace SdpParse {
      */
     void Device::Load(json routerRtpCapabilities, std::string sdp) {
 
-        //if (this->loaded)
-           // MS_ABORT("already loaded");
+        if (this->loaded)
+            MS_ABORT("already loaded");
 
+      //  LDebug("got sdpObject: ", routerRtpCapabilities.dump(4));
         // This may throw.
         ortc::validateRtpCapabilities(routerRtpCapabilities);
 

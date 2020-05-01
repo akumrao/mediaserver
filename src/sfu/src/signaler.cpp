@@ -141,7 +141,7 @@ namespace base {
             
            SDebug << sdp["sdp"].get<std::string>();
            
-           consumer->loadAnswer(this, sdp["sdp"].get<std::string>(), producer->producer );    
+           consumer->loadAnswer(this, sdp["sdp"].get<std::string>() );    
 
       //  const answerMediaObject = localSdpObject.media
         //    .find((m) => String(m.mid) === localId);

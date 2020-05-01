@@ -36,6 +36,7 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
+                json listenIps;
                 json routerCapabilities;
                 json createWebRtcTransport;
                 json maxbitrate;

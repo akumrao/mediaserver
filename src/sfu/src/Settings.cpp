@@ -67,10 +67,14 @@ void Settings::SetConfiguration(json &cnfg)
             
             
         if (cnfg.find("dtlsPrivateKeyFile") != cnfg.end()) {
-           Settings::configuration.dtlsCertificateFile = cnfg["dtlsPrivateKeyFile"].get<std::string>();
+           Settings::configuration.dtlsPrivateKeyFile = cnfg["dtlsPrivateKeyFile"].get<std::string>();
         }
 
+        if (cnfg.find("listenIps") != cnfg.end()) {
+           Settings::configuration.listenIps = cnfg["listenIps"];
+        }
 
+        
         if (cnfg.find("routerCapabilities") != cnfg.end()) {
            Settings::configuration.routerCapabilities = cnfg["routerCapabilities"];
         }
