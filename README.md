@@ -1,4 +1,4 @@
-# Very high performing mediaserver
+# Very high performing mediaserver. It is the only mediaserver with support both webrtc and ortc
 Live media streaming
 
 OS abstraction with libuv and std c14
@@ -9,7 +9,9 @@ Websocket sever
 
 Mjpeg streaming
 
-webrtc streaming
+webrtc streaming  ( states of producer and consumer are saved at server)
+
+Ortc Streaming    ( states of producer and consumer are saved at client)
 
 ******************************************************************************************************************************
 
