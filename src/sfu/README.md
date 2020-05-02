@@ -1,3 +1,40 @@
+## Readme.md Editor
+https://pandao.github.io/editor.md/en.html
+git difftool --tool=meld
+
+##git comand 
+*For branch merge*
+git checkout master
+git pull
+git checkout test
+git log master.. # if you're curious
+git merge origin/test # to update your local test from the fetch in the pull earlier
+
+When you're ready to merge back into master,
+git checkout master
+git log ..test # if you're curious
+git merge test
+git push
+
+##Debug at Browser
+
+chrome://webrtc-internals
+about:webrtc
+
+##**webrtc vs ortc**
+This sfu works with both webrtc and ortc
+
+*Webrtc:*   It works with SDP lines.  States of producer and consumer are saved at server side.
+*ORTC:* It wokrs with json. MS Edge browser suppots ORTC.  States of producer and consumer are saved at  APP side.
+
+##supports all the browser
+*Firefox:*  Does not supports RTX. yet. It just resends the original media packet when mediasoup sends a NACK to it. If the packet arrives in disorder after mediasoup sent the NACK, SRTP decrypt will fail for the second one since the original one was already received.
+
+Firfox does not work with self signed certificate.  If you do not have proper certifcate, please do not waste time with firefox.   Check https://letsencrypt.org/
+
+Also, you know that h264 in each browser depends on profile-level-id value, right and level id.
+
+
 **Background**
 The WebRTC specification has evolved over the years. Notable API changes in the past include the shift to addTrack() and other “track-based” APIs from the legacy addStream() and other “stream-based” APIs. The track-based APIs exposed senders and receivers, allowing replacing which track to send without renegotiation and getting and setting encoding parameters, but there is one more stage left in the evolution towards WebRTC 1.0.
 The specification has settled on an SDP format called “Unified Plan” which is different than the Chrome’s SDP format, “Plan B”. Switching SDP format will impact many applications in possibly breaking ways, including what SDP format is generated/accepted and assumptions no longer holding (e.g. local and remote track IDs no longer match in some cases). It also adds a set of new APIs: transceivers. This guide outlines the differences between “Plan B” and “Unified Plan” to help developers prepare for the switch. Firefox already supports Unified Plan, which is the only SDP format they support. Other browsers will follow.

@@ -121,13 +121,13 @@ namespace base {
                 onPeerDiconnected(from);
             }else if (std::string("subscribe") == type) {
                 
-            consumer =  new SdpParse::Consumer(device, peerID );
-            consumer->runit(this , producer->producer);
-            sendSDP("offer", consumer->offer);
+                consumer =  new SdpParse::Consumer(device, peerID );
+                consumer->runit(this , producer->producer);
+                sendSDP("offer", consumer->offer);
                 
             }
             else if (std::string("subscribe-resume") == type) {
-             consumer->resume(this , producer->producer,false);
+                consumer->resume(this , producer->producer,false);
             }
             else if (std::string("subscribe-pause") == type) {
              consumer->resume(this , producer->producer, true);
@@ -217,26 +217,7 @@ namespace base {
                     //grabWebCamVideo();
                 }));
 
-                //
-                //                socket->on("createWebRtcTransport", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                //
-                //                    SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-                //
-                //                    json jsonRequest = data[2]; //json::parse("{\"id\":1,\"method\":\"worker.createRouter\",\"internal\":{\"routerId\":\"2e32062d-f04a-4c2d-a656-b586e50498ef\"}}");//_json;
-                //                    LTrace("arvind ", cnfg::stringify(jsonRequest))
-                //                    Channel::Request req( jsonRequest);
-                //                    worker->OnChannelRequest(&req);
-                //                    if (isAck) {
-                //                        json arr = json::array();
-                //                                arr.push_back(req.jsonResponse);
-                //                                ack_resp = arr;
-                //                    }
-                //
-                //                }));
-
-
-
-
+      /// for ORTC messages    
                 socket->on("rest", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
                     //SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
@@ -264,7 +245,7 @@ namespace base {
 
                 }));
 
-
+   /// for webrtc messages
                 socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
                     //  LTrace(cnfg::stringify(m));
                     // LTrace('SocketioClient received message:', cnfg::stringify(m));
@@ -298,10 +279,6 @@ namespace base {
                 }));
 
 
-                // window.addEventListener('unload', function() {
-                //  LTrace(`Unloading window. Notifying peers in ${room}.`);
-                // socket->emit('bye', room);
-                // });
 
                 if (room != "") {
                     socket->emit("create or join", room);
