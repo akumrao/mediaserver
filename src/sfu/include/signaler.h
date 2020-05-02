@@ -5,7 +5,7 @@
 
 #include "Worker.h"
 #include "socketio/socketioClient.h"
-#include "sdp/Device.h"
+#include "sdp/Peer.h"
 //#include "sdp/Handler.h"
 
 using namespace base::sockio;
@@ -43,7 +43,7 @@ namespace base {
         public:
             void postMessage(const json& m);
             void postAppMessage(const json& m);
-            //void syncMessage(const ipc::Action& action);
+            void createRouter(string const& name, json const& data, bool isAck, json & ack_resp);
 
            // void onPeerConnected(std::string& peerID);
             void onPeerMessage(json const& m);
@@ -58,7 +58,9 @@ namespace base {
             void recvSDP(const std::string& token, const json& data);
             void recvCandidate(const std::string& token, const json& data);
             
-            void onPeerConnected(std::string& peerID, const json &sdp);
+           // void onPeerConnected(std::string& peerID);
+                        
+            void onffer(std::string& peerID, const json &sdp);
            
             void onPeerDiconnected(std::string& peerID);
             
@@ -85,7 +87,7 @@ namespace base {
             bool isInitiator{false};
             bool isStarted{false};
             
-            SdpParse::Device *device{nullptr};
+            SdpParse::Peer *peer{nullptr};
             SdpParse::Producer *producer{nullptr};
             SdpParse::Consumer *consumer{nullptr};
             //consumer *cons{nullptr};

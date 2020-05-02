@@ -1,5 +1,5 @@
 
-#include "sdp/Device.h"
+#include "sdp/Peer.h"
 #include "LoggerTag.h"
 #include "base/error.h"
 #include "sdp/ortc.h"
@@ -18,18 +18,18 @@ static json SctpNumStreams = {
 namespace SdpParse {
 
     /**
-     * Whether the Device is loaded.
+     * Whether the Peer is loaded.
      */
-    bool Device::IsLoaded() const {
+    bool Peer::IsLoaded() const {
 
 
         return this->loaded;
     }
 
     /**
-     * RTP capabilities of the Device for receiving media.
+     * RTP capabilities of the Peer for receiving media.
      */
-    const json& Device::GetRtpCapabilities() const {
+    const json& Peer::GetRtpCapabilities() const {
 
 
         if (!this->loaded)
@@ -39,9 +39,9 @@ namespace SdpParse {
     }
 
     /**
-     * SCTP capabilities of the Device for receiving media.
+     * SCTP capabilities of the Peer for receiving media.
      */
-    const json& Device::GetSctpCapabilities() const {
+    const json& Peer::GetSctpCapabilities() const {
 
 
         if (!this->loaded)
@@ -53,9 +53,9 @@ namespace SdpParse {
 
     ////////////////////////
     /**
-     * Initialize the Device.
+     * Initialize the Peer.
      */
-    void Device::Load(json routerRtpCapabilities, std::string sdp) {
+    void Peer::Load(json routerRtpCapabilities, std::string sdp) {
 
         if (this->loaded)
             MS_ABORT("already loaded");
@@ -127,7 +127,7 @@ namespace SdpParse {
      * Whether we can produce audio/video.
      *
      */
-    bool Device::CanProduce(const std::string& kind) {
+    bool Peer::CanProduce(const std::string& kind) {
         if (!this->loaded) {
             MS_ABORT("not loaded");
         } else if (kind != "audio" && kind != "video") {
@@ -137,7 +137,7 @@ namespace SdpParse {
         return this->canProduceByKind[kind];
     }
 
-    json Device::GetNativeSctpCapabilities() {
+    json Peer::GetNativeSctpCapabilities() {
         auto caps = json::object();
         caps["numStreams"] = SctpNumStreams;
         return caps;

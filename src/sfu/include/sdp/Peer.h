@@ -9,11 +9,11 @@
 
 namespace SdpParse {
 
-    class Device {
+    class Peer {
     public:
-        Device() = default;
+        Peer() = default;
 
-        ~Device() = default;
+        ~Peer() = default;
 
         bool IsLoaded() const;
         const nlohmann::json& GetRtpCapabilities() const;

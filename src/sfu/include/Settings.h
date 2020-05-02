@@ -38,6 +38,7 @@ public:
 		std::string dtlsPrivateKeyFile;
                 json listenIps;
                 json routerCapabilities;
+                json worker_createRouter;
                 json createWebRtcTransport;
                 json maxbitrate;
                 json transport_connect;

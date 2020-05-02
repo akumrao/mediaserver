@@ -16,7 +16,7 @@ namespace SdpParse {
     
     public:
                 
-        Handler(Device * device, std::string &peerID): device(device), peerID(peerID) 
+        Handler(Peer * peer, std::string &peerID): peer(peer), peerID(peerID) 
         {
             
         }
@@ -38,7 +38,7 @@ namespace SdpParse {
         
         
     protected:
-        Device * device;
+        Peer * peer;
         std::string peerID;
         std::string transportId;
         nlohmann::json dtlsParameters;
@@ -52,7 +52,7 @@ namespace SdpParse {
        
         public:
         
-        Producer(Device * device, std::string &peerID);
+        Producer(Peer * peer, std::string &peerID);
 
         void runit(base::wrtc::Signaler *signal);
         std::string answer;
@@ -70,7 +70,7 @@ namespace SdpParse {
     {
         
     public:
-        Consumer(Device * device, std::string &peerID);
+        Consumer(Peer * peer, std::string &peerID);
       
         void runit(base::wrtc::Signaler *signal,  nlohmann::json & producer);
 

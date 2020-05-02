@@ -6,7 +6,6 @@
 #include "Settings.h"
 #include "sdp/Handler.h"
 
-//#include "sdp/ortc.h"
 
 using std::endl;
 
@@ -53,7 +52,25 @@ namespace base {
             socket->emit("message", m);
         }
 
+        void Signaler::createRouter(string const& name, json const& data, bool isAck, json & ack_resp) {
 
+            SInfo << name << ":" << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+
+            peerID = data[1].get<std::string>();   
+            json param = json::array();
+            param.push_back("worker_createRouter");
+            param.push_back(peerID);
+            json &trans = Settings::configuration.worker_createRouter;
+            trans["id"] = 1;
+            param.push_back(trans);
+            request("signal", param, true, ack_resp);
+
+            isInitiator = true;
+              
+        }
+
+      
+        
         void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
 
             SInfo << name << ":" << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
@@ -71,12 +88,12 @@ namespace base {
 
         }
 
-        void Signaler::onPeerConnected(std::string& peerID, const json &sdp) {
+        void Signaler::onffer(std::string& peerID, const json &sdp) {
 
-            device = new SdpParse::Device();
-            device->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+            peer = new SdpParse::Peer();
+            peer->Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
             
-            producer =  new SdpParse::Producer(device, peerID );
+            producer =  new SdpParse::Producer(peer, peerID );
             producer->runit(this);
           
             sendSDP("answer", producer->answer);
@@ -111,7 +128,7 @@ namespace base {
                 //assert(0 && "offer not supported");
 
                 remotePeerID = from;
-                onPeerConnected(from, m["desc"]);
+                onffer(from, m["desc"]);
 
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);
@@ -121,7 +138,7 @@ namespace base {
                 onPeerDiconnected(from);
             }else if (std::string("subscribe") == type) {
                 
-                consumer =  new SdpParse::Consumer(device, peerID );
+                consumer =  new SdpParse::Consumer(peer, peerID );
                 consumer->runit(this , producer->producer);
                 sendSDP("offer", consumer->offer);
                 
@@ -211,10 +228,18 @@ namespace base {
 
                 socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
-                    SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-                    request(name, data, isAck, ack_resp);
-                    isInitiator = true;
-                    //grabWebCamVideo();
+                    if(data.size() > 2) // for ORTC
+                    {
+                        SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
+                        request(name, data, isAck, ack_resp);
+                       
+                        //grabWebCamVideo();
+                    }
+                    else // webrtc
+                    {
+                        createRouter(name,data, isAck, ack_resp);
+                    }
+                     isInitiator = true;
                 }));
 
       /// for ORTC messages    

@@ -79,6 +79,9 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.routerCapabilities = cnfg["routerCapabilities"];
         }
         
+        if (cnfg.find("worker_createRouter") != cnfg.end()) {
+           Settings::configuration.worker_createRouter = cnfg["worker_createRouter"];
+        }
         
         if (cnfg.find("createWebRtcTransport") != cnfg.end()) {
            Settings::configuration.createWebRtcTransport = cnfg["createWebRtcTransport"];

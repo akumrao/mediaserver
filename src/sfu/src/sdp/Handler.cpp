@@ -50,7 +50,7 @@ namespace SdpParse {
             }
 
             trans["data"]["listenIps"]= Settings::configuration.listenIps;
-            trans["id"] = ++device->reqId;
+            trans["id"] = ++peer->reqId;
             param.push_back(trans);
 
 
@@ -67,7 +67,7 @@ namespace SdpParse {
             param.push_back(peerID);
             json &trans = Settings::configuration.maxbitrate;
             trans["internal"]["transportId"] = transportId;
-            trans["id"] = ++device->reqId;
+            trans["id"] = ++peer->reqId;
             param.push_back(trans);
             signal->request("signal", param, true, ack_resp);
         }
@@ -83,15 +83,15 @@ namespace SdpParse {
         param.push_back(peerID);
         json &trans = Settings::configuration.transport_connect;
         trans["internal"]["transportId"] = transportId;
-        //STrace << "device->dtlsParameters " << dtlsParameters;
+        //STrace << "peer->dtlsParameters " << dtlsParameters;
         trans["data"]["dtlsParameters"] = dtlsParameters;
-        trans["id"] = ++device->reqId;
+        trans["id"] = ++peer->reqId;
         param.push_back(trans);
         signal->request("signal", param, true, ack_resp);
     }
        
     
-    Producer::Producer(Device * device, std::string &peerID) : Handler(device, peerID )
+    Producer::Producer(Peer * peer, std::string &peerID) : Handler(peer, peerID )
     {
     }
 
@@ -100,11 +100,11 @@ namespace SdpParse {
     std::string Producer::GetAnswer() {
 
 
-        sendingRtpParameters = device->sendingRtpParametersByKind["video"];
+        sendingRtpParameters = peer->sendingRtpParametersByKind["video"];
 
         const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
 
-        json& offerMediaObject = device->sdpObject["media"][mediaSectionIdx.idx];
+        json& offerMediaObject = peer->sdpObject["media"][mediaSectionIdx.idx];
 
         auto midIt = offerMediaObject.find("mid");
 
@@ -137,13 +137,13 @@ namespace SdpParse {
 
         json *codecOptions = nullptr;
 
-        _setupTransport(device->sdpObject, "server");
+        _setupTransport(peer->sdpObject, "server");
 
         remoteSdp->Send(
                 offerMediaObject,
                 mediaSectionIdx.reuseMid,
                 sendingRtpParameters,
-                device->sendingRemoteRtpParametersByKind["video"],
+                peer->sendingRemoteRtpParametersByKind["video"],
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();
@@ -153,7 +153,7 @@ namespace SdpParse {
             remoteSdp = nullptr;
         }
 
-        STrace << "andwer: " << answer;
+        STrace << "answer: " << answer;
         return answer;
     }
 
@@ -197,7 +197,7 @@ namespace SdpParse {
             };
 
             trans["data"] = data;
-            trans["id"] = ++device->reqId;
+            trans["id"] = ++peer->reqId;
             param.push_back(trans);
             signal->request("signal", param, true, ack_resp);
 
@@ -222,7 +222,7 @@ namespace SdpParse {
     /*************************************************************************************************************
         Producer starts
      *************************************************************************************************************/
-    Consumer::Consumer(Device * device, std::string &peerID) : Handler(device, peerID ){
+    Consumer::Consumer(Peer * peer, std::string &peerID) : Handler(peer, peerID ){
     }
 
 
@@ -272,7 +272,7 @@ namespace SdpParse {
             trans["internal"]["transportId"] = transportId;
             trans["internal"]["producerId"] =  producer["id"];
             trans["internal"]["consumerId"] =  consumer["id"];
-            trans["id"] = ++device->reqId;
+            trans["id"] = ++peer->reqId;
             param.push_back(trans);
             
             signal->request("signal", param, true, ack_resp);
@@ -314,7 +314,7 @@ namespace SdpParse {
 
 
 
-            json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) device->GetRtpCapabilities());
+            json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
             //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
 
             STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
@@ -330,7 +330,7 @@ namespace SdpParse {
             };
 
             trans["data"] = reqData;
-            trans["id"] = ++device->reqId;
+            trans["id"] = ++peer->reqId;
             param.push_back(trans);
             signal->request("signal", param, true, ack_resp);
 

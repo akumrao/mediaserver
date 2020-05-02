@@ -35,13 +35,7 @@ console.log("https://localhost:8080/");
 
 var roomid;
 let serverSocketid =null;
-var transport;  //producertranspor
-var consumerTransport;
-var routerCapabilities;
-var producer;
-var consumer;
 
-var listenIps;
 
 var fileServer = new(nodeStatic.Server)();
 // var app = http.createServer(function(req, res) {
@@ -92,9 +86,9 @@ async function runWebServer() {
       console.log('server is running');
       console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
 
-      listenIps = config.webRtcTransport.listenIps;
+    //  listenIps = config.webRtcTransport.listenIps;
       //const ip = listenIps.announcedIp || listenIps.ip;
-      console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
+     // console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
 
       resolve();
     });
@@ -152,16 +146,13 @@ async function runSocketServer() {
 		if (numClients === 0 || serverSocketid == null) {
 		 
 			log('Client ID ' + socket.id + ' created room ' + room);
-
-
-			var rut = {"id":1,"method":"worker.createRouter","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef"}};
-
+		
 			roomid = room;
 			serverSocketid = socket.id;
 			console.log('serverSocketid');
 			console.log(serverSocketid);
 
-			socket.emit('created', room, socket.id, rut, function (data) {
+			socket.emit('created', room, socket.id, function (data) {
 
 			console.log("ack"); // data will be 'woot'
 			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
