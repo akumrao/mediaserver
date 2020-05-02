@@ -185,9 +185,19 @@ async function btn_subscribe_resume() {
     sendMessage ({
           from: peerID,
           to: remotePeerID,
-          type: "subscribe-start",
+          type: "subscribe-resume",
         });
 }
+
+async function btn_subscribe_pause() {
+
+    sendMessage ({
+          from: peerID,
+          to: remotePeerID,
+          type: "subscribe-pause",
+        });
+}
+
 
 async function subscribe() {
 
@@ -259,33 +269,7 @@ async function subscribe() {
  
 }//end subscribe 
 
-// async function consume(transport) {
-//   const { rtpCapabilities } = device;
 
-//    socket.emit('consume', {rtpCapabilities }, async function (data) {
-//     	 console.log("consume");
-//     	  const {    producerId,   id,   kind,   rtpParameters,  } = data;
-
-//     	    let codecOptions = {};
-// 			  const consumer = await transport.consume({
-// 			    id,
-// 			    producerId,
-// 			    kind,
-// 			    rtpParameters,
-// 			    codecOptions,
-// 			  });
-// 			  const stream = new MediaStream();
-// 			  stream.addTrack(consumer.track);
-
-// 			  socket.emit('resume');
-
-// 			  document.querySelector('#remote_video').srcObject = stream;
-
-// 			  return stream;
-//     });
-
-// }
-    
 
 ///////////////////////////////////////////////////////////////////////////
 

@@ -54,7 +54,7 @@ namespace SdpParse {
             param.push_back(trans);
 
 
-            signal->request("createWebRtcTransport", param, true, ack_resp);
+            signal->request("signal", param, true, ack_resp);
 
             json &ackdata = ack_resp.at(0)["data"];
             createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
@@ -69,7 +69,7 @@ namespace SdpParse {
             trans["internal"]["transportId"] = transportId;
             trans["id"] = ++device->reqId;
             param.push_back(trans);
-            signal->request("maxbitrate", param, true, ack_resp);
+            signal->request("signal", param, true, ack_resp);
         }
          
     }
@@ -87,7 +87,7 @@ namespace SdpParse {
         trans["data"]["dtlsParameters"] = dtlsParameters;
         trans["id"] = ++device->reqId;
         param.push_back(trans);
-        signal->request("transport.connect", param, true, ack_resp);
+        signal->request("signal", param, true, ack_resp);
     }
        
     
@@ -199,7 +199,7 @@ namespace SdpParse {
             trans["data"] = data;
             trans["id"] = ++device->reqId;
             param.push_back(trans);
-            signal->request("transport.produce", param, true, ack_resp);
+            signal->request("signal", param, true, ack_resp);
 
 
 
@@ -250,22 +250,32 @@ namespace SdpParse {
 
     
     
-    void Consumer::resume(base::wrtc::Signaler *signal,  json& producer ) {
+    void Consumer::resume(base::wrtc::Signaler *signal,  json& producer, bool pause ) {
         
          {
             json ack_resp;
-            json param = json::array();
-            param.push_back("consumer.resume");
-            param.push_back(peerID);
             json &trans = Settings::configuration.consumer_resume;
+            json param = json::array();
+            if(pause)
+            {
+                param.push_back("consumer.pause");
+                trans["method"] = "consumer.pause";
+            }
+            else
+            {
+                param.push_back("consumer.resume");
+                trans["method"] = "consumer.resume";
+            }
+            
+            param.push_back(peerID);
             
             trans["internal"]["transportId"] = transportId;
-
             trans["internal"]["producerId"] =  producer["id"];
             trans["internal"]["consumerId"] =  consumer["id"];
             trans["id"] = ++device->reqId;
             param.push_back(trans);
-            signal->request("consumer.resume", param, true, ack_resp);
+            
+            signal->request("signal", param, true, ack_resp);
         }
     
     }
@@ -316,13 +326,13 @@ namespace SdpParse {
                 {"rtpParameters", rtpParameters},
                 {"type", producer["type"]},
                 {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
-                {"paused", paused}
+                {"paused", false}
             };
 
             trans["data"] = reqData;
             trans["id"] = ++device->reqId;
             param.push_back(trans);
-            signal->request("transport.consume", param, true, ack_resp);
+            signal->request("signal", param, true, ack_resp);
 
             json &ackdata = ack_resp.at(0)["data"];
 

@@ -126,12 +126,12 @@ namespace base {
             sendSDP("offer", consumer->offer);
                 
             }
-            else if (std::string("subscribe-start") == type) {
-                
-             consumer->resume(this , producer->producer);
-               
+            else if (std::string("subscribe-resume") == type) {
+             consumer->resume(this , producer->producer,false);
             }
-            
+            else if (std::string("subscribe-pause") == type) {
+             consumer->resume(this , producer->producer, true);
+            }
 
         }
 

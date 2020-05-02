@@ -125,6 +125,13 @@ $(document).ready(function(){
   });
 
   
+  $("#btn_subscribe_pause").click(function(){
+
+    console.log("btn_subscribe_pause click");
+          $("#div1").html("<h2>btn_subscribe_pause</h2>");
+
+   btn_subscribe_pause();
+  });
 
 
  });
