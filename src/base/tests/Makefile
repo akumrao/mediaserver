@@ -10,9 +10,9 @@ CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -
 
 
 CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
-              -DWEBRTC_POSIX -D_GLIBCXX_USE_CXX11_ABI=0 \
+             
               
-LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
+LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
 
 

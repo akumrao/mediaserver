@@ -5,9 +5,15 @@
 
 #include "Worker.h"
 #include "socketio/socketioClient.h"
-
+#include "sdp/Device.h"
+//#include "sdp/Handler.h"
 
 using namespace base::sockio;
+namespace SdpParse
+{
+    class Producer;
+    class Consumer;
+}
 
 namespace base {
     namespace wrtc {
@@ -21,11 +27,12 @@ namespace base {
             void connect(const std::string& host, const uint16_t port, const std::string room);
             
             Worker *worker{nullptr};
+            
 
         protected:
 
             // /// PeerManager interface
-            // void sendSDP(wrtc::Peer* conn, const std::string& type, const std::string& sdp) override;
+             void sendSDP( const std::string& type, const std::string& sdp);
             // void sendCandidate(wrtc::Peer* conn, const std::string& mid, int mlineindex, const std::string& sdp) override;
             // void onAddRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) override;
             // void onRemoveRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) override;
@@ -35,15 +42,29 @@ namespace base {
 
         public:
             void postMessage(const json& m);
+            void postAppMessage(const json& m);
             //void syncMessage(const ipc::Action& action);
 
            // void onPeerConnected(std::string& peerID);
             void onPeerMessage(json const& m);
            // void onPeerDiconnected(std::string& peerID);
 
-
-
-
+           
+            
+                /// PeerManager interface
+            //void sendSDP(wrtc::Peer* conn, const std::string& type, const std::string& sdp) override;
+           // void sendCandidate(wrtc::Peer* conn, const std::string& mid, int mlineindex, const std::string& sdp) override;
+      
+            void recvSDP(const std::string& token, const json& data);
+            void recvCandidate(const std::string& token, const json& data);
+            
+            void onPeerConnected(std::string& peerID, const json &sdp);
+           
+            void onPeerDiconnected(std::string& peerID);
+            
+            
+            
+            void request(string const& name, json const& data, bool isAck, json & ack_resp);
 
         protected:
 #if USE_SSL
@@ -63,7 +84,11 @@ namespace base {
             bool isChannelReady{false};
             bool isInitiator{false};
             bool isStarted{false};
-
+            
+            SdpParse::Device *device{nullptr};
+            SdpParse::Producer *producer{nullptr};
+            SdpParse::Consumer *consumer{nullptr};
+            //consumer *cons{nullptr};
         };
 
     }

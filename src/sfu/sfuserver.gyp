@@ -6,26 +6,25 @@
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp',
+      'deps/libsdptransform/sdptransform.gyp:sdptransform',
       'deps/libwebrtc/libwebrtc.gyp:libwebrtc',
       'deps/libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
+      
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
-          #../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/handles/*.cpp 
-      #../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp 
-      #../src/Utils/*.cpp  ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../http_parser/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../signal/src/*.cpp
-      #SOURCES=$(wildcard *.cpp ../src/*.cpp ../src/RTCP/*.cpp ../src/Codecs/*.cpp ../src/handles/*.cpp ../src/SctpDictionaries/*.cpp ../src/Channel/*.cpp ../src/Utils/*.cpp  ../src/RtpDictionaries/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../http_parser/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp ../../signal/src/*.cpp )
     'sources':
     [
       '<!@(ls -1 src/*.cpp)',
       '<!@(ls -1 src/RTCP/*.cpp)',
+      '<!@(ls -1 src/sdp/*.cpp)',
       '<!@(ls -1 src/Codecs/*.cpp)',
-      '<!@(ls -1 src/handles/*.cpp)',
       '<!@(ls -1 src/SctpDictionaries/*.cpp)',
       '<!@(ls -1 src/Channel/*.cpp)',
       '<!@(ls -1 src/Utils/*.cpp)',
       '<!@(ls -1 src/RtpDictionaries/*.cpp)',
       '<!@(ls -1 ../../src/net/src/*.cpp)',
+      '<!@(ls -1 ../../src/json/src/*.cpp)',
       '<!@(ls -1 ../../src/http_parser/*.cpp)', 
       '<!@(ls -1 ../../src/http/src/*.cpp)',
       '<!@(ls -1 ../../src/signal/src/*.cpp)',
@@ -36,7 +35,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann',
+      'deps/libsdptransform/include/',
       '../../src/libuv/include/',
       '../../src/libuv/src/',
       '../../src/signal/include/',

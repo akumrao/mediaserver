@@ -29,7 +29,7 @@ namespace Channel
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
                 
-                m_sig->postMessage(jsonNotification);
+                m_sig->postAppMessage(jsonNotification);
                 return;
 
              
@@ -44,7 +44,7 @@ namespace Channel
 		jsonNotification["event"]    = event;
 		jsonNotification["data"]     = data;
                 
-                m_sig->postMessage(jsonNotification);
+                m_sig->postAppMessage(jsonNotification);
                 return;
 		
 	}

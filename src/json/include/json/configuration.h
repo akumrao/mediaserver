@@ -40,6 +40,9 @@ public:
 
     virtual bool getRaw(const std::string& key, std::string& value) const ;
     virtual void setRaw(const std::string& key, const std::string& value) ;
+    
+    virtual bool getRaw(const std::string& key, json& value) const ;
+    
 
 private:
      virtual void loadIt(bool create);

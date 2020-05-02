@@ -1,4 +1,5 @@
 
+#include "json/configuration.h"
 #include "common.h"
 #include "DepLibSRTP.h"
 #include "base/application.h"
@@ -39,34 +40,20 @@ void IgnoreSignals();
 
 int main(int argc, char* argv[]) {
 
+    base::cnfg::Configuration config;
 
-    int argc1 = 10;
-    char* argv1[10];
-
-    // --logLevel=debug --logTag=info --logTag=ice --logTag=dtls --logTag=rtp --logTag=srtp"
-    // --logTag=rtcp --rtcMinPort=10000 --rtcMaxPort=10100
-
-    argv1[0] = argv[0];
-    argv1[1] = (char*)"--logLevel=debug";
-    argv1[2] = (char*)"--logTag=info";
-    argv1[3] = (char*)"--logTag=ice";
-    argv1[4] = (char*)"--logTag=dtls";
-    argv1[5] = (char*)"--logTag=rtp";
-    argv1[6] = (char*)"--logTag=srtp";
-    argv1[7] = (char*)"--logTag=rtcp";
-    argv1[8] = (char*)"--rtcMinPort=10000";
-    argv1[9] = (char*)"--rtcMaxPort=10100";
-
-
-
-    // Initialize the Logger.
-
-    Logger::instance().add(new ConsoleChannel("mediaserver", Level::Trace));
-   // Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Debug));
-    Logger::instance().setWriter(new AsyncLogWriter);
+    config.load("./config.js");
+  
+    json cnfg;
+   
+    if( !config.getRaw("webrtc", cnfg))
+    {
+        std::cout << "Could not parse config file";
+    }
+            
 
     try {
-        Settings::SetConfiguration(argc1, argv1);
+        Settings::SetConfiguration(cnfg);
     } catch (const std::exception& error) {
         MS_ERROR_STD("settings error: %s", error.what());
 

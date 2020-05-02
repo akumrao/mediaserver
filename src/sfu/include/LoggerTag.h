@@ -56,7 +56,7 @@ using namespace base;
 
 #define MS_WARN_DEV( ...) { LogStream(Level::Trace, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 
-#define MS_ABORT(...)
+#define MS_ABORT(...) std::abort();
 
 //LogStream(Level::Trace, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); std::abort();
   
