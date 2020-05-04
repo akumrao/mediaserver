@@ -2,7 +2,7 @@
 #define SDP_HANDLER_H
 
 
-#include "signaler.h"
+//#include "sdp/signaler.h"
 #include "sdp/RemoteSdp.h"
 #include <json.hpp>
 #include <map>
@@ -10,7 +10,8 @@
 
 namespace SdpParse {
     
-    
+    class Peer;
+    class Signaler;
     class Handler
     {
     
@@ -28,8 +29,8 @@ namespace SdpParse {
             }
         }
         
-        void transportCreate(base::wrtc::Signaler *signal);
-        void transportConnect(base::wrtc::Signaler *signal);
+        void transportCreate(Signaler *signal);
+        void transportConnect(Signaler *signal);
        
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
@@ -54,7 +55,7 @@ namespace SdpParse {
         
         Producer(Peer * peer, std::string &peerID);
 
-        void runit(base::wrtc::Signaler *signal);
+        void runit(Signaler *signal);
         std::string answer;
         
         nlohmann::json producer;
@@ -72,19 +73,19 @@ namespace SdpParse {
     public:
         Consumer(Peer * peer, std::string &peerID);
       
-        void runit(base::wrtc::Signaler *signal,  nlohmann::json & producer);
+        void runit(Signaler *signal,  nlohmann::json & producer);
 
         std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
 
-        void loadAnswer(base::wrtc::Signaler *signal, std::string sdp);
-        void resume(base::wrtc::Signaler *signal , json & producer, bool pause );
+        void loadAnswer(Signaler *signal, std::string sdp);
+        void resume(Signaler *signal , nlohmann::json & producer, bool pause );
         
 
         std::string offer;
     private:
         int mid{0};
       
-        json consumer;
+        nlohmann::json consumer;
 
     };
     

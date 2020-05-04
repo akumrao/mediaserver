@@ -29,7 +29,7 @@ namespace SdpParse {
     }
 
 
-    void Handler::transportCreate(base::wrtc::Signaler *signal)
+    void Handler::transportCreate(Signaler *signal)
     {
         {
             json ack_resp;
@@ -75,7 +75,7 @@ namespace SdpParse {
     }
    
     
-    void Handler::transportConnect(base::wrtc::Signaler *signal)
+    void Handler::transportConnect(Signaler *signal)
     {
         json ack_resp;
         json param = json::array();
@@ -100,7 +100,7 @@ namespace SdpParse {
     std::string Producer::GetAnswer() {
 
 
-        sendingRtpParameters = peer->sendingRtpParametersByKind["video"];
+        sendingRtpParameters = peer->sendingRtpParametersByKind["audio"];
 
         const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
 
@@ -143,7 +143,7 @@ namespace SdpParse {
                 offerMediaObject,
                 mediaSectionIdx.reuseMid,
                 sendingRtpParameters,
-                peer->sendingRemoteRtpParametersByKind["video"],
+                peer->sendingRemoteRtpParametersByKind["audio"],
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();
@@ -159,7 +159,7 @@ namespace SdpParse {
 
     
     
-    void Producer::runit(base::wrtc::Signaler *signal) {
+    void Producer::runit(Signaler *signal) {
         
       
         transportCreate(signal);
@@ -250,7 +250,7 @@ namespace SdpParse {
 
     
     
-    void Consumer::resume(base::wrtc::Signaler *signal,  json& producer, bool pause ) {
+    void Consumer::resume(Signaler *signal,  json& producer, bool pause ) {
         
          {
             json ack_resp;
@@ -283,7 +283,7 @@ namespace SdpParse {
     /**
      * Load andwer SDP.
      */
-    void Consumer::loadAnswer(base::wrtc::Signaler *signal, std::string sdp ) {
+    void Consumer::loadAnswer(Signaler *signal, std::string sdp ) {
         ////////////////////////
         json ansdpObject = sdptransform::parse(sdp);
         //SDebug << "answer " << ansdpObject.dump(4);
@@ -295,7 +295,7 @@ namespace SdpParse {
 
  
 
-    void Consumer::runit(base::wrtc::Signaler *signal, json &producer) {
+    void Consumer::runit(Signaler *signal, json &producer) {
 
         transportCreate(signal);
   
@@ -319,7 +319,7 @@ namespace SdpParse {
 
             STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
 
-            bool paused = producer["kind"] == "video" ? true : false;
+            //bool paused = producer["kind"] == "video" ? true : false;
 
             json reqData = {
                 {"kind", producer["kind"]},

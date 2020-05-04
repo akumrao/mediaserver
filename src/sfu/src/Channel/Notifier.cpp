@@ -9,10 +9,10 @@ namespace Channel
 	/* Class variables. */
 
 
-        base::wrtc::Signaler* Notifier::m_sig{ nullptr };
+        SdpParse::Signaler* Notifier::m_sig{ nullptr };
 	/* Static methods. */
 
-	void Notifier::ClassInit( base::wrtc::Signaler *sig)
+	void Notifier::ClassInit( SdpParse::Signaler *sig)
 	{
 		MS_TRACE();
                 

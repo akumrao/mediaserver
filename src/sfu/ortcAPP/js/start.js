@@ -579,7 +579,7 @@ async function getUserMedia1(transport, isWebcam) {
   let stream;
   try {
 
-  stream =  await navigator.mediaDevices.getUserMedia({ video: true });
+  stream =  await navigator.mediaDevices.getUserMedia({audio: true,  video: false });
 
     // stream = isWebcam ?
     //   await navigator.mediaDevices.getUserMedia({ video: true }) :
@@ -757,7 +757,11 @@ async function publish()
   let stream;
   try {
     stream =  await getUserMedia1(transport, true);
-    const track = stream.getVideoTracks()[0];
+   // const track = stream.getVideoTracks()[0];
+    const track = stream.getAudioTracks()[0];
+
+    
+
     const params = { track };
     // if ($chkSimulcast.checked) {
     //   params.encodings = [

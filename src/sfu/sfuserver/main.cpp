@@ -24,7 +24,7 @@
 #include <string>
 
 #include "base/platform.h"
-#include "signaler.h"
+#include "sdp/signaler.h"
 
 
 
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
         
          
         base::Application app;
-        base::wrtc::Signaler sig;
+        SdpParse::Signaler sig;
 
         // Initialize static stuff.
         DepOpenSSL::ClassInit();
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
         //std::string sourceFile(sampleDataDir("test.mp4"));
 
         //sig.startStreaming(sourceFile, true);
-        sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
+        sig.connect(SERVER_HOST, SERVER_PORT);
 
 
         app.waitForShutdown([&](void*) {

@@ -5,10 +5,10 @@
 #include <json.hpp>
 #include <map>
 #include <string>
-
+#include "sdp/Handler.h"
 
 namespace SdpParse {
-
+    struct Room;
     class Peer {
     public:
         Peer() = default;
@@ -50,11 +50,27 @@ namespace SdpParse {
     nlohmann::json sdpObject;
     
     int reqId{1};
+    
+    
+    private:
+        
+     SdpParse::Producer *producer{nullptr};
+     SdpParse::Consumer *consumer{nullptr};
 
     };
     
      
-    
+    class Peers
+    {
+    public:
+        Peers(Signaler *signaler, Room *room):signaler(signaler),room(room)
+        {
+            
+        }
+      
+        Room *room;
+        Signaler *signaler;   
+    };
     
     
 } // namespace SdpParse
