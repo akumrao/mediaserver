@@ -159,3 +159,28 @@ The Unified Plan way of offering to receive media is to use addTransceiver() to 
 [SDP]: https://www.diffchecker.com/8Dmr2vmP "SDP code snippet "
 
 *****************************************************************************************************************************
+
+
+##Recording Streams
+Please record stream in RTP format itself.
+
+If file format is required
+then for VP8 & Opus use WebM 
+     for  H264 & AAC/mp3 use mp4
+
+
+MP4 is not a good format to store live recordings, because it relies on waiting until the whole recording finishes, to then save all video metadata at the end of the file. This is obviously a weak decision: it will render corrupted files if the recording process crashes or is interrupted, because in such situations the metadata couldn't be written properly.
+
+As a sort of workaround, the MP4 specs include an alternative mode called "MP4 Fast-Start", which does some tricks within the container format and stores metadata at the beginning. We use MP4 Fast-Start in this example, as an attempt to generate the most reliable possible files. But the really best choice would be to never use MP4 when recording a live stream.
+
+ MP4 video for faster playback. And the way we do that has to do with the structure of the MP4 file, and how streaming video works.
+
+MP4 files consist of chunks of data called atoms. There are atoms to store things like subtitles or chapters, as well as obvious things like the video and audio data. Meta data about where the video and audio atoms are, as well as information about how to play the video like the dimensions and frames per second, is all stored in a special atom called the moov atom. You can think of the moov atom as a kind of table of contents for the MP4 file.
+
+When you play a video, the program looks through the MP4 file, locates the moov atom , and then uses that to find the start of the audio and video data and begin playing. Unfortunately, atoms can appear in any order, so the program doesn’t know where the moov atom will be ahead of time. Searching to find the moov works fine if you already have the entire video file. However another option is needed when you don’t have the entire video yet, such as when you are streaming HTML5 video. That’s the whole point of streaming a video! You can start watching it without having to download the entire video first.
+
+When streaming, your browser requests the video and starts receiving the beginning of the file. It looks to see if the moov atom is near the start. If the moov atom is not near the start, it must either download the entire file to try and find the moov, or the browser can download small different pieces of the video file, starting with data from the very end, in an attempt to find the moov atom.
+
+You can also reorganize an existing video to optimize it for web streaming. For example, the open source command line video encoder FFMpeg can reorganize the structure of the MP4 file to place the moov atom at the start. Unlike the initial encoding of the video which is very time consuming and CPU intensive, reorganizing the file is an easier operation. And, it will not alter the quality of the original video in any way. Before is an example of using ffmpeg to optimize a video named input.mp4* for streaming. The resulting video is named output.mp4
+
+ffmpeg -i input.mp4 -movflags faststart -acodec copy -vcodec copy output.mp4
