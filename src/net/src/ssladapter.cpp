@@ -11,8 +11,6 @@
 
 #include "net/ssladapter.h"
 #include "base/logger.h"
-#include "Settings.h"
-
 //#include "net/sslmanager.h"
 #include "net/netInterface.h"
 #include "net/SslConnection.h"
@@ -35,8 +33,8 @@ namespace base {
             const SSL_METHOD *method;
             SSL_CTX *ctx;
 
-          //  char CertFile[] = "/var/tmp/key/certificate.crt";
-          //  char KeyFile[] = "/var/tmp/key/private_key.pem";
+            char CertFile[] = "/var/tmp/key/certificate.crt";
+            char KeyFile[] = "/var/tmp/key/private_key.pem";
 
             SSL_library_init();
 
@@ -63,14 +61,14 @@ namespace base {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (SSL_CTX_load_verify_locations(ctx, Settings::configuration.dtlsCertificateFile.c_str(), nullptr) != 1)
+            if (SSL_CTX_load_verify_locations(ctx, CertFile, nullptr) != 1)
                     ERR_print_errors_fp(stderr);
 
             if (SSL_CTX_set_default_verify_paths(ctx) != 1)
                     ERR_print_errors_fp(stderr);
                 
                     /* set the local certificate from CertFile */
-            if (SSL_CTX_use_certificate_file(ctx, Settings::configuration.dtlsCertificateFile.c_str(), SSL_FILETYPE_PEM) <= 0) {
+            if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
                 ERR_print_errors_fp(stderr);
                 abort();
             }
@@ -84,7 +82,7 @@ namespace base {
                 
                 SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) "12345678");
                 
-                if (SSL_CTX_use_PrivateKey_file(ctx, Settings::configuration.dtlsPrivateKeyFile.c_str(), SSL_FILETYPE_PEM) <= 0) {
+                if (SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0) {
                     ERR_print_errors_fp(stderr);
                     abort();
                 }
