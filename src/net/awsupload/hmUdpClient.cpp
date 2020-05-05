@@ -214,8 +214,10 @@ void hmUdpClient::shutdown() {
     LInfo("hmUdpClient::shutdown()::stop");
     
     stop();
-    int  r = uv_async_send(&async);
-    assert(r == 0);
+    if(async.data) {
+        int r = uv_async_send(&async);
+        assert(r == 0);
+    }
     //restartUPload(lastPacketNo);
     join();
     
