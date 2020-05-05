@@ -3,9 +3,11 @@
 #include "LoggerTag.h"
 #include "base/error.h"
 #include "sdp/ortc.h"
-//#include "sdptransform.hpp"
+#include "sdp/signaler.h"
+#include "sdp/Peer.h"
 #include "sdp/Utils.h"
 #include "base/uuid.h"
+#include "sdp/Room.h"
 
 using json = nlohmann::json;
 
@@ -29,19 +31,16 @@ namespace SdpParse {
     }
 
 
-    void Handler::transportCreate(Signaler *signal)
+    void Handler::transportCreate()
     {
         {
             json ack_resp;
             json param = json::array();
             param.push_back("createWebRtcTransport");
-            param.push_back(peerID);
+            param.push_back(peer->participantID);
 
             json &trans = Settings::configuration.createWebRtcTransport;
             transportId = uuid4::uuid();
-            trans["internal"]["transportId"] = transportId;
-            
-            
 
             if(!forceTcp)
             {
@@ -50,11 +49,7 @@ namespace SdpParse {
             }
 
             trans["data"]["listenIps"]= Settings::configuration.listenIps;
-            trans["id"] = ++peer->reqId;
-            param.push_back(trans);
-
-
-            signal->request("signal", param, true, ack_resp);
+            raiseRequest( param, trans, ack_resp);;
 
             json &ackdata = ack_resp.at(0)["data"];
             createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
@@ -64,40 +59,43 @@ namespace SdpParse {
             json ack_resp;
             json param = json::array();
             param.push_back("maxbitrate");
-            param.push_back(peerID);
+            param.push_back(peer->participantID);
             json &trans = Settings::configuration.maxbitrate;
-            trans["internal"]["transportId"] = transportId;
-            trans["id"] = ++peer->reqId;
-            param.push_back(trans);
-            signal->request("signal", param, true, ack_resp);
+            raiseRequest( param, trans, ack_resp);
         }
          
     }
    
     
-    void Handler::transportConnect(Signaler *signal)
+    bool Handler::raiseRequest( json &param , json& trans, json& ack_resp)
+    {
+        
+        trans["id"] = ++peer->reqId;
+        trans["internal"]["transportId"] = transportId;
+        trans["internal"]["routerId"]= room->routerId;
+        param.push_back(trans);
+        signaler->request("signal", param, true, ack_resp);
+    }
+    
+    void Handler::transportConnect()
     {
         json ack_resp;
         json param = json::array();
         param.push_back("transport.connect");
-        param.push_back(peerID);
+        param.push_back(peer->participantID);
         json &trans = Settings::configuration.transport_connect;
-        trans["internal"]["transportId"] = transportId;
         //STrace << "peer->dtlsParameters " << dtlsParameters;
         trans["data"]["dtlsParameters"] = dtlsParameters;
-        trans["id"] = ++peer->reqId;
-        param.push_back(trans);
-        signal->request("signal", param, true, ack_resp);
+        raiseRequest( param, trans, ack_resp);
+
     }
        
     
-    Producer::Producer(Peer * peer, std::string &peerID) : Handler(peer, peerID )
+    Producers::Producers(Signaler *signaler, Room *room, Peer *peer): Handler(signaler, room, peer)
     {
     }
-
  
-
-    std::string Producer::GetAnswer() {
+    std::string Producers::GetAnswer() {
 
 
         sendingRtpParameters = peer->sendingRtpParametersByKind["audio"];
@@ -159,12 +157,13 @@ namespace SdpParse {
 
     
     
-    void Producer::runit(Signaler *signal) {
+    void Producers::runit() {
         
-      
-        transportCreate(signal);
-        answer = GetAnswer();
-        transportConnect(signal);
+        Producer *p = new Producer();
+        
+        transportCreate();
+        p->answer = GetAnswer();
+        transportConnect();
 
         {
             STrace << "sendingRtpParameters " << sendingRtpParameters.dump(4);
@@ -173,9 +172,9 @@ namespace SdpParse {
             json ack_resp;
             json param = json::array();
             param.push_back("transport.produce");
-            param.push_back(peerID);
+            param.push_back(peer->participantID);
             json &trans = Settings::configuration.transport_produce;
-            trans["internal"]["transportId"] = transportId;
+            
             trans["internal"]["producerId"] = uuid4::uuid();
 
 
@@ -197,13 +196,11 @@ namespace SdpParse {
             };
 
             trans["data"] = data;
-            trans["id"] = ++peer->reqId;
-            param.push_back(trans);
-            signal->request("signal", param, true, ack_resp);
+
+            raiseRequest( param, trans, ack_resp);
 
 
-
-            producer = {
+            p->producer = {
                 { "id", trans["internal"]["producerId"]},
                 {"kind", "video"},
                 {"rtpParameters", sendingRtpParameters},
@@ -212,7 +209,9 @@ namespace SdpParse {
 
             };
 
-            STrace << "Final Producer " << producer.dump(4);
+            STrace << "Final Producer " << p->producer.dump(4);
+            
+            mapProducer[p->producer["id"]] = p;
 
 
         }
@@ -222,11 +221,12 @@ namespace SdpParse {
     /*************************************************************************************************************
         Producer starts
      *************************************************************************************************************/
-    Consumer::Consumer(Peer * peer, std::string &peerID) : Handler(peer, peerID ){
+    Consumers::Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers) : Handler(signaler, room, peer),producers(producers)
+    {
     }
 
 
-    std::string Consumer::GetOffer(const std::string& id, const std::string& kind, const json& rtpParameters) {
+    std::string Consumers::GetOffer(const std::string& id, const std::string& kind, const json& rtpParameters) {
         std::string localId;
 
         //static int mid=0;  // wrong TBD
@@ -250,64 +250,62 @@ namespace SdpParse {
 
     
     
-    void Consumer::resume(Signaler *signal,  json& producer, bool pause ) {
+    void Consumers::resume(Signaler *signal, bool pause ) {
         
-         {
-            json ack_resp;
-            json &trans = Settings::configuration.consumer_resume;
-            json param = json::array();
-            if(pause)
-            {
-                param.push_back("consumer.pause");
-                trans["method"] = "consumer.pause";
-            }
-            else
-            {
-                param.push_back("consumer.resume");
-                trans["method"] = "consumer.resume";
-            }
-            
-            param.push_back(peerID);
-            
-            trans["internal"]["transportId"] = transportId;
-            trans["internal"]["producerId"] =  producer["id"];
-            trans["internal"]["consumerId"] =  consumer["id"];
-            trans["id"] = ++peer->reqId;
-            param.push_back(trans);
-            
-            signal->request("signal", param, true, ack_resp);
-        }
+//         {
+//            json ack_resp;
+//            json &trans = Settings::configuration.consumer_resume;
+//            json param = json::array();
+//            if(pause)
+//            {
+//                param.push_back("consumer.pause");
+//                trans["method"] = "consumer.pause";
+//            }
+//            else
+//            {
+//                param.push_back("consumer.resume");
+//                trans["method"] = "consumer.resume";
+//            }
+//            
+//            param.push_back(peer->participantID);
+//            
+//            trans["internal"]["producerId"] =  producer["id"];
+//            trans["internal"]["consumerId"] =  consumer["id"];
+
+//            
+//            raiseRequest( param, trans, ack_resp);
+//        }
     
     }
     
     /**
      * Load andwer SDP.
      */
-    void Consumer::loadAnswer(Signaler *signal, std::string sdp ) {
+    void Consumers::loadAnswer(Signaler *signal, std::string sdp ) {
         ////////////////////////
         json ansdpObject = sdptransform::parse(sdp);
         //SDebug << "answer " << ansdpObject.dump(4);
         _setupTransport(ansdpObject, "client");
 
-        transportConnect(signal);
+        transportConnect();
 
     }
 
  
 
-    void Consumer::runit(Signaler *signal, json &producer) {
+    void Consumers::runit() {
 
-        transportCreate(signal);
+        transportCreate();
   
+        for( auto& prod : producers->mapProducer)
         {
-
+            json &producer = prod.second->producer;
+                    
             json ack_resp;
             json param = json::array();
             param.push_back("transport.consume");
-            param.push_back(peerID);
+            param.push_back(peer->participantID);
             json &trans = Settings::configuration.transport_consume;
-            trans["internal"]["transportId"] = transportId;
-            //trans["id"] = 8;
 
             trans["internal"]["producerId"] = producer["id"];
             trans["internal"]["consumerId"] = uuid4::uuid();
@@ -330,13 +328,12 @@ namespace SdpParse {
             };
 
             trans["data"] = reqData;
-            trans["id"] = ++peer->reqId;
-            param.push_back(trans);
-            signal->request("signal", param, true, ack_resp);
+            raiseRequest( param, trans, ack_resp);
 
             json &ackdata = ack_resp.at(0)["data"];
 
-             consumer = {
+            Consumer *c= new Consumer();
+            c->consumer = {
 
                 {"id", trans["internal"]["consumerId"]},
                 {"kind", trans["data"]["kind"]},
@@ -349,10 +346,12 @@ namespace SdpParse {
 
             };
 
-            STrace << "Final Consumer " << consumer.dump(4);
+            STrace << "Final Consumer " << c->consumer.dump(4);
             ///////////////////
 
-            offer = GetOffer(consumer["id"], consumer["kind"], consumer["rtpParameters"]);
+            c->offer = GetOffer(c->consumer["id"], c->consumer["kind"], c->consumer["rtpParameters"]);
+            
+            mapConsumer[ c->consumer["id"]] = c; 
 
         }
 

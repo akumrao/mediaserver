@@ -11,9 +11,12 @@ namespace SdpParse {
     struct Room;
     class Peer {
     public:
-        Peer() = default;
+        Peer(Signaler *signaler, Room *room):signaler(signaler),room(room)
+        {
+            
+        }
 
-        ~Peer() = default;
+        ~Peer();
 
         bool IsLoaded() const;
         const nlohmann::json& GetRtpCapabilities() const;
@@ -24,6 +27,9 @@ namespace SdpParse {
         bool CanProduce(const std::string& kind);
 
         nlohmann::json GetNativeSctpCapabilities();
+        
+        std::string participantID;
+        std::string participantName;
         
 
     private:
@@ -42,6 +48,8 @@ namespace SdpParse {
         // clang-format on
         // Local SCTP capabilities.
         nlohmann::json sctpCapabilities;
+        
+      
             
     public:
         
@@ -51,12 +59,16 @@ namespace SdpParse {
     
     int reqId{1};
     
+    void onffer( const nlohmann::json &sdp);
     
     private:
         
-     SdpParse::Producer *producer{nullptr};
-     SdpParse::Consumer *consumer{nullptr};
-
+     Producers *producers{nullptr};
+     Consumers *consumers{nullptr};
+     
+     Room *room;
+     Signaler *signaler;
+     
     };
     
      
@@ -65,9 +77,14 @@ namespace SdpParse {
     public:
         Peers(Signaler *signaler, Room *room):signaler(signaler),room(room)
         {
-            
         }
-      
+        
+        ~Peers();
+        
+        void onffer( std::string& participantID, const nlohmann::json &sdp);
+        
+        std::map< std::string, Peer*> mapPeers;
+        
         Room *room;
         Signaler *signaler;   
     };

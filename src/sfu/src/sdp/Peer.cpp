@@ -142,5 +142,60 @@ namespace SdpParse {
         caps["numStreams"] = SctpNumStreams;
         return caps;
     }
+    
+    
+     void Peer::onffer( const json &sdp)
+     {
+         Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+         
+         producers =  new Producers(signaler,room , this );
+         producers->runit();
+          
+        signaler->sendSDP("answer", producers->mapProducer.begin()->second->answer, participantID);
+            
+     }
+     
+     Peer::~Peer()
+     {
+         if(producers)
+         {
+             delete producers;
+             producers = nullptr;
+         }
+         
+         if(consumers)
+         {
+             delete consumers;
+             consumers = nullptr;
+         }
+     }
+    
+    /*****************************************************************************
+     Peers
+    *********************************************************************************/
+    Peers::~Peers()
+    {
+        for(auto & peer : mapPeers  )
+        {
+            delete peer.second;
+        }
+        
+    }
+    
+    void Peers::onffer( std::string& participantID, const json &sdp)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            SWarn << "Peer already exist " << participantID ;
+            peer = mapPeers[participantID];
+        } else {
+            peer = new Peer( signaler, room);
+            peer->participantID = participantID;
+            peer->participantName = participantID;
+        }
+
+        peer->onffer(sdp);
+          
+    }
   
 } // namespace SdpParse

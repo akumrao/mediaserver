@@ -2,7 +2,6 @@
 #define SDP_HANDLER_H
 
 
-//#include "sdp/signaler.h"
 #include "sdp/RemoteSdp.h"
 #include <json.hpp>
 #include <map>
@@ -12,12 +11,14 @@ namespace SdpParse {
     
     class Peer;
     class Signaler;
+    class Room;
+    
     class Handler
     {
     
     public:
                 
-        Handler(Peer * peer, std::string &peerID): peer(peer), peerID(peerID) 
+        Handler(Signaler *signaler, Room *room, Peer * peer):signaler(signaler),room(room),peer(peer)
         {
             
         }
@@ -29,9 +30,9 @@ namespace SdpParse {
             }
         }
         
-        void transportCreate(Signaler *signal);
-        void transportConnect(Signaler *signal);
-       
+        void transportCreate();
+        void transportConnect();
+        bool raiseRequest( nlohmann::json &param , nlohmann::json& trans, nlohmann::json& ack_resp);
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
@@ -39,26 +40,35 @@ namespace SdpParse {
         
         
     protected:
-        Peer * peer;
-        std::string peerID;
+      
+        //std::string peerID;
         std::string transportId;
         nlohmann::json dtlsParameters;
         bool forceTcp{false};
-        static int ids;
+ 
+        Signaler *signaler;
+        Room *room;
+        Peer *peer;
+        
+       // static int ids;
         
     };
 
-    class Producer:public Handler
+    class Producers:public Handler
     {
        
         public:
         
-        Producer(Peer * peer, std::string &peerID);
+        Producers(Signaler *signaler, Room *room, Peer *peer);
 
-        void runit(Signaler *signal);
-        std::string answer;
+        void runit();
         
-        nlohmann::json producer;
+        struct Producer
+        {   std::string answer;
+            nlohmann::json producer;
+        };
+        
+        std::map<std::string, Producer*>  mapProducer;
         
     private:
         std::string GetAnswer();
@@ -67,25 +77,31 @@ namespace SdpParse {
         
     };
 
-    class Consumer : public Handler
+    class Consumers : public Handler
     {
         
     public:
-        Consumer(Peer * peer, std::string &peerID);
+        Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers);
       
-        void runit(Signaler *signal,  nlohmann::json & producer);
+        void runit();
 
         std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
 
         void loadAnswer(Signaler *signal, std::string sdp);
-        void resume(Signaler *signal , nlohmann::json & producer, bool pause );
+        void resume(Signaler *signal, bool pause );
         
 
-        std::string offer;
+        struct Consumer
+        {   std::string offer;
+            nlohmann::json consumer;
+        };
+        
+        std::map<std::string, Consumer*>  mapConsumer;
+        
     private:
         int mid{0};
       
-        nlohmann::json consumer;
+        Producers *producers;
 
     };
     

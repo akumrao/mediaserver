@@ -25,18 +25,28 @@ Rooms::Rooms( Signaler *signaler):signaler(signaler)
 
 Rooms::~Rooms() {
     
-    for(auto & room : mapRooms  )
+    for(auto& room : mapRooms  )
     {
         delete room.second;
     }
 }
 
+
+
 void Rooms::createRoom(std::string const& name, json const& data, bool isAck, json & ack_resp) {
 
+    
+      // std::string roomName = data[0].get<std::string>();
+    
+       if( mapRooms.find(name) != mapRooms.end())
+       {
+           SWarn << "Room already exist " << name << ":" << data[0].get<std::string>() << " - my client ID is " << data[1].get<std::string>();
+           return ;
+       }
+       
        SInfo << name << ":" << data[0].get<std::string>() << " - my client ID is " << data[1].get<std::string>();
 
-
-       std::string roomName = data[0].get<std::string>();
+       
        json param = json::array();
        param.push_back("worker_createRouter");
        param.push_back(data[1].get<std::string>());
@@ -48,10 +58,25 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        
        Room * room = new Room(signaler);
        room->routerId = trans["internal"]["routerId"];
-       room->name = roomName;
-       mapRooms[roomName] = room;
+       room->name = name;
+       mapRooms[name] = room;
        
    }
+
+
+    void Rooms::onffer(std::string &name , std::string& participantID, const json &sdp)
+    {
+        
+       if( mapRooms.find(name) != mapRooms.end())
+       {
+           SWarn << "Room already exist " << name ;
+           return ;
+       }
+       
+        Peers *peers = mapRooms[name]->peers;
+        peers->onffer(participantID,  sdp);
+  
+    }
 
 
 }//namespace SdpParse 
