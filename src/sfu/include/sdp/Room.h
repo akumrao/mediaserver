@@ -48,6 +48,10 @@ public:
     
     void onffer(std::string &room , std::string& participantID, const nlohmann::json &sdp);
     
+    void onSubscribe(std::string &room , std::string& participantID);
+    void resume(std::string &room , std::string& participantID, bool flag);
+    
+    
 private:
     
     Signaler *signaler;

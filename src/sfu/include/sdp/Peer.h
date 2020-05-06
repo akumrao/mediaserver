@@ -60,6 +60,7 @@ namespace SdpParse {
     int reqId{1};
     
     void onffer( const nlohmann::json &sdp);
+    void onSubscribe();
     
     private:
         
@@ -82,6 +83,7 @@ namespace SdpParse {
         ~Peers();
         
         void onffer( std::string& participantID, const nlohmann::json &sdp);
+        void onSubscribe(std::string& participantID);
         
         std::map< std::string, Peer*> mapPeers;
         

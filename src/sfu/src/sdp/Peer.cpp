@@ -155,6 +155,13 @@ namespace SdpParse {
             
      }
      
+     void Peer::onSubscribe( )
+     {
+          consumers =  new Consumers(signaler,room , this, producers);
+          consumers->runit();
+          signaler->sendSDP("offer", consumers->mapConsumer.begin()->second->offer, participantID);
+     }
+     
      Peer::~Peer()
      {
          if(producers)
@@ -197,5 +204,23 @@ namespace SdpParse {
         peer->onffer(sdp);
           
     }
+    
+    void Peers::onSubscribe(std::string& participantID)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            SWarn << "Peer already exist " << participantID ;
+            peer = mapPeers[participantID];
+        } else {
+            peer = new Peer( signaler, room);
+            peer->participantID = participantID;
+            peer->participantName = participantID;
+        }
+
+        peer->onSubscribe();
+          
+    }
+    
+       
   
 } // namespace SdpParse

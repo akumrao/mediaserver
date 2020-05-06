@@ -64,6 +64,36 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
    }
 
 
+
+    void Rooms::resume(std::string &room , std::string& participantID, bool flag)
+    {
+  
+//                   consumer =  new SdpParse::Consumer(peer, peerID );
+//                   consumer->runit(this , producer->producer);
+//                   sendSDP("offer", consumer->offer);
+
+    }
+    void Rooms::onSubscribe(std::string &room , std::string& participantID)
+    {
+  
+           SInfo << "Request Subscribe to join room" <<  room << " : " <<  " from Remote with Peer ID  " << participantID ;
+
+        
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+          
+            Peers *peers = mapRooms[room]->peers;
+            peers->onSubscribe(participantID);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+           
+              
+
+    }
+
     void Rooms::onffer(std::string &room , std::string& participantID, const json &sdp)
     {
        SInfo << "Request Offer to join room" <<  room << " : " <<  " from Remote with Peer ID  " << participantID ;
