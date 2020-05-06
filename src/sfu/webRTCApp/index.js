@@ -125,7 +125,7 @@ async function runSocketServer() {
 	// });
 
 	socket.on('disconnect', function() {
-	  console.log(socket.id);
+	  console.log("disconnect " + socket.id);
 	  if( socket.id == serverSocketid)
 	  {
 	  	serverSocketid = null;
@@ -134,6 +134,41 @@ async function runSocketServer() {
 
 	});
 
+
+
+
+	socket.on('CreateSFU', function(room) {
+		log('Received request to create or join room ' + room);
+
+		var clientsInRoom = io.sockets.adapter.rooms[room];
+		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+		log('Room ' + room + ' now has ' + numClients + ' client(s)');
+
+		socket.join(room);
+		
+		if (numClients !== 0 || serverSocketid !== null) {
+			io.sockets.connected[serverSocketid].disconnect();
+			serverSocketid =  null;
+		}
+		 
+		log('Client ID ' + socket.id + ' created room ' + room);
+	
+		roomid = room;
+		serverSocketid = socket.id;
+		console.log('serverSocketid');
+		console.log(serverSocketid);
+
+		socket.emit('created', room, socket.id, function (data) {
+
+		console.log("ack"); // data will be 'woot'
+		console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
+		}
+
+		);
+
+		//} else if (numClients === 1) {
+
+	});
 
 	socket.on('create or join', function(room) {
 		log('Received request to create or join room ' + room);

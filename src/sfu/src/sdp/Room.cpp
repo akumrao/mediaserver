@@ -36,15 +36,15 @@ Rooms::~Rooms() {
 void Rooms::createRoom(std::string const& name, json const& data, bool isAck, json & ack_resp) {
 
     
-      // std::string roomName = data[0].get<std::string>();
+       std::string roomName = data[0].get<std::string>();
     
-       if( mapRooms.find(name) != mapRooms.end())
+       if( mapRooms.find(roomName) != mapRooms.end())
        {
-           SWarn << "Room already exist " << name << ":" << data[0].get<std::string>() << " - my client ID is " << data[1].get<std::string>();
+           SWarn << "Room already exist " << name << ":" << data[0].get<std::string>() << " - sfuID is " << data[1].get<std::string>();
            return ;
        }
        
-       SInfo << name << ":" << data[0].get<std::string>() << " - my client ID is " << data[1].get<std::string>();
+       SInfo << name << " room :" << data[0].get<std::string>() << " - sfuID is " << data[1].get<std::string>();
 
        
        json param = json::array();
@@ -58,24 +58,27 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        
        Room * room = new Room(signaler);
        room->routerId = trans["internal"]["routerId"];
-       room->name = name;
-       mapRooms[name] = room;
+       room->name = roomName;
+       mapRooms[roomName] = room;
        
    }
 
 
-    void Rooms::onffer(std::string &name , std::string& participantID, const json &sdp)
+    void Rooms::onffer(std::string &room , std::string& participantID, const json &sdp)
     {
+       SInfo << "Request Offer to join room" <<  room << " : " <<  " from Remote with Peer ID  " << participantID ;
+
         
-       if( mapRooms.find(name) != mapRooms.end())
+       if( mapRooms.find(room) != mapRooms.end())
        {
-           SWarn << "Room already exist " << name ;
-           return ;
+          
+            Peers *peers = mapRooms[room]->peers;
+            peers->onffer(participantID,  sdp);
        }
-       
-        Peers *peers = mapRooms[name]->peers;
-        peers->onffer(participantID,  sdp);
-  
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
     }
 
 

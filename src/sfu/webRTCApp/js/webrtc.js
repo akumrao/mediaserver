@@ -125,6 +125,7 @@ function setLocalAndSendMessage2(sessionDescription) {
   console.log('Pc2 answer %o', sessionDescription);
 
     sendMessage ({
+      room: room,
       from: peerID,
       to: remotePeerID,
       type: sessionDescription.type,
@@ -183,6 +184,7 @@ async function getUserMedia1( isWebcam) {
 async function btn_subscribe_resume() {
 
     sendMessage ({
+          room: room,
           from: peerID,
           to: remotePeerID,
           type: "subscribe-resume",
@@ -192,6 +194,7 @@ async function btn_subscribe_resume() {
 async function btn_subscribe_pause() {
 
     sendMessage ({
+          room: room,
           from: peerID,
           to: remotePeerID,
           type: "subscribe-pause",
@@ -207,6 +210,7 @@ async function subscribe() {
 
 
   sendMessage ({
+          room: room,
           from: peerID,
           to: remotePeerID,
           type: "subscribe",
@@ -370,6 +374,7 @@ async function publish()
 
 
         sendMessage ({
+          room: room,
           from: peerID,
           to: remotePeerID,
           type: pc1.localDescription.type,

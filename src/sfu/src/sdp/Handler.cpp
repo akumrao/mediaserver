@@ -67,7 +67,7 @@ namespace SdpParse {
     }
    
     
-    bool Handler::raiseRequest( json &param , json& trans, json& ack_resp)
+    void Handler::raiseRequest( json &param , json& trans, json& ack_resp)
     {
         
         trans["id"] = ++peer->reqId;
@@ -98,7 +98,7 @@ namespace SdpParse {
     std::string Producers::GetAnswer() {
 
 
-        sendingRtpParameters = peer->sendingRtpParametersByKind["audio"];
+        sendingRtpParameters = peer->sendingRtpParametersByKind["video"];
 
         const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
 
@@ -141,7 +141,7 @@ namespace SdpParse {
                 offerMediaObject,
                 mediaSectionIdx.reuseMid,
                 sendingRtpParameters,
-                peer->sendingRemoteRtpParametersByKind["audio"],
+                peer->sendingRemoteRtpParametersByKind["video"],
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();

@@ -184,3 +184,26 @@ When streaming, your browser requests the video and starts receiving the beginni
 You can also reorganize an existing video to optimize it for web streaming. For example, the open source command line video encoder FFMpeg can reorganize the structure of the MP4 file to place the moov atom at the start. Unlike the initial encoding of the video which is very time consuming and CPU intensive, reorganizing the file is an easier operation. And, it will not alter the quality of the original video in any way. Before is an example of using ffmpeg to optimize a video named input.mp4* for streaming. The resulting video is named output.mp4
 
 ffmpeg -i input.mp4 -movflags faststart -acodec copy -vcodec copy output.mp4
+
+
+systemctl  stop media
+
+root@harmancloud:/etc/systemd/system# cat /etc/systemd/system/media.service 
+[Unit]
+Description=mediaserver
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/arvind/mediaserver/src/sfu/sfuserver
+#ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+

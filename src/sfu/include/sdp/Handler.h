@@ -32,7 +32,7 @@ namespace SdpParse {
         
         void transportCreate();
         void transportConnect();
-        bool raiseRequest( nlohmann::json &param , nlohmann::json& trans, nlohmann::json& ack_resp);
+        void raiseRequest( nlohmann::json &param , nlohmann::json& trans, nlohmann::json& ack_resp);
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
