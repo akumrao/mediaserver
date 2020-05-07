@@ -87,7 +87,7 @@ namespace SdpParse {
 
         std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
 
-        void loadAnswer(Signaler *signal, std::string sdp);
+        void loadAnswer( std::string sdp);
         void resume(Signaler *signal, bool pause );
         
 

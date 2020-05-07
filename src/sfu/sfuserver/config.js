@@ -4,7 +4,7 @@
       "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
       "rtcMinPort": 10000,
       "rtcMaxPort": 10100,
-      "logLevel": "trace",
+      "logLevel": "info",
       "logTags": [
         "info",
         "ice",

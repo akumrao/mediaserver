@@ -76,7 +76,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     void Rooms::onSubscribe(std::string &room , std::string& participantID)
     {
   
-           SInfo << "Request Subscribe to join room" <<  room << " : " <<  " from Remote with Peer ID  " << participantID ;
+        SInfo << "Consumer subscribe to join room" <<  room << " : " <<  " from participantID  " << participantID ;
 
         
        if( mapRooms.find(room) != mapRooms.end())
@@ -89,21 +89,36 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        {
             SError << "Room does not exist: " << room  ;
        }
-           
-              
 
     }
 
-    void Rooms::onffer(std::string &room , std::string& participantID, const json &sdp)
+    void Rooms::on_producer_offer(std::string &room , std::string& participantID, const json &sdp)
     {
-       SInfo << "Request Offer to join room" <<  room << " : " <<  " from Remote with Peer ID  " << participantID ;
+       SInfo << "Producer Offer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
+
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+          
+            Peers *peers = mapRooms[room]->peers;
+            peers->on_producer_offer(participantID,  sdp);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+    }
+    
+    
+    void Rooms::on_consumer_answer(std::string &room , std::string& participantID, const json &sdp)
+    {
+       SInfo << "Consumer got answer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
 
         
        if( mapRooms.find(room) != mapRooms.end())
        {
           
             Peers *peers = mapRooms[room]->peers;
-            peers->onffer(participantID,  sdp);
+            peers->on_consumer_answer(participantID,  sdp);
        }
        else
        {

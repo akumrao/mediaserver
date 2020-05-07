@@ -46,7 +46,8 @@ public:
     
     void createRoom(std::string const& name, nlohmann::json const& data, bool isAck, nlohmann::json & ack_resp);
     
-    void onffer(std::string &room , std::string& participantID, const nlohmann::json &sdp);
+    void on_producer_offer(std::string &room , std::string& participantID, const nlohmann::json &sdp);
+    void on_consumer_answer(std::string &room , std::string& participantID, const nlohmann::json &sdp);;
     
     void onSubscribe(std::string &room , std::string& participantID);
     void resume(std::string &room , std::string& participantID, bool flag);

@@ -143,9 +143,13 @@ namespace SdpParse {
         return caps;
     }
     
-    
-     void Peer::onffer( const json &sdp)
-     {
+    void Peer::on_consumer_answer( const json &sdp)
+    {
+         consumers->loadAnswer(sdp["sdp"].get<std::string>());   
+    }
+      
+    void Peer::on_producer_offer( const json &sdp)
+    {
          Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
          
          producers =  new Producers(signaler,room , this );
@@ -153,29 +157,29 @@ namespace SdpParse {
           
         signaler->sendSDP("answer", producers->mapProducer.begin()->second->answer, participantID);
             
-     }
+    }
      
-     void Peer::onSubscribe( )
-     {
+    void Peer::onSubscribe( )
+    {
           consumers =  new Consumers(signaler,room , this, producers);
           consumers->runit();
           signaler->sendSDP("offer", consumers->mapConsumer.begin()->second->offer, participantID);
-     }
+    }
      
-     Peer::~Peer()
-     {
-         if(producers)
-         {
-             delete producers;
-             producers = nullptr;
-         }
+    Peer::~Peer()
+    {
+        if(producers)
+        {
+            delete producers;
+            producers = nullptr;
+        }
          
-         if(consumers)
-         {
-             delete consumers;
-             consumers = nullptr;
-         }
-     }
+        if(consumers)
+        {
+            delete consumers;
+            consumers = nullptr;
+        }
+    }
     
     /*****************************************************************************
      Peers
@@ -189,7 +193,27 @@ namespace SdpParse {
         
     }
     
-    void Peers::onffer( std::string& participantID, const json &sdp)
+    
+    
+    
+    void Peers::on_consumer_answer( std::string& participantID, const json &sdp)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+           
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer already exist " << participantID ;
+//            peer = new Peer( signaler, room);
+//            peer->participantID = participantID;
+//            peer->participantName = participantID;
+//            mapPeers[participantID] = peer;
+        }
+
+        peer->on_consumer_answer(sdp);
+          
+    }
+    void Peers::on_producer_offer( std::string& participantID, const json &sdp)
     {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
@@ -199,9 +223,10 @@ namespace SdpParse {
             peer = new Peer( signaler, room);
             peer->participantID = participantID;
             peer->participantName = participantID;
+            mapPeers[participantID] = peer;
         }
 
-        peer->onffer(sdp);
+        peer->on_producer_offer(sdp);
           
     }
     
@@ -209,12 +234,15 @@ namespace SdpParse {
     {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
-            SWarn << "Peer already exist " << participantID ;
+            SInfo << "Peer already exist " << participantID ;
             peer = mapPeers[participantID];
         } else {
+            
+             SInfo << " New Peer " << participantID ;
             peer = new Peer( signaler, room);
             peer->participantID = participantID;
             peer->participantName = participantID;
+            mapPeers[participantID] = peer;
         }
 
         peer->onSubscribe();

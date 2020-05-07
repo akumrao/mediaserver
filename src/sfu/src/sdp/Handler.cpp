@@ -281,7 +281,7 @@ namespace SdpParse {
     /**
      * Load andwer SDP.
      */
-    void Consumers::loadAnswer(Signaler *signal, std::string sdp ) {
+    void Consumers::loadAnswer(std::string sdp ) {
         ////////////////////////
         json ansdpObject = sdptransform::parse(sdp);
         //SDebug << "answer " << ansdpObject.dump(4);

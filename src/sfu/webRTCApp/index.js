@@ -146,7 +146,7 @@ async function runSocketServer() {
 
 		socket.join(room);
 		
-		if (numClients !== 0 || serverSocketid !== null) {
+		if (numClients !== 0 && serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
 			io.sockets.connected[serverSocketid].disconnect();
 			serverSocketid =  null;
 		}

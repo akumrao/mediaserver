@@ -59,7 +59,9 @@ namespace SdpParse {
     
     int reqId{1};
     
-    void onffer( const nlohmann::json &sdp);
+    void on_producer_offer( const nlohmann::json &sdp);
+    void on_consumer_answer( const nlohmann::json &sdp);
+   
     void onSubscribe();
     
     private:
@@ -82,7 +84,9 @@ namespace SdpParse {
         
         ~Peers();
         
-        void onffer( std::string& participantID, const nlohmann::json &sdp);
+        void on_producer_offer( std::string& participantID, const nlohmann::json &sdp);
+        void on_consumer_answer( std::string& participantID, const nlohmann::json &sdp);
+        
         void onSubscribe(std::string& participantID);
         
         std::map< std::string, Peer*> mapPeers;
