@@ -50,7 +50,7 @@ namespace SdpParse {
         Room *room;
         Peer *peer;
         
-       // static int ids;
+        std::string classtype;
         
     };
 

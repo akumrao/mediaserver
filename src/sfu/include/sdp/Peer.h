@@ -57,12 +57,10 @@ namespace SdpParse {
     nlohmann::json sendingRemoteRtpParametersByKind ;
     nlohmann::json sdpObject;
     
-    int reqId{1};
-    
     void on_producer_offer( const nlohmann::json &sdp);
     void on_consumer_answer( const nlohmann::json &sdp);
    
-    void onSubscribe();
+    void onSubscribe( Peer *);
     
     private:
         

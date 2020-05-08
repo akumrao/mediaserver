@@ -70,11 +70,12 @@ namespace SdpParse {
     void Handler::raiseRequest( json &param , json& trans, json& ack_resp)
     {
         
-        trans["id"] = ++peer->reqId;
+       // trans["id"] = ++peer->reqId;
         trans["internal"]["transportId"] = transportId;
         trans["internal"]["routerId"]= room->routerId;
         param.push_back(trans);
-        signaler->request("signal", param, true, ack_resp);
+        
+        signaler->request(classtype, param, true, ack_resp);
     }
     
     void Handler::transportConnect()
@@ -93,6 +94,7 @@ namespace SdpParse {
     
     Producers::Producers(Signaler *signaler, Room *room, Peer *peer): Handler(signaler, room, peer)
     {
+        classtype = "Producers";
     }
  
     std::string Producers::GetAnswer() {
@@ -223,6 +225,7 @@ namespace SdpParse {
      *************************************************************************************************************/
     Consumers::Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers) : Handler(signaler, room, peer),producers(producers)
     {
+        classtype = "Consumers";
     }
 
 

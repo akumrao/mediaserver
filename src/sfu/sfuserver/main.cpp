@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
   
     Settings::PrintConfiguration();
    
-    try {
+    //try {
         
          
         base::Application app;
@@ -124,12 +124,12 @@ int main(int argc, char* argv[]) {
         //uv_sleep(200);
         //base::sleep(200);
 
-        std::_Exit(EXIT_SUCCESS);
-    } catch (const exception& error) {
-        MS_ERROR_STD("failure exit: %s", error.what());
-
-        std::_Exit(EXIT_FAILURE);
-    }
+//        std::_Exit(EXIT_SUCCESS);
+//    } catch (const exception& error) {
+//        MS_ERROR_STD("failure exit: %s", error.what());
+//
+//        std::_Exit(EXIT_FAILURE);
+//    }
 
   
 }
