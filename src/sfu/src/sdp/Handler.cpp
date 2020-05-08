@@ -205,7 +205,7 @@ namespace SdpParse {
             p->producer = {
                 { "id", trans["internal"]["producerId"]},
                 {"kind", "video"},
-                {"rtpParameters", sendingRtpParameters},
+                {"recvRtpCapabilities",  peer->GetRtpCapabilities()  }, //{"rtpParameters", sendingRtpParameters},
                 {"type", ack_resp.at(0)["data"]["type"]},
                 { "consumableRtpParameters", consumableRtpParameters}
 
@@ -315,7 +315,8 @@ namespace SdpParse {
 
 
 
-            json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
+            //json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
+             json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], producer["recvRtpCapabilities"]);
             //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
 
             STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
