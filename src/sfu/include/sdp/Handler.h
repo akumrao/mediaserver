@@ -31,19 +31,19 @@ namespace SdpParse {
         }
         
         void transportCreate();
-        void transportConnect();
+        void transportConnect(const nlohmann::json& sdpObject, const std::string& localDtlsRole);
         void raiseRequest( nlohmann::json &param , nlohmann::json& trans, nlohmann::json& ack_resp);
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
-        void _setupTransport(const nlohmann::json & sdpObject, const std::string localDtlsRole);
+        nlohmann::json  _setupTransport(const nlohmann::json & sdpObject, const std::string& localDtlsRole);
         
         
     protected:
       
         //std::string peerID;
         std::string transportId;
-        nlohmann::json dtlsParameters;
+        //nlohmann::json dtlsParameters;
         bool forceTcp{false};
  
         Signaler *signaler;
@@ -61,7 +61,7 @@ namespace SdpParse {
         
         Producers(Signaler *signaler, Room *room, Peer *peer);
 
-        void runit();
+        void runit(std::string & answer );
         
         struct Producer
         {   std::string answer;
@@ -69,11 +69,10 @@ namespace SdpParse {
         };
         
         std::map<std::string, Producer*>  mapProducer;
+        std::map<size_t, std::string>  mapProdMid;
         
     private:
-        std::string GetAnswer();
-        nlohmann::json sendingRtpParameters;
-    
+        std::string GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);
         
     };
 
@@ -83,9 +82,9 @@ namespace SdpParse {
     public:
         Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers);
       
-        void runit();
+        void runit(std::string& offer);
 
-        std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
+        std::string GetOffer(const std::string& id, size_t  mid , const std::string& kind, const nlohmann::json & rtpParameters);
 
         void loadAnswer( std::string sdp);
         void resume(Signaler *signal, bool pause );
@@ -99,7 +98,7 @@ namespace SdpParse {
         std::map<std::string, Consumer*>  mapConsumer;
         
     private:
-        int mid{0};
+        //int mid{0};
       
         Producers *producers;
 

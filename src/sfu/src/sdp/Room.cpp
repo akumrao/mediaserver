@@ -95,7 +95,8 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     void Rooms::on_producer_offer(std::string &room , std::string& participantID, const json &sdp)
     {
        SInfo << "Producer Offer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
-
+       
+       
        if( mapRooms.find(room) != mapRooms.end())
        {
           

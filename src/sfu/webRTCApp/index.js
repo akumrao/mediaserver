@@ -240,8 +240,19 @@ async function runSocketServer() {
 
 
 	 console.log('app message: ', message);
+
+
+	 	if ('to' in message) {
+			socket.to(message.to).emit('message', message);
+		}
+		else
+		{
+			socket.to(serverSocketid).emit('message', message);
+		}
+
+
     // for a real app, would be room-only (not broadcast)
-    	socket.broadcast.emit('message', message);
+    	
 
 	});
 

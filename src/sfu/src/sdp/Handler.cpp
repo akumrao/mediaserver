@@ -14,16 +14,18 @@ using json = nlohmann::json;
 namespace SdpParse {
     
     
-    void Handler::_setupTransport(const json & sdpObject, const std::string localDtlsRole) {
+    nlohmann::json Handler::_setupTransport(const json & sdpObject, const std::string & localDtlsRole) {
 
         // Get our local DTLS parameters.
-        dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
+        json dtlsParameters = Sdp::Utils::extractDtlsParameters(sdpObject);
         // Set our DTLS role.
         dtlsParameters["role"] = localDtlsRole;
 
         // Update the remote DTLS role in the SDP.
         remoteSdp->UpdateDtlsRole(
                 localDtlsRole == "client" ? "server" : "client");
+        
+        return dtlsParameters;
     }
     
     void Handler::createSdp(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
@@ -78,8 +80,10 @@ namespace SdpParse {
         signaler->request(classtype, param, true, ack_resp);
     }
     
-    void Handler::transportConnect()
+    void Handler::transportConnect(const nlohmann::json& sdpObject, const std::string& localDtlsRole )
     {
+        json  dtlsParameters = _setupTransport( sdpObject, localDtlsRole);
+        
         json ack_resp;
         json param = json::array();
         param.push_back("transport.connect");
@@ -97,15 +101,19 @@ namespace SdpParse {
         classtype = "Producers";
     }
  
-    std::string Producers::GetAnswer() {
+    std::string Producers::GetAnswer(std::string &kind, json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx) {
 
-
-        sendingRtpParameters = peer->sendingRtpParametersByKind["video"];
-
-        const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
-
+      
         json& offerMediaObject = peer->sdpObject["media"][mediaSectionIdx.idx];
+        
+        kind = offerMediaObject["type"].get<std::string>();
+        
+        sendingRtpParameters = peer->sendingRtpParametersByKind[kind];
+        
+        //SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
 
+       // SInfo << "offerMediaObject " << offerMediaObject.dump(4);
+        
         auto midIt = offerMediaObject.find("mid");
 
         if (midIt == offerMediaObject.end()) {
@@ -113,6 +121,8 @@ namespace SdpParse {
             throw "Found no mid in SDP";
         }
 
+        
+                
         sendingRtpParameters["mid"] = *midIt;
 
         sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
@@ -137,83 +147,95 @@ namespace SdpParse {
 
         json *codecOptions = nullptr;
 
-        _setupTransport(peer->sdpObject, "server");
+      //  _setupTransport(peer->sdpObject, "server");
 
         remoteSdp->Send(
                 offerMediaObject,
                 mediaSectionIdx.reuseMid,
                 sendingRtpParameters,
-                peer->sendingRemoteRtpParametersByKind["video"],
+                peer->sendingRemoteRtpParametersByKind[kind],
                 codecOptions);
 
         auto answer = remoteSdp->GetSdp();
 
-        if (remoteSdp) {
-            delete remoteSdp;
-            remoteSdp = nullptr;
-        }
+//        if (remoteSdp) {
+//            delete remoteSdp;
+//            remoteSdp = nullptr;
+//        }
 
-        STrace << "answer: " << answer;
+       // SInfo << "answer: " << answer;
         return answer;
     }
 
     
     
-    void Producers::runit() {
+    void Producers::runit(std::string& answer ) {
         
-        Producer *p = new Producer();
         
         transportCreate();
-        p->answer = GetAnswer();
-        transportConnect();
-
+        transportConnect(peer->sdpObject, "server");
+        
+       // int size = peer->canProduceByKind.size();
+        
+       // bool val = peer->canProduceByKind["audio"];
+        //bool val1 = peer->canProduceByKind["video"];
+        
+   
+        for( int i=0 ; i < peer->sdpObject["media"].size(); ++i )
         {
-            STrace << "sendingRtpParameters " << sendingRtpParameters.dump(4);
-
-
-            json ack_resp;
-            json param = json::array();
-            param.push_back("transport.produce");
-            param.push_back(peer->participantID);
-            json &trans = Settings::configuration.transport_produce;
+            std::string ckind;
             
-            trans["internal"]["producerId"] = uuid4::uuid();
+           // if( ckind.second )
+            {   json sendingRtpParameters;
+                Producer *p = new Producer();
+                 
+                Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
+
+                answer = GetAnswer( ckind , sendingRtpParameters, mediaSectionIdx);
+                
+
+                json ack_resp;
+                json param = json::array();
+                param.push_back("transport.produce");
+                param.push_back(peer->participantID);
+                json &trans = Settings::configuration.transport_produce;
+
+                trans["internal"]["producerId"] = uuid4::uuid();
 
 
-            // This may throw.
-            auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
+                // This may throw.
+                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
 
-            auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters("video", sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
-
-
-            STrace << "consumableRtpParameters " << rtpMapping.dump(4);
-            STrace << "rtpMapping " << rtpMapping.dump(4);
+                auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(ckind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
 
 
-            json data = {
-                {"kind", "video"},
-                {"paused", false},
-                {"rtpMapping", rtpMapping},
-                {"rtpParameters", sendingRtpParameters},
-            };
+               // STrace << "consumableRtpParameters " << rtpMapping.dump(4);
+               // STrace << "rtpMapping " << rtpMapping.dump(4);
 
-            trans["data"] = data;
+                json data = {
+                    {"kind", ckind},
+                    {"paused", false},
+                    {"rtpMapping", rtpMapping},
+                    {"rtpParameters", sendingRtpParameters},
+                };
 
-            raiseRequest( param, trans, ack_resp);
+                trans["data"] = data;
 
+                raiseRequest( param, trans, ack_resp);
 
-            p->producer = {
-                { "id", trans["internal"]["producerId"]},
-                {"kind", "video"},
-                {"recvRtpCapabilities",  peer->GetRtpCapabilities()  }, //{"rtpParameters", sendingRtpParameters},
-                {"type", ack_resp.at(0)["data"]["type"]},
-                { "consumableRtpParameters", consumableRtpParameters}
+                p->producer = {
+                    { "id", trans["internal"]["producerId"]},
+                    {"kind", ckind},
+                    {"recvRtpCapabilities",  peer->GetRtpCapabilities()  }, //{"rtpParameters", sendingRtpParameters},
+                    {"type", ack_resp.at(0)["data"]["type"]},
+                    { "consumableRtpParameters", consumableRtpParameters}
+                };
 
-            };
-
-            STrace << "Final Producer " << p->producer.dump(4);
-            
-            mapProducer[p->producer["id"]] = p;
+               // SInfo << "Final Producer " << p->producer.dump(4);
+                mapProducer[p->producer["id"]] = p;
+                mapProdMid[ mediaSectionIdx.idx ]=p->producer["id"];
+                
+            }
 
 
         }
@@ -229,17 +251,17 @@ namespace SdpParse {
     }
 
 
-    std::string Consumers::GetOffer(const std::string& id, const std::string& kind, const json& rtpParameters) {
+    std::string Consumers::GetOffer(const std::string& id, size_t  mid, const std::string& kind, const json& rtpParameters) {
         std::string localId;
 
-        //static int mid=0;  // wrong TBD
-
         // mid is optional, check whether it exists and is a non empty string.
-        auto midIt = rtpParameters.find("mid");
-        if (midIt != rtpParameters.end() && (midIt->is_string() && !midIt->get<std::string>().empty()))
-            localId = midIt->get<std::string>();
-        else
-            localId = std::to_string(mid++);
+//        auto midIt = rtpParameters.find("mid");
+//        if (midIt != rtpParameters.end() && (midIt->is_string() && !midIt->get<std::string>().empty()))
+//            localId = midIt->get<std::string>();
+//        else
+//            localId = std::to_string(mid++);
+        
+        localId = std::to_string(mid);
 
         auto& cname = rtpParameters["rtcp"]["cname"];
 
@@ -288,21 +310,21 @@ namespace SdpParse {
         ////////////////////////
         json ansdpObject = sdptransform::parse(sdp);
         //SDebug << "answer " << ansdpObject.dump(4);
-        _setupTransport(ansdpObject, "client");
+      //  _setupTransport(ansdpObject, "client");
 
-        transportConnect();
+        transportConnect( ansdpObject   , "client");
 
     }
 
  
 
-    void Consumers::runit() {
+    void Consumers::runit(std::string& offer) {
 
         transportCreate();
   
-        for( auto& prod : producers->mapProducer)
+        for( auto& prodMid : producers->mapProdMid)
         {
-            json &producer = prod.second->producer;
+            json &producer = producers->mapProducer[prodMid.second]->producer;
                     
             json ack_resp;
             json param = json::array();
@@ -319,7 +341,7 @@ namespace SdpParse {
              json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], producer["recvRtpCapabilities"]);
             //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
 
-            STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
+            //STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
 
             //bool paused = producer["kind"] == "video" ? true : false;
 
@@ -350,10 +372,13 @@ namespace SdpParse {
 
             };
 
-            STrace << "Final Consumer " << c->consumer.dump(4);
+           // STrace << "Final Consumer " << c->consumer.dump(4);
             ///////////////////
 
-            c->offer = GetOffer(c->consumer["id"], c->consumer["kind"], c->consumer["rtpParameters"]);
+            offer = GetOffer(c->consumer["id"], prodMid.first , c->consumer["kind"], c->consumer["rtpParameters"]);
+            
+            
+            SInfo << "Offer: " << offer;
             
             mapConsumer[ c->consumer["id"]] = c; 
 

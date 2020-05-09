@@ -31,6 +31,12 @@ namespace SdpParse {
         std::string participantID;
         std::string participantName;
         
+        
+        std::map<std::string, bool> canProduceByKind ={
+            { "audio", false},
+            { "video", false}
+        };
+        
 
     private:
         // Loaded flag.
@@ -40,12 +46,6 @@ namespace SdpParse {
         // Local RTP capabilities for receiving media.
         nlohmann::json recvRtpCapabilities;
         // Whether we can produce audio/video based on computed extended RTP capabilities.
-        // clang-format off
-        std::map<std::string, bool> canProduceByKind ={
-            { "audio", false},
-            { "video", false}
-        };
-        // clang-format on
         // Local SCTP capabilities.
         nlohmann::json sctpCapabilities;
         

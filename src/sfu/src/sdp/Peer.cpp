@@ -152,21 +152,23 @@ namespace SdpParse {
     {
          Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
          
+         std::string answer;
+                 
          producers =  new Producers(signaler,room , this );
-         producers->runit();
+         producers->runit(answer);
           
-        int sz =  producers->mapProducer.size(); 
-        signaler->sendSDP("answer", producers->mapProducer.begin()->second->answer, participantID);
+        //int sz =  producers->mapProducer.size(); 
+        signaler->sendSDP("answer", answer, participantID);
             
     }
      
     void Peer::onSubscribe( Peer *producerPeer)
     {
           if( producerPeer->producers)
-          {
+          {      std::string offer;
                 consumers =  new Consumers(signaler,room , this, producerPeer->producers);
-                consumers->runit();
-                signaler->sendSDP("offer", consumers->mapConsumer.begin()->second->offer, participantID);
+                consumers->runit(offer);
+                signaler->sendSDP("offer", offer, participantID);
           }
     }
      

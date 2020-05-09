@@ -132,17 +132,23 @@ function setLocalAndSendMessage2(sessionDescription) {
       desc:sessionDescription
     });
 
-   const transceiver = pc2.getTransceivers() 
-            .find((t) => t.mid === "0");
+   const transceivers = pc2.getTransceivers() ;
 
-   if (!transceiver)
+           
+    console.log( "transceivers %o", transceivers);
+   if (!transceivers)
             throw new Error('new RTCRtpTransceiver not found');
+     
+
+  const stream = new MediaStream();
+   for (var transceiver in transceivers) {
+        const track = transceivers[transceiver].receiver.track ;
+        stream.addTrack(track);
+
+   }
 
 
-   const track = transceiver.receiver.track ;
 
-   const stream = new MediaStream();
-   stream.addTrack(track);
 
        // socket.emit('resume');
 
@@ -168,7 +174,7 @@ async function getUserMedia1( isWebcam) {
   let stream;
   try {
 
-  stream =  await navigator.mediaDevices.getUserMedia({ video: true });
+  stream =  await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
 
     // stream = isWebcam ?
     //   await navigator.mediaDevices.getUserMedia({ video: true }) :
@@ -200,6 +206,134 @@ async function btn_subscribe_pause() {
           type: "subscribe-pause",
         });
 }
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
+
+//var pc1
+async function publish() 
+{
+  // const isWebcam = (e.target.id === 'btn_webcam');
+  // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
+
+  var parser = new URL(window.location.href); 
+  var istcp = parser.searchParams;
+  const tcpValue = istcp.get('forceTcp') ? true : false;
+
+
+   let stream;
+
+   stream =  await getUserMedia1(true);
+   const videotrack = stream.getVideoTracks()[0];
+
+   const audiotrack = stream.getAudioTracks()[0];
+
+   //const params = { track };
+
+
+
+    pc1 = new RTCPeerConnection(
+      {
+        iceServers         : [],
+        iceTransportPolicy : 'all',
+        bundlePolicy       : 'max-bundle',
+        rtcpMuxPolicy      : 'require',
+        sdpSemantics       : 'unified-plan'
+      });
+
+        // Handle RTCPeerConnection connection status.
+        pc1.addEventListener('iceconnectionstatechange', () =>
+        {
+            switch (pc1.iceConnectionState)
+            {
+                case 'checking':
+                     console.log( 'publishing...');
+                    break;
+                case 'connected':
+                case 'completed':
+
+                    const streamV = new MediaStream();
+                    streamV.addTrack(videotrack);
+
+                    document.querySelector('#local_video').srcObject = streamV;
+                  // $txtPublish.innerHTML = 'published';
+                  // $fsPublish.disabled = true;
+                  // $fsSubscribe.disabled = false;
+                   console.log( 'published...');
+                    break;
+                case 'failed':
+                    pc1.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+                case 'disconnected':
+                                         pc1.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+                case 'closed':
+                     pc1.close();
+                    // $txtPublish.innerHTML = 'failed';
+                    // $fsPublish.disabled = false;
+                    // $fsSubscribe.disabled = true;
+                    console.log( 'failed...');
+                    break;
+            }
+        });
+
+        var encodings;
+        var _stream = new MediaStream();
+
+
+        // const transceiver = pc1.addTransceiver(
+        //     videotrack,
+        //     {
+        //         direction     : 'sendonly'
+
+        //     });
+
+        const transceiver1 = pc1.addTransceiver(
+            audiotrack,
+            {
+                direction     : 'sendonly'
+
+            });
+         
+         
+
+        const offer = await pc1.createOffer();
+
+        console.log( "publish offer: %o", offer);
+
+         await pc1.setLocalDescription(offer);
+
+        // We can now get the transceiver.mid.
+        const localId = transceiver.mid;
+
+        console.log("arvind transceiver.mid " + transceiver.mid);
+
+        isStarted = true;
+
+        //document.querySelector('#local_video').srcObject = stream;
+
+
+        sendMessage ({
+          room: room,
+          from: peerID,
+          to: remotePeerID,
+          type: pc1.localDescription.type,
+          desc: pc1.localDescription
+        });
+
+ 
+}
+/////////////////////////////End Publish
 
 
 async function subscribe() {
@@ -272,132 +406,3 @@ async function subscribe() {
 
  
 }//end subscribe 
-
-
-
-///////////////////////////////////////////////////////////////////////////
-
-//var pc1
-async function publish() 
-{
-  // const isWebcam = (e.target.id === 'btn_webcam');
-  // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
-
-  var parser = new URL(window.location.href); 
-  var istcp = parser.searchParams;
-  const tcpValue = istcp.get('forceTcp') ? true : false;
-
-
-   let stream;
-
-   stream =  await getUserMedia1(true);
-   const track = stream.getVideoTracks()[0];
-   const params = { track };
-
-
-
-    pc1 = new RTCPeerConnection(
-      {
-        iceServers         : [],
-        iceTransportPolicy : 'all',
-        bundlePolicy       : 'max-bundle',
-        rtcpMuxPolicy      : 'require',
-        sdpSemantics       : 'unified-plan'
-      });
-
-        // Handle RTCPeerConnection connection status.
-        pc1.addEventListener('iceconnectionstatechange', () =>
-        {
-            switch (pc1.iceConnectionState)
-            {
-                case 'checking':
-                     console.log( 'publishing...');
-                    break;
-                case 'connected':
-                case 'completed':
-                    document.querySelector('#local_video').srcObject = stream;
-                  // $txtPublish.innerHTML = 'published';
-                  // $fsPublish.disabled = true;
-                  // $fsSubscribe.disabled = false;
-                   console.log( 'published...');
-                    break;
-                case 'failed':
-                    pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'disconnected':
-                                         pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'closed':
-                     pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-            }
-        });
-
-        var encodings;
-        var _stream = new MediaStream();
-
-        const transceiver = pc1.addTransceiver(
-            track,
-            {
-                direction     : 'sendonly'
-
-            });
-         
-         
-
-        const offer = await pc1.createOffer();
-
-        console.log( "publish offer: %o", offer);
-
-         await pc1.setLocalDescription(offer);
-
-        // We can now get the transceiver.mid.
-        const localId = transceiver.mid;
-
-        console.log("arvind transceiver.mid " + transceiver.mid);
-
-        isStarted = true;
-
-        //document.querySelector('#local_video').srcObject = stream;
-
-
-        sendMessage ({
-          room: room,
-          from: peerID,
-          to: remotePeerID,
-          type: pc1.localDescription.type,
-          desc: pc1.localDescription
-        });
-
-
-
-
-
-  //socket.emit('createProducerTransport', {  forceTcp: tcpValue,  rtpCapabilities: device.rtpCapabilities,
- 
-
-
- 
-
-
-
-
-
-
-
-    //////////////////////////////////////////////////////////////
-
-  
-}
