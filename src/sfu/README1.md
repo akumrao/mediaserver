@@ -13,7 +13,34 @@
 
 - TransportCC packets, in cases where the sender's network bandwidth estimation is performed by the sender, based on TrasnportCC packet data
 
+*FEC Forward Error Correction  and RED* 
+When you use FEC we use RED to encapsulate the payload (in this case
+VP8) and FEC. The whole stream will look like one RED stream
+independent on the level of FEC protection. Hence when FEC is enabled
+we will add the RED header to all packets even if FEC is currently not
+used. FEC can be "on" for a fraction of frames (packets) or "on" for
+all frames. This is determined by the importance of the frame and
+packet (as an example the packets of a key frame is most important a
+packet to an enhancement temporal layer is nice to have but not
+important for the stream)
 
+The only way to know if the packet is FEC or VP8 is to look direct
+after the RTP header, where the RED header is located.
+
+Since the stream look like a normal RTP stream where RED is the
+payload type and all packets come in sequence without gaps there is no
+issue to use SRTP.
+
+*ULPFEC* stands for Uneven Level Protection Forward Error Correction
+ XOR across multiple packets to generate this redundant information and be able to recover lost packets in the receiver side
+ 
+ RTCP NACK mechanism to report missing RTP packets.
+ Picture Loss Indication (PLI) to request a full keyframe from the remote party
+
+FIR (Full Intra Request)
+FIR and PLI not much difference
+FIR when ecoder changes so request for Intra frame
+PLI when decoder no more decode because of interframes loss so request key frame ( IDR)
 
 **Chrome**
 
