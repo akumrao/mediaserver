@@ -291,12 +291,12 @@ async function publish()
         var _stream = new MediaStream();
 
 
-        // const transceiver = pc1.addTransceiver(
-        //     videotrack,
-        //     {
-        //         direction     : 'sendonly'
+        const transceiver = pc1.addTransceiver(
+            videotrack,
+            {
+                direction     : 'sendonly'
 
-        //     });
+            });
 
         const transceiver1 = pc1.addTransceiver(
             audiotrack,
@@ -314,9 +314,9 @@ async function publish()
          await pc1.setLocalDescription(offer);
 
         // We can now get the transceiver.mid.
-        const localId = transceiver.mid;
+        //const localId = transceiver.mid;
 
-        console.log("arvind transceiver.mid " + transceiver.mid);
+        //console.log("arvind transceiver.mid " + transceiver.mid);
 
         isStarted = true;
 

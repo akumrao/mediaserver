@@ -51,7 +51,7 @@ public:
     
     void onSubscribe(std::string &room , std::string& participantID);
     void resume(std::string &room , std::string& participantID, bool flag);
-    
+    void onDisconnect(std::string &room , std::string& participantID);
     
 private:
     

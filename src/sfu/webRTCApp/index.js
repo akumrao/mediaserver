@@ -131,6 +131,11 @@ async function runSocketServer() {
 	  	serverSocketid = null;
 	  	console.log(serverSocketid);
 	  }
+	  else
+	  {
+	  	socket.to(serverSocketid).emit('disconnectClient', 'foo', socket.id);
+	  }
+
 
 	});
 

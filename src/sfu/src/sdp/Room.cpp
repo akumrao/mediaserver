@@ -126,6 +126,26 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
             SError << "Room does not exist: " << room  ;
        }
     }
+    
+    
+    void Rooms::onDisconnect(std::string &room , std::string& participantID)
+    {
+  
+        SInfo << " Disconeect peer from Room: " <<  room << " : " <<  " with participantID  " << participantID ;
+
+        
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+          
+            Peers *peers = mapRooms[room]->peers;
+            peers->onDisconnect(participantID);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+
+    }
 
 
 }//namespace SdpParse 

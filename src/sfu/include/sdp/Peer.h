@@ -8,6 +8,7 @@
 #include "sdp/Handler.h"
 
 namespace SdpParse {
+    class Peers;
     struct Room;
     class Peer {
     public:
@@ -62,10 +63,17 @@ namespace SdpParse {
    
     void onSubscribe( Peer *);
     
+    void onDisconnect( Peers *peers);
+    
     private:
         
      Producers *producers{nullptr};
      Consumers *consumers{nullptr};
+     
+     std::map<std::string, Consumers* >  mapOtherConumers;
+     std::map<std::string, Consumers* >  mapSelfConumers;
+     
+     
      
      Room *room;
      Signaler *signaler;
@@ -86,6 +94,9 @@ namespace SdpParse {
         void on_consumer_answer( std::string& participantID, const nlohmann::json &sdp);
         
         void onSubscribe(std::string& participantID);
+        
+        void onDisconnect( std::string& participantID);
+        
         
         std::map< std::string, Peer*> mapPeers;
         

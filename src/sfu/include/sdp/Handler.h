@@ -64,7 +64,7 @@ namespace SdpParse {
         void runit(std::string & answer );
         
         struct Producer
-        {   std::string answer;
+        {   //std::string answer;
             nlohmann::json producer;
         };
         
@@ -91,7 +91,7 @@ namespace SdpParse {
         
 
         struct Consumer
-        {   std::string offer;
+        {  // std::string offer;
             nlohmann::json consumer;
         };
         

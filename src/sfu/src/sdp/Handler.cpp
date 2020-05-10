@@ -378,7 +378,7 @@ namespace SdpParse {
             offer = GetOffer(c->consumer["id"], prodMid.first , c->consumer["kind"], c->consumer["rtpParameters"]);
             
             
-            SInfo << "Offer: " << offer;
+           // SInfo << "Offer: " << offer;
             
             mapConsumer[ c->consumer["id"]] = c; 
 

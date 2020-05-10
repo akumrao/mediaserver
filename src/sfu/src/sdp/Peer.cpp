@@ -153,7 +153,13 @@ namespace SdpParse {
          Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
          
          std::string answer;
-                 
+         
+         if(producers)
+         {
+             delete producers;
+             producers = nullptr;
+         }
+             
          producers =  new Producers(signaler,room , this );
          producers->runit(answer);
           
@@ -164,13 +170,60 @@ namespace SdpParse {
      
     void Peer::onSubscribe( Peer *producerPeer)
     {
+          if(producerPeer->mapOtherConumers.find(participantID ) !=   producerPeer->mapOtherConumers.end() )
+          {
+            //  delete producerPeer->mapOtherConumers[ participantID ];
+              producerPeer->mapOtherConumers.erase(participantID);
+          }
+          
+          if(mapSelfConumers.find(producerPeer->participantID ) !=   mapSelfConumers.end() )
+          {
+              delete mapSelfConumers[ producerPeer->participantID ];
+              mapSelfConumers.erase(producerPeer->participantID);
+          }
+          
+          
           if( producerPeer->producers)
           {      std::string offer;
                 consumers =  new Consumers(signaler,room , this, producerPeer->producers);
                 consumers->runit(offer);
                 signaler->sendSDP("offer", offer, participantID);
+                producerPeer->mapOtherConumers[ participantID ] = consumers;
+                mapSelfConumers[ producerPeer->participantID ] = consumers;
           }
     }
+    
+    void Peer::onDisconnect( Peers *peers)
+    {
+        for(auto & othCon : mapOtherConumers )
+        {
+            //delete othCon.second;
+            SInfo <<  "delte producer: " <<  participantID <<  " cusumer: " << othCon.first;
+            mapOtherConumers.erase(othCon.first);
+
+        }
+        mapOtherConumers.clear();
+         
+         
+        for(auto & selfCon : mapSelfConumers )
+        {
+           delete selfCon.second;
+
+          Peer *producerPeer =  peers->mapPeers[selfCon.first];
+
+          if(producerPeer)
+          if(producerPeer->mapOtherConumers.find(participantID ) !=   producerPeer->mapOtherConumers.end() )
+          {
+              SInfo <<  "delete producer: " <<  participantID <<  " cusumer: " << selfCon.first;
+
+              producerPeer->mapOtherConumers.erase(participantID);
+          }
+
+        }
+        mapSelfConumers.clear();
+          
+    }
+     
      
     Peer::~Peer()
     {
@@ -180,11 +233,11 @@ namespace SdpParse {
             producers = nullptr;
         }
          
-        if(consumers)
-        {
-            delete consumers;
-            consumers = nullptr;
-        }
+//        if(consumers)
+//        {
+//            delete consumers;
+//            consumers = nullptr;
+//        }
     }
     
     /*****************************************************************************
@@ -218,7 +271,6 @@ namespace SdpParse {
           
     }
     
-   
     void Peers::onSubscribe(std::string& participantID)
     {
         Peer *peer;
@@ -259,8 +311,26 @@ namespace SdpParse {
         }
 
         peer->on_consumer_answer(sdp);
-          
     }    
-       
+
+    
+    void Peers::onDisconnect( std::string& participantID)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->onDisconnect(this);
+        
+        delete peer;
+        
+        mapPeers.erase(participantID);
+        
+          
+    }
   
 } // namespace SdpParse
