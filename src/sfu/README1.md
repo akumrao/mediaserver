@@ -41,6 +41,11 @@ FIR (Full Intra Request)
 FIR when ecoder changes so request for Intra frame
 PLI when decoder no more decode because of interframes loss so request key frame ( IDR)
 
+
+at simulcast or setPropterties we can set
+dtx
+Only used for an RTCRtpSender whose kind is audio, this property indicates whether or not to use discontinuous transmission (a feature by which a phone is turned off or the microphone muted automatically in the absence of voice activity). The value is taken from the enumerated string type RTCDtxStatus.
+
 **Chrome**
 
 To enable simulcast/scalability support in Chrome, you have to munge the SDP Offer with the so-called SIM group to configure the number of resolutions to send (maximum of 3 if you are sending video in HD and a maximum of 1 for screen-sharing) and include a special flag in the SDP Answer (x-conference-flag) (see here and here for more information)..  One of the nicest parts of enabling simulcast in Chrome is that it automatically enables temporal scalability in VP8 as well (more info here).
