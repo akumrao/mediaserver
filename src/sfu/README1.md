@@ -38,7 +38,6 @@ issue to use SRTP.
  Picture Loss Indication (PLI) to request a full keyframe from the remote party
 
 FIR (Full Intra Request)
-FIR and PLI not much difference
 FIR when ecoder changes so request for Intra frame
 PLI when decoder no more decode because of interframes loss so request key frame ( IDR)
 
