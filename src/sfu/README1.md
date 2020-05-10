@@ -1,3 +1,10 @@
+**Chrome**
+To enable simulcast/scalability support in Chrome, you have to munge the SDP Offer with the so-called SIM group to configure the number of resolutions to send (maximum of 3 if you are sending video in HD and a maximum of 1 for screen-sharing) and include a special flag in the SDP Answer (x-conference-flag) (see here and here for more information)..  One of the nicest parts of enabling simulcast in Chrome is that it automatically enables temporal scalability in VP8 as well (more info here).
+
+**Firefox and standard methods**
+More recently, standards and Firefox are also adding simulcast support by means of  a new protocol feature called RID. RID allows the  identification of the different simulcast streams in RTP packets. ORTC and latest WebRTC specification goes much further adding APIs to tune the parameters of the different simulcast qualities (WebRTC spec, ORTC spec).
+
+
 
 Simulcast is one of the more interesting aspects of WebRTC for multiparty conferencing. In a nutshell, it means sending three different resolution (spatial scalability) and different frame rates (temporal scalability) at the same time. Oscar Divorra’s post contains the full details.
 
