@@ -20,11 +20,12 @@ So does this mean simulcast is less efficient for the user? On the contrary, sin
 **mplementing Suspension**
 Now let’s see if we can integrate this into the actual code.  There are 2 problems to solve here:
 
--On the SFU – figure out when streams aren’t being used and let clients know
--On the client – shut off streams when they aren’t being used and start them back up when they’re needed again
+-a) On the SFU – figure out when streams aren’t being used and let clients know
+-b) Refresh the stream, delete track recreate with same id 
+-c) On the client – shut off streams when they aren’t being used and start them back up when they’re needed again
 
-The SFU
-The first problem was straightforward to solve – the clients already explicitly request high quality streams from participants when they become the active speaker so we can tell senders when their high quality streams are being used and when they are not via data channel messages.
+
+-a) The first problem was straightforward to solve – the clients already explicitly request high quality streams from participants when they become the active speaker so we can tell senders when their high quality streams are being used and when they are not via data channel messages.
 
 The Client
 First Attempt
@@ -46,3 +47,28 @@ CPU usage when the cap is removed	Send bitrate when the cap is removed	Send fram
 Great, it comes back!  But there’s a problem…it takes over 30 seconds to get back to high quality.  This means when someone becomes the active speaker, their video quality on the main stage will be poor for at least 30 seconds.  This won’t work. Why is it so slow?
 
 If you’ve ever done network impairment testing with Chrome, you know that it applies lots of logic to prevent oversending. It is very cautious to ramp up the send bitrate for fear of losing packets.  What we’ve basically done via our SDP parameter is make Chrome think the network’s capacity for packets is very low (200 kbps) so when we remove it, Chrome cautiously increases the bitrate while it figures out how much it can actually send.  This makes a lot of sense when the network is having issues, but for our use case it’s a dealbreaker.
+
+
+
+-c)
+The WebRTC team recently put out a PSA about RTCRtpSender. Support for modifying encoding parameters landing in Chrome 69.  This has an API that gives us control over individual simulcast encodings, including whether or not they are enabled!  So, when we find out we’re not going to be on the main stage, the client can do:
+
+const videoSender = peerconnection.getSenders().find(sender => sender.track.kind === 'video');
+const parameters = videoSender.getParameters();
+parameters.encodings[1].active = false;
+parameters.encodings[2].active = false;
+videoSender.setParameters(parameters);
+
+const videoSender = peerconnection.getSenders().find(sender => sender.track.kind === 'video');
+const parameters = videoSender.getParameters();
+parameters.encodings[1].active = false;
+parameters.encodings[2].active = false;
+videoSender.setParameters(parameters);
+
+
+*************************************************************************************************************
+
+
+
+
+
