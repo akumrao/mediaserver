@@ -431,11 +431,11 @@ namespace SdpParse {
             ///////////////////////////
 
             // Generate codecs mapping.
-            for (const auto& [first, second] : codecToCapCodec) {
+            for (const auto& ctocap : codecToCapCodec) {
                 // kmap->first["payloadType"];
                 json obj = json::object();
-                obj["payloadType"] = first["payloadType"];
-                obj["mappedPayloadType"] = second["preferredPayloadType"];
+                obj["payloadType"] = ctocap.first["payloadType"];
+                obj["mappedPayloadType"] = ctocap.second["preferredPayloadType"];
 
                 rtpMapping["codecs"].push_back(obj);
             }

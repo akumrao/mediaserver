@@ -126,21 +126,95 @@ namespace SdpParse {
         sendingRtpParameters["mid"] = *midIt;
 
         sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
-        sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+        
+       // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+        
+  /*
+        // Set RTP encodings by parsing the SDP offer if no encodings are given.
+        if (encodings == nullptr || encodings->empty())
+        {
+                sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+        }
+        // Set RTP encodings by parsing the SDP offer and complete them with given
+        // one if just a single encoding has been given.
+        else if (encodings->size() == 1)
+        {
+                auto newEncodings = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
+                fillJsonRtpEncodingParameters(newEncodings.front(), encodings->front());
+                sendingRtpParameters["encodings"] = newEncodings;
+        }
+
+        // Otherwise if more than 1 encoding are given use them verbatim.
+        else
+        {
+                sendingRtpParameters["encodings"] = json::array();
+
+                for (const auto& encoding : *encodings)
+                {
+                        json jsonEncoding = {};
+
+                        fillJsonRtpEncodingParameters(jsonEncoding, encoding);
+                        sendingRtpParameters["encodings"].push_back(jsonEncoding);
+                }
+        }
+*/
+        
+        json encodings =  json::array();
+        
+
+        if( offerMediaObject.find("rids") != offerMediaObject.end())
+        {
+            int size =  offerMediaObject["rids"].size();
+
+            encodings.push_back({ 
+             {"rid", "q"},
+             {"scaleResolutionDownBy", 4.0 }
+             });
+               
+             encodings.push_back({ 
+              {"rid", "h"},
+              {"scaleResolutionDownBy", 2.0 }
+              });
+
+             if(size > 2)
+             encodings.push_back({
+             {"rid", "f"}
+             });
+        }
+               
+            
+      // SInfo << "encodings " << encodings.dump(4);  
+      // SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
+
+      // SInfo << "offerMediaObject " << offerMediaObject.dump(4);
+
+        if (!encodings.size()) {
+
+              sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+          }
+          // Set RTP encodings by parsing the SDP offer and complete them with given
+          // one if just a single encoding has been given.
+          else if (encodings.size() == 1) {
+              auto newEncodings =  Sdp::Utils::getRtpEncodings(offerMediaObject);
+            //  Object.assign(newEncodings[0], encodings[0]);  // TBD // this is for FID most probabily we need to check
+              sendingRtpParameters["encodings"] = newEncodings;
+          }
+          // Otherwise if more than 1 encoding are given use them verbatim.
+          else {
+              sendingRtpParameters["encodings"] = encodings;
+          }
+        
 
         // If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
         auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
 
         std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
 
-        if (
-                sendingRtpParameters["encodings"].size() > 1 &&
-                (mimeType == "video/vp8" || mimeType == "video/h264")
-                ) {
-            for (auto& encoding : sendingRtpParameters["encodings"]) {
-                encoding["scalabilityMode"] = "S1T3";
-            }
+        if ( sendingRtpParameters["encodings"].size() > 1 && (mimeType == "video/vp8" || mimeType == "video/h264")  ) {
+                    for (auto& encoding : sendingRtpParameters["encodings"]) {
+                        encoding["scalabilityMode"] = "S1T3";
+                }
         }
 
         // STrace << "sendingRtpParameters "  <<  sendingRtpParameters ;
