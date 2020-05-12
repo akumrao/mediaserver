@@ -225,7 +225,7 @@ namespace SdpParse {
                 {"rtcp", json::object()}
             };
 
-            SInfo  << " params " << params;
+//            SInfo  << " params " << params;
             for (auto& codec : params["codecs"]) 
             {
                 if (isRtxCodec(codec))

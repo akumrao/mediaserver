@@ -353,6 +353,7 @@ namespace SdpParse {
             trans["internal"]["producerId"] = producer["id"];
             raiseRequest( param, trans, ack_resp);
         
+            SInfo << "stats: " <<  ack_resp.dump(4);
         
         }
     }
@@ -363,16 +364,18 @@ namespace SdpParse {
         {
         
             json &producer =prod.second->producer;;
-                    
-            json ack_resp;
-            json param = json::array();
-            param.push_back("rtpObserver_addProducer");
-            param.push_back(peer->participantID);
-            json &trans = Settings::configuration.rtpObserver_addProducer;
+            if( producer["kind"] == "audio" )
+            {
+            
+                json ack_resp;
+                json param = json::array();
+                param.push_back("rtpObserver_addProducer");
+                param.push_back(peer->participantID);
+                json &trans = Settings::configuration.rtpObserver_addProducer;
 
-            trans["internal"]["producerId"] = producer["id"];
-            raiseRequest( param, trans, ack_resp);
-        
+                trans["internal"]["producerId"] = producer["id"];
+                raiseRequest( param, trans, ack_resp);
+            }
         
         }
     }

@@ -134,4 +134,22 @@ $(document).ready(function(){
   });
 
 
+  $("#btn_audio_level").click(function(){
+
+    console.log("btn_audio_level click");
+          $("#div1").html("<h2>btn_audio_level</h2>");
+
+   btn_audio_level();
+  });
+
+
+  $("#btn_producer_stats").click(function(){
+
+    console.log("btn_producer_stats click");
+          $("#div1").html("<h2>btn_producer_stats</h2>");
+
+   btn_producer_stats();
+  });
+
+
  });

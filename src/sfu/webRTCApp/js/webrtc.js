@@ -180,15 +180,15 @@ function onCreateSessionDescriptionError(error) {
 // just two resolutions, for now, as chrome 75 seems to ignore more
 // than two encodings
 //
-const CAM_VIDEO_SIMULCAST_ENCODINGS =
-[
-  { maxBitrate:  96000, scaleResolutionDownBy: 4 },
-  { maxBitrate: 680000, scaleResolutionDownBy: 1 },
-];
+// const CAM_VIDEO_SIMULCAST_ENCODINGS =
+// [
+//   { maxBitrate:  96000, scaleResolutionDownBy: 4 },
+//   { maxBitrate: 680000, scaleResolutionDownBy: 1 },
+// ];
 
-function camEncodings() {
-  return CAM_VIDEO_SIMULCAST_ENCODINGS;
-}
+// function camEncodings() {
+//   return CAM_VIDEO_SIMULCAST_ENCODINGS;
+// }
 
 
 ////////////////////////////////////////////////////////////
@@ -471,18 +471,43 @@ async function subscribe() {
 
 
 
-async function simulcast() 
+// async function pollit() 
+// {
+
+
+//       // super-simple signaling: let's poll at 1-second intervals
+//       pollingInterval = setInterval(async () => {
+//         let { error } = await pollAndUpdate();
+//         if (error) {
+//           clearInterval(pollingInterval);
+//           err(error);
+//         }
+//       }, 1000);
+
+
+// }//end simulcast 
+
+async function btn_audio_level()
 {
 
-
-      // super-simple signaling: let's poll at 1-second intervals
-      pollingInterval = setInterval(async () => {
-        let { error } = await pollAndUpdate();
-        if (error) {
-          clearInterval(pollingInterval);
-          err(error);
-        }
-      }, 1000);
+  sendMessage ({
+          room: room,
+          from: peerID,
+          to: remotePeerID,
+          type: "rtpObserver_addProducer",
+        });
+}
 
 
-}//end simulcast 
+
+async function btn_producer_stats()
+{
+
+  sendMessage ({
+          room: room,
+          from: peerID,
+          to: remotePeerID,
+          type: "producer_getStats",
+        });
+
+}
