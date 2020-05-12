@@ -336,6 +336,46 @@ namespace SdpParse {
         }
     }
 
+    
+    void Producers::producer_getStats( ) {
+
+        for( auto &prod: mapProducer)
+        {
+        
+            json &producer =prod.second->producer;;
+                    
+            json ack_resp;
+            json param = json::array();
+            param.push_back("producer.getStats");
+            param.push_back(peer->participantID);
+            json &trans = Settings::configuration.producer_getStats;
+
+            trans["internal"]["producerId"] = producer["id"];
+            raiseRequest( param, trans, ack_resp);
+        
+        
+        }
+    }
+
+       void Producers::rtpObserver_addProducer( ) {
+
+        for( auto &prod: mapProducer)
+        {
+        
+            json &producer =prod.second->producer;;
+                    
+            json ack_resp;
+            json param = json::array();
+            param.push_back("rtpObserver_addProducer");
+            param.push_back(peer->participantID);
+            json &trans = Settings::configuration.rtpObserver_addProducer;
+
+            trans["internal"]["producerId"] = producer["id"];
+            raiseRequest( param, trans, ack_resp);
+        
+        
+        }
+    }
 
     /*************************************************************************************************************
         Producer starts
@@ -478,8 +518,6 @@ namespace SdpParse {
             mapConsumer[ c->consumer["id"]] = c; 
 
         }
-
-
 
     }
 

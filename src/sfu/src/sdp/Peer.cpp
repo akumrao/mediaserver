@@ -201,11 +201,11 @@ namespace SdpParse {
     {
         for(auto & othCon : mapOtherConumers )
         {
-            if(othCon.second)
-            {
-                delete othCon.second;
-                mapOtherConumers[othCon.first] = nullptr;
-            }
+//            if(othCon.second)
+//            {
+//                delete othCon.second;
+//                mapOtherConumers[othCon.first] = nullptr;
+//            }
             SInfo <<  "delte producer: " <<  participantID <<  " cusumer: " << othCon.first;
             mapOtherConumers.erase(othCon.first);
 
@@ -252,6 +252,28 @@ namespace SdpParse {
 //            consumers = nullptr;
 //        }
     }
+    
+    
+    void Peer::producer_getStats()
+    {
+           
+         if(producers)
+         {
+           producers->producer_getStats();
+         }
+            
+    }
+
+    void Peer::rtpObserver_addProducer()
+    {
+         if(producers)
+         {
+           producers->rtpObserver_addProducer();
+         }
+            
+    }
+
+    
     
     /*****************************************************************************
      Peers
@@ -341,7 +363,36 @@ namespace SdpParse {
         delete peer;
         mapPeers.erase(participantID);
         
-          
     }
+    
+    void Peers::producer_getStats( std::string& participantID)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->producer_getStats();
+    
+    }  
+
+    void Peers::rtpObserver_addProducer( std::string& participantID)
+    {
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->rtpObserver_addProducer();
+    
+    }  
+
+    
   
 } // namespace SdpParse

@@ -108,6 +108,26 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.consumer_resume = cnfg["consumer_resume"];
         }
 	
+        
+        if (cnfg.find("router_createAudioLevelObserver") != cnfg.end()) {
+           Settings::configuration.router_createAudioLevelObserver = cnfg["router_createAudioLevelObserver"];
+        }
+        
+        if (cnfg.find("rtpObserver_addProducer") != cnfg.end()) {
+           Settings::configuration.rtpObserver_addProducer = cnfg["rtpObserver_addProducer"];
+        }
+        
+        if (cnfg.find("producer_getStats") != cnfg.end()) {
+           Settings::configuration.producer_getStats = cnfg["producer_getStats"];
+        }
+        
+        if (cnfg.find("consumer_getStats") != cnfg.end()) {
+           Settings::configuration.consumer_getStats = cnfg["consumer_getStats"];
+        }
+        
+        if (cnfg.find("consumer_setPreferredLayers") != cnfg.end()) {
+           Settings::configuration.consumer_setPreferredLayers = cnfg["consumer_setPreferredLayers"];
+        }
 
 	/* Post configuration. */
 

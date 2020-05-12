@@ -71,8 +71,12 @@ namespace SdpParse {
             nlohmann::json producer;
         };
         
+        void producer_getStats( );
+        void rtpObserver_addProducer( );
+        
         std::map<std::string, Producer*>  mapProducer;
-        std::map<size_t, std::string>  mapProdMid;
+        // this is to store mid 0 and 1 so that audio and video are sequence during sdp generation.
+        std::map<size_t, std::string>  mapProdMid;  
         
     private:
         std::string GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);

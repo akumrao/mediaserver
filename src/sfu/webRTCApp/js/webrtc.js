@@ -1,5 +1,9 @@
 'use strict';
 
+
+//const $chkSimulcast = $('#chk_simulcast');
+
+
 var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
@@ -166,6 +170,27 @@ function onCreateSessionDescriptionError(error) {
   console.log('Failed to create session description: ' + error.toString());
   
 }
+
+
+
+
+
+/////////////////////////////////////////////////////////////
+
+// just two resolutions, for now, as chrome 75 seems to ignore more
+// than two encodings
+//
+const CAM_VIDEO_SIMULCAST_ENCODINGS =
+[
+  { maxBitrate:  96000, scaleResolutionDownBy: 4 },
+  { maxBitrate: 680000, scaleResolutionDownBy: 1 },
+];
+
+function camEncodings() {
+  return CAM_VIDEO_SIMULCAST_ENCODINGS;
+}
+
+
 ////////////////////////////////////////////////////////////
 
 async function getUserMedia1( isWebcam) {
@@ -287,27 +312,61 @@ async function publish()
             }
         });
 
-        var encodings;
+        //var encodings;
         var _stream = new MediaStream();
 
 
-        const transceiver = pc1.addTransceiver(
-            videotrack,
-            {
-                direction     : 'sendonly'
 
-            });
-
-        const transceiver1 = pc1.addTransceiver(
+        var transceiver1 = pc1.addTransceiver(
             audiotrack,
             {
                 direction     : 'sendonly'
 
             });
          
+         //firefox
+        // var parameters = transceiver.sender.getParameters();
+        // console.log("simulcast parameters %o", parameters);
+
+        //  if (!parameters.encodings) {
+        //  parameters.encodings = [{}];
+        //  }
+
+        // var encodings = [
+        //           { rid: 'r0', maxBitrate: 100000 },
+        //           { rid: 'r1', maxBitrate: 500000 }
+        //       ];
+        // parameters.encodings = encodings;
+        // transceiver.sender.setParameters(parameters);
+
+
+          // Mormal without simulcast
+   
+         var checkBox = document.getElementById("chk_simulcast");
+         if (checkBox.checked) {
+
+             var transceiver =pc1.addTransceiver(videotrack, {
+                  direction: 'sendonly',
+                  sendEncodings: [
+                    {rid: 'q', scaleResolutionDownBy: 4.0},
+                    {rid: 'h', scaleResolutionDownBy: 2.0},
+                    {rid: 'f'}
+                  ]
+             });
+        }
+        else
+        {
+            var transceiver = pc1.addTransceiver(
+            videotrack,
+            {
+                direction     : 'sendonly'
+
+            });
+        }
+
          
 
-        const offer = await pc1.createOffer();
+        var offer = await pc1.createOffer();
 
         console.log( "publish offer: %o", offer);
 
@@ -330,6 +389,9 @@ async function publish()
           type: pc1.localDescription.type,
           desc: pc1.localDescription
         });
+
+
+
 
  
 }
@@ -406,3 +468,21 @@ async function subscribe() {
 
  
 }//end subscribe 
+
+
+
+async function simulcast() 
+{
+
+
+      // super-simple signaling: let's poll at 1-second intervals
+      pollingInterval = setInterval(async () => {
+        let { error } = await pollAndUpdate();
+        if (error) {
+          clearInterval(pollingInterval);
+          err(error);
+        }
+      }, 1000);
+
+
+}//end simulcast 

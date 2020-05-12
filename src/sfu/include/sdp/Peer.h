@@ -60,10 +60,11 @@ namespace SdpParse {
     
     void on_producer_offer( const nlohmann::json &sdp);
     void on_consumer_answer( const nlohmann::json &sdp);
-   
     void onSubscribe( Peer *);
-    
     void onDisconnect( Peers *peers);
+    
+    void producer_getStats();
+    void rtpObserver_addProducer();
     
     private:
         
@@ -96,8 +97,8 @@ namespace SdpParse {
         void onSubscribe(std::string& participantID);
         
         void onDisconnect( std::string& participantID);
-        
-        
+        void producer_getStats( std::string& participantID);
+        void rtpObserver_addProducer( std::string& participantID);
         std::map< std::string, Peer*> mapPeers;
         
         Room *room;

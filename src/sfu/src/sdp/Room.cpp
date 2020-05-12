@@ -51,16 +51,27 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        param.push_back("worker_createRouter");
        param.push_back(data[1].get<std::string>());
        json &trans = Settings::configuration.worker_createRouter;
-       trans["id"] = 1;
        trans["internal"]["routerId"] = uuid4::uuid();
        param.push_back(trans);
-       signaler->request("signal", param, true, ack_resp);
+       signaler->request("worker_createRouter", param, true, ack_resp);
        
        Room * room = new Room(signaler);
        room->routerId = trans["internal"]["routerId"];
        room->name = roomName;
        mapRooms[roomName] = room;
        
+       
+       //create router_createAudioLevelObserver
+       {
+            json param = json::array();
+            param.push_back("worker_createRouter");
+            param.push_back(data[1].get<std::string>());
+            json &trans = Settings::configuration.router_createAudioLevelObserver;
+            trans["internal"]["routerId"] = room->routerId;
+            param.push_back(trans);
+            signaler->request("createAudioLevelObserver", param, true, ack_resp);
+       
+       }
    }
 
 
@@ -147,5 +158,37 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
     }
 
+    
+    void Rooms::producer_getStats(std::string &room , std::string& participantID)
+    {
+  
+        SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
+   
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+            Peers *peers = mapRooms[room]->peers;
+            peers->producer_getStats(participantID);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+    }
+
+     void Rooms::rtpObserver_addProducer(std::string &room , std::string& participantID)
+    {
+  
+        SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
+   
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+            Peers *peers = mapRooms[room]->peers;
+            peers->rtpObserver_addProducer(participantID);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+    }
 
 }//namespace SdpParse 
