@@ -183,11 +183,6 @@ namespace SdpParse {
              });
         }
                
-            
-      // SInfo << "encodings " << encodings.dump(4);  
-      // SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
-
-      // SInfo << "offerMediaObject " << offerMediaObject.dump(4);
 
         if (!encodings.size()) {
 
@@ -275,6 +270,32 @@ namespace SdpParse {
                 json &trans = Settings::configuration.transport_produce;
 
                 trans["internal"]["producerId"] = uuid4::uuid();
+                
+                
+                /////////////////////
+                 if (constructor_name != "PipeTransport") {
+                // If CNAME is given and we don't have yet a CNAME for Producers in this
+                // Transport, take it.
+                    if (cnameForProducers.empty() && sendingRtpParameters.find( "rtcp") != sendingRtpParameters.end()  && sendingRtpParameters["rtcp"].find("cname") !=  sendingRtpParameters["rtcp"].end()) {
+                        cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
+                    }
+                    // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
+                    // do not include CNAME, create a random one.
+                    if (cnameForProducers.empty()) {
+                        cnameForProducers = base::util::randomString(8);
+                    }
+                    // Override Producer's CNAME.
+                    
+                    if( sendingRtpParameters.find( "rtcp") == sendingRtpParameters.end())
+                    {
+                        sendingRtpParameters["rtcp"] = json::object();
+                    }
+                    
+                    sendingRtpParameters["rtcp"]["cname"] = cnameForProducers;
+                }
+                
+                ///////////////////////
+                
 
 
                 // This may throw.
@@ -283,7 +304,7 @@ namespace SdpParse {
                 auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(ckind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
 
 
-               // STrace << "consumableRtpParameters " << rtpMapping.dump(4);
+               //SInfo << "consumableRtpParameters " << consumableRtpParameters.dump(4);
                // STrace << "rtpMapping " << rtpMapping.dump(4);
 
                 json data = {

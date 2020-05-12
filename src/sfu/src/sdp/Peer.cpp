@@ -178,7 +178,11 @@ namespace SdpParse {
           
           if(mapSelfConumers.find(producerPeer->participantID ) !=   mapSelfConumers.end() )
           {
-              delete mapSelfConumers[ producerPeer->participantID ];
+              if(mapSelfConumers[ producerPeer->participantID ])
+              {
+                delete mapSelfConumers[ producerPeer->participantID ];
+                mapSelfConumers[ producerPeer->participantID ]= nullptr;
+              }
               mapSelfConumers.erase(producerPeer->participantID);
           }
           
@@ -197,7 +201,11 @@ namespace SdpParse {
     {
         for(auto & othCon : mapOtherConumers )
         {
-            //delete othCon.second;
+            if(othCon.second)
+            {
+                delete othCon.second;
+                mapOtherConumers[othCon.first] = nullptr;
+            }
             SInfo <<  "delte producer: " <<  participantID <<  " cusumer: " << othCon.first;
             mapOtherConumers.erase(othCon.first);
 
@@ -207,7 +215,12 @@ namespace SdpParse {
          
         for(auto & selfCon : mapSelfConumers )
         {
-           delete selfCon.second;
+           if(selfCon.second )
+           {
+                delete selfCon.second;
+                mapSelfConumers[selfCon.first] = nullptr;
+           }
+           
 
           Peer *producerPeer =  peers->mapPeers[selfCon.first];
 
@@ -325,9 +338,7 @@ namespace SdpParse {
         }
 
         peer->onDisconnect(this);
-        
         delete peer;
-        
         mapPeers.erase(participantID);
         
           

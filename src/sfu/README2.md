@@ -1,3 +1,10 @@
+
+at consumer side not rid but probator
+
+BWE: missing proper RTP probator to allow layer up switch in all scenarios
+a=group:BUNDLE 0 probator
+a=mid:0
+
 **simulcast**
 
 Most of you are probably familiar with the typical SFU-style user interface that was first popularized in the consumer market with Google Hangouts and is used by Jitsi Meet and other Services. Front and center with the vast majority of screen real estate is the video of whoever is the current active speaker.  All the other participants are seen in their own thumbnail, usually on the right or across the bottom. We want the active speaker’s video in the middle to look great so that is high resolution. The thumbnails on the bottom/right are small, so high resolution there would be a waste of bandwidth.  To optimize for these different modes we need each sender’s video in multiple resolutions. Thankfully this is already a solved problem with simulcast!

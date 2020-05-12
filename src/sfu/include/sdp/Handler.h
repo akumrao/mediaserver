@@ -52,6 +52,9 @@ namespace SdpParse {
         
         std::string classtype;
         
+        
+        std::string constructor_name { "WebrtcTransport"};
+
     };
 
     class Producers:public Handler
@@ -73,6 +76,8 @@ namespace SdpParse {
         
     private:
         std::string GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);
+        
+        std::string cnameForProducers; 
         
     };
 
