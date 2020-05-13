@@ -273,7 +273,6 @@ namespace SdpParse {
          {
            producers->rtpObserver_addProducer(flag);
          }
-
     }
 
     void  Peer::consumer_getStats( nlohmann::json &stats)
@@ -303,9 +302,7 @@ namespace SdpParse {
         {
             delete peer.second;
         }
-        
     }
-    
     
 
     void Peers::on_producer_offer( std::string& participantID, const json &sdp)

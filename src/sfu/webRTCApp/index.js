@@ -262,9 +262,13 @@ async function runSocketServer() {
 	});
 
 
-	socket.on('postAppMessage', function(data) {
+	socket.on('postAppMessage', function(message) {
 
-		console.log('notification ' + JSON.stringify(data, null, 4) );
+		console.log('notification ' + JSON.stringify(message, null, 4) );
+
+		if ('to' in message) {
+			socket.to(message.to).emit('message', message);
+		}
 
 	});
 

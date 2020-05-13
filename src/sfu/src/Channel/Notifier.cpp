@@ -36,13 +36,21 @@ namespace Channel
 	}
 
 	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
-	{
+	{       
+                 SInfo <<  "volume: " << data.dump(4);
 
                 json jsonNotification = json::object();
 
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
-		jsonNotification["data"]     = data;
+		jsonNotification["desc"]     = data;
+                
+                if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
+                {
+                    jsonNotification["to"]= m_sig->mapNotification[targetId][data.at(0)["producerId"]];
+                    jsonNotification["type"]= "soundlevel";
+                }
+                
                 
                 m_sig->postAppMessage(jsonNotification);
                 return;

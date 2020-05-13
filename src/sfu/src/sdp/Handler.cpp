@@ -386,8 +386,14 @@ namespace SdpParse {
                  trans["method"]="rtpObserver.addProducer";
                 else
                  trans["method"]="rtpObserver.removeProducer";
-
+                
+                
+                if(flag) // && ok ack  TBD
+                {
+                    signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producer["id"]] = peer->participantID ;
+                }
                 raiseRequest( param, trans, ack_resp);
+                
             }
         
         }
@@ -549,9 +555,9 @@ namespace SdpParse {
                     
             json ack_resp;
             json param = json::array();
-            param.push_back("producer.getStats");
+            param.push_back("consumer_getStats");
             param.push_back(peer->participantID);
-            json &trans = Settings::configuration.producer_getStats;
+            json &trans = Settings::configuration.consumer_getStats;
 
             trans["internal"]["producerId"] = consumer["producerId"];
             trans["internal"]["consumerId"] = consumer["id"];

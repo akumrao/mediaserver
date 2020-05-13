@@ -147,7 +147,7 @@ $(document).ready(function(){
     console.log("btn_audio_level_start click");
           $("#div1").html("<h2>btn_audio_level_start</h2>");
 
-   btn_audio_level_start();
+   btn_audio_level_stop();
   });
 
 
@@ -158,6 +158,17 @@ $(document).ready(function(){
 
    btn_producer_stats();
   });
+
+  
+  $("#btn_subscribe_stats").click(function(){
+
+    console.log("btn_subscribe_stats click");
+          $("#div1").html("<h2>btn_subscribe_stats</h2>");
+
+   btn_subscribe_stats();
+  });
+
+
 
 
  });

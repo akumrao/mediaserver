@@ -3,6 +3,9 @@
 
 //const $chkSimulcast = $('#chk_simulcast');
 
+var sound_level = document.getElementById("sound_level"); 
+var prod_stat = document.getElementById("prod_stat"); 
+var cons_stat = document.getElementById("cons_stat"); 
 
 var isChannelReady = true;
 var isInitiator = false;
@@ -79,11 +82,11 @@ socket.on('message', function(message) {
   console.log('Client received message:', message);
 
 
-  if (!message.offer && remotePeerID && remotePeerID != message.from) {
-      console.log('Dropping message from unknown peer', message);
+  // if (!message.offer && remotePeerID && remotePeerID != message.from) {
+  //     console.log('Dropping message from unknown peer', message);
 
-      return;
-  }
+  //     return;
+  // }
 
 
   if (message === 'got user media') {
@@ -111,7 +114,14 @@ socket.on('message', function(message) {
     pc.addIceCandidate(candidate);
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
+  } else if (message.type === 'soundlevel' && isStarted) {
+    soundlevel(message.desc);
+  }else if (message.type === 'prodstats' && isStarted) {
+    prodstats(message.desc);
+  }else if (message.type === 'constats') {
+    constats(message.desc);
   }
+
 });
 
 function doAnswer() {
@@ -521,3 +531,39 @@ async function btn_producer_stats()
         });
 
 }
+
+async function btn_subscribe_stats()
+{
+
+  sendMessage ({
+          room: room,
+          from: peerID,
+          to: remotePeerID,
+          type: "consumer_getStats",
+        });
+
+}
+
+
+function soundlevel(level)
+{
+  //console.log(level);
+
+  sound_level.innerHTML = JSON.stringify(level, undefined, 4); 
+}
+
+function prodstats(desc)
+{
+  //console.log(level);
+
+  prod_stat.innerHTML = JSON.stringify(desc, undefined, 4); 
+}
+
+function constats(desc)
+{
+  //console.log(level);
+
+  cons_stat.innerHTML = JSON.stringify(desc, undefined, 4); 
+}
+
+
