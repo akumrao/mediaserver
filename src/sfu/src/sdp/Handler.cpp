@@ -43,6 +43,8 @@ namespace SdpParse {
 
             json &trans = Settings::configuration.createWebRtcTransport;
             transportId = uuid4::uuid();
+            
+            SInfo << "transportId: " << transportId;
 
             if(!forceTcp)
             {
@@ -337,7 +339,7 @@ namespace SdpParse {
     }
 
     
-    void Producers::producer_getStats( ) {
+    void Producers::producer_getStats(  nlohmann::json &stats) {
 
         for( auto &prod: mapProducer)
         {
@@ -352,13 +354,15 @@ namespace SdpParse {
 
             trans["internal"]["producerId"] = producer["id"];
             raiseRequest( param, trans, ack_resp);
+
+            stats.push_back(ack_resp );
         
             SInfo << "stats: " <<  ack_resp.dump(4);
         
         }
     }
 
-       void Producers::rtpObserver_addProducer( ) {
+       void Producers::rtpObserver_addProducer( bool flag ) {
 
         for( auto &prod: mapProducer)
         {
@@ -369,11 +373,20 @@ namespace SdpParse {
             
                 json ack_resp;
                 json param = json::array();
-                param.push_back("rtpObserver_addProducer");
+                if(flag)
+                    param.push_back("rtpObserver_addProducer");
+                else
+                    param.push_back("rtpObserver_removeProducer");
+
                 param.push_back(peer->participantID);
                 json &trans = Settings::configuration.rtpObserver_addProducer;
-
                 trans["internal"]["producerId"] = producer["id"];
+
+                if(flag)
+                 trans["method"]="rtpObserver.addProducer";
+                else
+                 trans["method"]="rtpObserver.removeProducer";
+
                 raiseRequest( param, trans, ack_resp);
             }
         
@@ -413,7 +426,7 @@ namespace SdpParse {
 
     
     
-    void Consumers::resume(Signaler *signal, bool pause ) {
+    void Consumers::resume( bool pause ) {
         
 //         {
 //            json ack_resp;
@@ -500,6 +513,7 @@ namespace SdpParse {
             c->consumer = {
 
                 {"id", trans["internal"]["consumerId"]},
+                {"producerId", producer["id"]},
                 {"kind", trans["data"]["kind"]},
                 {"rtpParameters", trans["data"]["rtpParameters"]},
                 {"type", trans["data"]["type"]},
@@ -522,6 +536,56 @@ namespace SdpParse {
 
         }
 
+    }
+
+
+
+     void Consumers::consumer_getStats(  nlohmann::json &stats) {
+
+        for( auto &cons: mapConsumer)
+        {
+        
+            json &consumer =cons.second->consumer;
+                    
+            json ack_resp;
+            json param = json::array();
+            param.push_back("producer.getStats");
+            param.push_back(peer->participantID);
+            json &trans = Settings::configuration.producer_getStats;
+
+            trans["internal"]["producerId"] = consumer["producerId"];
+            trans["internal"]["consumerId"] = consumer["id"];
+            
+            raiseRequest( param, trans, ack_resp);
+
+            stats.push_back(ack_resp );
+        
+            SInfo << "stats: " <<  ack_resp.dump(4);
+        
+        }
+    }
+
+    void Consumers::setPreferredLayers(json &layer) {
+
+        for( auto &cons: mapConsumer)
+        {
+            json &consumer =cons.second->consumer;
+            SInfo << " setPreferredLayers conusmer: "  << consumer.dump(4);
+            
+            if( consumer["kind"] == "video" && consumer["type"] == "simulcast" )
+            {
+            
+                json ack_resp;
+                json param = json::array();
+                param.push_back("consumer_setPreferredLayers");
+                param.push_back(peer->participantID);
+                json &trans = Settings::configuration.consumer_setPreferredLayers;
+                trans["internal"]["producerId"] = consumer["producerId"];
+                trans["internal"]["consumerId"] = consumer["id"];
+                raiseRequest( param, trans, ack_resp);
+            }
+        
+        }
     }
 
 

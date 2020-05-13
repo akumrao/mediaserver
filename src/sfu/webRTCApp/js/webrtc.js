@@ -487,7 +487,7 @@ async function subscribe() {
 
 // }//end simulcast 
 
-async function btn_audio_level()
+async function btn_audio_level_start()
 {
 
   sendMessage ({
@@ -498,6 +498,16 @@ async function btn_audio_level()
         });
 }
 
+async function btn_audio_level_stop()
+{
+
+  sendMessage ({
+          room: room,
+          from: peerID,
+          to: remotePeerID,
+          type: "rtpObserver_removeProducer",
+        });
+}
 
 
 async function btn_producer_stats()

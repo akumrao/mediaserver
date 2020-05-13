@@ -52,8 +52,11 @@ public:
     void onSubscribe(std::string &room , std::string& participantID);
     void resume(std::string &room , std::string& participantID, bool flag);
     void onDisconnect(std::string &room , std::string& participantID);
-    void producer_getStats(std::string &room , std::string& participantID); 
-    void rtpObserver_addProducer(std::string &room , std::string& participantID);
+
+    void producer_getStats( std::string &room , std::string& participantID, nlohmann::json &stats); 
+    void consumer_getStats( std::string &room , std::string& participantID, nlohmann::json &stats); 
+    void rtpObserver_addProducer(std::string &room , std::string& participantID, bool flag);
+    void setPreferredLayers( std::string &room ,std::string& participantID,  nlohmann::json &layer);
 private:
     
     Signaler *signaler;

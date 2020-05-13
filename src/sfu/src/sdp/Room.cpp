@@ -159,7 +159,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     }
 
     
-    void Rooms::producer_getStats(std::string &room , std::string& participantID)
+    void Rooms::producer_getStats(std::string &room , std::string& participantID, json &stats) 
     {
   
         SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
@@ -167,7 +167,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        if( mapRooms.find(room) != mapRooms.end())
        {
             Peers *peers = mapRooms[room]->peers;
-            peers->producer_getStats(participantID);
+            peers->producer_getStats(participantID, stats);
        }
        else
        {
@@ -175,7 +175,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        }
     }
 
-     void Rooms::rtpObserver_addProducer(std::string &room , std::string& participantID)
+    void Rooms::rtpObserver_addProducer(std::string &room , std::string& participantID, bool flag)
     {
   
         SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
@@ -183,12 +183,49 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        if( mapRooms.find(room) != mapRooms.end())
        {
             Peers *peers = mapRooms[room]->peers;
-            peers->rtpObserver_addProducer(participantID);
+            peers->rtpObserver_addProducer(participantID, flag);
        }
        else
        {
             SError << "Room does not exist: " << room  ;
        }
     }
+
+
+
+   void Rooms::consumer_getStats(std::string &room , std::string& participantID, json &stats) 
+    {
+  
+        SInfo << "Consumer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
+   
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+            Peers *peers = mapRooms[room]->peers;
+            peers->consumer_getStats(participantID, stats);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+    }
+
+
+
+   void Rooms::setPreferredLayers(std::string &room , std::string& participantID, json &layer) 
+    {
+  
+        SInfo << "Consumer set PreferredLayers for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
+   
+       if( mapRooms.find(room) != mapRooms.end())
+       {
+            Peers *peers = mapRooms[room]->peers;
+            peers->setPreferredLayers(participantID, layer);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
+    }
+
 
 }//namespace SdpParse 

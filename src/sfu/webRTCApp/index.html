@@ -41,15 +41,28 @@
       <td>
         <div>Local</div>
         <video id="local_video" controls autoplay playsinline></video>
-
-        <span id="camera-producer-stats" class="track-ctrl"></span>
-        
       </td>
       <td>
         <div>Remote</div>
         <video id="remote_video" controls autoplay playsinline></video>
       </td>
     </tr>
+    <tr>
+      <td>
+        <div>Local Stats</div>
+         <p id="prod_stat"></p>
+      </td>
+       <td>
+        <div>Sound Level</div>
+         <p id="sound_level"></p>
+      </td>
+      <td>
+        <div>Remote Stats</div>
+        <p id="cons_stat"></p>
+      </td>
+
+    </tr>
+
   </table>
   <br>
   <table>
@@ -73,7 +86,10 @@
             <span id="screen_status"></span>
           </div>
            <div>
-            <button id="btn_audio_level">Audio Level</button>
+            <button id="btn_audio_level_start">Start Audio Level</button> 
+          </div>
+           <div>
+            <button id="btn_audio_level_stop">stop Audio Level</button> 
           </div>
            <div>
             <button id="btn_producer_stats">Stats</button>
@@ -94,7 +110,7 @@
 
 <div id="div1"><h2>Let jQuery AJAX Change This Text</h2></div>
 
-<button id="btn2">Get External Content</button>
+
 
 </body>
 <script>

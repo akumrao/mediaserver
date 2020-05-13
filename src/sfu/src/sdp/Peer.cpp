@@ -254,25 +254,44 @@ namespace SdpParse {
     }
     
     
-    void Peer::producer_getStats()
+
+
+    
+
+    void Peer::producer_getStats( nlohmann::json &stats)
     {
-           
-         if(producers)
+
+       if(producers)
          {
-           producers->producer_getStats();
+           producers->producer_getStats(stats);
          }
-            
+
+    }
+    void  Peer::rtpObserver_addProducer( bool flag)
+    {
+        if(producers)
+         {
+           producers->rtpObserver_addProducer(flag);
+         }
+
     }
 
-    void Peer::rtpObserver_addProducer()
+    void  Peer::consumer_getStats( nlohmann::json &stats)
     {
-         if(producers)
+        if(consumers)
          {
-           producers->rtpObserver_addProducer();
+           consumers->consumer_getStats(stats);
          }
-            
-    }
 
+    }
+    void  Peer::setPreferredLayers( nlohmann::json &layer)
+    {
+
+       if(consumers)
+         {
+           consumers->setPreferredLayers(layer);
+         }
+    }
     
     
     /*****************************************************************************
@@ -365,8 +384,10 @@ namespace SdpParse {
         
     }
     
-    void Peers::producer_getStats( std::string& participantID)
+
+    void  Peers::producer_getStats( std::string& participantID, nlohmann::json &stats)
     {
+
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
             peer = mapPeers[participantID];
@@ -375,12 +396,13 @@ namespace SdpParse {
              return ;
         }
 
-        peer->producer_getStats();
-    
-    }  
+        peer->producer_getStats(stats);
 
-    void Peers::rtpObserver_addProducer( std::string& participantID)
+    }
+    void  Peers::rtpObserver_addProducer( std::string& participantID, bool flag)
     {
+
+
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
             peer = mapPeers[participantID];
@@ -389,9 +411,39 @@ namespace SdpParse {
              return ;
         }
 
-        peer->rtpObserver_addProducer();
-    
-    }  
+        peer->rtpObserver_addProducer(flag);
+
+    }
+
+    void  Peers::consumer_getStats( std::string& participantID, nlohmann::json &stats)
+    {
+
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->consumer_getStats(stats);
+
+    }
+    void  Peers::setPreferredLayers( std::string& participantID,  nlohmann::json &layer)
+    {
+
+
+        Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->setPreferredLayers(layer);
+
+    }
 
     
   

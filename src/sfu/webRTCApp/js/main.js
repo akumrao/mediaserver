@@ -134,12 +134,20 @@ $(document).ready(function(){
   });
 
 
-  $("#btn_audio_level").click(function(){
+  $("#btn_audio_level_start").click(function(){
 
-    console.log("btn_audio_level click");
-          $("#div1").html("<h2>btn_audio_level</h2>");
+    console.log("btn_audio_level_start click");
+          $("#div1").html("<h2>btn_audio_level_start</h2>");
 
-   btn_audio_level();
+   btn_audio_level_start();
+  });
+
+   $("#btn_audio_level_stop").click(function(){
+
+    console.log("btn_audio_level_start click");
+          $("#div1").html("<h2>btn_audio_level_start</h2>");
+
+   btn_audio_level_start();
   });
 
 
