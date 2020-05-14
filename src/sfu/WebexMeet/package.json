@@ -12,9 +12,9 @@
     "url": "git+https://github.com/akumrao/mediaserver"
   },
   "keywords": [
-    "nodejs",
-    "expressjs",
-    "mongodb",
+    "webrtc",
+    "ortc",
+    "phone-call",
     "socket.io",
     "real-time",
     "chat-app"

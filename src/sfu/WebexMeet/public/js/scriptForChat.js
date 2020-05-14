@@ -28,27 +28,47 @@ $ (function(){
   //receiving onlineStack.
   socket.on('onlineStack',function(stack){
     $('#list').empty();
-    $('#list').append($('<li>').append($('<button id="ubtn" class="btn btn-danger btn-block btn-lg"></button>').text("Group").css({"font-size":"18px"})));
+    $('#list').append($('<li>').append($('<span>Group</span>'),$('<button id="ubtn" class="btn btn-danger btn-xs"></button>').data("name","Group").text("chat"), $('<button id="ubtn" class="btn btn-danger btn-xs"></button>').data("name","Group").text("call")));
     var totalOnline = 0;
     for (var user in stack){
       //setting txt1. shows users button.
+
+      var txt1 = $('<span></span>').text(user);
+
       if(user == username){
-        var txt1 = $('<button class="boxF disabled"> </button>').text(user).css({"font-size":"18px"});
+        var txt2 = $('<button class="btn btn-secondary btn-xs disabled"> </button>').text("chat");
+            //   var txt3 = $('<span class="badge"></span>').text(stack[user]).css({"float":"right","color":"#a6a6a6","font-size":"12px"});
       }
       else{
-        var txt1 = $('<button id="ubtn" class="btn btn-success  btn-md">').text(user).css({"font-size":"18px"});
+        var txt2 = $('<button id="ubtn" class="btn btn-primary btn-xs" >').text("chat").data("name",user) ;
+
       }
+
+
+      if(user == username){
+        var txt3= $('<button class="btn btn-secondary btn-xs disabled"> </button>').text("call");
+            //   var txt3 = $('<span class="badge"></span>').text(stack[user]).css({"float":"right","color":"#a6a6a6","font-size":"12px"});
+      }
+      else{
+        var txt3 = $('<button id="ubtn" data-name=user class="btn btn-primary btn-xs" >').text("call").data("name",user)  ;
+
+      }
+
+
+
       //setting txt2. shows online status.
       if(stack[user] == "Online"){
-        var txt2 = $('<span class="badge"></span>').text("*"+stack[user]).css({"float":"right","color":"#009933","font-size":"18px"});
+        var txt4 = $('<span class="badge"></span>').text("*"+stack[user]).css({"float":"right","color":"#009933","font-size":"12px"});
         totalOnline++;
 
       }
       else{
-        var txt2 = $('<span class="badge"></span>').text(stack[user]).css({"float":"right","color":"#a6a6a6","font-size":"18px"});
+        var txt4 = $('<span class="badge"></span>').text(stack[user]).css({"float":"right","color":"#a6a6a6","font-size":"12px"});
       }
+
+      
       //listing all users.
-      $('#list').append($('<li>').append(txt1,txt2));
+      $('#list').append($('<li>').append(txt1,txt2,txt3,txt4));
       $('#totalOnline').text(totalOnline);
     }//end of for.
     $('#scrl1').scrollTop($('#scrl1').prop("scrollHeight"));
@@ -66,7 +86,15 @@ $ (function(){
     oldInitDone = 0;
 
     //assigning friends name to whom messages will send,(in case of group its value is Group).
-    toUser = $(this).text();
+    var type = $(this).text();
+
+    if(type == 'call')
+    {
+      return;
+    }
+
+    toUser =  $(this).data('name');
+
 
     //showing and hiding relevant information.
     $('#frndName').text(toUser);
