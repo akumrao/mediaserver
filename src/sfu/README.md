@@ -6,9 +6,9 @@ git difftool --tool=meld
 *For branch merge*
 git checkout master
 git pull
-git checkout test
+git checkout sdp
 git log master.. # if you're curious
-git merge origin/test # to update your local test from the fetch in the pull earlier
+git merge origin/sdp # to update your local test from the fetch in the pull earlier
 
 When you're ready to merge back into master,
 git checkout master
