@@ -99,11 +99,6 @@ async function runSocketServer() {
 
     console.error('runSocketServer');
 
-  // socketServer = socketIO(webServer, {
-  //   serveClient: false,
-  //   path: '/server',
-  //   log: false,
-  // });
 
    io = socketIO.listen(webServer);
 
@@ -113,16 +108,12 @@ async function runSocketServer() {
 
 	// convenience function to log server messages on the client
 	function log() {
-		// var array = ['Message from server:'];
-		// array.push.apply(array, arguments);
-		// socket.emit('log', array);
-		// console.log(array);
+		var array = ['Message from server:'];
+		 array.push.apply(array, arguments);
+		 socket.emit('log', array);
+		 console.log(array);
 	}
-	// socket.on('message', function(message) {
-	// 	log('Client said: ', message);
-	// 	// for a real app, would be room-only (not broadcast)
-	// 	socket.broadcast.emit('message', message);
-	// });
+
 
 	socket.on('disconnect', function() {
 	  console.log("disconnect " + socket.id);
@@ -133,7 +124,8 @@ async function runSocketServer() {
 	  }
 	  else
 	  {
-	  	socket.to(serverSocketid).emit('disconnectClient', 'foo', socket.id);
+	  	if( serverSocketid &&  io.sockets.connected[serverSocketid] &&  roomid)
+	  	io.sockets.connected[serverSocketid].emit('disconnectClient', roomid, socket.id);
 	  }
 
 
@@ -142,100 +134,67 @@ async function runSocketServer() {
 
 
 
-	socket.on('CreateSFU', function(room) {
-		log('Received request to create or join room ' + room);
-
-		var clientsInRoom = io.sockets.adapter.rooms[room];
-		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-		log('Room ' + room + ' now has ' + numClients + ' client(s)');
-
-		socket.join(room);
+	socket.on('CreateSFU', function() {
+		log('Received request to create CreateSFU');
 		
-		if (numClients !== 0 && serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
+		if (serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
 			io.sockets.connected[serverSocketid].disconnect();
 			serverSocketid =  null;
 		}
 		 
-		log('Client ID ' + socket.id + ' created room ' + room);
+		log('SFU ID ' , socket.id) ;
 	
-		roomid = room;
+		//roomid = room;
 		serverSocketid = socket.id;
-		console.log('serverSocketid');
-		console.log(serverSocketid);
 
-		socket.emit('created', room, socket.id, function (data) {
-
-		console.log("ack"); // data will be 'woot'
-		console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
-		}
-
-		);
-
-		//} else if (numClients === 1) {
 
 	});
 
 	socket.on('create or join', function(room) {
+
 		log('Received request to create or join room ' + room);
+
+		if( serverSocketid == null || io.sockets.connected[serverSocketid] == null)
+		 return  console.error("SFU server is down");	
 
 		var clientsInRoom = io.sockets.adapter.rooms[room];
 		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 		log('Room ' + room + ' now has ' + numClients + ' client(s)');
 
+
 		socket.join(room);
-		if (numClients === 0 || serverSocketid == null) {
+		if (numClients === 0 ) {
 		 
 			log('Client ID ' + socket.id + ' created room ' + room);
 		
 			roomid = room;
-			serverSocketid = socket.id;
-			console.log('serverSocketid');
-			console.log(serverSocketid);
+
+			io.sockets.connected[serverSocketid].emit('created', room, serverSocketid, function (data) {
+
+			console.log("ack"); // data will be 'woot'
+			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
+			});
+
 
 			socket.emit('created', room, socket.id, function (data) {
 
 			console.log("ack"); // data will be 'woot'
 			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
-			}
+			});
 
-			);
+			socket.emit('joined', room, socket.id);
 
-		} else if (numClients === 1) {
+		} else if (numClients ) {
 			log('Client ID ' + socket.id + ' joined room ' + room);
 			io.sockets.in(room).emit('join', room);
 
 			socket.emit('joined', room, socket.id);
 			io.sockets.in(room).emit('ready');
-		} else { // max two clients
-			socket.emit('full', room);
-
-			log('Client ID ' + socket.id + ' joined room ' + room);
-			io.sockets.in(room).emit('join', room);
-
-			socket.emit('joined', room, socket.id);
-			io.sockets.in(room).emit('ready')
-			
-		}
-
+		} 
 
 	});
 
 
-
- //    socket.on('connectConsumerTransport', async (data, callback) => {
-
- //      console.log('connectConsumerTransport ' + JSON.stringify(data, null, 4) );
-
- //      await consumerTransport.connect({ dtlsParameters: data.dtlsParameters });
- //      callback();
- //    });
-
-///////////////////////////////////////////////////////////////////////////
-
-//  function createConsumer(producer, rtpCapabilities) {
-
-  
-// }
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -252,7 +211,7 @@ async function runSocketServer() {
 		}
 		else
 		{
-			socket.to(serverSocketid).emit('message', message);
+			io.sockets.connected[serverSocketid].emit('message', message);
 		}
 
 
@@ -273,16 +232,6 @@ async function runSocketServer() {
 	});
 
 
-	// socket.on('ipaddr', function() {
-	// 	var ifaces = os.networkInterfaces();
-	// 	for (var dev in ifaces) {
-	// 		ifaces[dev].forEach(function(details) {
-	// 			if (details.family === 'IPv4' && details.address !== '127.0.0.1') {
-	// 				socket.emit('ipaddr', details.address);
-	// 			}
-	// 		});
-	// 	}
-	// });
 
 	socket.on('bye', function(){
 		console.log('received bye');
