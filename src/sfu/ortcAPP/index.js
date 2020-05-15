@@ -131,16 +131,56 @@ async function runSocketServer() {
 	// 	socket.broadcast.emit('message', message);
 	// });
 
-	socket.on('disconnect', function() {
-	  console.log(socket.id);
+     socket.on('disconnect', function() {
+	  console.log("disconnect " + socket.id);
 	  if( socket.id == serverSocketid)
 	  {
 	  	serverSocketid = null;
 	  	console.log(serverSocketid);
 	  }
+	  else
+	  {
+	  	socket.to(serverSocketid).emit('disconnectClient', 'foo', socket.id);
+	  }
+
 
 	});
 
+
+
+	socket.on('CreateSFU', function(room) {
+		log('Received request to create or join room ' + room);
+
+		var clientsInRoom = io.sockets.adapter.rooms[room];
+		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+		log('Room ' + room + ' now has ' + numClients + ' client(s)');
+
+		socket.join(room);
+		
+		if (numClients !== 0 && serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
+			io.sockets.connected[serverSocketid].disconnect();
+			serverSocketid =  null;
+		}
+		 
+		log('Client ID ' + socket.id + ' created room ' + room);
+	
+		roomid = room;
+		serverSocketid = socket.id;
+		console.log('serverSocketid');
+		console.log(serverSocketid);
+
+
+		var rut = {"id":1,"method":"worker.createRouter","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef"}};
+
+		socket.emit('created', room, socket.id, rut, function (data) {
+
+		console.log("ack"); // data will be 'woot'
+		console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
+		}
+
+		);
+
+	});
 
 	socket.on('create or join', function(room) {
 		log('Received request to create or join room ' + room);
