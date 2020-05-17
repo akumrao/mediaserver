@@ -19,22 +19,6 @@
 namespace SdpParse {
     class Signaler;
     
-    struct Room
-    {
-        std::string name;
-        std::string routerId;
-        Peers *peers;
-        
-        Room(Signaler *signaler)
-        {
-            peers = new Peers(signaler, this);
-        }
-        ~Room()
-        {
-            delete peers;
-        }        
-        
-    };
 
 class Rooms {
 public:
@@ -42,14 +26,14 @@ public:
 
      ~Rooms();
     
-    std::map < std::string , Room*> mapRooms;
+    //std::map < std::string , Room*> mapRooms;
     
     void createRoom(std::string const& name, nlohmann::json const& data, bool isAck, nlohmann::json & ack_resp);
     
     void on_producer_offer(std::string &room , std::string& participantID, const nlohmann::json &sdp);
     void on_consumer_answer(std::string &room , std::string& participantID, const nlohmann::json &sdp);;
     
-    void onSubscribe(std::string &room , std::string& participantID);
+    void onSubscribe(std::string &room , std::string& participantID, const nlohmann::json& peerPartiID);
     void resume(std::string &room , std::string& participantID, bool flag);
     void onDisconnect(std::string &room , std::string& participantID);
 
@@ -60,6 +44,8 @@ public:
 private:
     
     Signaler *signaler;
+    
+    Peers *peers ;
 
 };
 

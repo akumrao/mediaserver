@@ -76,7 +76,7 @@ namespace SdpParse {
         
        // trans["id"] = ++peer->reqId;
         trans["internal"]["transportId"] = transportId;
-        trans["internal"]["routerId"]= room->routerId;
+        trans["internal"]["routerId"]= peer->roomId;
         param.push_back(trans);
         
         signaler->request(classtype, param, true, ack_resp);
@@ -98,7 +98,7 @@ namespace SdpParse {
     }
        
     
-    Producers::Producers(Signaler *signaler, Room *room, Peer *peer): Handler(signaler, room, peer)
+    Producers::Producers(Signaler *signaler, Peer *peer): Handler(signaler,peer)
     {
         classtype = "Producers";
     }
@@ -402,7 +402,7 @@ namespace SdpParse {
     /*************************************************************************************************************
         Producer starts
      *************************************************************************************************************/
-    Consumers::Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers) : Handler(signaler, room, peer),producers(producers)
+    Consumers::Consumers(Signaler *signaler, Peer * peer, Producers *producers) : Handler(signaler, peer),producers(producers)
     {
         classtype = "Consumers";
     }

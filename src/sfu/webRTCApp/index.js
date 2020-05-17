@@ -186,7 +186,7 @@ async function runSocketServer() {
 
 		} else if (numClients ) {
 			log('Client ID ' + socket.id + ' joined room ' + room);
-			io.sockets.in(room).emit('join', room);
+			io.sockets.in(room).emit('join', room, socket.id);
 
 			socket.emit('joined', room, socket.id);
 			io.sockets.in(room).emit('ready');
@@ -205,12 +205,47 @@ async function runSocketServer() {
 
 	 console.log('app message: ', message);
 
+	  var revMessage = message;
+
 
 	 	if ('to' in message) {
 			socket.to(message.to).emit('message', message);
 		}
 		else
 		{
+			if(message.type ==="subscribe")
+			{
+				var clientsInRoom = io.sockets.adapter.rooms[message.room];
+				var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
+				if(numClients ===1)
+					return;
+
+				///////////////
+
+				let clients = [];
+
+				for( const member in clientsInRoom.sockets ) {
+					console.log(member);
+
+					if( member !=  message.from ) {
+						clients.push(member);
+
+						{
+							let client = [];
+							client.push(revMessage.from);
+							revMessage.from = member;
+							client.push(member);
+							revMessage.desc = client;
+							io.sockets.connected[serverSocketid].emit('message', revMessage);
+						}
+					}
+				}
+
+
+				message.desc = clients;
+
+			}
 			io.sockets.connected[serverSocketid].emit('message', message);
 		}
 

@@ -128,7 +128,13 @@ namespace SdpParse {
             } else if (std::string("bye") == type) {
                 rooms->onDisconnect( room, from);
             } else if (std::string("subscribe") == type) {
-                rooms->onSubscribe(room, from );
+                json peerIds;
+                if(m.find("desc") != m.end())
+                {
+                  peerIds =m["desc"];
+                }
+                SInfo << " PeerIds " << peerIds.dump(4); 
+                rooms->onSubscribe(room, from, peerIds);
             } else if (std::string("producer_getStats") == type) {
                 json stats = json::array();
                 rooms->producer_getStats(room, from, stats );

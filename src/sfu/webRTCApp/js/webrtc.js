@@ -24,7 +24,7 @@ var  peerName;
 
 
 var pc1;
-var pc2;
+//var pc2;
 var socket = io.connect();
 
 
@@ -37,10 +37,23 @@ socket.on('full', function(room) {
   console.log('Room ' + room + ' is full');
 });
 
-socket.on('join', function (room){
-  console.log('Another peer made a request to join room ' + room);
-  console.log('This peer is the initiator of room ' + room + '!');
+socket.on('join', function (room, id){
+  //console.log('Another peer made a request to join room ' + room);
+  console.log('This peer is the initiator of room ' + room + '!' +" client id " + id);
   isChannelReady = true;
+
+  // ////////////////////
+  //
+  //   sendMessage ({
+  //       room: room,
+  //       from: peerID,
+  //       to: remotePeerID,
+  //       type: "subscribe",
+  //       desc: id
+  //   });
+  // ////////////////////
+
+
 });
 
 socket.on('joined', function(room, id) {
@@ -97,14 +110,86 @@ socket.on('message', function(message) {
    // }
     remotePeerID=message.from;
      
-     console.log( " Pc2 offers %o", message.desc);
+    console.log( " Pc2 offers %o", message.desc);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+     var pc2 = new RTCPeerConnection(
+          {
+              iceServers         : [],
+              iceTransportPolicy : 'all',
+              bundlePolicy       : 'max-bundle',
+              rtcpMuxPolicy      : 'require',
+              sdpSemantics       : 'unified-plan'
+          });
+
+      // Handle RTCPeerConnection connection status.
+      pc2.addEventListener('iceconnectionstatechange', () =>
+      {
+          switch (pc2.iceConnectionState)
+          {
+              case 'checking':
+                  console.log( 'subscribing...');
+                  break;
+              case 'connected':
+              case 'completed':
+                  //  document.querySelector('#local_video').srcObject = stream;
+                  // $txtPublish.innerHTML = 'published';
+                  // $fsPublish.disabled = true;
+                  // $fsSubscribe.disabled = false;
+                  console.log( 'subscribed...');
+                  break;
+              case 'failed':
+                  pc2.close();
+                  // $txtPublish.innerHTML = 'failed';
+                  // $fsPublish.disabled = false;
+                  // $fsSubscribe.disabled = true;
+                  console.log( 'failed...');
+                  break;
+              case 'disconnected':
+                  pc2.close();
+                  // $txtPublish.innerHTML = 'failed';
+                  // $fsPublish.disabled = false;
+                  // $fsSubscribe.disabled = true;
+                  console.log( 'failed...');
+                  break;
+              case 'closed':
+                  pc2.close();
+                  // $txtPublish.innerHTML = 'failed';
+                  // $fsPublish.disabled = false;
+                  // $fsSubscribe.disabled = true;
+                  console.log( 'failed...');
+                  break;
+          }
+      });
+
+
+      /////////////////
+
+
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////
+
      
-     pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
-    doAnswer();
+    pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
+    doAnswer(pc2);
   } else if (message.type === 'answer' && isStarted) {
     remotePeerID=message.from;
     console.log("publish andwer %o", message)
-    pc1.setRemoteDescription(new RTCSessionDescription(message.desc));
+    pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
+        .then(function ()
+        {
+            subscribe();
+
+              }, function (error) {
+
+            console.error(error);
+
+        });
+
+
+
   } else if (message.type === 'candidate' && isStarted) {
     var candidate = new RTCIceCandidate({
       sdpMLineIndex: message.candidate.sdpMLineIndex,
@@ -124,17 +209,33 @@ socket.on('message', function(message) {
 
 });
 
-function doAnswer() {
+function doAnswer(pc2) {
   console.log('Sending answer to peer.');
 
-  pc2.createAnswer().then(
-    setLocalAndSendMessage2,
-    onCreateSessionDescriptionError
-  );
+  // pc2.createAnswer().then(
+  //   setLocalAndSendMessage2,
+  //   onCreateSessionDescriptionError
+  // );
+
+
+
+    pc2.createAnswer(function (answer) {
+
+        setLocalAndSendMessage2( answer, pc2)
+
+
+
+    }, function (error) {
+
+        onCreateSessionDescriptionError(error);
+
+    });
+
+
 }
 
 ////////////////////////////////////////////////////
-function setLocalAndSendMessage2(sessionDescription) {
+function setLocalAndSendMessage2(sessionDescription, pc2) {
   pc2.setLocalDescription(sessionDescription);
   console.log('Pc2 answer %o', sessionDescription);
 
@@ -164,14 +265,32 @@ function setLocalAndSendMessage2(sessionDescription) {
 
 
 
-       // socket.emit('resume');
+  // socket.emit('resume');
 
-  document.querySelector('#remote_video').srcObject = stream;
+  //document.querySelector('#remote_video').srcObject = stream;
 
 
-    //alert('hi');
+    var videoEl = document.getElementById("remote-video1");
 
-   // remoteVideo.srcObject = stream;
+    let el = document.createElement("video");
+    // set some attributes on our audio and video elements to make
+    // mobile Safari happy. note that for audio to play you need to be
+    // capturing from the mic/camera
+    el.setAttribute('playsinline', true);
+    el.setAttribute('autoplay', true);
+
+    $('#remote_video').append(el);
+
+    el.srcObject = stream;
+
+    el.play()
+      .then(()=>{})
+      .catch((e) => {
+        err(e);
+      });
+
+
+
 }
 
 
@@ -182,26 +301,6 @@ function onCreateSessionDescriptionError(error) {
 }
 
 
-
-
-
-/////////////////////////////////////////////////////////////
-
-// just two resolutions, for now, as chrome 75 seems to ignore more
-// than two encodings
-//
-// const CAM_VIDEO_SIMULCAST_ENCODINGS =
-// [
-//   { maxBitrate:  96000, scaleResolutionDownBy: 4 },
-//   { maxBitrate: 680000, scaleResolutionDownBy: 1 },
-// ];
-
-// function camEncodings() {
-//   return CAM_VIDEO_SIMULCAST_ENCODINGS;
-// }
-
-
-////////////////////////////////////////////////////////////
 
 async function getUserMedia1( isWebcam) {
 
@@ -266,7 +365,52 @@ async function publish()
    const audiotrack = stream.getAudioTracks()[0];
 
    //const params = { track };
+//////////////////////////////////////////////////////////////////////////
 
+// var objTo = document.getElementById('container');
+//     var divtest = document.createElement("div");
+//     divtest.innerHTML = "new div";
+//     objTo.appendChild(divtest);
+
+
+    const $chkSimulcast = $('#chk_simulcast');
+    const chkSimulcast1 = $('#chk_simulcast');
+
+    if (chkSimulcast1.prop('checked')
+)   {
+         var x = 1;
+    }
+
+    var test = $('#remote-video');
+  
+  var videoEl = document.getElementById("local-video1");
+
+  let el = document.createElement("video");
+  // set some attributes on our audio and video elements to make
+  // mobile Safari happy. note that for audio to play you need to be
+  // capturing from the mic/camera
+  el.setAttribute('playsinline', true);
+  el.setAttribute('autoplay', true);
+
+  $('#local_video').append(el);
+
+   // videoEl.appendChild(el);
+
+ // el.srcObject = new MediaStream([ consumer.track.clone() ]);
+ // el.consumer = consumer;
+  // let's "yield" and return before playing, rather than awaiting on
+  // play() succeeding. play() will not succeed on a producer-paused
+  // track until the producer unpauses.
+  // el.play()
+  //   .then(()=>{})
+  //   .catch((e) => {
+  //     err(e);
+  //   });
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
 
 
     pc1 = new RTCPeerConnection(
@@ -292,7 +436,15 @@ async function publish()
                     const streamV = new MediaStream();
                     streamV.addTrack(videotrack);
 
-                    document.querySelector('#local_video').srcObject = streamV;
+                    el.srcObject = streamV;
+
+                    el.play()
+                        .then(()=>{})
+                        .catch((e) => {
+                            err(e);
+                        });
+
+
                   // $txtPublish.innerHTML = 'published';
                   // $fsPublish.disabled = true;
                   // $fsSubscribe.disabled = false;
@@ -418,63 +570,8 @@ async function subscribe() {
   sendMessage ({
           room: room,
           from: peerID,
-          to: remotePeerID,
           type: "subscribe",
         });
-
-
- ////////////////
-  pc2 = new RTCPeerConnection(
-      {
-        iceServers         : [],
-        iceTransportPolicy : 'all',
-        bundlePolicy       : 'max-bundle',
-        rtcpMuxPolicy      : 'require',
-        sdpSemantics       : 'unified-plan'
-      });
-
-        // Handle RTCPeerConnection connection status.
-        pc2.addEventListener('iceconnectionstatechange', () =>
-        {
-            switch (pc2.iceConnectionState)
-            {
-                case 'checking':
-                     console.log( 'subscribing...');
-                    break;
-                case 'connected':
-                case 'completed':
-                  //  document.querySelector('#local_video').srcObject = stream;
-                  // $txtPublish.innerHTML = 'published';
-                  // $fsPublish.disabled = true;
-                  // $fsSubscribe.disabled = false;
-                   console.log( 'subscribed...');
-                    break;
-                case 'failed':
-                    pc2.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'disconnected':
-                                         pc2.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'closed':
-                     pc2.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-            }
-        });
-
-
-  /////////////////
 
  
 }//end subscribe 

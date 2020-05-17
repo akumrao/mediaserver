@@ -21,14 +21,11 @@ namespace SdpParse {
 
 Rooms::Rooms( Signaler *signaler):signaler(signaler)
 {
+     peers = new Peers(signaler);
 }
 
 Rooms::~Rooms() {
-    
-    for(auto& room : mapRooms  )
-    {
-        delete room.second;
-    }
+    delete peers;
 }
 
 
@@ -38,7 +35,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     
        std::string roomName = data[0].get<std::string>();
     
-       if( mapRooms.find(roomName) != mapRooms.end())
+      if( signaler->worker->mapRouters.find(roomName) !=  signaler->worker->mapRouters.end())
        {
            SWarn << "Room already exist " << name << ":" << data[0].get<std::string>() << " - sfuID is " << data[1].get<std::string>();
            return ;
@@ -51,14 +48,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        param.push_back("worker_createRouter");
        param.push_back(data[1].get<std::string>());
        json &trans = Settings::configuration.worker_createRouter;
-       trans["internal"]["routerId"] = uuid4::uuid();
+       trans["internal"]["routerId"] = roomName ;// uuid4::uuid();
        param.push_back(trans);
        signaler->request("worker_createRouter", param, true, ack_resp);
        
-       Room * room = new Room(signaler);
-       room->routerId = trans["internal"]["routerId"];
-       room->name = roomName;
-       mapRooms[roomName] = room;
+      // Room * room = new Room(signaler);
+     //  room->routerId = trans["internal"]["routerId"];
+    //   room->name = roomName;
+//       mapRooms[roomName] = room;
        
        
        //create router_createAudioLevelObserver
@@ -67,7 +64,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
             param.push_back("worker_createRouter");
             param.push_back(data[1].get<std::string>());
             json &trans = Settings::configuration.router_createAudioLevelObserver;
-            trans["internal"]["routerId"] = room->routerId;
+            trans["internal"]["routerId"] = roomName;
             param.push_back(trans);
             signaler->request("createAudioLevelObserver", param, true, ack_resp);
        
@@ -84,17 +81,17 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 //                   sendSDP("offer", consumer->offer);
 
     }
-    void Rooms::onSubscribe(std::string &room , std::string& participantID)
+    void Rooms::onSubscribe(std::string &room , std::string& participantID, const json& peerPartiID)
     {
   
         SInfo << "Consumer subscribe to join room" <<  room << " : " <<  " from participantID  " << participantID ;
 
         
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            Peers *peers = mapRooms[room]->peers;
-            peers->onSubscribe(participantID);
+           
+            peers->onSubscribe(room, participantID, peerPartiID);
        }
        else
        {
@@ -108,11 +105,10 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        SInfo << "Producer Offer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
        
        
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            Peers *peers = mapRooms[room]->peers;
-            peers->on_producer_offer(participantID,  sdp);
+            peers->on_producer_offer(room, participantID,  sdp);
        }
        else
        {
@@ -126,10 +122,9 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        SInfo << "Consumer got answer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
 
         
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            Peers *peers = mapRooms[room]->peers;
             peers->on_consumer_answer(participantID,  sdp);
        }
        else
@@ -145,10 +140,9 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
         SInfo << " Disconeect peer from Room: " <<  room << " : " <<  " with participantID  " << participantID ;
 
         
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            Peers *peers = mapRooms[room]->peers;
             peers->onDisconnect(participantID);
        }
        else
@@ -164,9 +158,8 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
   
         SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            Peers *peers = mapRooms[room]->peers;
             peers->producer_getStats(participantID, stats);
        }
        else
@@ -180,9 +173,8 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
   
         SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            Peers *peers = mapRooms[room]->peers;
             peers->rtpObserver_addProducer(participantID, flag);
        }
        else
@@ -198,9 +190,8 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
   
         SInfo << "Consumer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            Peers *peers = mapRooms[room]->peers;
             peers->consumer_getStats(participantID, stats);
        }
        else
@@ -216,9 +207,8 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
   
         SInfo << "Consumer set PreferredLayers for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
-       if( mapRooms.find(room) != mapRooms.end())
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            Peers *peers = mapRooms[room]->peers;
             peers->setPreferredLayers(participantID, layer);
        }
        else

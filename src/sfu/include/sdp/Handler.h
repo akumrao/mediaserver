@@ -18,7 +18,7 @@ namespace SdpParse {
     
     public:
                 
-        Handler(Signaler *signaler, Room *room, Peer * peer):signaler(signaler),room(room),peer(peer)
+        Handler(Signaler *signaler,  Peer * peer):signaler(signaler),peer(peer)
         {
             
         }
@@ -47,7 +47,8 @@ namespace SdpParse {
         bool forceTcp{false};
  
         Signaler *signaler;
-        Room *room;
+       // std::string roomId;
+        
         Peer *peer;
         
         std::string classtype;
@@ -62,7 +63,7 @@ namespace SdpParse {
        
         public:
         
-        Producers(Signaler *signaler, Room *room, Peer *peer);
+        Producers(Signaler *signaler, Peer *peer);
 
         void runit(std::string & answer );
         
@@ -91,7 +92,7 @@ namespace SdpParse {
     {
         
     public:
-        Consumers(Signaler *signaler, Room *room, Peer * peer, Producers *producers);
+        Consumers(Signaler *signaler, Peer * peer, Producers *producers);
       
         void runit(std::string& offer);
 

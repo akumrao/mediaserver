@@ -12,7 +12,7 @@ namespace SdpParse {
     struct Room;
     class Peer {
     public:
-        Peer(Signaler *signaler, Room *room):signaler(signaler),room(room)
+        Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
         {
             
         }
@@ -53,6 +53,7 @@ namespace SdpParse {
       
             
     public:
+        std::string roomId;
         
     nlohmann::json sendingRtpParametersByKind;
     nlohmann::json sendingRemoteRtpParametersByKind ;
@@ -74,7 +75,7 @@ namespace SdpParse {
      Producers *producers{nullptr};
      Consumers *consumers{nullptr};
      
-     std::map<std::string, Consumers* >  mapOtherConumers;
+     //std::map<std::string, Consumers* >  mapOtherConumers;
      std::map<std::string, Consumers* >  mapSelfConumers;
      
      
@@ -88,16 +89,16 @@ namespace SdpParse {
     class Peers
     {
     public:
-        Peers(Signaler *signaler, Room *room):signaler(signaler),room(room)
+        Peers(Signaler *signaler):signaler(signaler)
         {
         }
         
         ~Peers();
         
-        void on_producer_offer( std::string& participantID, const nlohmann::json &sdp);
+        void on_producer_offer(std::string &room, std::string& participantID, const nlohmann::json &sdp);
         void on_consumer_answer( std::string& participantID, const nlohmann::json &sdp);
         
-        void onSubscribe(std::string& participantID);
+        void onSubscribe(std::string &room, std::string& participantID, const nlohmann::json& peerPartiID);
         
         void onDisconnect( std::string& participantID);
         
@@ -110,7 +111,7 @@ namespace SdpParse {
 
         std::map< std::string, Peer*> mapPeers;
         
-        Room *room;
+  
         Signaler *signaler;   
     };
     
