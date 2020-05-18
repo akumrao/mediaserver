@@ -38,7 +38,7 @@ namespace SdpParse {
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
         nlohmann::json  _setupTransport(const nlohmann::json & sdpObject, const std::string& localDtlsRole);
         
-        
+        bool transport_connect{false};
     protected:
       
         //std::string peerID;
@@ -52,8 +52,6 @@ namespace SdpParse {
         Peer *peer;
         
         std::string classtype;
-        
-        
         std::string constructor_name { "WebrtcTransport"};
 
     };
@@ -64,6 +62,8 @@ namespace SdpParse {
         public:
         
         Producers(Signaler *signaler, Peer *peer);
+        
+        ~Producers();
 
         void runit(std::string & answer );
         
@@ -92,9 +92,10 @@ namespace SdpParse {
     {
         
     public:
-        Consumers(Signaler *signaler, Peer * peer, Producers *producers);
+        Consumers(Signaler *signaler, Peer * peer);
+        ~Consumers();
       
-        void runit(std::string& offer);
+        void runit(std::string& offer,  Producers *producers);
 
         std::string GetOffer(const std::string& id, size_t  mid , const std::string& kind, const nlohmann::json & rtpParameters);
 
@@ -115,7 +116,7 @@ namespace SdpParse {
     private:
         //int mid{0};
       
-        Producers *producers;
+       // Producers *producers;
 
     };
     

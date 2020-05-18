@@ -203,9 +203,8 @@ async function runSocketServer() {
 		//console.log('notification ' + JSON.stringify(data, null, 4) );
 
 
-	 console.log('app message: ', message);
 
-	  var revMessage = message;
+
 
 
 	 	if ('to' in message) {
@@ -221,31 +220,42 @@ async function runSocketServer() {
 				if(numClients ===1)
 					return;
 
-				///////////////
+				console.log("Number of participant " + numClients );
+				let objCopy = Object.assign({}, message);
+				//var revMessage = message.clone();
+				let revClient = [];
+				revClient.push(message.from);
+
+
+
 
 				let clients = [];
 
+				console.log("message.from "+ message.from);
 				for( const member in clientsInRoom.sockets ) {
-					console.log(member);
 
-					if( member !=  message.from ) {
+					if( member !==  message.from ) {
+
+						console.log("member "+ member);
+
 						clients.push(member);
 
-						{
-							let client = [];
-							client.push(revMessage.from);
-							revMessage.from = member;
-							client.push(member);
-							revMessage.desc = client;
-							io.sockets.connected[serverSocketid].emit('message', revMessage);
-						}
+						objCopy.from = member;
+						objCopy.desc = revClient;
+						// console.log('app revMessage: ', objCopy);
+						// io.sockets.connected[serverSocketid].emit('message', objCopy);
+
 					}
 				}
 
 
 				message.desc = clients;
 
+			//	return;
 			}
+
+			console.log('app message: ', message);
+
 			io.sockets.connected[serverSocketid].emit('message', message);
 		}
 

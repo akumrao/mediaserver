@@ -226,6 +226,22 @@ namespace SdpParse
 		return sdptransform::write(this->sdpObject);
 	}
 
+        Sdp::RemoteSdp::~RemoteSdp()
+        {
+            flushMediaSection();
+        } 
+        void Sdp::RemoteSdp::flushMediaSection()
+        {
+            for( auto &ms: mediaSections  )
+            {
+                delete ms;
+            }
+            mediaSections.clear();
+            sdpObject["media"].clear();
+            midToIndex.clear();
+            
+        }
+        
 	void Sdp::RemoteSdp::AddMediaSection(MediaSection* newMediaSection)
 	{
 		

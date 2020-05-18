@@ -50,6 +50,11 @@ namespace SdpParse {
         return this->sctpCapabilities;
     }
 
+    
+    Peer::Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
+    {
+        consumers =  new Consumers(signaler, this);
+    }
 
     ////////////////////////
     /**
@@ -144,7 +149,7 @@ namespace SdpParse {
     }
     
     void Peer::on_consumer_answer( const json &sdp)
-    {
+    {    if(!consumers->transport_connect)
          consumers->loadAnswer(sdp["sdp"].get<std::string>());   
     }
       
@@ -177,12 +182,12 @@ namespace SdpParse {
 //              producerPeer->mapOtherConumers.erase(participantID);
 //          }
           
-          if(mapSelfConumers.find(producerPeer->participantID ) !=   mapSelfConumers.end() )
+          if( mapSelfConumers.find(producerPeer->participantID ) !=   mapSelfConumers.end() )
           {
               if(mapSelfConumers[ producerPeer->participantID ])
               {
-                delete mapSelfConumers[ producerPeer->participantID ];
-                mapSelfConumers[ producerPeer->participantID ]= nullptr;
+                //delete mapSelfConumers[ producerPeer->participantID ];
+               // mapSelfConumers[ producerPeer->participantID ]= nullptr;
               }
               mapSelfConumers.erase(producerPeer->participantID);
           }
@@ -190,8 +195,8 @@ namespace SdpParse {
           
           if( producerPeer->producers)
           {      std::string offer;
-                consumers =  new Consumers(signaler, this, producerPeer->producers);
-                consumers->runit(offer);
+                
+                consumers->runit(offer,  producerPeer->producers);
                 signaler->sendSDP("offer", offer, participantID);
                 //producerPeer->mapOtherConumers[ participantID ] = consumers;
                 mapSelfConumers[ producerPeer->participantID ] = consumers;
@@ -218,11 +223,11 @@ namespace SdpParse {
          
         for(auto & selfCon : mapSelfConumers )
         {
-           if(selfCon.second )
-           {
-                delete selfCon.second;
-                mapSelfConumers[selfCon.first] = nullptr;
-           }
+//           if(selfCon.second )
+//           {
+//                delete selfCon.second;
+//                mapSelfConumers[selfCon.first] = nullptr;
+//           }
            // FOr P1  = c2 c3 others map
            // for P1  = c2 c3  self map
            SInfo <<  "Erase form self consumermap : " <<  participantID <<  " cusumer: " << selfCon.first;
@@ -252,17 +257,14 @@ namespace SdpParse {
             delete producers;
             producers = nullptr;
         }
-         
-//        if(consumers)
-//        {
-//            delete consumers;
-//            consumers = nullptr;
-//        }
+        
+        if(consumers)
+        {
+            delete consumers;
+            consumers = nullptr;
+        }
+
     }
-    
-    
-
-
     
 
     void Peer::producer_getStats( nlohmann::json &stats)
@@ -354,10 +356,15 @@ namespace SdpParse {
         }
         else
         {
+             int x = 0;
             for( auto &id : peerPartiID)
             {
-                SInfo  << " peerids "  << id;
-                peer->onSubscribe( mapPeers[id]);
+                if(mapPeers.find(id)  != mapPeers.end() )
+                {
+                  SInfo  << " peerids "  << id;
+                  if(++x == 1  )
+                  peer->onSubscribe(mapPeers[id]);
+                }
             }
         }
     }

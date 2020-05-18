@@ -29,6 +29,9 @@ namespace SdpParse {
     }
     
     void Handler::createSdp(const json& iceParameters, const json& iceCandidates, const json& dtlsParameters) {
+        if(remoteSdp)
+            delete remoteSdp;
+        
         remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
     }
 
@@ -94,6 +97,12 @@ namespace SdpParse {
         //STrace << "peer->dtlsParameters " << dtlsParameters;
         trans["data"]["dtlsParameters"] = dtlsParameters;
         raiseRequest( param, trans, ack_resp);
+        
+        //if(ack_resp.at(0)["accepted"] ) // arvind TBD later
+            
+        transport_connect = true;
+        
+        
 
     }
        
@@ -361,8 +370,19 @@ namespace SdpParse {
         
         }
     }
+    
+     Producers::~Producers()
+    {
+        for( auto &prod: mapProducer)
+        {
+            delete prod.second;
+        }
+        
+        mapProducer.clear();
+    }
+    
 
-       void Producers::rtpObserver_addProducer( bool flag ) {
+    void Producers::rtpObserver_addProducer( bool flag ) {
 
         for( auto &prod: mapProducer)
         {
@@ -402,7 +422,7 @@ namespace SdpParse {
     /*************************************************************************************************************
         Producer starts
      *************************************************************************************************************/
-    Consumers::Consumers(Signaler *signaler, Peer * peer, Producers *producers) : Handler(signaler, peer),producers(producers)
+    Consumers::Consumers(Signaler *signaler, Peer * peer) : Handler(signaler, peer)
     {
         classtype = "Consumers";
     }
@@ -475,9 +495,14 @@ namespace SdpParse {
 
  
 
-    void Consumers::runit(std::string& offer) {
+    void Consumers::runit(std::string& offer, Producers *producers) {
 
+        if(transportId.empty())
         transportCreate();
+        else
+        {
+            remoteSdp->flushMediaSection();
+        }
   
         for( auto& prodMid : producers->mapProdMid)
         {
@@ -570,7 +595,15 @@ namespace SdpParse {
         
         }
     }
-
+    Consumers::~Consumers()
+    {
+        for( auto &cons: mapConsumer)
+        {
+            delete cons.second;
+        }
+        mapConsumer.clear();
+    }
+    
     void Consumers::setPreferredLayers(json &layer) {
 
         for( auto &cons: mapConsumer)

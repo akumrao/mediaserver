@@ -12,10 +12,8 @@ namespace SdpParse {
     struct Room;
     class Peer {
     public:
-        Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
-        {
-            
-        }
+        Peer(Signaler *signaler, std::string &roomId);
+       
 
         ~Peer();
 
