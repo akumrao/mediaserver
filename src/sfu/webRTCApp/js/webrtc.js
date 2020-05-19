@@ -180,7 +180,7 @@ socket.on('message', function(message) {
     pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
         .then(function ()
         {
-            subscribe();
+           // subscribe();
 
               }, function (error) {
 
@@ -234,6 +234,7 @@ function doAnswer(pc2) {
 
 }
 
+var nConsumer =2;
 ////////////////////////////////////////////////////
 function setLocalAndSendMessage2(sessionDescription, pc2) {
   pc2.setLocalDescription(sessionDescription);
@@ -270,7 +271,7 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
   //document.querySelector('#remote_video').srcObject = stream;
 
 
-    var videoEl = document.getElementById("remote-video1");
+    var videoEl = document.getElementById("remote-video"+ nConsumer );
 
     let el = document.createElement("video");
     // set some attributes on our audio and video elements to make
@@ -279,7 +280,7 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
     el.setAttribute('playsinline', true);
     el.setAttribute('autoplay', true);
 
-    $('#remote_video').append(el);
+    $('#remote_video'+nConsumer).append(el);
 
     el.srcObject = stream;
 
@@ -289,7 +290,7 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
         err(e);
       });
 
-
+    --nConsumer;
 
 }
 
@@ -308,11 +309,11 @@ async function getUserMedia1( isWebcam) {
   let stream;
   try {
 
-  stream =  await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+  //stream =  await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
 
-    // stream = isWebcam ?
-    //   await navigator.mediaDevices.getUserMedia({ video: true }) :
-    //   await navigator.mediaDevices.getDisplayMedia({ video: true });
+   stream = isWebcam ?
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true }) :
+      await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
   } catch (err) {
     console.error('getUserMedia() failed:', err.message);
     throw err;
@@ -328,6 +329,7 @@ async function btn_subscribe_resume() {
           from: peerID,
           to: remotePeerID,
           type: "subscribe-resume",
+          desc:'sessionDescription'
         });
 }
 
@@ -338,6 +340,7 @@ async function btn_subscribe_pause() {
           from: peerID,
           to: remotePeerID,
           type: "subscribe-pause",
+          desc:'sessionDescription'
         });
 }
 
@@ -347,7 +350,7 @@ async function btn_subscribe_pause() {
 ///////////////////////////////////////////////////////////////////////////
 
 //var pc1
-async function publish() 
+async function publish(isWebcam)
 {
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
@@ -359,10 +362,10 @@ async function publish()
 
    let stream;
 
-   stream =  await getUserMedia1(true);
+   stream =  await getUserMedia1(isWebcam);
    const videotrack = stream.getVideoTracks()[0];
 
-   const audiotrack = stream.getAudioTracks()[0];
+   let audiotrack = stream.getAudioTracks()[0];
 
    //const params = { track };
 //////////////////////////////////////////////////////////////////////////
@@ -373,16 +376,15 @@ async function publish()
 //     objTo.appendChild(divtest);
 
 
-    const $chkSimulcast = $('#chk_simulcast');
-    const chkSimulcast1 = $('#chk_simulcast');
+//     const $chkSimulcast = $('#chk_simulcast');
+//     const chkSimulcast1 = $('#chk_simulcast');
+//
+//     if (chkSimulcast1.prop('checked')
+// )   {
+//          var x = 1;
+//     }
 
-    if (chkSimulcast1.prop('checked')
-)   {
-         var x = 1;
-    }
 
-    var test = $('#remote-video');
-  
   var videoEl = document.getElementById("local-video1");
 
   let el = document.createElement("video");
@@ -478,13 +480,14 @@ async function publish()
         var _stream = new MediaStream();
 
 
+        if(audiotrack) {
+            var transceiver1 = pc1.addTransceiver(
+                audiotrack,
+                {
+                    direction: 'sendonly'
 
-        var transceiver1 = pc1.addTransceiver(
-            audiotrack,
-            {
-                direction     : 'sendonly'
-
-            });
+                });
+        }
          
          //firefox
         // var parameters = transceiver.sender.getParameters();

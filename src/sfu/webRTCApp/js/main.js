@@ -103,8 +103,14 @@ $(document).ready(function(){
 
     console.log("btn_webcam click");
           $("#div1").html("<h2>btn_webcam</h2>");
+   publish(true);
+  });
 
-   publish();
+  $("#btn_screen").click(function(){
+
+        console.log("btn_screen click");
+        $("#div1").html("<h2>btn_screen</h2>");
+        publish(false);
   });
 
 

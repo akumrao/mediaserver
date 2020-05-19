@@ -34,7 +34,7 @@ public:
     void on_consumer_answer(std::string &room , std::string& participantID, const nlohmann::json &sdp);;
     
     void onSubscribe(std::string &room , std::string& participantID, const nlohmann::json& peerPartiID);
-    void resume(std::string &room , std::string& participantID, bool flag);
+    void resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag);
     void onDisconnect(std::string &room , std::string& participantID);
 
     void producer_getStats( std::string &room , std::string& participantID, nlohmann::json &stats); 

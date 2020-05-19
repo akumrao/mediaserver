@@ -164,10 +164,13 @@ namespace SdpParse {
                 rooms->setPreferredLayers(room, from, layer );
             } 
             else if (std::string("subscribe-resume") == type) {
-              // rooms->resume(this , producer->producer,false);
+                
+               std::string consumerId = m["desc"].get<std::string>();
+               rooms->resume(room ,from, consumerId,false);
             }
             else if (std::string("subscribe-pause") == type) {
-              //consumer->resume(this , producer->producer, true);
+              std::string consumerId = m["desc"].get<std::string>();
+              rooms->resume(room, from , consumerId, true);
             }
 
         }

@@ -73,14 +73,21 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
 
 
-    void Rooms::resume(std::string &room , std::string& participantID, bool flag)
+    void Rooms::resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag)
     {
-  
-//                   consumer =  new SdpParse::Consumer(peer, peerID );
-//                   consumer->runit(this , producer->producer);
-//                   sendSDP("offer", consumer->offer);
+        SInfo << "Consumer Resume video for room" <<  room << " : " <<  " for participantID  " << participantID << " for consumerID  " << consumerID;
+
+       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
+       {
+            peers->resume(participantID, consumerID, flag);
+       }
+       else
+       {
+            SError << "Room does not exist: " << room  ;
+       }
 
     }
+    
     void Rooms::onSubscribe(std::string &room , std::string& participantID, const json& peerPartiID)
     {
   
@@ -89,8 +96,6 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
         
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-          
-           
             peers->onSubscribe(room, participantID, peerPartiID);
        }
        else

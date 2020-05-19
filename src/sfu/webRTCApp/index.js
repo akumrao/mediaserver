@@ -121,6 +121,14 @@ async function runSocketServer() {
 	  {
 	  	serverSocketid = null;
 	  	console.log(serverSocketid);
+
+
+		  for( let soc in   io.sockets.connected ){
+
+			  io.sockets.connected[soc].disconnect();
+		  }
+
+
 	  }
 	  else
 	  {

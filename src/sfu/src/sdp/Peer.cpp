@@ -192,14 +192,18 @@ namespace SdpParse {
               mapSelfConumers.erase(producerPeer->participantID);
           }
           
-          
+          //static int x = 0 ;
           if( producerPeer->producers)
-          {      std::string offer;
+          {      
+             std::string offer;
                 
-                consumers->runit(offer,  producerPeer->producers);
-                signaler->sendSDP("offer", offer, participantID);
-                //producerPeer->mapOtherConumers[ participantID ] = consumers;
-                mapSelfConumers[ producerPeer->participantID ] = consumers;
+            consumers->runit(offer,  producerPeer->producers);
+
+            // if(++x%2 == 0  )
+            signaler->sendSDP("offer", offer, participantID);
+            //producerPeer->mapOtherConumers[ participantID ] = consumers;
+            mapSelfConumers[ producerPeer->participantID ] = consumers;
+            
           }
     }
     
@@ -356,13 +360,13 @@ namespace SdpParse {
         }
         else
         {
-             int x = 0;
+            // int x = 0;
             for( auto &id : peerPartiID)
             {
                 if(mapPeers.find(id)  != mapPeers.end() )
                 {
                   SInfo  << " peerids "  << id;
-                  if(++x == 1  )
+                 // if(++x == 2  )
                   peer->onSubscribe(mapPeers[id]);
                 }
             }
@@ -465,6 +469,18 @@ namespace SdpParse {
 
     }
 
-    
+    void Peers::resume(std::string& participantID, std::string& consumerID,  bool flag)
+    {
+         Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->consumers->resume(consumerID,flag );
+
+    }
   
 } // namespace SdpParse

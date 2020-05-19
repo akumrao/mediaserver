@@ -100,7 +100,7 @@ namespace SdpParse {
         std::string GetOffer(const std::string& id, size_t  mid , const std::string& kind, const nlohmann::json & rtpParameters);
 
         void loadAnswer( std::string sdp);
-        void resume( bool pause);
+        void resume( const std::string& consumerId , bool pause);
 
         void consumer_getStats( nlohmann::json &stats); 
         void setPreferredLayers( nlohmann::json &layer);

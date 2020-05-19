@@ -452,31 +452,34 @@ namespace SdpParse {
 
     
     
-    void Consumers::resume( bool pause ) {
+    void Consumers::resume( const std::string& consumerId , bool pause) {
         
-//         {
-//            json ack_resp;
-//            json &trans = Settings::configuration.consumer_resume;
-//            json param = json::array();
-//            if(pause)
-//            {
-//                param.push_back("consumer.pause");
-//                trans["method"] = "consumer.pause";
-//            }
-//            else
-//            {
-//                param.push_back("consumer.resume");
-//                trans["method"] = "consumer.resume";
-//            }
-//            
-//            param.push_back(peer->participantID);
-//            
-//            trans["internal"]["producerId"] =  producer["id"];
-//            trans["internal"]["consumerId"] =  consumer["id"];
+        for( auto &cons: mapConsumer)
+        {
+        
+            json &consumer =cons.second->consumer;
+                    
+            json ack_resp;
+            json &trans = Settings::configuration.consumer_resume;
+            json param = json::array();
+            if(pause)
+            {
+                param.push_back("consumer.pause");
+                trans["method"] = "consumer.pause";
+            }
+            else
+            {
+                param.push_back("consumer.resume");
+                trans["method"] = "consumer.resume";
+            }
+            param.push_back(peer->participantID);
 
-//            
-//            raiseRequest( param, trans, ack_resp);
-//        }
+            trans["internal"]["producerId"] = consumer["producerId"];
+            trans["internal"]["consumerId"] = consumer["id"];
+            
+            raiseRequest( param, trans, ack_resp);
+        }
+       
     
     }
     

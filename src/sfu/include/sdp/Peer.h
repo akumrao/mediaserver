@@ -67,12 +67,11 @@ namespace SdpParse {
     void rtpObserver_addProducer( bool flag);
     void setPreferredLayers( nlohmann::json &layer);
 
+    Producers *producers{nullptr};
+    Consumers *consumers{nullptr};
     
     private:
         
-     Producers *producers{nullptr};
-     Consumers *consumers{nullptr};
-     
      //std::map<std::string, Consumers* >  mapOtherConumers;
      std::map<std::string, Consumers* >  mapSelfConumers;
      
@@ -100,12 +99,14 @@ namespace SdpParse {
         
         void onDisconnect( std::string& participantID);
         
+        void resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag);
     
         void producer_getStats( std::string& participantID, nlohmann::json &stats); 
         void consumer_getStats( std::string& participantID, nlohmann::json &stats); 
         void rtpObserver_addProducer( std::string& participantID, bool flag);
         void setPreferredLayers( std::string& participantID,  nlohmann::json &layer);
-
+        
+        void resume(std::string& participantID, std::string& consumerID,  bool flag);
 
         std::map< std::string, Peer*> mapPeers;
         
