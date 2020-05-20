@@ -368,9 +368,16 @@ async function publish(isWebcam)
    let stream;
 
    stream =  await getUserMedia1(isWebcam);
-   const videotrack = stream.getVideoTracks()[0];
+   let  videotrack;
+   let audiotrack;
 
-   let audiotrack = stream.getAudioTracks()[0];
+
+
+   if ($('#chk_video').prop('checked'))
+   videotrack = stream.getVideoTracks()[0];
+
+   if ($('#chk_audio').prop('checked'))
+    audiotrack = stream.getAudioTracks()[0];
 
    //const params = { track };
 //////////////////////////////////////////////////////////////////////////
@@ -512,28 +519,27 @@ async function publish(isWebcam)
 
 
           // Mormal without simulcast
-   
-         var checkBox = document.getElementById("chk_simulcast");
-         if (checkBox.checked) {
+         if(videotrack ) {
+             var checkBox = document.getElementById("chk_simulcast");
+             if (checkBox.checked) {
 
-             var transceiver =pc1.addTransceiver(videotrack, {
-                  direction: 'sendonly',
-                  sendEncodings: [
-                    {rid: 'q', scaleResolutionDownBy: 4.0},
-                    {rid: 'h', scaleResolutionDownBy: 2.0},
-                    {rid: 'f'}
-                  ]
-             });
-        }
-        else
-        {
-            var transceiver = pc1.addTransceiver(
-            videotrack,
-            {
-                direction     : 'sendonly'
+                 var transceiver = pc1.addTransceiver(videotrack, {
+                     direction: 'sendonly',
+                     sendEncodings: [
+                         {rid: 'q', scaleResolutionDownBy: 4.0},
+                         {rid: 'h', scaleResolutionDownBy: 2.0},
+                         {rid: 'f'}
+                     ]
+                 });
+             } else {
+                 var transceiver = pc1.addTransceiver(
+                     videotrack,
+                     {
+                         direction: 'sendonly'
 
-            });
-        }
+                     });
+             }
+         }
 
          
 

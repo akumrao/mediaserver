@@ -33,6 +33,7 @@ namespace SdpParse {
         json getConsumerRtpParameters(json &consumableParams, json &caps) {
             
           //  STrace << "consumableParams " << consumableParams.dump(4);
+          //  SInfo << "caps " << caps.dump(4);
             
             json consumerParams = {
                 {"codecs", json::array()},

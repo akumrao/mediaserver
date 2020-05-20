@@ -429,8 +429,7 @@ namespace SdpParse {
     }
 
 
-    std::string Consumers::GetOffer(const std::string& id, size_t  mid, const std::string& kind, const json& rtpParameters) {
-        std::string localId;
+    std::string Consumers::GetOffer(const std::string& id, const std::string&  mid, const std::string& kind, const json& rtpParameters) {
 
         // mid is optional, check whether it exists and is a non empty string.
 //        auto midIt = rtpParameters.find("mid");
@@ -439,11 +438,11 @@ namespace SdpParse {
 //        else
 //            localId = std::to_string(mid++);
         
-        localId = std::to_string(mid);
+       
 
         auto& cname = rtpParameters["rtcp"]["cname"];
 
-        this->remoteSdp->Receive(localId, kind, rtpParameters, cname, id);
+        this->remoteSdp->Receive(mid, kind, rtpParameters, cname, id);
 
         auto offer = this->remoteSdp->GetSdp();
 
@@ -560,13 +559,80 @@ namespace SdpParse {
 
            // STrace << "Final Consumer " << c->consumer.dump(4);
             ///////////////////
-
-            offer = GetOffer(c->consumer["id"], prodMid.first , c->consumer["kind"], c->consumer["rtpParameters"]);
+            std::string localId;
+            localId = std::to_string(prodMid.first);
+            offer = GetOffer(c->consumer["id"], localId , c->consumer["kind"], c->consumer["rtpParameters"]);
             
             
            // SInfo << "Offer: " << offer;
             
             mapConsumer[ c->consumer["id"]] = c; 
+            
+      
+            ////////////////////////////////////////////////////////////////////////////////
+                
+            if (!_probatorConsumerCreated && producer["kind"] == "video")
+            {
+                 {
+                    json probatorRtpParameters = ortc::generateProbatorRtpParameters(c->consumer["rtpParameters"]);
+                
+                    _probatorConsumerCreated = true;
+                    
+                    ///////////////
+                    json ack_resp;
+                    json param = json::array();
+                    param.push_back("transport.consume");
+                    param.push_back(peer->participantID);
+                    json &trans = Settings::configuration.transport_consume;
+
+                    trans["internal"]["producerId"] = producer["id"];
+                    trans["internal"]["consumerId"] = "probator";
+           
+
+                    json reqData = {
+                        {"kind", producer["kind"]},
+                        {"rtpParameters", probatorRtpParameters},
+                        {"type", producer["type"]},
+                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
+                        {"paused", false}
+                    };
+
+                    trans["data"] = reqData;
+                    raiseRequest( param, trans, ack_resp);
+
+                    json &ackdata = ack_resp.at(0)["data"];
+
+                    Consumer *c= new Consumer();
+                    c->consumer = {
+
+                        {"id", trans["internal"]["consumerId"]},
+                        {"producerId", producer["id"]},
+                        {"kind", trans["data"]["kind"]},
+                        {"rtpParameters", trans["data"]["rtpParameters"]},
+                        {"type", trans["data"]["type"]},
+                        {"paused", ackdata["paused"]},
+                        {"producerPaused", ackdata["producerPaused"]},
+                        {"score", ackdata["score"]},
+                        {"preferredLayers", ackdata["preferredLayers"]}
+
+                    };
+
+                    // STrace << "Final Consumer " << c->consumer.dump(4);
+                        ///////////////////
+
+                    offer = GetOffer(c->consumer["id"], "probator" , c->consumer["kind"], c->consumer["rtpParameters"]);
+            
+            
+                 // SInfo << "Offer: " << offer;
+            
+                 mapConsumer[ c->consumer["id"]] = c; 
+                    //////////
+                    
+                    
+                    
+                }
+
+            }
 
         }
 

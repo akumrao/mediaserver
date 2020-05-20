@@ -97,7 +97,7 @@ namespace SdpParse {
       
         void runit(std::string& offer,  Producers *producers);
 
-        std::string GetOffer(const std::string& id, size_t  mid , const std::string& kind, const nlohmann::json & rtpParameters);
+        std::string GetOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters);
 
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);
@@ -112,10 +112,10 @@ namespace SdpParse {
         };
         
         std::map<std::string, Consumer*>  mapConsumer;
-        
+       
+        bool _probatorConsumerCreated{false};
     private:
-        //int mid{0};
-      
+       //int mid{0};
        // Producers *producers;
 
     };
