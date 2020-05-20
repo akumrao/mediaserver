@@ -205,71 +205,62 @@ async function runSocketServer() {
 
 
 
-//////////////////////////////////////////////////////////////////////////
 	socket.on('message', function(message) {
 
-		//console.log('notification ' + JSON.stringify(data, null, 4) );
+			  socket.to(message.to).emit('message', message);
+	  });
+
+//////////////////////////////////////////////////////////////////////////
+	socket.on('sfu-message', function(message) {
 
 
-
-
-
-
-	 	if ('to' in message) {
-			socket.to(message.to).emit('message', message);
-		}
-		else
+		if(message.type ==="subscribe")
 		{
-			if(message.type ==="subscribe")
-			{
-				var clientsInRoom = io.sockets.adapter.rooms[message.room];
-				var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+			var clientsInRoom = io.sockets.adapter.rooms[message.room];
+			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 
-				if(numClients ===1)
-					return;
+			if(numClients ===1)
+				return;
 
-				console.log("Number of participant " + numClients );
-				let objCopy = Object.assign({}, message);
-				//var revMessage = message.clone();
-				let revClient = [];
-				revClient.push(message.from);
+			console.log("Number of participant " + numClients );
+			let objCopy = Object.assign({}, message);
+			//var revMessage = message.clone();
+			let revClient = [];
+			revClient.push(message.from);
 
 
 
 
-				let clients = [];
+			let clients = [];
 
-				console.log("message.from "+ message.from);
-				for( const member in clientsInRoom.sockets ) {
+			console.log("message.from "+ message.from);
+			for( const member in clientsInRoom.sockets ) {
 
-					if( member !==  message.from ) {
+				if( member !==  message.from ) {
 
-						console.log("member "+ member);
+					console.log("member "+ member);
 
-						clients.push(member);
+					clients.push(member);
 
-						objCopy.from = member;
-						objCopy.desc = revClient;
-						// console.log('app revMessage: ', objCopy);
-						// io.sockets.connected[serverSocketid].emit('message', objCopy);
+					objCopy.from = member;
+					objCopy.desc = revClient;
+					console.log('app revMessage: ', objCopy);
+					io.sockets.connected[serverSocketid].emit('message', objCopy);
 
-					}
 				}
-
-
-				message.desc = clients;
-
-			//	return;
 			}
 
-			console.log('app message: ', message);
 
-			io.sockets.connected[serverSocketid].emit('message', message);
+			message.desc = clients;
+
+			//return;
 		}
 
+		console.log('app message: ', message);
 
-    // for a real app, would be room-only (not broadcast)
-    	
+		io.sockets.connected[serverSocketid].emit('message', message);
+
+
 
 	});
 

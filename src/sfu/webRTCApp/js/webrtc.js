@@ -87,7 +87,7 @@ socket.on('log', function(array) {
 
 function sendMessage(message) {
   console.log('Client sending message: ', message);
-  socket.emit('message', message);
+  socket.emit('sfu-message', message);
 }
 
 // This client receives a message
@@ -234,7 +234,6 @@ function doAnswer(pc2) {
 
 }
 
-var nConsumer =2;
 ////////////////////////////////////////////////////
 function setLocalAndSendMessage2(sessionDescription, pc2) {
   pc2.setLocalDescription(sessionDescription);
@@ -264,14 +263,12 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
    }
 
 
-
-
   // socket.emit('resume');
 
   //document.querySelector('#remote_video').srcObject = stream;
 
 
-    var videoEl = document.getElementById("remote-video"+ nConsumer );
+   // var videoEl = document.getElementById("remote-video"+ nConsumer );
 
     let el = document.createElement("video");
     // set some attributes on our audio and video elements to make
@@ -280,7 +277,16 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
     el.setAttribute('playsinline', true);
     el.setAttribute('autoplay', true);
 
-    $('#remote_video'+nConsumer).append(el);
+
+    var div = document.createElement('div');
+    div.textContent = remotePeerID;
+    div.appendChild(el);
+    var td = document.createElement('td');
+
+    td.appendChild(div);
+
+
+    $('#TRSubscribe').append(td);
 
     el.srcObject = stream;
 
@@ -290,7 +296,6 @@ function setLocalAndSendMessage2(sessionDescription, pc2) {
         err(e);
       });
 
-    --nConsumer;
 
 }
 
@@ -395,6 +400,7 @@ async function publish(isWebcam)
   el.setAttribute('autoplay', true);
 
   $('#local_video').append(el);
+  $('#divPeerid').text(peerID);
 
    // videoEl.appendChild(el);
 

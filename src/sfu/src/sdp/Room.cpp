@@ -91,7 +91,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     void Rooms::onSubscribe(std::string &room , std::string& participantID, const json& peerPartiID)
     {
   
-        SInfo << "Consumer subscribe to join room" <<  room << " : " <<  " from participantID  " << participantID ;
+        SInfo << "Consumer subscribe to join room" <<  room << " : " <<  " from participantID  " << participantID  << " peerids" << peerPartiID.dump(4);
 
         
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
@@ -122,15 +122,15 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     }
     
     
-    void Rooms::on_consumer_answer(std::string &room , std::string& participantID, const json &sdp)
+    void Rooms::on_consumer_answer(std::string &room , std::string& participantID, std::string& to, const json &sdp)
     {
-       SInfo << "Consumer got answer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
+       SInfo << "Consumer got answer to join room" <<  room << " : " <<  " from participantID  " << participantID  << " to " << to;
 
         
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            peers->on_consumer_answer(participantID,  sdp);
+            peers->on_consumer_answer(participantID, to,  sdp);
        }
        else
        {

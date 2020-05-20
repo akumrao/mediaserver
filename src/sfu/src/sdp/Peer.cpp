@@ -53,7 +53,7 @@ namespace SdpParse {
     
     Peer::Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
     {
-        consumers =  new Consumers(signaler, this);
+        //consumers =  new Consumers(signaler, this);
     }
 
     ////////////////////////
@@ -148,8 +148,14 @@ namespace SdpParse {
         return caps;
     }
     
-    void Peer::on_consumer_answer( const json &sdp)
-    {    if(!consumers->transport_connect)
+    void Peer::on_consumer_answer( std::string& to, const json &sdp)
+    {   
+        if( mapSelfConumers.find(to) == mapSelfConumers.end())
+        {
+            SError << "Could not find consumer:  " << to;
+        }
+        Consumers *consumers = mapSelfConumers[to];
+        if(!consumers->transport_connect)
          consumers->loadAnswer(sdp["sdp"].get<std::string>());   
     }
       
@@ -169,105 +175,71 @@ namespace SdpParse {
          producers->runit(answer);
           
         //int sz =  producers->mapProducer.size(); 
-        signaler->sendSDP("answer", answer, participantID);
-        
-            
+        signaler->sendSDP("answer", answer, participantID,participantID);
+       
     }
      
     void Peer::onSubscribe( Peer *producerPeer)
     {
-//          if(producerPeer->mapOtherConumers.find(participantID ) !=   producerPeer->mapOtherConumers.end() )
-//          {
-//            //  delete producerPeer->mapOtherConumers[ participantID ];
-//              producerPeer->mapOtherConumers.erase(participantID);
-//          }
-          
-          if( mapSelfConumers.find(producerPeer->participantID ) !=   mapSelfConumers.end() )
-          {
-              if(mapSelfConumers[ producerPeer->participantID ])
-              {
-                //delete mapSelfConumers[ producerPeer->participantID ];
-               // mapSelfConumers[ producerPeer->participantID ]= nullptr;
-              }
-              mapSelfConumers.erase(producerPeer->participantID);
-          }
-          
-          //static int x = 0 ;
-          if( producerPeer->producers)
-          {      
+        if( producerPeer->producers)
+        {
+            Consumers *consumers;
+            if( mapSelfConumers.find(producerPeer->participantID ) == mapSelfConumers.end())
+            {
+                consumers = new Consumers(signaler, this);
+                mapSelfConumers[ producerPeer->participantID ] = consumers;
+                 
+                 //SInfo << "mapSelfConumers " <<  "participantID: " << participantID   << " for " << producerPeer->participantID; 
+            }
+            else
+            {
+                SError << "found mapSelfConumers " <<  "participantID: " << participantID   << " for " << producerPeer->participantID; 
+
+               consumers = mapSelfConumers[producerPeer->participantID ];
+            }
+               
              std::string offer;
                 
             consumers->runit(offer,  producerPeer->producers);
 
             // if(++x%2 == 0  )
-            signaler->sendSDP("offer", offer, participantID);
-            //producerPeer->mapOtherConumers[ participantID ] = consumers;
-            mapSelfConumers[ producerPeer->participantID ] = consumers;
+            signaler->sendSDP("offer", offer, participantID, producerPeer->participantID);
+           
+            SInfo << "sendSDP offer " <<  "participantID: " << participantID   << " for " << producerPeer->participantID;
             
-          }
+        }
     }
     
-    void Peer::onDisconnect( Peers *peers)
+    void Peer::onDisconnect( )
     {
-//        for(auto & othCon : mapOtherConumers )
-//        {
-//            if(othCon.second)
-//            {
-//                delete othCon.second;
-//                mapOtherConumers[othCon.first] = nullptr;
-//            }
-//            // FOr P1  = c2 c3 others map
-//            // for P1  = c2 c3  self map
-//            SInfo <<  "delete others consumermap: " <<  participantID <<  " cusumer: " << othCon.first;
-//            mapOtherConumers.erase(othCon.first);
-//
-//        }
-//        mapOtherConumers.clear();
-         
-         
+
         for(auto & selfCon : mapSelfConumers )
         {
-//           if(selfCon.second )
-//           {
-//                delete selfCon.second;
-//                mapSelfConumers[selfCon.first] = nullptr;
-//           }
+           if(selfCon.second )
+           {
+                delete selfCon.second;
+                mapSelfConumers[selfCon.first] = nullptr;
+           }
            // FOr P1  = c2 c3 others map
            // for P1  = c2 c3  self map
            SInfo <<  "Erase form self consumermap : " <<  participantID <<  " cusumer: " << selfCon.first;
            mapSelfConumers.erase(selfCon.first);
-           
-
-//          Peer *producerPeer =  peers->mapPeers[selfCon.first];
-
-//          if(producerPeer)
-//          if(producerPeer->mapOtherConumers.find(participantID ) !=   producerPeer->mapOtherConumers.end() )
-//          {
-//              SInfo <<  "delete producer: " <<  participantID <<  " cusumer: " << selfCon.first;
-//
-//              producerPeer->mapOtherConumers.erase(participantID);
-//          }
 
         }
         mapSelfConumers.clear();
+        
+        if(producers)
+        {
+            delete producers;
+            producers = nullptr;
+        }
           
     }
      
      
     Peer::~Peer()
     {
-        if(producers)
-        {
-            delete producers;
-            producers = nullptr;
-        }
-        
-        if(consumers)
-        {
-            delete consumers;
-            consumers = nullptr;
-        }
-
+        onDisconnect( );
     }
     
 
@@ -290,19 +262,19 @@ namespace SdpParse {
 
     void  Peer::consumer_getStats( nlohmann::json &stats)
     {
-        if(consumers)
-         {
-           consumers->consumer_getStats(stats);
-         }
+//        if(consumers)
+//         {
+//           consumers->consumer_getStats(stats);
+//         }
 
     }
     void  Peer::setPreferredLayers( nlohmann::json &layer)
     {
-
-       if(consumers)
-         {
-           consumers->setPreferredLayers(layer);
-         }
+//
+//       if(consumers)
+//         {
+//           consumers->setPreferredLayers(layer);
+//         }
     }
     
     
@@ -365,7 +337,7 @@ namespace SdpParse {
             {
                 if(mapPeers.find(id)  != mapPeers.end() )
                 {
-                  SInfo  << " peerids "  << id;
+                 // SInfo  << " peerids "  << id;
                  // if(++x == 2  )
                   peer->onSubscribe(mapPeers[id]);
                 }
@@ -374,7 +346,7 @@ namespace SdpParse {
     }
 
     
-    void Peers::on_consumer_answer( std::string& participantID, const json &sdp)
+    void Peers::on_consumer_answer( std::string& participantID,  std::string& to, const json &sdp)
     {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
@@ -388,7 +360,7 @@ namespace SdpParse {
              return ;
         }
 
-        peer->on_consumer_answer(sdp);
+        peer->on_consumer_answer(to, sdp);
     }    
 
     
@@ -402,7 +374,7 @@ namespace SdpParse {
              return ;
         }
 
-        peer->onDisconnect(this);
+        peer->onDisconnect();
         delete peer;
         mapPeers.erase(participantID);
         
@@ -471,15 +443,15 @@ namespace SdpParse {
 
     void Peers::resume(std::string& participantID, std::string& consumerID,  bool flag)
     {
-         Peer *peer;
-        if (mapPeers.find(participantID) != mapPeers.end()) {
-            peer = mapPeers[participantID];
-        } else {
-             SError << "Peer does not exist. Not a possible state. " << participantID ;
-             return ;
-        }
-
-        peer->consumers->resume(consumerID,flag );
+//         Peer *peer;
+//        if (mapPeers.find(participantID) != mapPeers.end()) {
+//            peer = mapPeers[participantID];
+//        } else {
+//             SError << "Peer does not exist. Not a possible state. " << participantID ;
+//             return ;
+//        }
+//
+//        peer->consumers->resume(consumerID,flag );
 
     }
   

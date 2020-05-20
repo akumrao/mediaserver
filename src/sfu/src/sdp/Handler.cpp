@@ -425,6 +425,7 @@ namespace SdpParse {
     Consumers::Consumers(Signaler *signaler, Peer * peer) : Handler(signaler, peer)
     {
         classtype = "Consumers";
+         transportCreate();
     }
 
 
@@ -500,12 +501,11 @@ namespace SdpParse {
 
     void Consumers::runit(std::string& offer, Producers *producers) {
 
-        if(transportId.empty())
-        transportCreate();
-        else
-        {
-            remoteSdp->flushMediaSection();
-        }
+//       
+//        else
+//        {
+//            remoteSdp->flushMediaSection();
+//        }
   
         for( auto& prodMid : producers->mapProdMid)
         {

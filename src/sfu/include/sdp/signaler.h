@@ -41,7 +41,7 @@ namespace SdpParse {
             // void onFailure(wrtc::Peer* conn, const std::string& error) override;
 
         public:
-            void sendSDP( const std::string& type, const std::string& sdp,  std::string & remoteID);
+            void sendSDP( const std::string& type, const std::string& sdp,  std::string & remoteID, std::string & from);
             void postMessage(const json& m);
             void postAppMessage(const json& m);
                       // void onPeerConnected(std::string& peerID);

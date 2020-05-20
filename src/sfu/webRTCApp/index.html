@@ -37,22 +37,22 @@
 </style>
 <body>
   <table>
-    <tr>
+    <tr id="TRSubscribe">
       <td>
-        <div>Local</div>
+        <div id="divPeerid"></div>
 <!--        <video id="local_video" controls autoplay playsinline></video>-->
         <div id="local_video"> </div>
       </td>
-      <td>
-        <div>Remote1</div>
-<!--        <video id="remote_video" controls autoplay playsinline></video>-->
-         <div id="remote_video1"> </div>
-      </td>
-      <td>
-        <div>Remote2</div>
-        <!--        <video id="remote_video" controls autoplay playsinline></video>-->
-        <div id="remote_video2"> </div>
-      </td>
+<!--      <td>-->
+<!--        <div>Remote1</div>-->
+<!--&lt;!&ndash;        <video id="remote_video" controls autoplay playsinline></video>&ndash;&gt;-->
+<!--         <div id="remote_video1"> </div>-->
+<!--      </td>-->
+<!--      <td>-->
+<!--        <div>Remote2</div>-->
+<!--        &lt;!&ndash;        <video id="remote_video" controls autoplay playsinline></video>&ndash;&gt;-->
+<!--        <div id="remote_video2"> </div>-->
+<!--      </td>-->
     </tr>
     <tr>
       <td>
@@ -84,6 +84,8 @@
         <fieldset id="fs_publish">
           <legend>Publishing</legend>
           <div><label><input type="checkbox" id="chk_simulcast"> Use Simulcast</label></div>
+          <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
+          <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
           <div>
             <button id="btn_webcam">Start Webcam</button>
             <span id="webcam_status"></span>

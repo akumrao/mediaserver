@@ -58,9 +58,9 @@ namespace SdpParse {
     nlohmann::json sdpObject;
     
     void on_producer_offer( const nlohmann::json &sdp);
-    void on_consumer_answer( const nlohmann::json &sdp);
+    void on_consumer_answer( std::string& to,const nlohmann::json &sdp);
     void onSubscribe( Peer *);
-    void onDisconnect( Peers *peers);
+    void onDisconnect();
     
     void producer_getStats(nlohmann::json &stats); 
     void consumer_getStats(nlohmann::json &stats); 
@@ -68,7 +68,7 @@ namespace SdpParse {
     void setPreferredLayers( nlohmann::json &layer);
 
     Producers *producers{nullptr};
-    Consumers *consumers{nullptr};
+    //Consumers *consumers{nullptr};
     
     private:
         
@@ -93,7 +93,7 @@ namespace SdpParse {
         ~Peers();
         
         void on_producer_offer(std::string &room, std::string& participantID, const nlohmann::json &sdp);
-        void on_consumer_answer( std::string& participantID, const nlohmann::json &sdp);
+        void on_consumer_answer( std::string& participantID, std::string& to, const nlohmann::json &sdp);
         
         void onSubscribe(std::string &room, std::string& participantID, const nlohmann::json& peerPartiID);
         

@@ -31,7 +31,7 @@ namespace SdpParse {
         }
         ////////////////////////////////////////////////////////////////////
 
-        void Signaler::sendSDP(const std::string& type,  const std::string& sdp, std::string & remotePeerID) {
+        void Signaler::sendSDP(const std::string& type,  const std::string& sdp, std::string & remotePeerID, std::string & from  ) {
             assert(type == "offer" || type == "answer");
             //smpl::Message m;
             json desc;
@@ -42,7 +42,7 @@ namespace SdpParse {
 
             m["type"] = type;
             m["desc"] = desc;
-            m["from"] = sfuID;
+            m["from"] = from;
             m["to"] = remotePeerID;
 
 
@@ -58,18 +58,18 @@ namespace SdpParse {
         
         void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
 
-            SInfo << name << ":" << data[0].get<std::string>()  << " for  " << data[1].get<std::string>();
+        //    SInfo << name << ":" << data[0].get<std::string>()  << " for  " << data[1].get<std::string>();
 
             json jsonRequest = data[2];
             jsonRequest["id"] = reqId++;
-            LInfo("arvind ", cnfg::stringify(jsonRequest))
+            LDebug("arvind ", cnfg::stringify(jsonRequest))
             Channel::Request req(jsonRequest);
             worker->OnChannelRequest(&req);
             if (isAck) {
                 ack_resp = json::array();
                 ack_resp.push_back(req.jsonResponse);
                // ack_resp = arr;
-                SInfo<< "ack" << ack_resp.dump(4); //
+                SDebug<< "ack" << ack_resp.dump(4); //
             }
 
         }
@@ -82,6 +82,18 @@ namespace SdpParse {
             std::string from;
             std::string type;
             std::string room;
+            std::string to;
+            
+            
+            if (m.find("to") != m.end()) {
+                to = m["to"].get<std::string>();
+            }
+//            else
+//            {
+//                SError << " On Peer message is missing participant id ";
+//               // return;
+//            }
+            
 
             if (m.find("from") != m.end()) {
                 from = m["from"].get<std::string>();
@@ -109,7 +121,7 @@ namespace SdpParse {
             }
             
 
-            SInfo << "On Peer message for room:" << room << " from: " << from << " type: " << type ;
+          //  SInfo << "On Peer message for room:" << room << " from: " << from << " type: " << type ;
             
   
 
@@ -122,7 +134,7 @@ namespace SdpParse {
 
             } else if (std::string("answer") == type) {
                // recvSDP(from, m["desc"]);
-                rooms->on_consumer_answer( room,  from, m["desc"] );
+                rooms->on_consumer_answer( room, from, to, m["desc"] );
             } else if (std::string("candidate") == type) {
                 recvCandidate(from, m["candidate"]);
             } else if (std::string("bye") == type) {
@@ -133,7 +145,7 @@ namespace SdpParse {
                 {
                   peerIds =m["desc"];
                 }
-                SInfo << " PeerIds " << peerIds.dump(4); 
+               // SInfo << " PeerIds " << peerIds.dump(4); 
                 rooms->onSubscribe(room, from, peerIds);
             } else if (std::string("producer_getStats") == type) {
                 json stats = json::array();
