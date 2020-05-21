@@ -37,7 +37,7 @@ namespace Channel
 
 	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
 	{       
-                 SInfo <<  "volume: " << data.dump(4);
+                 STrace <<  "Emit: " << data.dump(4);
 
                 json jsonNotification = json::object();
 

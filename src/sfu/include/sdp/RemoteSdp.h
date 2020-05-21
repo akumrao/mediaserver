@@ -47,6 +47,7 @@ namespace SdpParse
 			void CloseMediaSection(const std::string& mid);
 			std::string GetSdp();
                         void flushMediaSection();
+                        int MediaSectionSize();
 
 		private:
 			void AddMediaSection(MediaSection* newMediaSection);

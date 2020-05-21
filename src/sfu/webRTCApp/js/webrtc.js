@@ -125,6 +125,27 @@ socket.on('message', function(message) {
           });
 
       // Handle RTCPeerConnection connection status.
+
+
+
+      let el = document.createElement("video");
+      // set some attributes on our audio and video elements to make
+      // mobile Safari happy. note that for audio to play you need to be
+      // capturing from the mic/camera
+      el.setAttribute('playsinline', true);
+      el.setAttribute('autoplay', true);
+
+
+      var div = document.createElement('div');
+      div.textContent = remotePeerID;
+      div.appendChild(el);
+      var td = document.createElement('td');
+
+      td.appendChild(div);
+
+
+      $('#TRSubscribe').append(td);
+
       pc2.addEventListener('iceconnectionstatechange', () =>
       {
           switch (pc2.iceConnectionState)
@@ -139,6 +160,42 @@ socket.on('message', function(message) {
                   // $fsPublish.disabled = true;
                   // $fsSubscribe.disabled = false;
                   console.log( 'subscribed...');
+                  //////////////////////////////////////////////////////////////////////
+                  const transceivers = pc2.getTransceivers() ;
+
+
+                  console.log( "transceivers %o", transceivers);
+                  if (!transceivers)
+                      throw new Error('new RTCRtpTransceiver not found');
+
+
+                  const stream = new MediaStream();
+                  for (var transceiver in transceivers) {
+                      const track = transceivers[transceiver].receiver.track ;
+                      stream.addTrack(track);
+
+                  }
+
+
+                  // socket.emit('resume');
+
+                  //document.querySelector('#remote_video').srcObject = stream;
+
+
+                  // var videoEl = document.getElementById("remote-video"+ nConsumer );
+
+
+                  el.srcObject = stream;
+
+                  el.play()
+                      .then(()=>{})
+                      .catch((e) => {
+                          err(e);
+                      });
+
+
+
+                  /////////////////////////////////////////////////////////////////////
                   break;
               case 'failed':
                   pc2.close();
@@ -172,8 +229,24 @@ socket.on('message', function(message) {
       /////////////////////////////////////////////////////////////////////////////////////////////////
 
      
-    pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
-    doAnswer(pc2);
+    //pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
+
+
+    pc2.setRemoteDescription(new RTCSessionDescription(message.desc))
+          .then(function ()
+          {
+              doAnswer(pc2);
+
+          }, function (error) {
+
+              console.error(error);
+
+          });
+
+
+
+
+
   } else if (message.type === 'answer' && isStarted) {
     remotePeerID=message.from;
     console.log("publish andwer %o", message)
@@ -236,65 +309,27 @@ function doAnswer(pc2) {
 
 ////////////////////////////////////////////////////
 function setLocalAndSendMessage2(sessionDescription, pc2) {
-  pc2.setLocalDescription(sessionDescription);
+  //pc2.setLocalDescription(sessionDescription);
   console.log('Pc2 answer %o', sessionDescription);
 
-    sendMessage ({
-      room: room,
-      from: peerID,
-      to: remotePeerID,
-      type: sessionDescription.type,
-      desc:sessionDescription
-    });
 
-   const transceivers = pc2.getTransceivers() ;
+    pc2.setLocalDescription(sessionDescription)
+        .then(function ()
+        {
+            sendMessage ({
+                room: room,
+                from: peerID,
+                to: remotePeerID,
+                type: sessionDescription.type,
+                desc:sessionDescription
+            });
 
-           
-    console.log( "transceivers %o", transceivers);
-   if (!transceivers)
-            throw new Error('new RTCRtpTransceiver not found');
-     
+        }, function (error) {
 
-  const stream = new MediaStream();
-   for (var transceiver in transceivers) {
-        const track = transceivers[transceiver].receiver.track ;
-        stream.addTrack(track);
+            console.error(error);
 
-   }
+        });
 
-
-  // socket.emit('resume');
-
-  //document.querySelector('#remote_video').srcObject = stream;
-
-
-   // var videoEl = document.getElementById("remote-video"+ nConsumer );
-
-    let el = document.createElement("video");
-    // set some attributes on our audio and video elements to make
-    // mobile Safari happy. note that for audio to play you need to be
-    // capturing from the mic/camera
-    el.setAttribute('playsinline', true);
-    el.setAttribute('autoplay', true);
-
-
-    var div = document.createElement('div');
-    div.textContent = remotePeerID;
-    div.appendChild(el);
-    var td = document.createElement('td');
-
-    td.appendChild(div);
-
-
-    $('#TRSubscribe').append(td);
-
-    el.srcObject = stream;
-
-    el.play()
-      .then(()=>{})
-      .catch((e) => {
-        err(e);
-      });
 
 
 }

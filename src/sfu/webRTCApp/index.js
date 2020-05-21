@@ -257,7 +257,7 @@ async function runSocketServer() {
 		}
 
 		console.log('app message: ', message);
-
+		if(io.sockets.connected[serverSocketid])
 		io.sockets.connected[serverSocketid].emit('message', message);
 
 

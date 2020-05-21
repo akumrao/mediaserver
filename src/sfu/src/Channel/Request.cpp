@@ -66,7 +66,7 @@ namespace Channel
 
 	/* Instance methods. */
 
-	Request::Request(json& jsonRequest) //: channel(channel)
+	Request::Request(json& jsonRequest, std::function<void (json& )> func): cb(func) //: channel(channel)
 	{
 		MS_TRACE();
 
@@ -123,13 +123,13 @@ namespace Channel
 
 		this->replied = true;
 
-		jsonResponse = json::object();
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
 
-                MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));
-                
+                if(cb)
+                cb(jsonResponse );
 		//this->channel->Send(jsonResponse);
 	}
 
@@ -141,16 +141,15 @@ namespace Channel
 
 		this->replied = true;
 
-		jsonResponse = json::object();
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
 
 		if (data.is_structured())
 		jsonResponse["data"] = data;
-
-          // MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));      
-		//this->channel->Send(jsonResponse);
+                if(cb) 
+                cb(jsonResponse );
 	}
 
 	void Request::Error(const char* reason)
@@ -161,7 +160,7 @@ namespace Channel
 
 		this->replied = true;
 
-		jsonResponse = json::object();
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]    = this->id;
 		jsonResponse["error"] = "Error";
@@ -169,9 +168,9 @@ namespace Channel
 		if (reason != nullptr)
 			jsonResponse["reason"] = reason;
                 
-		 MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));
+		SError << jsonResponse.dump(4);
                  
-                //this->channel->Send(jsonResponse);
+                cb(jsonResponse );
                 
 	}
 
@@ -183,7 +182,7 @@ namespace Channel
 
 		this->replied = true;
 
-		 jsonResponse = json::object();
+		json  jsonResponse = json::object();
 
 		jsonResponse["id"]    = this->id;
 		jsonResponse["error"] = "TypeError";
@@ -191,7 +190,8 @@ namespace Channel
 		if (reason != nullptr)
 			jsonResponse["reason"] = reason;
 
-                 MS_DEBUG_DEV("jsonResponse: ", base::cnfg::stringify(jsonResponse));
-		//this->channel->Send(jsonResponse);
+                SError << jsonResponse.dump(4);
+                 
+                cb(jsonResponse );
 	}
 } // namespace Channel

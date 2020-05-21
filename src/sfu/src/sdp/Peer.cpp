@@ -172,10 +172,10 @@ namespace SdpParse {
          }
              
          producers =  new Producers(signaler, this );
-         producers->runit(answer);
-          
-        //int sz =  producers->mapProducer.size(); 
-        signaler->sendSDP("answer", answer, participantID,participantID);
+         producers->runit(  [&]( const std::string &answer)
+         {
+          signaler->sendSDP("answer", answer, participantID,participantID);
+         });
        
     }
      
@@ -198,14 +198,15 @@ namespace SdpParse {
                consumers = mapSelfConumers[producerPeer->participantID ];
             }
                
-             std::string offer;
+               
+            consumers->runit( producerPeer->producers, [&]( const std::string &offer)
+            {
                 
-            consumers->runit(offer,  producerPeer->producers);
-
-            // if(++x%2 == 0  )
-            signaler->sendSDP("offer", offer, participantID, producerPeer->participantID);
+              signaler->sendSDP("offer", offer, participantID, producerPeer->participantID);
            
-            SInfo << "sendSDP offer " <<  "participantID: " << participantID   << " for " << producerPeer->participantID;
+             // SInfo << "sendSDP offer " <<  "participantID: " << participantID   << " for " << producerPeer->participantID;
+                
+            });     
             
         }
     }
@@ -322,15 +323,15 @@ namespace SdpParse {
             mapPeers[participantID] = peer;
         }
 
-        if(peerPartiID.empty())
-        {
-            for( auto & pr : mapPeers)
-            {
-               if( pr.first != participantID)  // do not stream your stream to youself
-                peer->onSubscribe( pr.second);
-            }
-        }
-        else
+//        if(peerPartiID.empty())
+//        {
+//            for( auto & pr : mapPeers)
+//            {
+//               if( pr.first != participantID)  // do not stream your stream to youself
+//                peer->onSubscribe( pr.second);
+//            }
+//        }
+//        else
         {
             // int x = 0;
             for( auto &id : peerPartiID)

@@ -50,7 +50,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        json &trans = Settings::configuration.worker_createRouter;
        trans["internal"]["routerId"] = roomName ;// uuid4::uuid();
        param.push_back(trans);
-       signaler->request("worker_createRouter", param, true, ack_resp);
+       signaler->request("worker_createRouter", param, true,  [&](const json & ack_resp){});
        
       // Room * room = new Room(signaler);
      //  room->routerId = trans["internal"]["routerId"];
@@ -66,7 +66,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
             json &trans = Settings::configuration.router_createAudioLevelObserver;
             trans["internal"]["routerId"] = roomName;
             param.push_back(trans);
-            signaler->request("createAudioLevelObserver", param, true, ack_resp);
+            signaler->request("createAudioLevelObserver", param, true,  [&](const json & ack_resp){});
        
        }
    }

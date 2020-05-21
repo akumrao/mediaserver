@@ -56,21 +56,17 @@ namespace SdpParse {
         }
 
         
-        void Signaler::request(string const& name, json const& data, bool isAck, json & ack_resp) {
+        void Signaler::request(string const& name, json const& data, bool isAck,  std::function<void (const json& )> func) {
 
-        //    SInfo << name << ":" << data[0].get<std::string>()  << " for  " << data[1].get<std::string>();
-
+           //    SInfo << name << ":" << data[0].get<std::string>()  << " for  " << data[1].get<std::string>();
+            
+           // std::lock_guard<std::mutex> guard(lock);
+            
             json jsonRequest = data[2];
             jsonRequest["id"] = reqId++;
             LDebug("arvind ", cnfg::stringify(jsonRequest))
-            Channel::Request req(jsonRequest);
+            Channel::Request req(jsonRequest, func);
             worker->OnChannelRequest(&req);
-            if (isAck) {
-                ack_resp = json::array();
-                ack_resp.push_back(req.jsonResponse);
-               // ack_resp = arr;
-                SDebug<< "ack" << ack_resp.dump(4); //
-            }
 
         }
 
@@ -219,7 +215,10 @@ namespace SdpParse {
                     if(data.size() > 2) // for ORTC
                     {
                         SInfo << "Created room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-                        request(name, data, isAck, ack_resp);
+                        request(name, data, isAck, [&](const json & ack_resp)
+                        {
+                            
+                        });
                     }
                     else // webrtc
                     {
@@ -232,7 +231,7 @@ namespace SdpParse {
                 socket->on("rest", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
                     //SInfo << "room " << cnfg::stringify(data[0]) << " - my client ID is " << cnfg::stringify(data[1]);
-                    request(name, data, isAck, ack_resp);
+                    request(name, data, isAck, [&](const json & ack_resp){});
 
                 }));
 

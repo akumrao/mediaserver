@@ -32,7 +32,7 @@ namespace SdpParse {
         
         void transportCreate();
         void transportConnect(const nlohmann::json& sdpObject, const std::string& localDtlsRole);
-        void raiseRequest( nlohmann::json &param , nlohmann::json& trans, nlohmann::json& ack_resp);
+        void raiseRequest( nlohmann::json &param , nlohmann::json& trans,  std::function<void (const nlohmann::json& )> func );
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
@@ -65,7 +65,7 @@ namespace SdpParse {
         
         ~Producers();
 
-        void runit(std::string & answer );
+        void runit(std::function<void (const std::string & )> cbAns);
         
         struct Producer
         {   //std::string answer;
@@ -82,7 +82,7 @@ namespace SdpParse {
         std::map<size_t, std::string>  mapProdMid;  
         
     private:
-        std::string GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);
         
         std::string cnameForProducers; 
         
@@ -95,9 +95,9 @@ namespace SdpParse {
         Consumers(Signaler *signaler, Peer * peer);
         ~Consumers();
       
-        void runit(std::string& offer,  Producers *producers);
+        void runit(Producers *producers, std::function<void (const std::string & )> cboffer);
 
-        std::string GetOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters);
+        //std::string GetOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters);
 
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);

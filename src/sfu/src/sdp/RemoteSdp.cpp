@@ -230,6 +230,11 @@ namespace SdpParse
         {
             flushMediaSection();
         } 
+        
+        int Sdp::RemoteSdp::MediaSectionSize()
+        {
+            return mediaSections.size();
+        }
         void Sdp::RemoteSdp::flushMediaSection()
         {
             for( auto &ms: mediaSections  )

@@ -62,7 +62,7 @@ namespace SdpParse {
            
             //void onPeerDiconnected(std::string &room,  std::string& peerID);
             
-            void request(string const& room, json const& data, bool isAck, json & ack_resp);
+            void request(string const& room, json const& data, bool isAck,  std::function<void (const json& )> func);
 
         protected:
 #if USE_SSL
