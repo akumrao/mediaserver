@@ -68,7 +68,7 @@ namespace SdpParse {
     void setPreferredLayers( nlohmann::json &layer);
 
     Producers *producers{nullptr};
-    //Consumers *consumers{nullptr};
+    Consumers *consumers{nullptr};
     
     private:
         

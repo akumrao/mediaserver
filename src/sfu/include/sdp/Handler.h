@@ -6,7 +6,7 @@
 #include <json.hpp>
 #include <map>
 #include <string>
-
+#include <atomic>
 namespace SdpParse {
     
     class Peer;
@@ -49,6 +49,7 @@ namespace SdpParse {
         Signaler *signaler;
        // std::string roomId;
         
+    public:
         Peer *peer;
         
         std::string classtype;
@@ -95,17 +96,18 @@ namespace SdpParse {
         Consumers(Signaler *signaler, Peer * peer);
         ~Consumers();
       
-        void runit(Producers *producers, std::function<void (const std::string & )> cboffer);
-
-        //std::string GetOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters);
+        void runit(Producers *producers);
+       
+        void sendOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters, const std::string& partID , const std::string& remotePartID);
 
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);
 
         void consumer_getStats( nlohmann::json &stats); 
         void setPreferredLayers( nlohmann::json &layer);
+        std::atomic<uint8_t>  nodevice{0};
         
-
+       
         struct Consumer
         {  // std::string offer;
             nlohmann::json consumer;
@@ -113,7 +115,7 @@ namespace SdpParse {
         
         std::map<std::string, Consumer*>  mapConsumer;
        
-        bool _probatorConsumerCreated{false};
+        bool _probatorConsumerCreated{true};
     private:
        //int mid{0};
        // Producers *producers;

@@ -1,6 +1,130 @@
 'use strict';
 
 
+////////////////////////////////////////////////////////////////////////////////////////////
+/*
+* Error produced when calling a method in an invalid state.
+*/
+class InvalidStateError extends Error
+{
+    constructor(message)
+    {
+        super(message);
+
+        this.name = 'InvalidStateError';
+
+        if (Error.hasOwnProperty('captureStackTrace')) // Just in V8.
+            Error.captureStackTrace(this, InvalidStateError);
+        else
+            this.stack = (new Error(message)).stack;
+    }
+}
+
+class AwaitQueue
+{
+    constructor({ ClosedErrorClass = Error } = {})
+    {
+        // Closed flag.
+        // @type {Boolean}
+        this._closed = false;
+
+        // Queue of pending tasks. Each task is a function that returns a promise
+        // or a value directly.
+        // @type {Array<Function>}
+        this._tasks = [];
+
+        // Error used when rejecting a task after the AwaitQueue has been closed.
+        // @type {Error}
+        this._closedErrorClass = ClosedErrorClass;
+    }
+
+    close()
+    {
+        this._closed = true;
+    }
+
+    /**
+     * @param {Function} task - Function that returns a promise or a value directly.
+     *
+     * @async
+     */
+    async push(task)
+    {
+        if (typeof task !== 'function')
+            throw new TypeError('given task is not a function');
+
+        return new Promise((resolve, reject) =>
+        {
+            task._resolve = resolve;
+            task._reject = reject;
+
+            // Append task to the queue.
+            this._tasks.push(task);
+
+            // And run it if the only task in the queue is the new one.
+            if (this._tasks.length === 1)
+                this._next();
+        });
+    }
+
+    async _next()
+    {
+        // Take the first task.
+        const task = this._tasks[0];
+
+        if (!task)
+            return;
+
+        // Execute it.
+        await this._runTask(task);
+
+        // Remove the first task (the completed one) from the queue.
+        this._tasks.shift();
+
+        // And continue.
+        this._next();
+    }
+
+    async _runTask(task)
+    {
+        if (this._closed)
+        {
+            task._reject(new this._closedErrorClass('AwaitQueue closed'));
+
+            return;
+        }
+
+        try
+        {
+            const result = await task();
+
+            if (this._closed)
+            {
+                task._reject(new this._closedErrorClass('AwaitQueue closed'));
+
+                return;
+            }
+
+            // Resolve the task with the given result (if any).
+            task._resolve(result);
+        }
+        catch (error)
+        {
+            if (this._closed)
+            {
+                task._reject(new this._closedErrorClass('AwaitQueue closed'));
+
+                return;
+            }
+
+            // Reject the task with the error.
+            task._reject(error);
+        }
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////
+
+
 //const $chkSimulcast = $('#chk_simulcast');
 
 var sound_level = document.getElementById("sound_level"); 
@@ -17,14 +141,16 @@ var isStarted = false;
 //var turnReady;
 
 var room = 'foo'; /*think as a group  peerName@room */
-var  remotePeerID;
+//var  remotePeerID;
 var  peerID;
 var  remotePeerName;
 var  peerName;
 
 
 var pc1;
-//var pc2;
+var pc2;
+var pc2Connected= false;
+
 var socket = io.connect();
 
 
@@ -63,21 +189,69 @@ socket.on('joined', function(room, id) {
   peerID = id;
 
 
-  //if (isInitiator) {
+   initPC2();
+    // Handle RTCPeerConnection connection status.
 
-    // when working with web enable bellow line
-    // doCall();
-    // disable  send message 
-    //  sendMessage ({
-    //   from: peerID,
-    //   to: remotePeerID,
-    //   type: 'offer',
-    //   desc:'sessionDescription'
-    // });
-
- // }
 
 });
+
+
+
+function initPC2()
+{
+    pc2 = new RTCPeerConnection(
+        {
+            iceServers         : [],
+            iceTransportPolicy : 'all',
+            bundlePolicy       : 'max-bundle',
+            rtcpMuxPolicy      : 'require',
+            sdpSemantics       : 'unified-plan'
+        });
+
+    pc2.addEventListener('iceconnectionstatechange', () =>
+    {
+        switch (pc2.iceConnectionState)
+        {
+            case 'checking':
+                console.log( 'subscribing...');
+                break;
+            case 'connected':
+            case 'completed':
+                //  document.querySelector('#local_video').srcObject = stream;
+                // $txtPublish.innerHTML = 'published';
+                // $fsPublish.disabled = true;
+                // $fsSubscribe.disabled = false;
+                pc2Connected = true;
+                console.log( 'subscribed...');
+
+                break;
+            case 'failed':
+                pc2.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'failed...');
+                break;
+            case 'disconnected':
+                pc2.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'Peerconnection disconnected...');
+                break;
+            case 'closed':
+                pc2.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'failed...');
+                break;
+        }
+    });
+
+
+}
+
 
 socket.on('log', function(array) {
   console.log.apply(console, array);
@@ -90,165 +264,38 @@ function sendMessage(message) {
   socket.emit('sfu-message', message);
 }
 
+
+async  function processOffer( remotePeerID,  sdp)
+{
+
+    console.log( " Pc2 offers %o", sdp);
+
+    await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
+
+
+    const ret = await doAnswer(remotePeerID);
+
+    return ret;
+}
+
+
+
+var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
+
 // This client receives a message
-socket.on('message', function(message) {
+socket.on('message',  async function(message) {
   console.log('Client received message:', message);
-
-
-  // if (!message.offer && remotePeerID && remotePeerID != message.from) {
-  //     console.log('Dropping message from unknown peer', message);
-
-  //     return;
-  // }
-
 
   if (message === 'got user media') {
     maybeStart();
   } else if (message.type === 'offer') {
-   // if (!isInitiator && !isStarted) {
-   //   maybeStart();
-   // }
-    remotePeerID=message.from;
-     
-    console.log( " Pc2 offers %o", message.desc);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-     var pc2 = new RTCPeerConnection(
-          {
-              iceServers         : [],
-              iceTransportPolicy : 'all',
-              bundlePolicy       : 'max-bundle',
-              rtcpMuxPolicy      : 'require',
-              sdpSemantics       : 'unified-plan'
-          });
-
-      // Handle RTCPeerConnection connection status.
-
-
-
-      let el = document.createElement("video");
-      // set some attributes on our audio and video elements to make
-      // mobile Safari happy. note that for audio to play you need to be
-      // capturing from the mic/camera
-      el.setAttribute('playsinline', true);
-      el.setAttribute('autoplay', true);
-
-
-      var div = document.createElement('div');
-      div.textContent = remotePeerID;
-      div.appendChild(el);
-      var td = document.createElement('td');
-
-      td.appendChild(div);
-
-
-      $('#TRSubscribe').append(td);
-
-      pc2.addEventListener('iceconnectionstatechange', () =>
-      {
-          switch (pc2.iceConnectionState)
-          {
-              case 'checking':
-                  console.log( 'subscribing...');
-                  break;
-              case 'connected':
-              case 'completed':
-                  //  document.querySelector('#local_video').srcObject = stream;
-                  // $txtPublish.innerHTML = 'published';
-                  // $fsPublish.disabled = true;
-                  // $fsSubscribe.disabled = false;
-                  console.log( 'subscribed...');
-                  //////////////////////////////////////////////////////////////////////
-                  const transceivers = pc2.getTransceivers() ;
-
-
-                  console.log( "transceivers %o", transceivers);
-                  if (!transceivers)
-                      throw new Error('new RTCRtpTransceiver not found');
-
-
-                  const stream = new MediaStream();
-                  for (var transceiver in transceivers) {
-                      const track = transceivers[transceiver].receiver.track ;
-                      stream.addTrack(track);
-
-                  }
-
-
-                  // socket.emit('resume');
-
-                  //document.querySelector('#remote_video').srcObject = stream;
-
-
-                  // var videoEl = document.getElementById("remote-video"+ nConsumer );
-
-
-                  el.srcObject = stream;
-
-                  el.play()
-                      .then(()=>{})
-                      .catch((e) => {
-                          err(e);
-                      });
-
-
-
-                  /////////////////////////////////////////////////////////////////////
-                  break;
-              case 'failed':
-                  pc2.close();
-                  // $txtPublish.innerHTML = 'failed';
-                  // $fsPublish.disabled = false;
-                  // $fsSubscribe.disabled = true;
-                  console.log( 'failed...');
-                  break;
-              case 'disconnected':
-                  pc2.close();
-                  // $txtPublish.innerHTML = 'failed';
-                  // $fsPublish.disabled = false;
-                  // $fsSubscribe.disabled = true;
-                  console.log( 'failed...');
-                  break;
-              case 'closed':
-                  pc2.close();
-                  // $txtPublish.innerHTML = 'failed';
-                  // $fsPublish.disabled = false;
-                  // $fsSubscribe.disabled = true;
-                  console.log( 'failed...');
-                  break;
-          }
-      });
-
-
-      /////////////////
-
-
-
-      /////////////////////////////////////////////////////////////////////////////////////////////////
-
-     
-    //pc2.setRemoteDescription(new RTCSessionDescription(message.desc));
-
-
-    pc2.setRemoteDescription(new RTCSessionDescription(message.desc))
-          .then(function ()
-          {
-              doAnswer(pc2);
-
-          }, function (error) {
-
-              console.error(error);
-
-          });
-
-
-
-
+      return _awaitQueue.push(
+          async () =>  processOffer(message.from, message.desc  ));
+     //await processOffer(message.from, message.desc  );
 
   } else if (message.type === 'answer' && isStarted) {
-    remotePeerID=message.from;
+    //remotePeerID=message.from;
     console.log("publish andwer %o", message)
     pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
         .then(function ()
@@ -282,61 +329,126 @@ socket.on('message', function(message) {
 
 });
 
-function doAnswer(pc2) {
-  console.log('Sending answer to peer.');
+var trackNo= -1;
 
-  // pc2.createAnswer().then(
-  //   setLocalAndSendMessage2,
-  //   onCreateSessionDescriptionError
-  // );
+async function sleep(ms) {
+    return new Promise((r) => setTimeout(() => r(), ms));
+}
 
-
-
-    pc2.createAnswer(function (answer) {
-
-        setLocalAndSendMessage2( answer, pc2)
+async function doAnswer(remotePeerID) {
 
 
+  const answer = await  pc2.createAnswer();
 
-    }, function (error) {
+  await pc2.setLocalDescription(answer);
 
-        onCreateSessionDescriptionError(error);
+    if(!pc2Connected) {
+        pc2Connected = true;
+        console.log('Sending answer to peer.');
+        sendMessage({
+            room: room,
+            from: peerID,
+            to: remotePeerID,
+            type: answer.type,
+            desc: answer
+        });
+    }
 
+
+    // while (!pc2Connected) {
+    //     console.log(' transport connstate', pc2Connected );
+    //     await sleep(100);
+    //
+    // }
+
+
+    console.log("answer %o", answer.type);
+
+
+
+    //////////////////////////////////////////////////////////////////////
+    const transceivers = pc2.getTransceivers() ;
+
+    //const [sender] = pc2.getSenders();
+
+
+    console.log( "transceivers %o", transceivers);
+    if (!transceivers)
+        throw new Error('new RTCRtpTransceiver not found');
+
+
+    var mss = pc2.getRemoteStreams();
+
+
+    for (var ts in mss) {
+        if (ts > trackNo) {
+            console.log("ts%o:%o, ", ts, mss[ts]);
+
+            var ms = mss[ts];
+            trackNo = ts;
+            addVideoAudio(ms);
+        }
+    }
+
+
+    // const stream = new MediaStream();
+    // for (var transceiver in transceivers) {
+    //     const track = transceivers[transceiver].receiver.track ;
+    //     const mid = transceivers[transceiver].mid;
+    //     var cname =transceivers[transceiver].sender.getParameters();
+    //
+    //     console.log("cname %o", cname  );
+    //
+    //     console.log("cname %o", transceivers[transceiver].sender  );
+    //
+    //     if( transceiver > trackNo   )
+    //     {
+    //         trackNo = Number(transceiver);
+    //          console.log("trackNo" +trackNo);
+    //         stream.addTrack(track);
+    //     }
+    //
+    //
+    // }
+
+
+    return  true;
+ }
+
+function addVideoAudio(ms) {
+
+
+let el = document.createElement("video");
+// set some attributes on our audio and video elements to make
+// mobile Safari happy. note that for audio to play you need to be
+// capturing from the mic/camera
+el.setAttribute('playsinline', true);
+el.setAttribute('autoplay', true);
+
+
+var div = document.createElement('div');
+div.textContent = ms.id;
+div.appendChild(el);
+var td = document.createElement('td');
+
+td.appendChild(div);
+
+$('#TRSubscribe').append(td);
+
+el.srcObject = ms;
+
+el.play()
+    .then(()=>{})
+    .catch((e) => {
+        err(e);
     });
 
+return true;
 
 }
-
-////////////////////////////////////////////////////
-function setLocalAndSendMessage2(sessionDescription, pc2) {
-  //pc2.setLocalDescription(sessionDescription);
-  console.log('Pc2 answer %o', sessionDescription);
-
-
-    pc2.setLocalDescription(sessionDescription)
-        .then(function ()
-        {
-            sendMessage ({
-                room: room,
-                from: peerID,
-                to: remotePeerID,
-                type: sessionDescription.type,
-                desc:sessionDescription
-            });
-
-        }, function (error) {
-
-            console.error(error);
-
-        });
-
-
-
-}
-
 
 function onCreateSessionDescriptionError(error) {
-  log('Failed to create session description: ' + error.toString());
+  //log('Failed to create session description: ' + error.toString());
   console.log('Failed to create session description: ' + error.toString());
   
 }
@@ -597,7 +709,7 @@ async function publish(isWebcam)
         sendMessage ({
           room: room,
           from: peerID,
-          to: remotePeerID,
+          //to: remotePeerID,
           type: pc1.localDescription.type,
           desc: pc1.localDescription
         });

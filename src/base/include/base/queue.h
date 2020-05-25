@@ -22,6 +22,7 @@
 #include "uv.h"
 #include <queue>
 #include <algorithm>
+#include <mutex>
 
 namespace base {
 

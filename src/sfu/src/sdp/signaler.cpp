@@ -31,7 +31,7 @@ namespace SdpParse {
         }
         ////////////////////////////////////////////////////////////////////
 
-        void Signaler::sendSDP(const std::string& type,  const std::string& sdp, std::string & remotePeerID, std::string & from  ) {
+        void Signaler::sendSDP(const std::string& type,  const std::string& sdp, const std::string & remotePeerID, const std::string & from  ) {
             assert(type == "offer" || type == "answer");
             //smpl::Message m;
             json desc;

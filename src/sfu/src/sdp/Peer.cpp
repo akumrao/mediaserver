@@ -53,7 +53,7 @@ namespace SdpParse {
     
     Peer::Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
     {
-        //consumers =  new Consumers(signaler, this);
+        consumers =  new Consumers(signaler, this);
     }
 
     ////////////////////////
@@ -148,16 +148,6 @@ namespace SdpParse {
         return caps;
     }
     
-    void Peer::on_consumer_answer( std::string& to, const json &sdp)
-    {   
-        if( mapSelfConumers.find(to) == mapSelfConumers.end())
-        {
-            SError << "Could not find consumer:  " << to;
-        }
-        Consumers *consumers = mapSelfConumers[to];
-        if(!consumers->transport_connect)
-         consumers->loadAnswer(sdp["sdp"].get<std::string>());   
-    }
       
     void Peer::on_producer_offer( const json &sdp)
     {
@@ -174,11 +164,23 @@ namespace SdpParse {
          producers =  new Producers(signaler, this );
          producers->runit(  [&]( const std::string &answer)
          {
-          signaler->sendSDP("answer", answer, participantID,participantID);
+          signaler->sendSDP("answer", answer,  (const std::string&)participantID,(const std::string&)participantID);
          });
        
     }
-     
+#ifdef SeparateSocket // if you want to keep separate PC at webrtc for each subscriper
+
+    void Peer::on_consumer_answer( std::string& to, const json &sdp)
+    {   
+        if( mapSelfConumers.find(to) == mapSelfConumers.end())
+        {
+            SError << "Could not find consumer:  " << to;
+        }
+        Consumers *consumers = mapSelfConumers[to];
+        if(!consumers->transport_connect)
+         consumers->loadAnswer(sdp["sdp"].get<std::string>());   
+    }
+        
     void Peer::onSubscribe( Peer *producerPeer)
     {
         if( producerPeer->producers)
@@ -198,19 +200,30 @@ namespace SdpParse {
                consumers = mapSelfConumers[producerPeer->participantID ];
             }
                
-               
-            consumers->runit( producerPeer->producers, [&]( const std::string &offer)
-            {
-                
-              signaler->sendSDP("offer", offer, participantID, producerPeer->participantID);
+            consumers->nodevice += producerPeer->producers->mapProducer.size();   
+            consumers->runit( producerPeer->producers);
            
-             // SInfo << "sendSDP offer " <<  "participantID: " << participantID   << " for " << producerPeer->participantID;
-                
-            });     
             
         }
     }
+#endif// SeparateSocket    
     
+    void Peer::on_consumer_answer( std::string& to, const json &sdp)
+    {   
+        if(!consumers->transport_connect)
+         consumers->loadAnswer(sdp["sdp"].get<std::string>());   
+    }
+        
+    void Peer::onSubscribe( Peer *producerPeer)
+    {
+        if( producerPeer->producers)
+        {
+           
+            consumers->nodevice += producerPeer->producers->mapProducer.size();   
+            consumers->runit( producerPeer->producers);
+            
+        }
+    }
     void Peer::onDisconnect( )
     {
 
@@ -228,13 +241,20 @@ namespace SdpParse {
 
         }
         mapSelfConumers.clear();
+
+        if(consumers)
+        {
+            delete consumers;
+            consumers = nullptr;
+        }
         
         if(producers)
         {
             delete producers;
             producers = nullptr;
         }
-          
+         
+
     }
      
      

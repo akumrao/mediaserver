@@ -481,24 +481,40 @@ namespace SdpParse {
         transportConnect(ansdpObject, "client");
 
     }
+    
+    void Consumers::sendOffer(const std::string& id, const std::string&  mid, const std::string& kind, const json& rtpParameters , const std::string& partID , const std::string& remotePartID) {
+    
+            std::string localId;
+            localId = std::to_string(remoteSdp->MediaSectionSize());
+    
+            auto& cname = rtpParameters["rtcp"]["cname"];
+            
+            
+            SInfo <<  localId << " Sendffer  for consumer" << id << " kind " << kind;
 
-    void Consumers::runit(Producers *producers, std::function<void (const std::string &) > cboffer) {
+            this->remoteSdp->Receive(localId, kind, rtpParameters, cname, id);
+    
+            SInfo <<  localId << " Sendffer  for consumer" << id << " nodevice " <<  (int) nodevice << " remoteSdp->MediaSectionSize() " << remoteSdp->MediaSectionSize();
+            
+            if( remoteSdp->MediaSectionSize() == nodevice )
+            {
+                auto offer = this->remoteSdp->GetSdp();
+               // SInfo << "offer: " << offer;
+                signaler->sendSDP("offer", offer, partID, remotePartID);
+            }
+           
+        
+              
 
-        //        {
-        //            remoteSdp->flushMediaSection();
-        //        }
+     }
 
-        int sizeofMid = producers->mapProdMid.size() + 1;
+    void Consumers::runit(Producers *producers) {
+
+
 
         for (auto& prodMid : producers->mapProdMid) {
-            std::string localId;
-            localId = std::to_string(prodMid.first);
-
+        
             json &producer = producers->mapProducer[prodMid.second]->producer;
-
-            //SInfo <<  prodMid.first << " mapconumer " << producer["id"] << " kind " << producer["kind"];
-
-
 
             json param = json::array();
             param.push_back("transport.consume");
@@ -528,12 +544,11 @@ namespace SdpParse {
 
             trans["data"] = reqData;
 
-            // SInfo <<  localId << " GetOffer " << trans["internal"]["consumerId"]<< " kind " << reqData["kind"];
-
-            raiseRequest(param, trans, [ this, localId, trans, reqData, producer, sizeofMid, cboffer](const json & ack_resp) {
+           
+            raiseRequest(param, trans, [ this,  trans, reqData, producer, producers](const json & ack_resp) {
                // SInfo << ack_resp.dump(4);
                 const json &ackdata = ack_resp["data"];
-                SInfo << localId << " GetOffer " << trans["internal"]["consumerId"] << " kind " << reqData["kind"];
+               // SInfo << localId << " GetOffer " << trans["internal"]["consumerId"] << " kind " << reqData["kind"];
                 Consumer *c = new Consumer();
                 c->consumer = {
 
@@ -549,17 +564,16 @@ namespace SdpParse {
 
                 };
 
-                //GetOffer(c->consumer["id"], localId , c->consumer["kind"], c->consumer["rtpParameters"]);
-
+               
                 //SInfo <<  localId << " GetOffer " << c->consumer["id"] << " kind " << c->consumer["kind"];
                 mapConsumer[ c->consumer["id"]] = c;
 
-                auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
-                this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
-                if (sizeofMid == remoteSdp->MediaSectionSize()) {
-                    auto offer = this->remoteSdp->GetSdp();
-                            cboffer(offer);
-                }
+                //auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
+            
+             //   this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
+               
+                 sendOffer(c->consumer["id"], "" , c->consumer["kind"], c->consumer["rtpParameters"], peer->participantID, producers->peer->participantID );
+
 
             });
 
@@ -590,7 +604,7 @@ namespace SdpParse {
                     };
 
                     trans["data"] = reqData;
-                    raiseRequest(param, trans, [this, localId, trans, reqData, producer, sizeofMid, cboffer](const json & ack_resp) {
+                    raiseRequest(param, trans, [this, trans, reqData, producer](const json & ack_resp) {
 
                         const json &ackdata = ack_resp["data"];
 
@@ -615,11 +629,11 @@ namespace SdpParse {
                         mapConsumer[ c->consumer["id"]] = c;
 
                         auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
-                        remoteSdp->Receive("probator", c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
-                        if (sizeofMid == remoteSdp->MediaSectionSize()) {
-                            auto offer = this->remoteSdp->GetSdp();
-                                    cboffer(offer);
-                        }
+//                        remoteSdp->Receive("probator", c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
+//                        if (sizeofMid == remoteSdp->MediaSectionSize()) {
+//                            auto offer = this->remoteSdp->GetSdp();
+//                                    cboffer(offer);
+//                        }
 
                         //////////
                     });
