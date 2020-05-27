@@ -144,32 +144,20 @@ namespace SdpParse {
                // SInfo << " PeerIds " << peerIds.dump(4); 
                 rooms->onSubscribe(room, from, peerIds);
             } else if (std::string("producer_getStats") == type) {
-                json stats = json::array();
-                rooms->producer_getStats(room, from, stats );
-                json m;
-                m["type"] = "prodstats";
-                m["desc"] = stats;
-                m["from"] = sfuID;
-                m["to"] = from;
-                postAppMessage(m);
+                std::string producerId = m["desc"].get<std::string>();
+                rooms->producer_getStats(room, from, producerId );
             } else if (std::string("rtpObserver_addProducer") == type) {
                 rooms->rtpObserver_addProducer(room, from , true);
             } else if (std::string("rtpObserver_removeProducer") == type) {
                 rooms->rtpObserver_addProducer(room, from , false);
             } else if (std::string("consumer_getStats") == type) {
-                json stats = json::array();
-                rooms->consumer_getStats(room, from, stats );
-                json m;
-                m["type"] = "constats";
-                m["desc"] = stats;
-                m["from"] = sfuID;
-                m["to"] = from;
-                postAppMessage(m);
-                
+                std::string consumerId = m["desc"].get<std::string>();
+                rooms->consumer_getStats(room, from, consumerId );
             } 
             else if (std::string("setPreferredLayers") == type) {
-                json layer = json::array();
-                rooms->setPreferredLayers(room, from, layer );
+                //std::string consumerId = m["desc"].get<std::string>();
+                //json layer = json::array();
+                //rooms->setPreferredLayers(room, from, layer );
             } 
             else if (std::string("subscribe-resume") == type) {
                 

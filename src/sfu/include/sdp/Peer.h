@@ -62,8 +62,8 @@ namespace SdpParse {
     void onSubscribe( Peer *);
     void onDisconnect();
     
-    void producer_getStats(nlohmann::json &stats); 
-    void consumer_getStats(nlohmann::json &stats); 
+    void producer_getStats(const std::string& producerId); 
+    void consumer_getStats(const std::string& consumerId); 
     void rtpObserver_addProducer( bool flag);
     void setPreferredLayers( nlohmann::json &layer);
 
@@ -101,8 +101,8 @@ namespace SdpParse {
         
         void resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag);
     
-        void producer_getStats( std::string& participantID, nlohmann::json &stats); 
-        void consumer_getStats( std::string& participantID, nlohmann::json &stats); 
+        void producer_getStats( std::string& participantID, const std::string& producerId); 
+        void consumer_getStats( std::string& participantID, const std::string& consumerId); 
         void rtpObserver_addProducer( std::string& participantID, bool flag);
         void setPreferredLayers( std::string& participantID,  nlohmann::json &layer);
         

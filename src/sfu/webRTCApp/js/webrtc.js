@@ -286,9 +286,7 @@ var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 socket.on('message',  async function(message) {
   console.log('Client received message:', message);
 
-  if (message === 'got user media') {
-    maybeStart();
-  } else if (message.type === 'offer') {
+  if (message.type === 'offer') {
 
       return _awaitQueue.push(
           async () =>  processOffer(message.from, message.desc  ));
@@ -301,6 +299,20 @@ socket.on('message',  async function(message) {
         .then(function ()
         {
            // subscribe();
+           //////
+
+            var mss = pc1.getTransceivers()
+
+
+            for (var ts in mss) {
+                var ms = mss[ts].sender.track;
+                if(ms.kind === 'video' )
+                addProducerVideoAudio(ms);
+            }
+
+           //////
+
+
 
               }, function (error) {
 
@@ -412,6 +424,105 @@ async function doAnswer(remotePeerID) {
     return  true;
  }
 
+
+function addProducerVideoAudio(ms) {
+
+    var store={};
+
+    var track = ms;
+
+    var divStore = document.createElement('div');
+
+    var statButton;
+
+
+        store[track.kind] = track.id
+
+        let pause = document.createElement('span'),
+            checkbox = document.createElement('input'),
+            label = document.createElement('label');
+        pause.classList = 'nowrap';
+        checkbox.type = 'checkbox';
+        checkbox.id=track.id;
+        checkbox.checked = false;
+        checkbox.onchange = async () => {
+            if (checkbox.checked) {
+                await btn_subscribe_pause (checkbox.id);
+            } else {
+                await btn_subscribe_resume(checkbox.id);
+            }
+
+        }
+        label.id = `consumer-stats-${track.id}`;
+        label.innerHTML = "Pause " + track.kind;
+
+
+        if(track.kind === 'video') {
+            statButton = document.createElement('button');
+            statButton.id=track.id;
+            statButton.innerHTML += 'video Stats';
+            statButton.onclick = function(){
+                // alert('here be dragons');return false;
+                btn_subscribe_stats(statButton.id);
+                return false;
+            };
+
+
+
+
+        // if (consumer.paused) {
+        //     label.innerHTML = '[consumer paused]'
+        // } else {
+        //     let stats = lastPollSyncData[myPeerId].stats[consumer.id],
+        //         bitrate = '-';
+        //     if (stats) {
+        //         bitrate = Math.floor(stats.bitrate / 1000.0);
+        //     }
+        //     label.innerHTML = `[consumer playing ${bitrate} kb/s]`;
+        // }
+        pause.appendChild(checkbox);
+        pause.appendChild(label);
+        pause.appendChild(checkbox);
+        divStore.appendChild(pause);
+
+
+    }
+
+    if(statButton)
+        divStore.appendChild(statButton);
+
+    let el = document.createElement("video");
+// set some attributes on our audio and video elements to make
+// mobile Safari happy. note that for audio to play you need to be
+// capturing from the mic/camera
+    el.setAttribute('playsinline', true);
+    el.setAttribute('autoplay', true);
+
+
+    var div = document.createElement('div');
+    div.textContent = ms.id;
+    div.potato= store;
+
+    div.appendChild(el);
+    var td = document.createElement('td');
+
+    td.appendChild(div);
+    td.appendChild(divStore);
+
+    $('#local_video').append(td);
+
+    el.srcObject = ms;
+
+    el.play()
+        .then(()=>{})
+        .catch((e) => {
+            err(e);
+        });
+
+    return true;
+
+}
+
 function addVideoAudio(ms) {
 
     var store={};
@@ -419,6 +530,8 @@ function addVideoAudio(ms) {
     var tracks = ms.getTracks();
 
     var divStore = document.createElement('div');
+
+    var statButton;
 
     for( const tno in tracks)
     {
@@ -443,6 +556,21 @@ function addVideoAudio(ms) {
         label.id = `consumer-stats-${track.id}`;
         label.innerHTML = "Pause " + track.kind;
 
+
+        if(track.kind === 'video') {
+            statButton = document.createElement('button');
+            statButton.id=track.id;
+            statButton.innerHTML += 'video Stats';
+            statButton.onclick = function(){
+               // alert('here be dragons');return false;
+                btn_subscribe_stats(statButton.id);
+                return false;
+            };
+
+
+        }
+
+
         // if (consumer.paused) {
         //     label.innerHTML = '[consumer paused]'
         // } else {
@@ -455,10 +583,14 @@ function addVideoAudio(ms) {
         // }
         pause.appendChild(checkbox);
         pause.appendChild(label);
+        pause.appendChild(checkbox);
         divStore.appendChild(pause);
 
 
     }
+
+    if(statButton)
+    divStore.appendChild(statButton);
 
 let el = document.createElement("video");
 // set some attributes on our audio and video elements to make
@@ -587,17 +719,17 @@ async function publish(isWebcam)
 //     }
 
 
-  var videoEl = document.getElementById("local-video1");
 
-  let el = document.createElement("video");
-  // set some attributes on our audio and video elements to make
-  // mobile Safari happy. note that for audio to play you need to be
-  // capturing from the mic/camera
-  el.setAttribute('playsinline', true);
-  el.setAttribute('autoplay', true);
-
-  $('#local_video').append(el);
-  $('#divPeerid').text(peerID);
+  //
+  // let el = document.createElement("video");
+  // // set some attributes on our audio and video elements to make
+  // // mobile Safari happy. note that for audio to play you need to be
+  // // capturing from the mic/camera
+  // el.setAttribute('playsinline', true);
+  // el.setAttribute('autoplay', true);
+  //
+  // $('#local_video').append(el);
+  // $('#divPeerid').text(peerID);
 
    // videoEl.appendChild(el);
 
@@ -638,16 +770,16 @@ async function publish(isWebcam)
                 case 'connected':
                 case 'completed':
 
-                    const streamV = new MediaStream();
-                    streamV.addTrack(videotrack);
-
-                    el.srcObject = streamV;
-
-                    el.play()
-                        .then(()=>{})
-                        .catch((e) => {
-                            err(e);
-                        });
+                    // const streamV = new MediaStream();
+                    // streamV.addTrack(videotrack);
+                    //
+                    // el.srcObject = streamV;
+                    //
+                    // el.play()
+                    //     .then(()=>{})
+                    //     .catch((e) => {
+                    //         err(e);
+                    //     });
 
 
                   // $txtPublish.innerHTML = 'published';
@@ -687,8 +819,8 @@ async function publish(isWebcam)
             var transceiver1 = pc1.addTransceiver(
                 audiotrack,
                 {
-                    direction: 'sendonly'
-
+                    direction: 'sendonly',
+                    streams: [_stream]
                 });
         }
          
@@ -715,6 +847,7 @@ async function publish(isWebcam)
 
                  var transceiver = pc1.addTransceiver(videotrack, {
                      direction: 'sendonly',
+                     streams: [_stream],
                      sendEncodings: [
                          {rid: 'q', scaleResolutionDownBy: 4.0},
                          {rid: 'h', scaleResolutionDownBy: 2.0},
@@ -725,8 +858,8 @@ async function publish(isWebcam)
                  var transceiver = pc1.addTransceiver(
                      videotrack,
                      {
-                         direction: 'sendonly'
-
+                         direction: 'sendonly',
+                         streams: [_stream]
                      });
              }
          }
@@ -822,26 +955,26 @@ async function btn_audio_level_stop()
 }
 
 
-async function btn_producer_stats()
+async function btn_producer_stats(producerid)
 {
 
   sendMessage ({
           room: room,
           from: peerID,
-          to: remotePeerID,
           type: "producer_getStats",
+          desc: producerid
         });
 
 }
 
-async function btn_subscribe_stats()
+async function btn_subscribe_stats(consumerid)
 {
 
   sendMessage ({
           room: room,
           from: peerID,
-          to: remotePeerID,
           type: "consumer_getStats",
+          desc: consumerid
         });
 
 }

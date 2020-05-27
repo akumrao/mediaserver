@@ -264,12 +264,12 @@ namespace SdpParse {
     }
     
 
-    void Peer::producer_getStats( nlohmann::json &stats)
+    void Peer::producer_getStats( const std::string& producerId)
     {
 
        if(producers)
          {
-           producers->producer_getStats(stats);
+           producers->producer_getStats(producerId);
          }
 
     }
@@ -281,21 +281,21 @@ namespace SdpParse {
          }
     }
 
-    void  Peer::consumer_getStats( nlohmann::json &stats)
+    void  Peer::consumer_getStats( const std::string& consumerId)
     {
-//        if(consumers)
-//         {
-//           consumers->consumer_getStats(stats);
-//         }
+        if(consumers)
+         {
+           consumers->consumer_getStats(consumerId);
+         }
 
     }
     void  Peer::setPreferredLayers( nlohmann::json &layer)
     {
-//
-//       if(consumers)
-//         {
-//           consumers->setPreferredLayers(layer);
-//         }
+
+       if(consumers)
+         {
+           consumers->setPreferredLayers(layer);
+         }
     }
     
     
@@ -402,7 +402,7 @@ namespace SdpParse {
     }
     
 
-    void  Peers::producer_getStats( std::string& participantID, nlohmann::json &stats)
+    void  Peers::producer_getStats( std::string& participantID, const std::string& producerId)
     {
 
         Peer *peer;
@@ -413,7 +413,7 @@ namespace SdpParse {
              return ;
         }
 
-        peer->producer_getStats(stats);
+        peer->producer_getStats(producerId);
 
     }
     void  Peers::rtpObserver_addProducer( std::string& participantID, bool flag)
@@ -432,7 +432,7 @@ namespace SdpParse {
 
     }
 
-    void  Peers::consumer_getStats( std::string& participantID, nlohmann::json &stats)
+    void  Peers::consumer_getStats( std::string& participantID, const std::string& consumerId)
     {
 
         Peer *peer;
@@ -443,7 +443,7 @@ namespace SdpParse {
              return ;
         }
 
-        peer->consumer_getStats(stats);
+        peer->consumer_getStats(consumerId);
 
     }
     void  Peers::setPreferredLayers( std::string& participantID,  nlohmann::json &layer)

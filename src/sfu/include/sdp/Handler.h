@@ -74,7 +74,7 @@ namespace SdpParse {
         };
         
 
-        void producer_getStats( nlohmann::json &stats); 
+        void producer_getStats(const std::string& producerId); 
         void rtpObserver_addProducer( bool flag);
 
         
@@ -83,7 +83,7 @@ namespace SdpParse {
         std::map<size_t, std::string>  mapProdMid;  
         
     private:
-        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx);
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx, std::string &trackid );
         
         std::string cnameForProducers; 
         
@@ -103,7 +103,7 @@ namespace SdpParse {
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);
 
-        void consumer_getStats( nlohmann::json &stats); 
+        void consumer_getStats( const std::string& consumerIds); 
         void setPreferredLayers( nlohmann::json &layer);
         std::atomic<uint8_t>  nodevice{0};
         

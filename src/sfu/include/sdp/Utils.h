@@ -21,8 +21,9 @@ namespace SdpParse
 	{
 		namespace Utils
 		{
-			json extractRtpCapabilities(const json& sdpObject);
-			json extractDtlsParameters(const json& sdpObject);
+			json extractRtpCapabilities(const json& mediaObject);
+                        std::string extractTrackID(const json& sdpObject);
+                        json extractDtlsParameters(const json& sdpObject);
 			void fillRtpParametersForTrack(json& rtpParameters, const json& sdpObject, const std::string& mid);
 			void addLegacySimulcast(json& offerMediaObject, uint8_t numStreams);
 			std::string getCname(const json& offerMediaObject);

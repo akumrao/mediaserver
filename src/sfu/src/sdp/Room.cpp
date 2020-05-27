@@ -158,14 +158,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     }
 
     
-    void Rooms::producer_getStats(std::string &room , std::string& participantID, json &stats) 
+    void Rooms::producer_getStats(std::string &room , std::string& participantID, const std::string& producerId) 
     {
   
         SInfo << "Producer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            peers->producer_getStats(participantID, stats);
+            peers->producer_getStats(participantID, producerId);
        }
        else
        {
@@ -190,14 +190,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
 
 
-   void Rooms::consumer_getStats(std::string &room , std::string& participantID, json &stats) 
+   void Rooms::consumer_getStats(std::string &room , std::string& participantID, const std::string& consumerId) 
     {
   
         SInfo << "Consumer requested Stats for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            peers->consumer_getStats(participantID, stats);
+            peers->consumer_getStats(participantID, consumerId);
        }
        else
        {
@@ -207,14 +207,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
 
 
-   void Rooms::setPreferredLayers(std::string &room , std::string& participantID, json &layer) 
+   void Rooms::setPreferredLayers(std::string &room , std::string& participantID, const std::string& consumerId, json &layer) 
     {
   
         SInfo << "Consumer set PreferredLayers for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            peers->setPreferredLayers(participantID, layer);
+//            peers->setPreferredLayers(participantID, consumerId, layer);
        }
        else
        {
