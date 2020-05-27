@@ -211,7 +211,7 @@ async function runSocketServer() {
 
 
 //port setup
-const port = process.env.PORT || 5000;
+//const port = process.env.PORT || 5000;
 
 //socket.io
 

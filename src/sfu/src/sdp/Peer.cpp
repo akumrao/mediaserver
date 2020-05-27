@@ -464,15 +464,15 @@ namespace SdpParse {
 
     void Peers::resume(std::string& participantID, std::string& consumerID,  bool flag)
     {
-//         Peer *peer;
-//        if (mapPeers.find(participantID) != mapPeers.end()) {
-//            peer = mapPeers[participantID];
-//        } else {
-//             SError << "Peer does not exist. Not a possible state. " << participantID ;
-//             return ;
-//        }
-//
-//        peer->consumers->resume(consumerID,flag );
+         Peer *peer;
+        if (mapPeers.find(participantID) != mapPeers.end()) {
+            peer = mapPeers[participantID];
+        } else {
+             SError << "Peer does not exist. Not a possible state. " << participantID ;
+             return ;
+        }
+
+        peer->consumers->resume(consumerID,flag );
 
     }
   

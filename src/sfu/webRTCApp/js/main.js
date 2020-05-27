@@ -102,14 +102,14 @@ $(document).ready(function(){
   $("#btn_webcam").click(function(){
 
     console.log("btn_webcam click");
-          $("#div1").html("<h2>btn_webcam</h2>");
+
    publish(true);
   });
 
   $("#btn_screen").click(function(){
 
         console.log("btn_screen click");
-        $("#div1").html("<h2>btn_screen</h2>");
+
         publish(false);
   });
 
@@ -117,7 +117,6 @@ $(document).ready(function(){
   $("#btn_subscribe").click(function(){
 
     console.log("btn_subscribe click");
-          $("#div1").html("<h2>btn_subscribe</h2>");
 
    subscribe();
   });
@@ -125,7 +124,6 @@ $(document).ready(function(){
  $("#btn_subscribe_resume").click(function(){
 
     console.log("btn_subscribe_resume click");
-          $("#div1").html("<h2>btn_subscribe_resume</h2>");
 
    btn_subscribe_resume();
   });
@@ -134,7 +132,6 @@ $(document).ready(function(){
   $("#btn_subscribe_pause").click(function(){
 
     console.log("btn_subscribe_pause click");
-          $("#div1").html("<h2>btn_subscribe_pause</h2>");
 
    btn_subscribe_pause();
   });
@@ -143,15 +140,12 @@ $(document).ready(function(){
   $("#btn_audio_level_start").click(function(){
 
     console.log("btn_audio_level_start click");
-          $("#div1").html("<h2>btn_audio_level_start</h2>");
-
-   btn_audio_level_start();
+    btn_audio_level_start();
   });
 
    $("#btn_audio_level_stop").click(function(){
 
     console.log("btn_audio_level_start click");
-          $("#div1").html("<h2>btn_audio_level_start</h2>");
 
    btn_audio_level_stop();
   });
@@ -160,7 +154,6 @@ $(document).ready(function(){
   $("#btn_producer_stats").click(function(){
 
     console.log("btn_producer_stats click");
-          $("#div1").html("<h2>btn_producer_stats</h2>");
 
    btn_producer_stats();
   });
@@ -169,8 +162,6 @@ $(document).ready(function(){
   $("#btn_subscribe_stats").click(function(){
 
     console.log("btn_subscribe_stats click");
-          $("#div1").html("<h2>btn_subscribe_stats</h2>");
-
    btn_subscribe_stats();
   });
 

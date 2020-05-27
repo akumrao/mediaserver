@@ -1,6 +1,6 @@
 $ (function(){
 
-  var socket = io('/chat');
+  var socket = io('/');
 
   var username = $('#user').val();
   var noChat = 0; //setting 0 if all chats histroy is not loaded. 1 if all chats loaded.
@@ -90,7 +90,7 @@ $ (function(){
 
     if(type == 'call')
     {
-      return;
+      //return;
     }
 
     toUser =  $(this).data('name');

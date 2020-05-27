@@ -133,8 +133,9 @@ namespace SdpParse {
 
 
         sendingRtpParameters["mid"] = *midIt;
-
-        sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
+           
+        //sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
+        sendingRtpParameters["rtcp"]["cname"] = peer->participantID;   // arvind risky code. I am changing cname and msid to particpant id
 
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
@@ -442,9 +443,15 @@ namespace SdpParse {
 
     void Consumers::resume(const std::string& consumerId, bool pause) {
 
-        for (auto &cons : mapConsumer) {
+           if( mapConsumer.find(consumerId) == mapConsumer.end() )
+           {
+               SError << "Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
+               return ;
+           }
+           
+            auto &cons = mapConsumer[consumerId];
 
-            json &consumer = cons.second->consumer;
+            json &consumer = cons->consumer;
 
 
             json &trans = Settings::configuration.consumer_resume;
@@ -464,8 +471,6 @@ namespace SdpParse {
             raiseRequest(param, trans, [&](const json & ack_resp) {
 
             });
-        }
-
 
     }
 

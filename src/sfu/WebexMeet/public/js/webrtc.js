@@ -434,9 +434,9 @@ function addVideoAudio(ms) {
         checkbox.checked = false;
         checkbox.onchange = async () => {
             if (checkbox.checked) {
-                await btn_subscribe_pause (checkbox.id);
+                await btn_subscribe_pause (this.id);
             } else {
-                await btn_subscribe_resume(checkbox.id);
+                await btn_subscribe_resume(this.id);
             }
 
         }

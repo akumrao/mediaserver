@@ -14,12 +14,15 @@ const userModel = mongoose.model("User");
 const chatModel = mongoose.model("Chat");
 const roomModel = mongoose.model("Room");
 
+
+let serverSocketid =null;
+
 //reatime magic begins here
 module.exports.sockets = function(http) {
   io = socketio.listen(http);
 
   //setting chat route
-  const ioChat = io.of("/chat");
+  const ioChat = io.of("/");
   const userStack = {};
   let oldChats, sendUserStack, setRoom;
   const userSocket = {};
@@ -27,6 +30,30 @@ module.exports.sockets = function(http) {
   //socket.io magic starts here
   ioChat.on("connection", function(socket) {
     console.log("socketio chat connected.");
+
+    function log() {
+      var array = ['Message from server:'];
+      array.push.apply(array, arguments);
+      socket.emit('log', array);
+      console.log(array);
+    }
+
+
+   socket.on('CreateSFU', function() {
+    log('Received request to create CreateSFU');
+    
+    if (serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
+      io.sockets.connected[serverSocketid].disconnect();
+      serverSocketid =  null;
+    }
+     
+    log('SFU ID ' , socket.id) ;
+  
+    //roomid = room;
+    serverSocketid = socket.id;
+
+
+  });
 
     //function to get user name
     socket.on("set-user-data", function(username) {
