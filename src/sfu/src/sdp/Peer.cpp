@@ -316,8 +316,10 @@ namespace SdpParse {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
             SWarn << "Peer already exist " << participantID ;
-            peer = mapPeers[participantID];
-        } else {
+            delete mapPeers[participantID];
+           // peer = mapPeers[participantID];
+        }
+        {
             peer = new Peer( signaler, room);
             peer->participantID = participantID;
             peer->participantName = participantID;

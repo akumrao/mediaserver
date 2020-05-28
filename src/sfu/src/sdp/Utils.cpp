@@ -17,6 +17,14 @@ namespace SdpParse
 		{
                         std::string extractTrackID(const json& offerMediaObject)
                         {
+                            auto msid = offerMediaObject["msid"];
+
+                            auto v = SdpParse::Utils::split(msid.get<std::string>(), ' ');
+                            auto& streamId = v[0];
+                            auto& trackId  = v[1];
+                            return trackId;
+                            
+                            /* // ssrc is not present at simulcast
                             auto mSsrcs = offerMediaObject["ssrcs"];
 
                             auto jsonSsrcIt = std::find_if(mSsrcs.begin(), mSsrcs.end(), [](const json & line) {
@@ -38,6 +46,8 @@ namespace SdpParse
 				auto& streamId = v[0];
 				auto& trackId  = v[1];
                                 return trackId;
+                               */ 
+                                
                         }
                         
 			json extractRtpCapabilities(const json& sdpObject)

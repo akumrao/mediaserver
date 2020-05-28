@@ -40,7 +40,7 @@ public:
     void producer_getStats( std::string &room , std::string& participantID, const std::string& producerId); 
     void consumer_getStats( std::string &room , std::string& participantID, const std::string& consumerId); 
     void rtpObserver_addProducer(std::string &room , std::string& participantID, bool flag);
-    void setPreferredLayers( std::string &room ,std::string& participantID, const std::string& consumerId, nlohmann::json &layer);
+    void setPreferredLayers( std::string &room ,std::string& participantID, nlohmann::json &layer);
 private:
     
     Signaler *signaler;

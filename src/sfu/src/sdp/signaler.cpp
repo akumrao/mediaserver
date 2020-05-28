@@ -155,9 +155,8 @@ namespace SdpParse {
                 rooms->consumer_getStats(room, from, consumerId );
             } 
             else if (std::string("setPreferredLayers") == type) {
-                //std::string consumerId = m["desc"].get<std::string>();
-                //json layer = json::array();
-                //rooms->setPreferredLayers(room, from, layer );
+                json layer =  m["desc"] ;
+                rooms->setPreferredLayers(room, from, layer );
             } 
             else if (std::string("subscribe-resume") == type) {
                 

@@ -207,14 +207,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
 
 
-   void Rooms::setPreferredLayers(std::string &room , std::string& participantID, const std::string& consumerId, json &layer) 
+   void Rooms::setPreferredLayers(std::string &room , std::string& participantID,  json &layer) 
     {
   
         SInfo << "Consumer set PreferredLayers for Room: " <<  room << " : " <<  "  participantID  " << participantID ;
    
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-//            peers->setPreferredLayers(participantID, consumerId, layer);
+            peers->setPreferredLayers(participantID, layer);
        }
        else
        {

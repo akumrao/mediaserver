@@ -98,12 +98,6 @@ namespace SdpParse {
 
         });
 
-
-
-
-
-
-
     }
 
     Producers::Producers(Signaler *signaler, Peer *peer) : Handler(signaler, peer) {
@@ -119,11 +113,11 @@ namespace SdpParse {
 
         sendingRtpParameters = peer->sendingRtpParametersByKind[kind];
         
+        //SInfo << "offerMediaObject " << offerMediaObject.dump(4);
+        
         trackid= Sdp::Utils::extractTrackID(offerMediaObject);
 
         //SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
-
-        //SInfo << "offerMediaObject " << offerMediaObject.dump(4);
 
         auto midIt = offerMediaObject.find("mid");
 
@@ -141,10 +135,8 @@ namespace SdpParse {
 
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
-       
 
         json encodings = json::array();
-
 
         if (offerMediaObject.find("rids") != offerMediaObject.end()) {
             int size = offerMediaObject["rids"].size();
@@ -318,29 +310,27 @@ namespace SdpParse {
             return ;
         }
 
-         auto &prod = mapProducer[producerId];
+        auto &prod = mapProducer[producerId];
 
-         json &producer = prod->producer;
+        json &producer = prod->producer;
 
+        json param = json::array();
+        param.push_back("producer.getStats");
+        param.push_back(peer->participantID);
+        json &trans = Settings::configuration.producer_getStats;
 
+        trans["internal"]["producerId"] = producer["id"];
+        raiseRequest(param, trans, [&](const json & ack_resp) {
 
-            json param = json::array();
-            param.push_back("producer.getStats");
-            param.push_back(peer->participantID);
-            json &trans = Settings::configuration.producer_getStats;
+        //SInfo << "stats: " << ack_resp.dump(4);
 
-            trans["internal"]["producerId"] = producer["id"];
-            raiseRequest(param, trans, [&](const json & ack_resp) {
-           
-            SInfo << "stats: " << ack_resp.dump(4);
-                
-            json m;
-            m["type"] = "prodstats";
-            m["desc"] = ack_resp;
-            m["to"] = peer->participantID;
-            signaler->postAppMessage(m);
+        json m;
+        m["type"] = "prodstats";
+        m["desc"] = ack_resp;
+        m["to"] = peer->participantID;
+        signaler->postAppMessage(m);
 
-            });
+        });
 
         
     }
@@ -681,31 +671,31 @@ namespace SdpParse {
 
     void Consumers::setPreferredLayers(json &layer) {
 
-//        if( mapConsumer.find(consumerId) == mapConsumer.end() )
-//        {
-//            SError << "setPreferredLayers: Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
-//            return ;
-//        }
-//
-//         auto &cons = mapConsumer[consumerId];
-//
-//           
-//        json &consumer = cons->consumer;
-//        
-//
-//        SInfo << " setPreferredLayers conusmer: " << consumer.dump(4);
-//
-//        if (consumer["kind"] == "video" && consumer["type"] == "simulcast") {
-//            json param = json::array();
-//            param.push_back("consumer_setPreferredLayers");
-//            param.push_back(peer->participantID);
-//            json &trans = Settings::configuration.consumer_setPreferredLayers;
-//            trans["internal"]["producerId"] = consumer["producerId"];
-//            trans["internal"]["consumerId"] = consumer["id"];
-//            raiseRequest(param, trans, [](const json & ack_resp) {
-//
-//            });
-//        }
+        std::string consumerId = layer["id"].get<std::string>();
+        
+        if( mapConsumer.find(consumerId) == mapConsumer.end() )
+        {
+            SError << "setPreferredLayers: Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
+            return ;
+        }
+
+        auto &cons = mapConsumer[consumerId];
+        json &consumer = cons->consumer;
+
+        SInfo << " setPreferredLayers conusmer: " << consumer.dump(4);
+
+        if (consumer["kind"] == "video" && consumer["type"] == "simulcast") {
+            json param = json::array();
+            param.push_back("consumer_setPreferredLayers");
+            param.push_back(peer->participantID);
+            json &trans = Settings::configuration.consumer_setPreferredLayers;
+            trans["internal"]["producerId"] = consumer["producerId"];
+            trans["internal"]["consumerId"] = consumer["id"];
+            trans["data"] = layer["data"];
+            raiseRequest(param, trans, [](const json & ack_resp) {
+
+            });
+        }
 
     }
    
