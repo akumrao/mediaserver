@@ -682,7 +682,7 @@ namespace SdpParse {
         auto &cons = mapConsumer[consumerId];
         json &consumer = cons->consumer;
 
-        SInfo << " setPreferredLayers conusmer: " << consumer.dump(4);
+        //SInfo << " setPreferredLayers conusmer: " << consumer.dump(4);
 
         if (consumer["kind"] == "video" && consumer["type"] == "simulcast") {
             json param = json::array();
@@ -693,7 +693,7 @@ namespace SdpParse {
             trans["internal"]["consumerId"] = consumer["id"];
             trans["data"] = layer["data"];
             raiseRequest(param, trans, [](const json & ack_resp) {
-
+                SInfo << ack_resp.dump(4);
             });
         }
 

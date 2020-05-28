@@ -280,6 +280,53 @@ async  function processOffer( remotePeerID,  sdp)
 
 
 
+
+//////////////////////////////////////////////////////////////////////
+
+
+function publish_simulcast(transceiver)
+{
+
+    for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
+
+        var div = document.createElement('div');
+        var radio = document.createElement('input');
+        var label = document.createElement('label');
+        radio.type = 'radio';
+        radio.name = `radioProducer`;
+        // radio.checked = currentLayer == undefined ?
+        //     (i === stats.length-1) :
+        //     (i === currentLayer);
+        radio.onchange = () => {
+            console.log('ask server to set layers ' + i);
+            // sig('consumer-set-layers', { consumerId: consumer.id,
+            //  spatialLayer: i });
+
+            const parameters =  transceiver.sender.getParameters();
+            var radioButtons = document.getElementsByName("radioProducer");
+            for(var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked == true) {
+                    parameters.encodings[i].active = true;
+
+                } else
+                    parameters.encodings[i].active = false;
+            }
+
+            transceiver.sender.setParameters(parameters);
+
+        };
+        // let bitrate = Math.floor(s.bitrate / 1000);
+        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
+
+        div.appendChild(radio);
+        div.appendChild(label);
+        //container.appendChild(div);
+        $('#local_video').append(div);
+
+    }
+
+}
+
 var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 // This client receives a message
@@ -303,11 +350,30 @@ socket.on('message',  async function(message) {
 
             var mss = pc1.getTransceivers()
 
+            var spatialLayer =0;
 
             for (var ts in mss) {
+
+
                 var ms = mss[ts].sender.track;
-                if(ms.kind === 'video' )
-                addProducerVideoAudio(ms);
+                if(ms.kind === 'video' ) {
+
+                    const parameters =  mss[ts].sender.getParameters();
+                    parameters.encodings.forEach((encoding, idx) => {
+                        // if (idx <= spatialLayer)
+                        //     encoding.active = true;
+                        // else
+                        //     encoding.active = false;
+
+                        console.log("idx %o, encoding %o", idx, encoding );
+                    });
+                    //mss[ts].sender.setParameters(parameters);
+
+                    addProducerVideoAudio(ms);
+                    publish_simulcast(mss[ts]);
+
+
+                }
             }
 
            //////
@@ -378,8 +444,6 @@ async function doAnswer(remotePeerID) {
 
 
 
-    //////////////////////////////////////////////////////////////////////
-    //const transceivers = pc2.getTransceivers() ;
 
     // console.log( "transceivers %o", transceivers);
     // if (!transceivers)
@@ -391,34 +455,16 @@ async function doAnswer(remotePeerID) {
 
     for (var ts in mss) {
         if (ts > trackNo) {
-            console.log("ts%o:%o, ", ts, mss[ts]);
+           // console.log("ts%o:%o, ", ts, mss[ts]);
 
             var ms = mss[ts];
             trackNo = ts;
-            addVideoAudio(ms);
+            addConumerVideoAudio(ms);
         }
     }
 
 
-    // const stream = new MediaStream();
-    // for (var transceiver in transceivers) {
-    //     const track = transceivers[transceiver].receiver.track ;
-    //     const mid = transceivers[transceiver].mid;
-    //     var cname =transceivers[transceiver].sender.getParameters();
-    //
-    //     console.log("cname %o", cname  );
-    //
-    //     console.log("cname %o", transceivers[transceiver].sender  );
-    //
-    //     if( transceiver > trackNo   )
-    //     {
-    //         trackNo = Number(transceiver);
-    //          console.log("trackNo" +trackNo);
-    //         stream.addTrack(track);
-    //     }
-    //
-    //
-    // }
+
 
 
     return  true;
@@ -438,23 +484,23 @@ function addProducerVideoAudio(ms) {
 
         store[track.kind] = track.id
 
-        let pause = document.createElement('span'),
-            checkbox = document.createElement('input'),
-            label = document.createElement('label');
-        pause.classList = 'nowrap';
-        checkbox.type = 'checkbox';
-        checkbox.id=track.id;
-        checkbox.checked = false;
-        checkbox.onchange = async () => {
-            if (checkbox.checked) {
-                await btn_subscribe_pause (checkbox.id);
-            } else {
-                await btn_subscribe_resume(checkbox.id);
-            }
-
-        }
-        label.id = `consumer-stats-${track.id}`;
-        label.innerHTML = "Pause " + track.kind;
+        // let pause = document.createElement('span'),
+        //     checkbox = document.createElement('input'),
+        //     label = document.createElement('label');
+        // pause.classList = 'nowrap';
+        // checkbox.type = 'checkbox';
+        // checkbox.id=track.id;
+        // checkbox.checked = false;
+        // checkbox.onchange = async () => {
+        //     if (checkbox.checked) {
+        //         await btn_subscribe_pause (checkbox.id);
+        //     } else {
+        //         await btn_subscribe_resume(checkbox.id);
+        //     }
+        //
+        // }
+        // label.id = `consumer-stats-${track.id}`;
+        // label.innerHTML = "Pause " + track.kind;
 
 
         if(track.kind === 'video') {
@@ -463,7 +509,7 @@ function addProducerVideoAudio(ms) {
             statButton.innerHTML += 'video Stats';
             statButton.onclick = function(){
                 // alert('here be dragons');return false;
-                btn_subscribe_stats(statButton.id);
+                btn_producer_stats(statButton.id);
                 return false;
             };
 
@@ -480,10 +526,10 @@ function addProducerVideoAudio(ms) {
         //     }
         //     label.innerHTML = `[consumer playing ${bitrate} kb/s]`;
         // }
-        pause.appendChild(checkbox);
-        pause.appendChild(label);
-        pause.appendChild(checkbox);
-        divStore.appendChild(pause);
+        //pause.appendChild(checkbox);
+        //pause.appendChild(label);
+       // pause.appendChild(checkbox);
+       // divStore.appendChild(pause);
 
 
     }
@@ -511,7 +557,10 @@ function addProducerVideoAudio(ms) {
 
     $('#local_video').append(td);
 
-    el.srcObject = ms;
+    const streamV = new MediaStream();
+    streamV.addTrack(ms);
+
+    el.srcObject = streamV;
 
     el.play()
         .then(()=>{})
@@ -522,8 +571,50 @@ function addProducerVideoAudio(ms) {
     return true;
 
 }
+function subscribe_simulcast(trackid)
+{
+    for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
 
-function addVideoAudio(ms) {
+        var div = document.createElement('div');
+        var radio = document.createElement('input');
+        var label = document.createElement('label');
+        radio.type = 'radio';
+        radio.name = `radioConsumer`;
+        // radio.checked = currentLayer == undefined ?
+        //     (i === stats.length-1) :
+        //     (i === currentLayer);
+
+        radio.onchange = () => {
+            var desc= {};
+            desc["id"]=trackid;
+
+            var radioButtons = document.getElementsByName("radioConsumer");
+            for(var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked == true) {
+                    desc["data"]={"spatialLayer":i};
+                    sendMessage({
+                        room: room,
+                        from: peerID,
+                        type: 'setPreferredLayers',
+                        desc: desc
+                    });
+
+
+                }
+            }
+
+        };
+        // let bitrate = Math.floor(s.bitrate / 1000);
+        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
+        div.appendChild(radio);
+        div.appendChild(label);
+        //container.appendChild(div);
+        $('#TRSubscribe').append(div);
+
+    }
+}
+
+function addConumerVideoAudio(ms) {
 
     var store={};
 
@@ -583,9 +674,8 @@ function addVideoAudio(ms) {
         // }
         pause.appendChild(checkbox);
         pause.appendChild(label);
-        pause.appendChild(checkbox);
+       // pause.appendChild(checkbox);
         divStore.appendChild(pause);
-
 
     }
 
@@ -612,13 +702,18 @@ td.appendChild(divStore);
 
 $('#TRSubscribe').append(td);
 
-el.srcObject = ms;
 
+subscribe_simulcast(store.video);
+
+el.srcObject = ms;
 el.play()
     .then(()=>{})
     .catch((e) => {
         err(e);
     });
+
+
+
 
 return true;
 
@@ -672,8 +767,12 @@ async function btn_subscribe_pause(consumerid ) {
 }
 
 
-
-
+const CAM_VIDEO_SIMULCAST_ENCODINGS =
+[
+    {rid: 'q', scaleResolutionDownBy: 4.0},
+    {rid: 'h', scaleResolutionDownBy: 2.0},
+    {rid: 'f'}
+];
 ///////////////////////////////////////////////////////////////////////////
 
 //var pc1
@@ -848,12 +947,10 @@ async function publish(isWebcam)
                  var transceiver = pc1.addTransceiver(videotrack, {
                      direction: 'sendonly',
                      streams: [_stream],
-                     sendEncodings: [
-                         {rid: 'q', scaleResolutionDownBy: 4.0},
-                         {rid: 'h', scaleResolutionDownBy: 2.0},
-                         {rid: 'f'}
-                     ]
+                     sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
                  });
+
+
              } else {
                  var transceiver = pc1.addTransceiver(
                      videotrack,
