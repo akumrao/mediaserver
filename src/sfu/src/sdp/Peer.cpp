@@ -53,7 +53,7 @@ namespace SdpParse {
     
     Peer::Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
     {
-        consumers =  new Consumers(signaler, this);
+       
     }
 
     ////////////////////////
@@ -62,8 +62,8 @@ namespace SdpParse {
      */
     void Peer::Load(json routerRtpCapabilities, std::string sdp) {
 
-        if (this->loaded)
-            MS_ABORT("already loaded");
+       // if (this->loaded)
+        //    MS_ABORT("already loaded");
 
       //  LDebug("got sdpObject: ", routerRtpCapabilities.dump(4));
         // This may throw.
@@ -151,17 +151,15 @@ namespace SdpParse {
       
     void Peer::on_producer_offer( const json &sdp)
     {
-         Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
+        
          
          std::string answer;
          
-         if(producers)
-         {
-             delete producers;
-             producers = nullptr;
+         if(!producers)
+         {   
+             producers =  new Producers(signaler, this );
          }
-             
-         producers =  new Producers(signaler, this );
+         Load(Settings::configuration.routerCapabilities, sdp["sdp"].get<std::string>());
          producers->runit(  [&]( const std::string &answer)
          {
           signaler->sendSDP("answer", answer,  (const std::string&)participantID,(const std::string&)participantID);
@@ -217,8 +215,8 @@ namespace SdpParse {
     void Peer::onSubscribe( Peer *producerPeer)
     {
         if( producerPeer->producers)
-        {
-           
+        {   if(!consumers)
+            consumers =  new Consumers(signaler, this);
             consumers->nodevice += producerPeer->producers->mapProducer.size();   
             consumers->runit( producerPeer->producers);
             
@@ -316,9 +314,9 @@ namespace SdpParse {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
             SWarn << "Peer already exist " << participantID ;
-            delete mapPeers[participantID];
-           // peer = mapPeers[participantID];
+            peer = mapPeers[participantID];
         }
+        else
         {
             peer = new Peer( signaler, room);
             peer->participantID = participantID;

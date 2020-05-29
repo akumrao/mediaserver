@@ -250,6 +250,72 @@ function initPC2()
     });
 
 
+
+    /////////////////////////////////////////////////////////////////////////////////
+
+
+    pc1 = new RTCPeerConnection(
+        {
+            iceServers         : [],
+            iceTransportPolicy : 'all',
+            bundlePolicy       : 'max-bundle',
+            rtcpMuxPolicy      : 'require',
+            sdpSemantics       : 'unified-plan'
+        });
+
+    // Handle RTCPeerConnection connection status.
+    pc1.addEventListener('iceconnectionstatechange', () =>
+    {
+        switch (pc1.iceConnectionState)
+        {
+            case 'checking':
+                console.log( 'publishing...');
+                break;
+            case 'connected':
+            case 'completed':
+
+                // const streamV = new MediaStream();
+                // streamV.addTrack(videotrack);
+                //
+                // el.srcObject = streamV;
+                //
+                // el.play()
+                //     .then(()=>{})
+                //     .catch((e) => {
+                //         err(e);
+                //     });
+
+
+                // $txtPublish.innerHTML = 'published';
+                // $fsPublish.disabled = true;
+                // $fsSubscribe.disabled = false;
+                console.log( 'published...');
+                break;
+            case 'failed':
+                pc1.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'failed...');
+                break;
+            case 'disconnected':
+                pc1.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'failed...');
+                break;
+            case 'closed':
+                pc1.close();
+                // $txtPublish.innerHTML = 'failed';
+                // $fsPublish.disabled = false;
+                // $fsSubscribe.disabled = true;
+                console.log( 'failed...');
+                break;
+        }
+    });
+
+
 }
 
 
@@ -282,6 +348,48 @@ async  function processOffer( remotePeerID,  sdp)
 
 
 //////////////////////////////////////////////////////////////////////
+function subscribe_simulcast(trackid)
+{
+    for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
+
+        var div = document.createElement('div');
+        var radio = document.createElement('input');
+        var label = document.createElement('label');
+        radio.type = 'radio';
+        radio.name = `radioConsumer`;
+        // radio.checked = currentLayer == undefined ?
+        //     (i === stats.length-1) :
+        //     (i === currentLayer);
+
+        radio.onchange = () => {
+            var desc= {};
+            desc["id"]=trackid;
+
+            var radioButtons = document.getElementsByName("radioConsumer");
+            for(var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked == true) {
+                    desc["data"]={"spatialLayer":i};
+                    sendMessage({
+                        room: room,
+                        from: peerID,
+                        type: 'setPreferredLayers',
+                        desc: desc
+                    });
+
+
+                }
+            }
+
+        };
+        // let bitrate = Math.floor(s.bitrate / 1000);
+        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
+        div.appendChild(radio);
+        div.appendChild(label);
+        //container.appendChild(div);
+        $('#TRSubscribe').append(div);
+
+    }
+}
 
 
 function publish_simulcast(transceiver)
@@ -327,6 +435,9 @@ function publish_simulcast(transceiver)
 
 }
 
+
+var prodtrackNo= -1;
+
 var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 // This client receives a message
@@ -348,39 +459,22 @@ socket.on('message',  async function(message) {
            // subscribe();
            //////
 
-            var mss = pc1.getTransceivers()
-
-            var spatialLayer =0;
+            var mss = pc1.getTransceivers();
 
             for (var ts in mss) {
+                if( ts > prodtrackNo  ) {
+                    prodtrackNo = ts;
+                    var ms = mss[ts].sender.track;
+                    if (ms.kind === 'video') {
+                        addProducerVideoAudio(ms);
+                        publish_simulcast(mss[ts]);
 
-
-                var ms = mss[ts].sender.track;
-                if(ms.kind === 'video' ) {
-
-                    const parameters =  mss[ts].sender.getParameters();
-                    parameters.encodings.forEach((encoding, idx) => {
-                        // if (idx <= spatialLayer)
-                        //     encoding.active = true;
-                        // else
-                        //     encoding.active = false;
-
-                        console.log("idx %o, encoding %o", idx, encoding );
-                    });
-                    //mss[ts].sender.setParameters(parameters);
-
-                    addProducerVideoAudio(ms);
-                    publish_simulcast(mss[ts]);
-
-
+                    }
                 }
             }
 
-           //////
 
-
-
-              }, function (error) {
+            }, function (error) {
 
             console.error(error);
 
@@ -470,6 +564,11 @@ async function doAnswer(remotePeerID) {
     return  true;
  }
 
+function removeElement(elementId) {
+    // Removes an element from the document
+    var element = document.getElementById(elementId);
+    element.parentNode.removeChild(element);
+}
 
 function addProducerVideoAudio(ms) {
 
@@ -514,8 +613,6 @@ function addProducerVideoAudio(ms) {
             };
 
 
-
-
         // if (consumer.paused) {
         //     label.innerHTML = '[consumer paused]'
         // } else {
@@ -555,7 +652,32 @@ function addProducerVideoAudio(ms) {
     td.appendChild(div);
     td.appendChild(divStore);
 
+
+    var closeButton = document.createElement('button');
+    closeButton.innerHTML += 'close';
+    closeButton.onclick = function(){
+
+
+        transceiver.sender.replaceTrack(null);
+        this._pc.removeTrack(transceiver.sender);
+        this._remoteSdp.closeMediaSection(transceiver.mid);
+
+        btn_producer_close(store);
+        removeElement('producertd' );
+        return false;
+
+    };
+
+    td.appendChild(closeButton);
+
+    td.id = 'producertd';
+
     $('#local_video').append(td);
+
+
+
+
+
 
     const streamV = new MediaStream();
     streamV.addTrack(ms);
@@ -568,50 +690,9 @@ function addProducerVideoAudio(ms) {
             err(e);
         });
 
+
     return true;
 
-}
-function subscribe_simulcast(trackid)
-{
-    for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
-
-        var div = document.createElement('div');
-        var radio = document.createElement('input');
-        var label = document.createElement('label');
-        radio.type = 'radio';
-        radio.name = `radioConsumer`;
-        // radio.checked = currentLayer == undefined ?
-        //     (i === stats.length-1) :
-        //     (i === currentLayer);
-
-        radio.onchange = () => {
-            var desc= {};
-            desc["id"]=trackid;
-
-            var radioButtons = document.getElementsByName("radioConsumer");
-            for(var i = 0; i < radioButtons.length; i++) {
-                if (radioButtons[i].checked == true) {
-                    desc["data"]={"spatialLayer":i};
-                    sendMessage({
-                        room: room,
-                        from: peerID,
-                        type: 'setPreferredLayers',
-                        desc: desc
-                    });
-
-
-                }
-            }
-
-        };
-        // let bitrate = Math.floor(s.bitrate / 1000);
-        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
-        div.appendChild(radio);
-        div.appendChild(label);
-        //container.appendChild(div);
-        $('#TRSubscribe').append(div);
-
-    }
 }
 
 function addConumerVideoAudio(ms) {
@@ -846,69 +927,6 @@ async function publish(isWebcam)
 
 
 
-/////////////////////////////////////////////////////////////////////////////////
-
-
-    pc1 = new RTCPeerConnection(
-      {
-        iceServers         : [],
-        iceTransportPolicy : 'all',
-        bundlePolicy       : 'max-bundle',
-        rtcpMuxPolicy      : 'require',
-        sdpSemantics       : 'unified-plan'
-      });
-
-        // Handle RTCPeerConnection connection status.
-        pc1.addEventListener('iceconnectionstatechange', () =>
-        {
-            switch (pc1.iceConnectionState)
-            {
-                case 'checking':
-                     console.log( 'publishing...');
-                    break;
-                case 'connected':
-                case 'completed':
-
-                    // const streamV = new MediaStream();
-                    // streamV.addTrack(videotrack);
-                    //
-                    // el.srcObject = streamV;
-                    //
-                    // el.play()
-                    //     .then(()=>{})
-                    //     .catch((e) => {
-                    //         err(e);
-                    //     });
-
-
-                  // $txtPublish.innerHTML = 'published';
-                  // $fsPublish.disabled = true;
-                  // $fsSubscribe.disabled = false;
-                   console.log( 'published...');
-                    break;
-                case 'failed':
-                    pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'disconnected':
-                                         pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-                case 'closed':
-                     pc1.close();
-                    // $txtPublish.innerHTML = 'failed';
-                    // $fsPublish.disabled = false;
-                    // $fsSubscribe.disabled = true;
-                    console.log( 'failed...');
-                    break;
-            }
-        });
 
         //var encodings;
         var _stream = new MediaStream();
@@ -1051,6 +1069,18 @@ async function btn_audio_level_stop()
         });
 }
 
+
+async function btn_producer_close(producerids)
+{
+
+    sendMessage ({
+        room: room,
+        from: peerID,
+        type: "producer_close",
+        desc: producerids
+    });
+
+}
 
 async function btn_producer_stats(producerid)
 {

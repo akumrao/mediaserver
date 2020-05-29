@@ -102,6 +102,7 @@ namespace SdpParse {
 
     Producers::Producers(Signaler *signaler, Peer *peer) : Handler(signaler, peer) {
         classtype = "Producers";
+        transportCreate();
     }
 
     void Producers::GetAnswer(std::string &kind, json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx, std::string &trackid ) {
@@ -202,7 +203,7 @@ namespace SdpParse {
     void Producers::runit(std::function<void (const std::string &) > cbAns) {
 
 
-        transportCreate();
+        if(!transport_connect)
         transportConnect(peer->sdpObject, "server");
 
 
@@ -211,92 +212,94 @@ namespace SdpParse {
         for (int i = 0; i < peer->sdpObject["media"].size(); ++i) {
             std::string ckind;
 
-            // if( ckind.second )
-            {
-                json sendingRtpParameters;
-                Producer *p = new Producer();
 
-                Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
-                
-                std::string trackid;
-                GetAnswer(ckind, sendingRtpParameters, mediaSectionIdx, trackid);
+            json sendingRtpParameters;
+            Producer *p = new Producer();
 
-                json param = json::array();
-                param.push_back("transport.produce");
-                param.push_back(peer->participantID);
-                json &trans = Settings::configuration.transport_produce;
+            Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
 
-                trans["internal"]["producerId"] = trackid;//uuid4::uuid();
+            std::string trackid;
+            GetAnswer(ckind, sendingRtpParameters, mediaSectionIdx, trackid);
+
+            json param = json::array();
+            param.push_back("transport.produce");
+            param.push_back(peer->participantID);
+            json &trans = Settings::configuration.transport_produce;
+
+            trans["internal"]["producerId"] = trackid;//uuid4::uuid();
 
 
-                /////////////////////
-                if (constructor_name != "PipeTransport") {
-                    // If CNAME is given and we don't have yet a CNAME for Producers in this
-                    // Transport, take it.
-                    if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end()) {
-                        cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
-                    }
-                    // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
-                    // do not include CNAME, create a random one.
-                    if (cnameForProducers.empty()) {
-                        cnameForProducers = base::util::randomString(8);
-                    }
-                    // Override Producer's CNAME.
+            /////////////////////
+            if (constructor_name != "PipeTransport") {
+                // If CNAME is given and we don't have yet a CNAME for Producers in this
+                // Transport, take it.
+                if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end()) {
+                    cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
+                }
+                // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
+                // do not include CNAME, create a random one.
+                if (cnameForProducers.empty()) {
+                    cnameForProducers = base::util::randomString(8);
+                }
+                // Override Producer's CNAME.
 
-                    if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end()) {
-                        sendingRtpParameters["rtcp"] = json::object();
-                    }
-
-                    sendingRtpParameters["rtcp"]["cname"] = cnameForProducers;
+                if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end()) {
+                    sendingRtpParameters["rtcp"] = json::object();
                 }
 
-                ///////////////////////
-
-
-
-                // This may throw.
-                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
-
-                auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(ckind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
-
-
-                //SInfo << "consumableRtpParameters " << consumableRtpParameters.dump(4);
-                // STrace << "rtpMapping " << rtpMapping.dump(4);
-
-                json data = {
-                    {"kind", ckind},
-                    {"paused", false},
-                    {"rtpMapping", rtpMapping},
-                    {"rtpParameters", sendingRtpParameters},
-                };
-
-                trans["data"] = data;
-
-                raiseRequest(param, trans, [&](const json & ack_resp) {
-
-                    p->producer = {
-                        { "id", trans["internal"]["producerId"]},
-                        {"kind", ckind},
-                        {"recvRtpCapabilities", peer->GetRtpCapabilities()}, //{"rtpParameters", sendingRtpParameters},
-                        {"type", ack_resp["data"]["type"]},
-                        { "consumableRtpParameters", consumableRtpParameters}
-                    };
-
-                    // SInfo << "Final Producer " << p->producer.dump(4);
-                    mapProducer[p->producer["id"]] = p;
-                    mapProdMid[ mediaSectionIdx.idx ] = p->producer["id"];
-                    SInfo <<  mediaSectionIdx.idx << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
-
-                    if (sizeofMid == remoteSdp->MediaSectionSize()) {
-                        auto answer = remoteSdp->GetSdp();
-                                cbAns(answer);
-                    }
-
-
-                });
-
+                sendingRtpParameters["rtcp"]["cname"] = cnameForProducers;
             }
 
+            ///////////////////////
+
+
+
+            // This may throw.
+            auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
+
+            auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(ckind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
+
+
+            //SInfo << "consumableRtpParameters " << consumableRtpParameters.dump(4);
+            // STrace << "rtpMapping " << rtpMapping.dump(4);
+
+            json data = {
+                {"kind", ckind},
+                {"paused", false},
+                {"rtpMapping", rtpMapping},
+                {"rtpParameters", sendingRtpParameters},
+            };
+
+            trans["data"] = data;
+
+            raiseRequest(param, trans, [&](const json & ack_resp) {
+
+                p->producer = {
+                    { "id", trans["internal"]["producerId"]},
+                    {"kind", ckind},
+                    {"recvRtpCapabilities", peer->GetRtpCapabilities()}, //{"rtpParameters", sendingRtpParameters},
+                    {"type", ack_resp["data"]["type"]},
+                    { "consumableRtpParameters", consumableRtpParameters}
+                };
+
+                // SInfo << "Final Producer " << p->producer.dump(4);
+                mapProducer[p->producer["id"]] = p;
+                mapProdMid[ mediaSectionIdx.idx ] = p->producer["id"];
+                SInfo <<  mediaSectionIdx.idx << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
+
+                if (sizeofMid == remoteSdp->MediaSectionSize()) {
+                    auto answer = remoteSdp->GetSdp();
+                            cbAns(answer);
+                }
+
+
+            });
+
+
+            if( mediaSectionIdx.idx == sizeofMid -1 )
+            {
+                break;
+            }
 
         }
     }

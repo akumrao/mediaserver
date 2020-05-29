@@ -94,10 +94,130 @@ module.exports.sockets = function(http) {
       setRoom = function(roomId) {
         socket.room = roomId;
         console.log("roomId : " + socket.room);
+
+        /// code for webrtc
+        /////////////////////////////////////////////////////////////
+        var clientsInRoom = io.sockets.adapter.rooms[roomId];
+        var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+        log('Room ' + room + ' now has ' + numClients + ' client(s)');
+
+
+        // webrtc code
+        ////////////////////////////////////////////////////////////
+
         socket.join(socket.room);
         ioChat.to(userSocket[socket.username]).emit("set-room", socket.room);
+
+
+        ///////////////////////////////////////////////////
+        if (numClients === 0 ) {
+
+          log('Client ID ' + socket.id + ' created room ' + roomId);
+
+
+          io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid, function (data) {
+
+            console.log("ack");
+            console.log( JSON.stringify(data, null, 4));
+          });
+
+
+          socket.emit('created', room, socket.id, function (data) {
+
+            console.log("ack");
+            console.log( JSON.stringify(data, null, 4));
+          });
+
+          socket.emit('joined', room, socket.id);
+
+        } else if (numClients ) {
+          log('Client ID ' + socket.id + ' joined room ' + room);
+          io.sockets.in(room).emit('join', room, socket.id);
+
+          socket.emit('joined', room, socket.id);
+          io.sockets.in(room).emit('ready');
+        }
+
+        /////////////////////////////
+
+
       };
     }); //end of set-room event.
+
+
+    //////////////////////////////////////////////////////////////////////////////////
+    socket.on('message', function(message) {
+
+      socket.to(message.to).emit('message', message);
+    });
+
+//////////////////////////////////////////////////////////////////////////
+    socket.on('sfu-message', function(message) {
+
+
+      if(message.type ==="subscribe")
+      {
+        var clientsInRoom = io.sockets.adapter.rooms[message.room];
+        var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
+        if(numClients ===1)
+          return;
+
+        console.log("Number of participant " + numClients );
+        let objCopy = Object.assign({}, message);
+        //var revMessage = message.clone();
+        let revClient = [];
+        revClient.push(message.from);
+
+
+        let clients = [];
+
+        console.log("message.from "+ message.from);
+        for( const member in clientsInRoom.sockets ) {
+
+          if( member !==  message.from ) {
+
+            console.log("member "+ member);
+
+            clients.push(member);
+
+            objCopy.from = member;
+            objCopy.desc = revClient;
+            console.log('app revMessage: ', objCopy);
+            io.sockets.connected[serverSocketid].emit('message', objCopy);
+
+          }
+        }
+
+
+        message.desc = clients;
+
+        //return;
+      }
+
+      console.log('app message: ', message);
+      if(io.sockets.connected[serverSocketid])
+        io.sockets.connected[serverSocketid].emit('message', message);
+
+
+
+    });
+
+
+    socket.on('postAppMessage', function(message) {
+
+      console.log('notification ' + JSON.stringify(message, null, 4) );
+
+      if ('to' in message) {
+        socket.to(message.to).emit('message', message);
+      }
+
+    });
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////
+
 
     //emits event to read old-chats-init from database.
     socket.on("old-chats-init", function(data) {
@@ -155,6 +275,31 @@ module.exports.sockets = function(http) {
       userStack[socket.username] = "Offline";
 
       ioChat.emit("onlineStack", userStack);
+
+      //webrtc
+      //////////////////////////////////////////////////////////////
+      console.log("disconnect " + socket.id);
+      if( socket.id == serverSocketid)
+      {
+        serverSocketid = null;
+        console.log(serverSocketid);
+
+
+        for( let soc in   io.sockets.connected ){
+
+          io.sockets.connected[soc].disconnect();
+        }
+
+      }
+      else
+      {
+        if( serverSocketid &&  io.sockets.connected[serverSocketid] &&  socket.room)
+          io.sockets.connected[serverSocketid].emit('disconnectClient', socket.room, socket.id);
+      }
+
+
+      /////////////////////////////////////////////////////////////
+
     }); //end of disconnect event.
   }); //end of io.on(connection).
   //end of socket.io code for chat feature.
