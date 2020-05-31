@@ -99,7 +99,7 @@ module.exports.sockets = function(http) {
         /////////////////////////////////////////////////////////////
         var clientsInRoom = io.sockets.adapter.rooms[roomId];
         var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-        log('Room ' + room + ' now has ' + numClients + ' client(s)');
+        log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
 
 
         // webrtc code
@@ -115,27 +115,19 @@ module.exports.sockets = function(http) {
           log('Client ID ' + socket.id + ' created room ' + roomId);
 
 
-          io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid, function (data) {
-
-            console.log("ack");
-            console.log( JSON.stringify(data, null, 4));
-          });
+          io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid);
 
 
-          socket.emit('created', room, socket.id, function (data) {
-
-            console.log("ack");
-            console.log( JSON.stringify(data, null, 4));
-          });
+          socket.emit('created', room, socket.id);
 
           socket.emit('joined', room, socket.id);
 
         } else if (numClients ) {
-          log('Client ID ' + socket.id + ' joined room ' + room);
-          io.sockets.in(room).emit('join', room, socket.id);
+          log('Client ID ' + socket.id + ' joined room ' + roomId);
+          io.sockets.in(roomId).emit('join', roomId, socket.id);
 
-          socket.emit('joined', room, socket.id);
-          io.sockets.in(room).emit('ready');
+          socket.emit('joined', roomId, socket.id);
+          io.sockets.in(roomId).emit('ready');
         }
 
         /////////////////////////////
