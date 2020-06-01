@@ -134,7 +134,7 @@ namespace SdpParse {
             } else if (std::string("candidate") == type) {
                 recvCandidate(from, m["candidate"]);
             } else if (std::string("bye") == type) {
-                rooms->onDisconnect( room, from);
+                rooms->onDisconnect( from);
             } else if (std::string("subscribe") == type) {
                 json peerIds;
                 if(m.find("desc") != m.end())
@@ -254,11 +254,8 @@ namespace SdpParse {
 
                 // Leaving rooms and disconnecting from peers.
                 socket->on("disconnectClient", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                    
-                    
-                    std::string roomName = data[0].get<std::string>();
-                    std::string participant = data[1].get<std::string>();
-                    rooms->onDisconnect( roomName, participant);
+                    std::string participant = data;
+                    rooms->onDisconnect( participant);
                     
                 }));
 

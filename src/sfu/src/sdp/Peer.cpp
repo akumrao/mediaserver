@@ -217,7 +217,14 @@ namespace SdpParse {
         if( producerPeer->producers)
         {   if(!consumers)
             consumers =  new Consumers(signaler, this);
-            consumers->nodevice += producerPeer->producers->mapProducer.size();   
+            if(consumers->mapConsDev.find(producerPeer->participantID) != consumers->mapConsDev.end() ){
+            consumers->nodevice +=  (producerPeer->producers->mapProducer.size()- consumers->mapConsDev[producerPeer->participantID]);   
+            }
+            else
+             consumers->nodevice +=  producerPeer->producers->mapProducer.size();      
+                
+            consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
+            
             consumers->runit( producerPeer->producers);
             
         }

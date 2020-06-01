@@ -114,6 +114,7 @@ namespace SdpParse {
         };
         
         std::map<std::string, Consumer*>  mapConsumer;
+        std::map<std::string, uint8_t>  mapConsDev;
        
         bool _probatorConsumerCreated{true};
     private:

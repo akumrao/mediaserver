@@ -139,21 +139,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     }
     
     
-    void Rooms::onDisconnect(std::string &room , std::string& participantID)
+    void Rooms::onDisconnect( std::string& participantID)
     {
   
-        SInfo << " Disconeect peer from Room: " <<  room << " : " <<  " with participantID  " << participantID ;
+        SInfo << " Disconeect peer with participantID  " << participantID ;
 
-        
-       if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
-       {
           
-            peers->onDisconnect(participantID);
-       }
-       else
-       {
-            SError << "Room does not exist: " << room  ;
-       }
+        peers->onDisconnect(participantID);
+  
 
     }
 

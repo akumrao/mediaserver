@@ -33,7 +33,6 @@ let io;
 
 console.log("https://localhost:8080/");
 
-var roomid;
 let serverSocketid =null;
 
 
@@ -123,17 +122,15 @@ async function runSocketServer() {
 	  	console.log(serverSocketid);
 
 
-		  for( let soc in   io.sockets.connected ){
-
-			  io.sockets.connected[soc].disconnect();
-		  }
-
+	  	for( let soc in   io.sockets.connected ){
+	  		io.sockets.connected[soc].disconnect();
+		}
 
 	  }
 	  else
 	  {
-	  	if( serverSocketid &&  io.sockets.connected[serverSocketid] &&  roomid)
-	  	io.sockets.connected[serverSocketid].emit('disconnectClient', roomid, socket.id);
+	  	if( serverSocketid &&  io.sockets.connected[serverSocketid])
+	  	io.sockets.connected[serverSocketid].emit('disconnectClient', socket.id);
 	  }
 
 
@@ -152,52 +149,43 @@ async function runSocketServer() {
 		 
 		log('SFU ID ' , socket.id) ;
 	
-		//roomid = room;
 		serverSocketid = socket.id;
 
 
 	});
 
-	socket.on('create or join', function(room) {
+	socket.on('create or join', function(roomId) {
 
-		log('Received request to create or join room ' + room);
+		log('Received request to create or join room ' + roomId);
 
 		if( serverSocketid == null || io.sockets.connected[serverSocketid] == null)
-		 return  console.error("SFU server is down");	
+		  return  console.error("SFU server is down");
 
-		var clientsInRoom = io.sockets.adapter.rooms[room];
-		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-		log('Room ' + room + ' now has ' + numClients + ' client(s)');
+		socket.join(roomId);
 
 
-		socket.join(room);
-		if (numClients === 0 ) {
+		var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
+
+		log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
+
+
+		if (numClients === 1 ) {
 		 
-			log('Client ID ' + socket.id + ' created room ' + room);
+			log('Client ID ' + socket.id + ' created room ' + roomId);
 		
-			roomid = room;
-
-			io.sockets.connected[serverSocketid].emit('created', room, serverSocketid, function (data) {
-
-			console.log("ack"); // data will be 'woot'
-			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
-			});
+			io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid);
 
 
-			socket.emit('created', room, socket.id, function (data) {
+			socket.emit('created', roomId, socket.id);
 
-			console.log("ack"); // data will be 'woot'
-			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
-			});
+			socket.emit('joined', roomId, socket.id);
 
-			socket.emit('joined', room, socket.id);
+		} else if (numClients > 1 ) {
+			log('Client ID ' + socket.id + ' joined room ' + roomId);
+			io.sockets.in(roomId).emit('join', roomId, socket.id);
 
-		} else if (numClients ) {
-			log('Client ID ' + socket.id + ' joined room ' + room);
-			io.sockets.in(room).emit('join', room, socket.id);
-
-			socket.emit('joined', room, socket.id);
-			io.sockets.in(room).emit('ready');
+			socket.emit('joined', roomId, socket.id);
+			io.sockets.in(roomId).emit('ready');
 		} 
 
 	});
@@ -216,6 +204,8 @@ async function runSocketServer() {
 
 		if(message.type ==="subscribe")
 		{
+			console.log("subscribe");
+
 			var clientsInRoom = io.sockets.adapter.rooms[message.room];
 			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 
@@ -238,7 +228,7 @@ async function runSocketServer() {
 
 				if( member !==  message.from ) {
 
-					console.log("member "+ member);
+					//console.log("member "+ member);
 
 					clients.push(member);
 
@@ -267,7 +257,7 @@ async function runSocketServer() {
 
 	socket.on('postAppMessage', function(message) {
 
-		console.log('notification ' + JSON.stringify(message, null, 4) );
+		//console.log('notification ' + JSON.stringify(message, null, 4) );
 
 		if ('to' in message) {
 			socket.to(message.to).emit('message', message);

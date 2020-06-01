@@ -217,33 +217,22 @@ function initPC2()
                 break;
             case 'connected':
             case 'completed':
-                //  document.querySelector('#local_video').srcObject = stream;
-                // $txtPublish.innerHTML = 'published';
-                // $fsPublish.disabled = true;
-                // $fsSubscribe.disabled = false;
+
                 pc2Connected = true;
                 console.log( 'subscribed...');
 
                 break;
             case 'failed':
                 pc2.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
+
                 console.log( 'failed...');
                 break;
             case 'disconnected':
                 pc2.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
                 console.log( 'Peerconnection disconnected...');
                 break;
             case 'closed':
                 pc2.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
                 console.log( 'failed...');
                 break;
         }
@@ -274,43 +263,19 @@ function initPC2()
             case 'connected':
             case 'completed':
 
-                // const streamV = new MediaStream();
-                // streamV.addTrack(videotrack);
-                //
-                // el.srcObject = streamV;
-                //
-                // el.play()
-                //     .then(()=>{})
-                //     .catch((e) => {
-                //         err(e);
-                //     });
-
-
-                // $txtPublish.innerHTML = 'published';
-                // $fsPublish.disabled = true;
-                // $fsSubscribe.disabled = false;
                 console.log( 'published...');
                 break;
             case 'failed':
                 pc1.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
                 console.log( 'failed...');
                 break;
             case 'disconnected':
                 pc1.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
                 console.log( 'failed...');
                 break;
             case 'closed':
                 pc1.close();
-                // $txtPublish.innerHTML = 'failed';
-                // $fsPublish.disabled = false;
-                // $fsSubscribe.disabled = true;
-                console.log( 'failed...');
+                 console.log( 'failed...');
                 break;
         }
     });
@@ -326,7 +291,8 @@ socket.on('log', function(array) {
 ////////////////////////////////////////////////
 
 function sendMessage(message) {
-  console.log('Client sending message: ', message);
+
+  console.log('sending message: ', message.type);
   socket.emit('sfu-message', message);
 }
 
@@ -357,9 +323,7 @@ function subscribe_simulcast(trackid)
         var label = document.createElement('label');
         radio.type = 'radio';
         radio.name = `radioConsumer`;
-        // radio.checked = currentLayer == undefined ?
-        //     (i === stats.length-1) :
-        //     (i === currentLayer);
+
 
         radio.onchange = () => {
             var desc= {};
@@ -442,7 +406,7 @@ var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 // This client receives a message
 socket.on('message',  async function(message) {
-  console.log('Client received message:', message);
+  console.log('Client received message:', message.type);
 
   if (message.type === 'offer') {
 
@@ -456,18 +420,22 @@ socket.on('message',  async function(message) {
     pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
         .then(function ()
         {
-           // subscribe();
+            subscribe();
            //////
 
             var mss = pc1.getTransceivers();
 
+            var store={};
+
             for (var ts in mss) {
                 if( ts > prodtrackNo  ) {
                     prodtrackNo = ts;
-                    var ms = mss[ts].sender.track;
-                    if (ms.kind === 'video') {
-                        addProducerVideoAudio(ms);
-                        publish_simulcast(mss[ts]);
+                    var track = mss[ts].sender.track;
+                    store [track.kind] = track.id
+                    if (track.kind === 'video') {
+
+                        addProducerVideoAudio(track, store);
+                       // publish_simulcast(mss[ts]);
 
                     }
                 }
@@ -480,15 +448,6 @@ socket.on('message',  async function(message) {
 
         });
 
-
-
-  } else if (message.type === 'candidate' && isStarted) {
-    var candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.candidate.sdpMLineIndex,
-      sdpMid: message.candidate.sdpMid,
-      candidate: message.candidate.candidate
-    });
-    pc.addIceCandidate(candidate);
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
@@ -534,18 +493,9 @@ async function doAnswer(remotePeerID) {
     // }
 
 
-    console.log("answer %o", answer.type);
-
-
-
-
-    // console.log( "transceivers %o", transceivers);
-    // if (!transceivers)
-    //     throw new Error('new RTCRtpTransceiver not found');
-
+    console.log("answer %o", answer);
 
     var mss = pc2.getRemoteStreams();
-
 
     for (var ts in mss) {
         if (ts > trackNo) {
@@ -557,12 +507,8 @@ async function doAnswer(remotePeerID) {
         }
     }
 
-
-
-
-
     return  true;
- }
+}
 
 function removeElement(elementId) {
     // Removes an element from the document
@@ -570,117 +516,115 @@ function removeElement(elementId) {
     element.parentNode.removeChild(element);
 }
 
-function addProducerVideoAudio(ms) {
+function addProducerVideoAudio(track, store) {
 
-    var store={};
 
-    var track = ms;
+   // var track = ms;
 
     var divStore = document.createElement('div');
 
-    var statButton;
 
 
-        store[track.kind] = track.id
+    let el = document.createElement("video");
 
-        // let pause = document.createElement('span'),
-        //     checkbox = document.createElement('input'),
-        //     label = document.createElement('label');
-        // pause.classList = 'nowrap';
-        // checkbox.type = 'checkbox';
-        // checkbox.id=track.id;
-        // checkbox.checked = false;
-        // checkbox.onchange = async () => {
-        //     if (checkbox.checked) {
-        //         await btn_subscribe_pause (checkbox.id);
-        //     } else {
-        //         await btn_subscribe_resume(checkbox.id);
-        //     }
-        //
-        // }
-        // label.id = `consumer-stats-${track.id}`;
-        // label.innerHTML = "Pause " + track.kind;
+    el.setAttribute('playsinline', true);
+    el.setAttribute('autoplay', true);
 
+    el.class='video';
 
-        if(track.kind === 'video') {
-            statButton = document.createElement('button');
-            statButton.id=track.id;
-            statButton.innerHTML += 'video Stats';
-            statButton.onclick = function(){
-                // alert('here be dragons');return false;
-                btn_producer_stats(statButton.id);
-                return false;
-            };
+    el.style.width = "200px";
+    el.style.hight = "200px";
+
+    var div = document.createElement('div');
+   // div.textContent = track.id;
+    div.potato= store;
+
+    var para = document.createElement("P");
+    para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  peerID  + "<br>" +   "</small> </span>";
+    div.appendChild(para);
+
+    div.appendChild(el);
+    div.style.width = "200px";
 
 
-        // if (consumer.paused) {
-        //     label.innerHTML = '[consumer paused]'
-        // } else {
-        //     let stats = lastPollSyncData[myPeerId].stats[consumer.id],
-        //         bitrate = '-';
-        //     if (stats) {
-        //         bitrate = Math.floor(stats.bitrate / 1000.0);
-        //     }
-        //     label.innerHTML = `[consumer playing ${bitrate} kb/s]`;
-        // }
-        //pause.appendChild(checkbox);
-        //pause.appendChild(label);
-       // pause.appendChild(checkbox);
-       // divStore.appendChild(pause);
 
+    divStore.appendChild(div);
 
+    let statButton;
+
+    if(track.kind === 'video') {
+        statButton = document.createElement('button');
+        statButton.id=track.id;
+        statButton.innerHTML += 'video Stats';
+        statButton.onclick = function(){
+            // alert('here be dragons');return false;
+            btn_producer_stats(statButton.id);
+            return false;
+        };
     }
 
     if(statButton)
         divStore.appendChild(statButton);
 
-    let el = document.createElement("video");
-// set some attributes on our audio and video elements to make
-// mobile Safari happy. note that for audio to play you need to be
-// capturing from the mic/camera
-    el.setAttribute('playsinline', true);
-    el.setAttribute('autoplay', true);
-
-
-    var div = document.createElement('div');
-    div.textContent = ms.id;
-    div.potato= store;
-
-    div.appendChild(el);
-    var td = document.createElement('td');
-
-    td.appendChild(div);
-    td.appendChild(divStore);
-
-
     var closeButton = document.createElement('button');
     closeButton.innerHTML += 'close';
-    closeButton.onclick = function(){
+    closeButton.onclick = async function(){
+
+        var mss = pc1.getTransceivers();
+
+        // console.log( "ravind1 : %o", mss);
+
+        for (var ts in mss) {
 
 
-        transceiver.sender.replaceTrack(null);
-        this._pc.removeTrack(transceiver.sender);
-        this._remoteSdp.closeMediaSection(transceiver.mid);
+            let ltrack = mss[ts].sender.track;
+
+            if ( ltrack && store[ltrack.kind] === ltrack.id) {
+
+                mss[ts].sender.replaceTrack(null);
+
+                pc1.removeTrack(mss[ts].sender);
+
+                mss[ts].direction = "inactive";
+
+                //  this._remoteSdp.closeMediaSection(transceiver.mid)
+
+                var offer = await pc1.createOffer();
+
+                console.log( "arvind removed offer: %o", offer);
+                console.log('removded ' + ts);
+
+            }
+
+            // var mss1 = pc1.getTransceivers();
+            console.log(ts);
+
+
+        }
 
         btn_producer_close(store);
-        removeElement('producertd' );
+        // removeElement('producertd' );
         return false;
 
     };
 
-    td.appendChild(closeButton);
+    divStore.appendChild(closeButton);
 
-    td.id = 'producertd';
-
-    $('#local_video').append(td);
-
+    var td = document.createElement('td');
+    td.appendChild(divStore);
 
 
 
+
+    td.id = 'td' + track.id;
+    td.class='td';
+    td.style.width = "200px";
+
+    $('#traddCtrl').append(td);
 
 
     const streamV = new MediaStream();
-    streamV.addTrack(ms);
+    streamV.addTrack(track);
 
     el.srcObject = streamV;
 
@@ -728,7 +672,6 @@ function addConumerVideoAudio(ms) {
         label.id = `consumer-stats-${track.id}`;
         label.innerHTML = "Pause " + track.kind;
 
-
         if(track.kind === 'video') {
             statButton = document.createElement('button');
             statButton.id=track.id;
@@ -739,20 +682,9 @@ function addConumerVideoAudio(ms) {
                 return false;
             };
 
-
         }
 
 
-        // if (consumer.paused) {
-        //     label.innerHTML = '[consumer paused]'
-        // } else {
-        //     let stats = lastPollSyncData[myPeerId].stats[consumer.id],
-        //         bitrate = '-';
-        //     if (stats) {
-        //         bitrate = Math.floor(stats.bitrate / 1000.0);
-        //     }
-        //     label.innerHTML = `[consumer playing ${bitrate} kb/s]`;
-        // }
         pause.appendChild(checkbox);
         pause.appendChild(label);
        // pause.appendChild(checkbox);
@@ -763,40 +695,38 @@ function addConumerVideoAudio(ms) {
     if(statButton)
     divStore.appendChild(statButton);
 
-let el = document.createElement("video");
-// set some attributes on our audio and video elements to make
-// mobile Safari happy. note that for audio to play you need to be
-// capturing from the mic/camera
-el.setAttribute('playsinline', true);
-el.setAttribute('autoplay', true);
+    let el = document.createElement("video");
+    // set some attributes on our audio and video elements to make
+    // mobile Safari happy. note that for audio to play you need to be
+    // capturing from the mic/camera
+    el.setAttribute('playsinline', true);
+    el.setAttribute('autoplay', true);
 
 
-var div = document.createElement('div');
-div.textContent = ms.id;
-div.potato= store;
+    var div = document.createElement('div');
+    div.textContent = ms.id;
+    div.potato= store;
 
-div.appendChild(el);
-var td = document.createElement('td');
+    div.appendChild(el);
 
-td.appendChild(div);
-td.appendChild(divStore);
+    var td = document.createElement('td');
+    td.appendChild(div);
+    td.appendChild(divStore);
 
-$('#TRSubscribe').append(td);
-
-
-subscribe_simulcast(store.video);
-
-el.srcObject = ms;
-el.play()
-    .then(()=>{})
-    .catch((e) => {
-        err(e);
-    });
+    $('#traddCtrl').append(td);
 
 
+    //subscribe_simulcast(store.video);
+
+    el.srcObject = ms;
+    el.play()
+        .then(()=>{})
+        .catch((e) => {
+            err(e);
+        });
 
 
-return true;
+    return true;
 
 }
 
@@ -881,50 +811,6 @@ async function publish(isWebcam)
    if ($('#chk_audio').prop('checked'))
     audiotrack = stream.getAudioTracks()[0];
 
-   //const params = { track };
-//////////////////////////////////////////////////////////////////////////
-
-// var objTo = document.getElementById('container');
-//     var divtest = document.createElement("div");
-//     divtest.innerHTML = "new div";
-//     objTo.appendChild(divtest);
-
-
-//     const $chkSimulcast = $('#chk_simulcast');
-//     const chkSimulcast1 = $('#chk_simulcast');
-//
-//     if (chkSimulcast1.prop('checked')
-// )   {
-//          var x = 1;
-//     }
-
-
-
-  //
-  // let el = document.createElement("video");
-  // // set some attributes on our audio and video elements to make
-  // // mobile Safari happy. note that for audio to play you need to be
-  // // capturing from the mic/camera
-  // el.setAttribute('playsinline', true);
-  // el.setAttribute('autoplay', true);
-  //
-  // $('#local_video').append(el);
-  // $('#divPeerid').text(peerID);
-
-   // videoEl.appendChild(el);
-
- // el.srcObject = new MediaStream([ consumer.track.clone() ]);
- // el.consumer = consumer;
-  // let's "yield" and return before playing, rather than awaiting on
-  // play() succeeding. play() will not succeed on a producer-paused
-  // track until the producer unpauses.
-  // el.play()
-  //   .then(()=>{})
-  //   .catch((e) => {
-  //     err(e);
-  //   });
-
-
 
 
 
@@ -960,7 +846,7 @@ async function publish(isWebcam)
           // Mormal without simulcast
          if(videotrack ) {
              var checkBox = document.getElementById("chk_simulcast");
-             if (checkBox.checked) {
+             if (checkBox.checked && isWebcam ) {
 
                  var transceiver = pc1.addTransceiver(videotrack, {
                      direction: 'sendonly',
