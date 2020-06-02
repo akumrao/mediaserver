@@ -213,19 +213,23 @@ namespace SdpParse {
     }
         
     void Peer::onSubscribe( Peer *producerPeer)
-    {
+    {   // Arvind TBD: Below code is risky it should be under Mutex lock.
         if( producerPeer->producers)
         {   if(!consumers)
             consumers =  new Consumers(signaler, this);
             if(consumers->mapConsDev.find(producerPeer->participantID) != consumers->mapConsDev.end() ){
-            consumers->nodevice +=  (producerPeer->producers->mapProducer.size()- consumers->mapConsDev[producerPeer->participantID]);   
+                int cusDevCount=  consumers->mapConsDev[producerPeer->participantID];
+                consumers->nodevice +=  (producerPeer->producers->mapProducer.size()- cusDevCount);   
+                consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
+                consumers->runit( producerPeer->producers, cusDevCount);
             }
             else
-             consumers->nodevice +=  producerPeer->producers->mapProducer.size();      
+            {
+                consumers->nodevice +=  producerPeer->producers->mapProducer.size();     
+                consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
+                consumers->runit( producerPeer->producers);
+            }
                 
-            consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
-            
-            consumers->runit( producerPeer->producers);
             
         }
     }

@@ -460,7 +460,7 @@ socket.on('message',  async function(message) {
 
 });
 
-var trackNo= -1;
+//var trackNo= -1;
 
 async function sleep(ms) {
     return new Promise((r) => setTimeout(() => r(), ms));
@@ -495,16 +495,21 @@ async function doAnswer(remotePeerID) {
 
     console.log("answer %o", answer);
 
-    var mss = pc2.getRemoteStreams();
 
-    for (var ts in mss) {
-        if (ts > trackNo) {
-           // console.log("ts%o:%o, ", ts, mss[ts]);
 
-            var ms = mss[ts];
-            trackNo = ts;
-            addConumerVideoAudio(ms);
-        }
+    //$('#traddCtrl2').remove();
+
+    const myNode = document.getElementById("traddCtrl2");
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.lastChild);
+    }
+
+
+
+    var transceivers = pc2.getTransceivers();
+
+    for (var tsn in transceivers) {
+            addConumerVideoAudio(transceivers[tsn]);
     }
 
     return  true;
@@ -620,7 +625,7 @@ function addProducerVideoAudio(track, store) {
     td.class='td';
     td.style.width = "200px";
 
-    $('#traddCtrl').append(td);
+    $('#traddCtrl1').append(td);
 
 
     const streamV = new MediaStream();
@@ -639,63 +644,40 @@ function addProducerVideoAudio(track, store) {
 
 }
 
-function addConumerVideoAudio(ms) {
+function addConumerVideoAudio(transiver) {
+
 
     var store={};
 
-    var tracks = ms.getTracks();
+    var track = transiver.receiver.track;
 
-    var divStore = document.createElement('div');
+    if(track.kind === 'audio')
+        return ;
 
-    var statButton;
 
-    for( const tno in tracks)
+    var mss = pc2.getRemoteStreams();
+    let ms;
+    for( var msn in mss   )
     {
-        var track = tracks[tno];
-        store [track.kind] = track.id
+       var lms = mss[msn];
 
-        let pause = document.createElement('span'),
-        checkbox = document.createElement('input'),
-        label = document.createElement('label');
-        pause.classList = 'nowrap';
-        checkbox.type = 'checkbox';
-        checkbox.id=track.id;
-        checkbox.checked = false;
-        checkbox.onchange = async () => {
-            if (checkbox.checked) {
-                await btn_subscribe_pause (checkbox.id);
-            } else {
-                await btn_subscribe_resume(checkbox.id);
-            }
+       var tracks = lms.getTracks();
+       for(var tc of tracks )
+       {
+           if ( tc ==track)
+           {
+               ms = lms;
+           }
+       }
 
-        }
-        label.id = `consumer-stats-${track.id}`;
-        label.innerHTML = "Pause " + track.kind;
-
-        if(track.kind === 'video') {
-            statButton = document.createElement('button');
-            statButton.id=track.id;
-            statButton.innerHTML += 'video Stats';
-            statButton.onclick = function(){
-               // alert('here be dragons');return false;
-                btn_subscribe_stats(statButton.id);
-                return false;
-            };
-
-        }
-
-
-        pause.appendChild(checkbox);
-        pause.appendChild(label);
-       // pause.appendChild(checkbox);
-        divStore.appendChild(pause);
-
+       if(ms)
+           break;
     }
 
-    if(statButton)
-    divStore.appendChild(statButton);
+    store [track.kind] = track.id;
 
-    let el = document.createElement("video");
+
+    let el = document.createElement(track.kind);
     // set some attributes on our audio and video elements to make
     // mobile Safari happy. note that for audio to play you need to be
     // capturing from the mic/camera
@@ -709,21 +691,71 @@ function addConumerVideoAudio(ms) {
 
     div.appendChild(el);
 
+
+
+    let pause = document.createElement('span'),
+    checkbox = document.createElement('input'),
+    label = document.createElement('label');
+    pause.classList = 'nowrap';
+    checkbox.type = 'checkbox';
+    checkbox.id=track.id;
+    checkbox.checked = false;
+    checkbox.onchange = async () => {
+        if (checkbox.checked) {
+            await btn_subscribe_pause (checkbox.id);
+        } else {
+            await btn_subscribe_resume(checkbox.id);
+        }
+
+        }
+    label.id = `consumer-stats-${track.id}`;
+    label.innerHTML = "Pause " + track.kind;
+
+    let statButton;
+    if(track.kind === 'video') {
+        statButton = document.createElement('button');
+        statButton.id=track.id;
+        statButton.innerHTML += 'video Stats';
+        statButton.onclick = function(){
+           // alert('here be dragons');return false;
+            btn_subscribe_stats(statButton.id);
+            return false;
+        };
+
+        }
+
+
+        pause.appendChild(checkbox);
+        pause.appendChild(label);
+
+
+    var divStore = document.createElement('div');
+
+   // pause.appendChild(checkbox);
+    divStore.appendChild(pause);
+
+    if(statButton)
+        divStore.appendChild(statButton);
+
+
     var td = document.createElement('td');
     td.appendChild(div);
     td.appendChild(divStore);
 
-    $('#traddCtrl').append(td);
+    $('#traddCtrl2').append(td);
 
 
-    //subscribe_simulcast(store.video);
-
-    el.srcObject = ms;
+    el.srcObject = new MediaStream([ track.clone() ]);
+    // let's "yield" and return before playing, rather than awaiting on
+    // play() succeeding. play() will not succeed on a producer-paused
+    // track until the producer unpauses.
     el.play()
         .then(()=>{})
         .catch((e) => {
             err(e);
         });
+
+
 
 
     return true;

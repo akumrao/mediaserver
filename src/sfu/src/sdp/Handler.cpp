@@ -488,10 +488,11 @@ namespace SdpParse {
 
      }
 
-    void Consumers::runit(Producers *producers) {
+    void Consumers::runit(Producers *producers, int mid) {
 
         for (auto& prodMid : producers->mapProdMid) {
-        
+            if( prodMid.first < mid )
+               continue; 
             json &producer = producers->mapProducer[prodMid.second]->producer;
 
             json param = json::array();
