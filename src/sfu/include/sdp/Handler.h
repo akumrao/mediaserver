@@ -66,6 +66,7 @@ namespace SdpParse {
         
         ~Producers();
 
+        void close_producer( const std::string &producerid);
         void runit(std::function<void (const std::string & )> cbAns);
         
         struct Producer
@@ -103,7 +104,9 @@ namespace SdpParse {
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);
 
+        void close_consumer(const std::string& producerid, const std::string& conumserid );
         void consumer_getStats( const std::string& consumerIds); 
+        void onUnSubscribe(const std::string& producerPeer);
         void setPreferredLayers( nlohmann::json &layer);
         std::atomic<uint8_t>  nodevice{0};
         
@@ -112,10 +115,10 @@ namespace SdpParse {
         {  // std::string offer;
             nlohmann::json consumer;
         };
-        
-        std::map<std::string, Consumer*>  mapConsumer;
-        std::map<std::string, uint8_t>  mapConsDev;
-       
+        std::map<int, std::string>  mapConMid;  // map mid with conusmer id
+        std::map<std::string, Consumer*>  mapConsumer;  // map number of consumer Devices
+        std::map<std::string, std::pair<int, int > > mapProdDevs;  // map number of device mid used from producer 
+                                // pair is for mid range 0 to maximum devices
         bool _probatorConsumerCreated{true};
     private:
        //int mid{0};

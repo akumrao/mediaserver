@@ -60,6 +60,7 @@ namespace SdpParse {
     void on_producer_offer( const nlohmann::json &sdp);
     void on_consumer_answer( std::string& to,const nlohmann::json &sdp);
     void onSubscribe( Peer *);
+    void onUnSubscribe( const std::string& producerPeer);
     void onDisconnect();
     
     void producer_getStats(const std::string& producerId); 

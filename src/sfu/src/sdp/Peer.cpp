@@ -74,7 +74,7 @@ namespace SdpParse {
         sdpObject = sdptransform::parse(sdp);
 
         
-        //LDebug("got sdpObject: ", sdpObject.dump(4));
+       // LInfo("got sdpObject: ", sdpObject.dump(4));
 
         auto nativeRtpCapabilities = Sdp::Utils::extractRtpCapabilities(sdpObject);
 
@@ -212,21 +212,40 @@ namespace SdpParse {
          consumers->loadAnswer(sdp["sdp"].get<std::string>());   
     }
         
+    
+    
+    void Peer::onUnSubscribe( const std::string& producerPeer)
+    {
+        if(!consumers)
+            return;
+         consumers->onUnSubscribe(producerPeer); 
+        
+    }
+    
     void Peer::onSubscribe( Peer *producerPeer)
     {   // Arvind TBD: Below code is risky it should be under Mutex lock.
         if( producerPeer->producers)
         {   if(!consumers)
             consumers =  new Consumers(signaler, this);
-            if(consumers->mapConsDev.find(producerPeer->participantID) != consumers->mapConsDev.end() ){
-                int cusDevCount=  consumers->mapConsDev[producerPeer->participantID];
-                consumers->nodevice +=  (producerPeer->producers->mapProducer.size()- cusDevCount);   
-                consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
-                consumers->runit( producerPeer->producers, cusDevCount);
+            if(consumers->mapProdDevs.find(producerPeer->participantID) != consumers->mapProdDevs.end() ){
+                int cusDevCount=  consumers->mapProdDevs[producerPeer->participantID].second +1;
+                
+                int diff = producerPeer->producers->mapProdMid.size()- cusDevCount;
+                if(diff )
+                {
+                    consumers->nodevice +=  diff;   
+                    consumers->mapProdDevs[producerPeer->participantID].second = producerPeer->producers->mapProdMid.size() -1;
+                    consumers->runit( producerPeer->producers, cusDevCount);
+                }
+                else
+                {
+                    consumers->runit( producerPeer->producers, -1);
+                }
             }
             else
             {
-                consumers->nodevice +=  producerPeer->producers->mapProducer.size();     
-                consumers->mapConsDev[producerPeer->participantID] = producerPeer->producers->mapProducer.size();
+                consumers->mapProdDevs[producerPeer->participantID] = std::make_pair((int)consumers->nodevice,  int(producerPeer->producers->mapProdMid.size()-1) );
+                consumers->nodevice +=  producerPeer->producers->mapProdMid.size();     
                 consumers->runit( producerPeer->producers);
             }
                 
@@ -262,8 +281,6 @@ namespace SdpParse {
             delete producers;
             producers = nullptr;
         }
-         
-
     }
      
      
@@ -373,6 +390,11 @@ namespace SdpParse {
                  // if(++x == 2  )
                   peer->onSubscribe(mapPeers[id]);
                 }
+                else
+                {
+                    peer->onUnSubscribe(id.get<std::string>());
+                }
+                
             }
         }
     }

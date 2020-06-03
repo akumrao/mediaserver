@@ -423,19 +423,24 @@ socket.on('message',  async function(message) {
             subscribe();
            //////
 
-            var mss = pc1.getTransceivers();
+
+            const myNode = document.getElementById("traddCtrl1");
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.lastChild);
+            }
+
+            var transceivers = pc1.getTransceivers();
 
             var store={};
 
-            for (var ts in mss) {
-                if( ts > prodtrackNo  ) {
-                    prodtrackNo = ts;
-                    var track = mss[ts].sender.track;
-                    store [track.kind] = track.id
+            for (var ts in transceivers) {
+                if( transceivers[ts].currentDirection != 'inactive' &&  transceivers[ts].direction != 'inactive') {
+                    var track = transceivers[ts].sender.track;
+                    store [track.kind] = track.id;
                     if (track.kind === 'video') {
 
                         addProducerVideoAudio(track, store);
-                       // publish_simulcast(mss[ts]);
+                        // publish_simulcast(mss[ts]);
 
                     }
                 }
@@ -505,10 +510,11 @@ async function doAnswer(remotePeerID) {
     }
 
 
-
     var transceivers = pc2.getTransceivers();
 
     for (var tsn in transceivers) {
+
+        if(transceivers[tsn].direction != 'inactive' && transceivers[tsn].currentDirection != 'inactive')
             addConumerVideoAudio(transceivers[tsn]);
     }
 
@@ -594,15 +600,24 @@ function addProducerVideoAudio(track, store) {
 
                 //  this._remoteSdp.closeMediaSection(transceiver.mid)
 
-                var offer = await pc1.createOffer();
-
-                console.log( "arvind removed offer: %o", offer);
-                console.log('removded ' + ts);
 
             }
 
-            // var mss1 = pc1.getTransceivers();
-            console.log(ts);
+            var offer1 = await pc1.createOffer();
+
+
+           console.log("after close offer %o ", offer1);
+
+            await pc1.setLocalDescription(offer1);
+
+            sendMessage ({
+                room: room,
+                from: peerID,
+                //to: remotePeerID,
+                type: offer1.type,
+                desc: offer1
+            });
+
 
 
         }

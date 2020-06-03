@@ -129,9 +129,65 @@ async function runSocketServer() {
 	  }
 	  else
 	  {
-	  	if( serverSocketid &&  io.sockets.connected[serverSocketid])
-	  	io.sockets.connected[serverSocketid].emit('disconnectClient', socket.id);
+	  	  ////////////////////////////////////////////////////////////////////
+		  if( serverSocketid &&  io.sockets.connected[serverSocketid])
+			  io.sockets.connected[serverSocketid].emit('disconnectClient', socket.id);
+
+		  console.log("unsubscribe " + socket.id);
+
+
+		  // var room_list = {};
+		  // var rooms = socket.adapter.rooms;
+		  //
+		  // for (var room in rooms){
+			//   if (!rooms[room].hasOwnProperty(room)) {
+			// 	  console.log(rooms[room]);
+			// 	  room_list[room] = Object.keys(rooms[room]).length;
+			//   }
+		  // }
+		  // console.log(room_list);
+
+
+		  var rooms = socket.adapter.rooms;
+
+		  for(var room in rooms  ) {
+
+			  if( Object.keys(rooms[room].sockets)[0] == room )
+				  continue;
+
+			  var clientsInRoom = io.sockets.adapter.rooms[room];
+			  var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
+
+
+			  console.log("Number of participant " + numClients + " for room " + room);
+			  var message = {
+				  room: room,
+				  type: "subscribe"
+			  };
+			  var revClient = [];
+			  revClient.push(socket.id);
+
+			  for (const member in clientsInRoom.sockets) {
+
+				  if (member !== message.from) {
+					  message.from = member;
+					  message.desc = revClient;
+					  console.log('unsubscribe: ', message);
+					  io.sockets.connected[serverSocketid].emit('message', message);
+
+				  }
+			  }
+		  }
+
+
+
+		  ///////////////////////////////////////////////////////////////////
+
 	  }
+
+
+
 
 
 	});
@@ -167,7 +223,6 @@ async function runSocketServer() {
 		var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
 
 		log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
-
 
 		if (numClients === 1 ) {
 		 
