@@ -15,6 +15,41 @@ namespace SdpParse
 	{
 		namespace Utils
 		{
+                        std::string extractTrackID(const json& offerMediaObject)
+                        {
+                            auto msid = offerMediaObject["msid"];
+
+                            auto v = SdpParse::Utils::split(msid.get<std::string>(), ' ');
+                            auto& streamId = v[0];
+                            auto& trackId  = v[1];
+                            return trackId;
+                            
+                            /* // ssrc is not present at simulcast
+                            auto mSsrcs = offerMediaObject["ssrcs"];
+
+                            auto jsonSsrcIt = std::find_if(mSsrcs.begin(), mSsrcs.end(), [](const json & line) {
+                                auto jsonAttributeIt = line.find("attribute");
+
+                                if (jsonAttributeIt == line.end() && !jsonAttributeIt->is_string())
+                                    return false;
+
+                                    return jsonAttributeIt->get<std::string>() == "msid";
+                                });
+
+                                if (jsonSsrcIt == mSsrcs.end())
+				{
+					MS_ABORT("a=ssrc line with msid information not found");
+				}
+
+				auto& ssrcMsidLine = *jsonSsrcIt;
+				auto v = SdpParse::Utils::split(ssrcMsidLine["value"].get<std::string>(), ' ');
+				auto& streamId = v[0];
+				auto& trackId  = v[1];
+                                return trackId;
+                               */ 
+                                
+                        }
+                        
 			json extractRtpCapabilities(const json& sdpObject)
 			{
 				

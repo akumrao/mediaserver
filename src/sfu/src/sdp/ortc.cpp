@@ -9,6 +9,7 @@
 #include <string>
 #include "Utils.h"
 #include "sdp/Utils.h"
+#include "sdp/scalabilityMode.h"
 
 
 using json = nlohmann::json;
@@ -32,6 +33,7 @@ namespace SdpParse {
         json getConsumerRtpParameters(json &consumableParams, json &caps) {
             
           //  STrace << "consumableParams " << consumableParams.dump(4);
+          //  SInfo << "caps " << caps.dump(4);
             
             json consumerParams = {
                 {"codecs", json::array()},
@@ -189,27 +191,25 @@ namespace SdpParse {
                         
             
             
-            
+                 // If there is simulast, mangle spatial layers in scalabilityMode.
                 if(encodingWithScalabilityMode != encodings.end())
                 {
-                    /*
-                    std::string scalabilityMode = (*encodingWithScalabilityMode)["scalabilityMode"];
+                   
+                    std::string scalabilityMode = (*encodingWithScalabilityMode)["scalabilityMode"].get<std::string>();
                           
                     // TBD //arvind
                     // If there is simulast, mangle spatial layers in scalabilityMode.
                     if (consumableParams["encodings"].size() > 1) {
-        //                const
-        //                {
-        //                    temporalLayers
-        //                }
-        //                = scalabilityModes_1.parse(scalabilityMode);
+                        
+                        auto tempL = parseScalabilityMode(scalabilityMode);
+                        
+                        auto temporalLayers = tempL["temporalLayers"].get<int>();
 
-        //                scalabilityMode = `S${consumableParams.encodings.length}
-        //                T${temporalLayers}`;
+                        scalabilityMode = "S" +  std::to_string(consumableParams["encodings"].size())+ "T" + std::to_string(temporalLayers);
                     }
-                    if (scalabilityMode)
+                    if (!scalabilityMode.empty())
                         consumerEncoding["scalabilityMode"] = scalabilityMode;
-                    */
+                    
                 }
             // Set a single encoding for the Consumer.
             consumerParams["encodings"].push_back(consumerEncoding);
@@ -226,6 +226,7 @@ namespace SdpParse {
                 {"rtcp", json::object()}
             };
 
+//            SInfo  << " params " << params;
             for (auto& codec : params["codecs"]) 
             {
                 if (isRtxCodec(codec))
@@ -296,9 +297,9 @@ namespace SdpParse {
                 }
                 json consumableExt = {
                     {"uri", capExt["uri"]},
-                    {"id", capExt["preferredId"]}
-                   // {"encrypt", capExt["preferredEncrypt"]},
-                   // {"parameters",{})}
+                    {"id", capExt["preferredId"]},
+                    {"encrypt", capExt["preferredEncrypt"]},
+                    {"parameters",{}}
                 };
                 consumableParams["headerExtensions"].push_back(consumableExt);
             }
@@ -431,11 +432,11 @@ namespace SdpParse {
             ///////////////////////////
 
             // Generate codecs mapping.
-            for (const auto& [first, second] : codecToCapCodec) {
+            for (const auto& ctocap : codecToCapCodec) {
                 // kmap->first["payloadType"];
                 json obj = json::object();
-                obj["payloadType"] = first["payloadType"];
-                obj["mappedPayloadType"] = second["preferredPayloadType"];
+                obj["payloadType"] = ctocap.first["payloadType"];
+                obj["mappedPayloadType"] = ctocap.second["preferredPayloadType"];
 
                 rtpMapping["codecs"].push_back(obj);
             }

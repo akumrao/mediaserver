@@ -24,7 +24,7 @@
 #include <string>
 
 #include "base/platform.h"
-#include "signaler.h"
+#include "sdp/signaler.h"
 
 
 
@@ -80,11 +80,11 @@ int main(int argc, char* argv[]) {
   
     Settings::PrintConfiguration();
    
-    try {
+    //try {
         
          
         base::Application app;
-        base::wrtc::Signaler sig;
+        SdpParse::Signaler sig;
 
         // Initialize static stuff.
         DepOpenSSL::ClassInit();
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
         //std::string sourceFile(sampleDataDir("test.mp4"));
 
         //sig.startStreaming(sourceFile, true);
-        sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
+        sig.connect(SERVER_HOST, SERVER_PORT);
 
 
         app.waitForShutdown([&](void*) {
@@ -124,12 +124,12 @@ int main(int argc, char* argv[]) {
         //uv_sleep(200);
         //base::sleep(200);
 
-        std::_Exit(EXIT_SUCCESS);
-    } catch (const exception& error) {
-        MS_ERROR_STD("failure exit: %s", error.what());
-
-        std::_Exit(EXIT_FAILURE);
-    }
+//        std::_Exit(EXIT_SUCCESS);
+//    } catch (const exception& error) {
+//        MS_ERROR_STD("failure exit: %s", error.what());
+//
+//        std::_Exit(EXIT_FAILURE);
+//    }
 
   
 }

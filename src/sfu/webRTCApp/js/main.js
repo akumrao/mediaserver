@@ -102,16 +102,21 @@ $(document).ready(function(){
   $("#btn_webcam").click(function(){
 
     console.log("btn_webcam click");
-          $("#div1").html("<h2>btn_webcam</h2>");
 
-   publish();
+   publish(true);
+  });
+
+  $("#btn_screen").click(function(){
+
+        console.log("btn_screen click");
+
+        publish(false);
   });
 
 
   $("#btn_subscribe").click(function(){
 
     console.log("btn_subscribe click");
-          $("#div1").html("<h2>btn_subscribe</h2>");
 
    subscribe();
   });
@@ -119,7 +124,6 @@ $(document).ready(function(){
  $("#btn_subscribe_resume").click(function(){
 
     console.log("btn_subscribe_resume click");
-          $("#div1").html("<h2>btn_subscribe_resume</h2>");
 
    btn_subscribe_resume();
   });
@@ -128,10 +132,40 @@ $(document).ready(function(){
   $("#btn_subscribe_pause").click(function(){
 
     console.log("btn_subscribe_pause click");
-          $("#div1").html("<h2>btn_subscribe_pause</h2>");
 
    btn_subscribe_pause();
   });
+
+
+  $("#btn_audio_level_start").click(function(){
+
+    console.log("btn_audio_level_start click");
+    btn_audio_level_start();
+  });
+
+   $("#btn_audio_level_stop").click(function(){
+
+    console.log("btn_audio_level_start click");
+
+   btn_audio_level_stop();
+  });
+
+
+  $("#btn_producer_stats").click(function(){
+
+    console.log("btn_producer_stats click");
+
+   btn_producer_stats();
+  });
+
+  
+  $("#btn_subscribe_stats").click(function(){
+
+    console.log("btn_subscribe_stats click");
+   btn_subscribe_stats();
+  });
+
+
 
 
  });

@@ -24,3 +24,11 @@ pre {
    font-size: 11px; 
    font-weight: bold;
 }
+
+
+.track-ctrl > div {
+  display: inline;
+}
+.track-ctrl * {
+  vertical-align: middle;
+}

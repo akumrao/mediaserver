@@ -19,6 +19,7 @@ namespace SdpParse
 				std::string reuseMid;
 			};
 
+                ~RemoteSdp();
 		public:
 			RemoteSdp(
 			  const nlohmann::json& iceParameters,
@@ -45,6 +46,8 @@ namespace SdpParse
 			void DisableMediaSection(const std::string& mid);
 			void CloseMediaSection(const std::string& mid);
 			std::string GetSdp();
+                        void flushMediaSection();
+                        int MediaSectionSize();
 
 		private:
 			void AddMediaSection(MediaSection* newMediaSection);

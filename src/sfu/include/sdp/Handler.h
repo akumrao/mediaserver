@@ -2,21 +2,23 @@
 #define SDP_HANDLER_H
 
 
-#include "signaler.h"
 #include "sdp/RemoteSdp.h"
 #include <json.hpp>
 #include <map>
 #include <string>
-
+#include <atomic>
 namespace SdpParse {
     
+    class Peer;
+    class Signaler;
+    class Room;
     
     class Handler
     {
     
     public:
                 
-        Handler(Device * device, std::string &peerID): device(device), peerID(peerID) 
+        Handler(Signaler *signaler,  Peer * peer):signaler(signaler),peer(peer)
         {
             
         }
@@ -28,63 +30,99 @@ namespace SdpParse {
             }
         }
         
-        void transportCreate(base::wrtc::Signaler *signal);
-        void transportConnect(base::wrtc::Signaler *signal);
-       
+        void transportCreate();
+        void transportConnect(const nlohmann::json& sdpObject, const std::string& localDtlsRole);
+        void raiseRequest( nlohmann::json &param , nlohmann::json& trans,  std::function<void (const nlohmann::json& )> func );
 
         Sdp::RemoteSdp *remoteSdp{nullptr};
         void createSdp(const nlohmann::json& iceParameters, const nlohmann::json& iceCandidates, const nlohmann::json& dtlsParameters);
-        void _setupTransport(const nlohmann::json & sdpObject, const std::string localDtlsRole);
+        nlohmann::json  _setupTransport(const nlohmann::json & sdpObject, const std::string& localDtlsRole);
         
-        
+        bool transport_connect{false};
     protected:
-        Device * device;
-        std::string peerID;
+      
+        //std::string peerID;
         std::string transportId;
-        nlohmann::json dtlsParameters;
+        //nlohmann::json dtlsParameters;
         bool forceTcp{false};
-        static int ids;
+ 
+        Signaler *signaler;
+       // std::string roomId;
         
+    public:
+        Peer *peer;
+        
+        std::string classtype;
+        std::string constructor_name { "WebrtcTransport"};
+
     };
 
-    class Producer:public Handler
+    class Producers:public Handler
     {
        
         public:
         
-        Producer(Device * device, std::string &peerID);
-
-        void runit(base::wrtc::Signaler *signal);
-        std::string answer;
+        Producers(Signaler *signaler, Peer *peer);
         
-        nlohmann::json producer;
+        ~Producers();
+
+        void close_producer( const std::string &producerid);
+        void runit(std::function<void (const std::string & )> cbAns);
+        
+        struct Producer
+        {   //std::string answer;
+            nlohmann::json producer;
+        };
+        
+
+        void producer_getStats(const std::string& producerId); 
+        void rtpObserver_addProducer( bool flag);
+
+        
+        std::map<std::string, Producer*>  mapProducer;
+        // this is to store mid 0 and 1 so that audio and video are sequence during sdp generation.
+        std::map<size_t, std::string>  mapProdMid;  
         
     private:
-        std::string GetAnswer();
-        nlohmann::json sendingRtpParameters;
-    
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx, std::string &trackid );
+        
+        std::string cnameForProducers; 
         
     };
 
-    class Consumer : public Handler
+    class Consumers : public Handler
     {
         
     public:
-        Consumer(Device * device, std::string &peerID);
+        Consumers(Signaler *signaler, Peer * peer);
+        ~Consumers();
       
-        void runit(base::wrtc::Signaler *signal,  nlohmann::json & producer);
+        void runit(Producers *producers, int mid=0);
+       
+        void sendOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters, const std::string& partID , const std::string& remotePartID);
 
-        std::string GetOffer(const std::string& id, const std::string& kind, const nlohmann::json & rtpParameters);
+        void loadAnswer( std::string sdp);
+        void resume( const std::string& consumerId , bool pause);
 
-        void loadAnswer(base::wrtc::Signaler *signal, std::string sdp);
-        void resume(base::wrtc::Signaler *signal , json & producer, bool pause );
+        void close_consumer(const std::string& producerid, const std::string& conumserid );
+        void consumer_getStats( const std::string& consumerIds); 
+        void onUnSubscribe(const std::string& producerPeer);
+        void setPreferredLayers( nlohmann::json &layer);
+        std::atomic<uint8_t>  nodevice{0};
         
-
-        std::string offer;
+       
+        struct Consumer
+        {  // std::string offer;
+            nlohmann::json consumer;
+        };
+        std::map<int, std::string>  mapConMid;  // map mid with conusmer id
+        std::map<std::string, Consumer*>  mapConsumer;  // map number of consumer Devices
+        std::map<std::string, std::pair<int, int > > mapProdDevs;  // map number of device mid used from producer 
+                                // pair is for mid range 0 to maximum devices
+        bool _probatorConsumerCreated{true};
     private:
-        int mid{0};
-      
-        json consumer;
+       //int mid{0};
+       // Producers *producers;
 
     };
     

@@ -260,10 +260,10 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     /* XXX Future optimization: do EPOLL_CTL_MOD lazily if we stop watching
      * events, skip the syscall and squelch the events after epoll_wait().
      */
-    if( op ==  EPOLL_CTL_ADD )
-    printf("EPOLL_CTL_ADD %d \n", w->fd );
-    else
-    printf("EPOLL_CTL_MOD %d \n", w->fd );
+//    if( op ==  EPOLL_CTL_ADD ) //arvind
+//    printf("EPOLL_CTL_ADD %d \n", w->fd );
+//    else
+//    printf("EPOLL_CTL_MOD %d \n", w->fd );
       
     if (epoll_ctl(loop->backend_fd, op, w->fd, &e)) {
       if (errno != EEXIST)

@@ -5,21 +5,21 @@
 //#include "Channel/UnixStreamSocket.h"
 #include <json.hpp>
 #include <string>
-#include "signaler.h"
+#include "sdp/signaler.h"
 
 namespace Channel
 {
 	class Notifier
 	{
 	public:
-		static void ClassInit( base::wrtc::Signaler *sig);
+		static void ClassInit( SdpParse::Signaler *sig);
 		static void Emit(const std::string& targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event, json& data);
 
 	public:
 		// Passed by argument.
 		//static Channel::UnixStreamSocket* channel;
-                static  base::wrtc::Signaler *m_sig;
+                static  SdpParse::Signaler *m_sig;
 	};
 } // namespace Channel
 

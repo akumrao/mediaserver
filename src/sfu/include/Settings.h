@@ -38,12 +38,18 @@ public:
 		std::string dtlsPrivateKeyFile;
                 json listenIps;
                 json routerCapabilities;
+                json worker_createRouter;
                 json createWebRtcTransport;
                 json maxbitrate;
                 json transport_connect;
                 json transport_produce;
                 json transport_consume;
                 json consumer_resume;
+                json router_createAudioLevelObserver;
+                json rtpObserver_addProducer;
+                json producer_getStats;
+                json consumer_getStats;
+                json consumer_setPreferredLayers;
 	};
 
 public:

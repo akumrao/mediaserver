@@ -37,16 +37,26 @@
 </style>
 <body>
   <table>
+    <tr id="traddCtrl1">
+    </tr>
+    <tr id="traddCtrl2">
+    </tr>
     <tr>
       <td>
-        <div>Local</div>
-        <video id="local_video" controls autoplay playsinline></video>
+        <div>Local Stats</div>
+         <p id="prod_stat"></p>
+      </td>
+       <td>
+        <div>Sound Level</div>
+         <p id="sound_level"></p>
       </td>
       <td>
-        <div>Remote</div>
-        <video id="remote_video" controls autoplay playsinline></video>
+        <div>Remote Stats</div>
+        <p id="cons_stat"></p>
       </td>
+
     </tr>
+
   </table>
   <br>
   <table>
@@ -60,7 +70,9 @@
       <td>
         <fieldset id="fs_publish">
           <legend>Publishing</legend>
-          <div><label><input type="checkbox" id="chk_simulcast"> Use Simulcast</label></div>
+          <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
+          <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
+          <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
           <div>
             <button id="btn_webcam">Start Webcam</button>
             <span id="webcam_status"></span>
@@ -69,23 +81,32 @@
             <button id="btn_screen">Share Screen</button>
             <span id="screen_status"></span>
           </div>
+           <div>
+            <button id="btn_audio_level_start">Start Audio Level</button> 
+          </div>
+           <div>
+            <button id="btn_audio_level_stop">stop Audio Level</button> 
+          </div>
+           <div>
+            <button id="btn_producer_stats">Stats</button>
+          </div>
         </fieldset>
       </td>
       <td>
         <fieldset id="fs_subscribe" >
           <legend>Subscription</legend>
-          <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
-            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>
-          <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>
+            <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
+<!--            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>-->
+<!--            <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>-->
+<!--            <div><button id="btn_subscribe_stats">stats</button> <span id="sub_status"></span>-->
           </div>
         </fieldset>
       </td>
     </tr>
   </table>
 
-<div id="div1"><h2>Let jQuery AJAX Change This Text</h2></div>
 
-<button id="btn2">Get External Content</button>
+
 
 </body>
 <script>
@@ -98,7 +119,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 
-  <script src="js/start.js" async  ></script>
-  <script src="js/main.js" async></script>
+  <script src="js/main.js" async  ></script>
+  <script src="js/webrtc.js" async></script>
 
 </html>

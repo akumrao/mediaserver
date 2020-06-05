@@ -302,6 +302,9 @@ namespace base {
             flushWriteBIO();
         }
 
+      /* Arvind TBD. Below code does not work with lower version of OpenSSL.
+        In future I will replace TLS with DTLS
+
         void SSLAdapter::flushReadBIO() {
             size_t npending = BIO_ctrl_pending(_readBIO);
             if (npending > 0) {
@@ -312,6 +315,23 @@ namespace base {
                     //  _socket->listener->on_read(_socket, buffer, nread); // arvind
                     _socket->on_read(buffer, nread); // arvind
                 }
+            }
+        }
+        */ 
+        void SSLAdapter::flushReadBIO() {
+            size_t npending = BIO_ctrl_pending(_readBIO);
+            if (npending > 0) {
+                int nread = 0;
+                int ntotal = 0;
+                 
+                char buffer[npending];
+                while ((nread = SSL_read(_ssl, &buffer[ntotal], npending)) > 0) {
+                   // LTrace("On Read ", buffer)
+                    //  _socket->listener->on_read(_socket, buffer, nread); // arvind
+                   // _socket->on_read(buffer, nread); // arvind
+                    ntotal = ntotal + nread;
+                }
+                _socket->on_read(buffer, ntotal); // arvind
             }
         }
 

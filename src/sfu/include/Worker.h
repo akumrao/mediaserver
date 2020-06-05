@@ -33,13 +33,14 @@ public:
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
 	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
+        std::unordered_map<std::string, RTC::Router*> mapRouters;
 
 private:
 	// Passed by argument.
 	//Channel::UnixStreamSocket* channel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
-	std::unordered_map<std::string, RTC::Router*> mapRouters;
+	
 	// Others.
 	bool closed{ false };
 };

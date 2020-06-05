@@ -33,15 +33,8 @@ let io;
 
 console.log("https://localhost:8080/");
 
-var roomid;
 let serverSocketid =null;
-var transport;  //producertranspor
-var consumerTransport;
-var routerCapabilities;
-var producer;
-var consumer;
 
-var listenIps;
 
 var fileServer = new(nodeStatic.Server)();
 // var app = http.createServer(function(req, res) {
@@ -92,9 +85,9 @@ async function runWebServer() {
       console.log('server is running');
       console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
 
-      listenIps = config.webRtcTransport.listenIps;
+    //  listenIps = config.webRtcTransport.listenIps;
       //const ip = listenIps.announcedIp || listenIps.ip;
-      console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
+     // console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
 
       resolve();
     });
@@ -105,11 +98,6 @@ async function runSocketServer() {
 
     console.error('runSocketServer');
 
-  // socketServer = socketIO(webServer, {
-  //   serveClient: false,
-  //   path: '/server',
-  //   log: false,
-  // });
 
    io = socketIO.listen(webServer);
 
@@ -119,124 +107,220 @@ async function runSocketServer() {
 
 	// convenience function to log server messages on the client
 	function log() {
-		// var array = ['Message from server:'];
-		// array.push.apply(array, arguments);
-		// socket.emit('log', array);
-		// console.log(array);
+		var array = ['Message from server:'];
+		 array.push.apply(array, arguments);
+		 socket.emit('log', array);
+		 console.log(array);
 	}
-	// socket.on('message', function(message) {
-	// 	log('Client said: ', message);
-	// 	// for a real app, would be room-only (not broadcast)
-	// 	socket.broadcast.emit('message', message);
-	// });
+
 
 	socket.on('disconnect', function() {
-	  console.log(socket.id);
+	  console.log("disconnect " + socket.id);
 	  if( socket.id == serverSocketid)
 	  {
 	  	serverSocketid = null;
 	  	console.log(serverSocketid);
-	  }
-
-	});
 
 
-	socket.on('create or join', function(room) {
-		log('Received request to create or join room ' + room);
-
-		var clientsInRoom = io.sockets.adapter.rooms[room];
-		var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-		log('Room ' + room + ' now has ' + numClients + ' client(s)');
-
-		socket.join(room);
-		if (numClients === 0 || serverSocketid == null) {
-		 
-			log('Client ID ' + socket.id + ' created room ' + room);
-
-
-			var rut = {"id":1,"method":"worker.createRouter","internal":{"routerId":"2e32062d-f04a-4c2d-a656-b586e50498ef"}};
-
-			roomid = room;
-			serverSocketid = socket.id;
-			console.log('serverSocketid');
-			console.log(serverSocketid);
-
-			socket.emit('created', room, socket.id, rut, function (data) {
-
-			console.log("ack"); // data will be 'woot'
-			console.log( JSON.stringify(data, null, 4)); // data will be 'woot'
-			}
-
-			);
-
-		} else if (numClients === 1) {
-			log('Client ID ' + socket.id + ' joined room ' + room);
-			io.sockets.in(room).emit('join', room);
-
-			socket.emit('joined', room, socket.id);
-			io.sockets.in(room).emit('ready');
-		} else { // max two clients
-			socket.emit('full', room);
-
-			log('Client ID ' + socket.id + ' joined room ' + room);
-			io.sockets.in(room).emit('join', room);
-
-			socket.emit('joined', room, socket.id);
-			io.sockets.in(room).emit('ready')
-			
+	  	for( let soc in   io.sockets.connected ){
+	  		io.sockets.connected[soc].disconnect();
 		}
 
+	  }
+	  else
+	  {
+	  	  ////////////////////////////////////////////////////////////////////
+		  if( serverSocketid &&  io.sockets.connected[serverSocketid])
+			  io.sockets.connected[serverSocketid].emit('disconnectClient', socket.id);
+
+		  console.log("unsubscribe " + socket.id);
+
+
+		  // var room_list = {};
+		  // var rooms = socket.adapter.rooms;
+		  //
+		  // for (var room in rooms){
+			//   if (!rooms[room].hasOwnProperty(room)) {
+			// 	  console.log(rooms[room]);
+			// 	  room_list[room] = Object.keys(rooms[room]).length;
+			//   }
+		  // }
+		  // console.log(room_list);
+
+
+		  // var rooms = socket.adapter.rooms;
+		  //
+		  // for(var room in rooms  ) {
+		  //
+			//   if( Object.keys(rooms[room].sockets)[0] == room )
+			// 	  continue;
+		  //
+			//   var clientsInRoom = io.sockets.adapter.rooms[room];
+			//   var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+		  //
+		  //
+		  //
+			//   console.log("Number of participant " + numClients + " for room " + room);
+			//   var message = {
+			// 	  room: room,
+			// 	  type: "subscribe"
+			//   };
+			//   var revClient = [];
+			//   revClient.push(socket.id);
+		  //
+			//   for (const member in clientsInRoom.sockets) {
+		  //
+			// 	  if (member !== message.from) {
+			// 		  message.from = member;
+			// 		  message.desc = revClient;
+			// 		  console.log('unsubscribe: ', message);
+			// 		  io.sockets.connected[serverSocketid].emit('message', message);
+		  //
+			// 	  }
+			//   }
+		  // }
+
+
+
+		  ///////////////////////////////////////////////////////////////////
+
+	  }
+
+
+
+
 
 	});
 
 
 
- //    socket.on('connectConsumerTransport', async (data, callback) => {
 
- //      console.log('connectConsumerTransport ' + JSON.stringify(data, null, 4) );
-
- //      await consumerTransport.connect({ dtlsParameters: data.dtlsParameters });
- //      callback();
- //    });
-
-///////////////////////////////////////////////////////////////////////////
-
-//  function createConsumer(producer, rtpCapabilities) {
-
-  
-// }
+	socket.on('CreateSFU', function() {
+		log('Received request to create CreateSFU');
+		
+		if (serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
+			io.sockets.connected[serverSocketid].disconnect();
+			serverSocketid =  null;
+		}
+		 
+		log('SFU ID ' , socket.id) ;
+	
+		serverSocketid = socket.id;
 
 
-//////////////////////////////////////////////////////////////////////////
+	});
+
+	socket.on('create or join', function(roomId) {
+
+		log('Received request to create or join room ' + roomId);
+
+		if( serverSocketid == null || io.sockets.connected[serverSocketid] == null)
+		  return  console.error("SFU server is down");
+
+		socket.join(roomId);
+
+
+		var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
+
+		log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
+
+		if (numClients === 1 ) {
+		 
+			log('Client ID ' + socket.id + ' created room ' + roomId);
+		
+			io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid);
+
+
+			socket.emit('created', roomId, socket.id);
+
+			socket.emit('joined', roomId, socket.id);
+
+		} else if (numClients > 1 ) {
+			log('Client ID ' + socket.id + ' joined room ' + roomId);
+			io.sockets.in(roomId).emit('join', roomId, socket.id);
+
+			socket.emit('joined', roomId, socket.id);
+			io.sockets.in(roomId).emit('ready');
+		} 
+
+	});
+
+
+
+
 	socket.on('message', function(message) {
 
-		//console.log('notification ' + JSON.stringify(data, null, 4) );
+			  socket.to(message.to).emit('message', message);
+	  });
+
+//////////////////////////////////////////////////////////////////////////
+	socket.on('sfu-message', function(message) {
 
 
-	 console.log('app message: ', message);
-    // for a real app, would be room-only (not broadcast)
-    	socket.broadcast.emit('message', message);
+		if(message.type ==="subscribe")
+		{
+			console.log("subscribe");
+
+			var clientsInRoom = io.sockets.adapter.rooms[message.room];
+			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
+			if(numClients ===1)
+				return;
+
+			console.log("Number of participant " + numClients );
+			let objCopy = Object.assign({}, message);
+			//var revMessage = message.clone();
+			let revClient = [];
+			revClient.push(message.from);
+
+
+
+
+			let clients = [];
+
+			console.log("message.from "+ message.from);
+			for( const member in clientsInRoom.sockets ) {
+
+				if( member !==  message.from ) {
+
+					//console.log("member "+ member);
+
+					clients.push(member);
+
+					objCopy.from = member;
+					objCopy.desc = revClient;
+					console.log('app revMessage: ', objCopy);
+					//io.sockets.connected[serverSocketid].emit('message', objCopy);
+
+				}
+			}
+
+
+			message.desc = clients;
+
+			//return;
+		}
+
+		console.log('app message: ', message);
+		if(io.sockets.connected[serverSocketid])
+		io.sockets.connected[serverSocketid].emit('message', message);
+
+
 
 	});
 
 
-	socket.on('postAppMessage', function(data) {
+	socket.on('postAppMessage', function(message) {
 
-		console.log('notification ' + JSON.stringify(data, null, 4) );
+		//console.log('notification ' + JSON.stringify(message, null, 4) );
+
+		if ('to' in message) {
+			socket.to(message.to).emit('message', message);
+		}
 
 	});
 
 
-	// socket.on('ipaddr', function() {
-	// 	var ifaces = os.networkInterfaces();
-	// 	for (var dev in ifaces) {
-	// 		ifaces[dev].forEach(function(details) {
-	// 			if (details.family === 'IPv4' && details.address !== '127.0.0.1') {
-	// 				socket.emit('ipaddr', details.address);
-	// 			}
-	// 		});
-	// 	}
-	// });
 
 	socket.on('bye', function(){
 		console.log('received bye');
