@@ -127,7 +127,10 @@ namespace SdpParse {
             throw "Found no mid in SDP";
         }
 
-
+        if(mediaSectionIdx.idx != std::stoi(midIt->get<std::string>()) )
+        {
+           SError << "Not a valid state,  mid "  <<  mediaSectionIdx.idx << " not matches with " << midIt->get<std::string>();
+        }
 
         sendingRtpParameters["mid"] = *midIt;
            
@@ -250,6 +253,8 @@ namespace SdpParse {
             }
             
             auto answer = remoteSdp->GetSdp();
+            
+            SInfo << " ans "  << answer;
             cbAns(answer);
                   
             return;
@@ -331,7 +336,7 @@ namespace SdpParse {
                 // SInfo << "Final Producer " << p->producer.dump(4);
                 mapProducer[p->producer["id"]] = p;
                 mapProdMid[ mediaSectionIdx.idx ] = p->producer["id"];
-                SInfo <<  mediaSectionIdx.idx << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
+                SInfo << "mid : " <<  mediaSectionIdx.idx << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
 
                 if (sizeofMid == remoteSdp->MediaSectionSize()) {
                     auto answer = remoteSdp->GetSdp();
@@ -519,14 +524,14 @@ namespace SdpParse {
         auto& cname = rtpParameters["rtcp"]["cname"];
 
 
-        SInfo <<  localId << " Sendffer  for consumer" << id << " kind " << kind;
+       // SInfo <<  localId << " Sendffer  for consumer" << id << " kind " << kind;
 
         this->remoteSdp->Receive(localId, kind, rtpParameters, cname, id);
 
-        SInfo <<  localId << " Sendffer  for consumer" << id << " nodevice " <<  (int) nodevice << " remoteSdp->MediaSectionSize() " << remoteSdp->MediaSectionSize();
-
         if( remoteSdp->MediaSectionSize() == nodevice )
         {
+            SInfo << "mid " <<  localId << " Sendffer  for consumer" << id << " nodevice " <<  (int) nodevice << " remoteSdp->MediaSectionSize() " << remoteSdp->MediaSectionSize();
+
             auto offer = this->remoteSdp->GetSdp();
            // SInfo << "offer: " << offer;
             signaler->sendSDP("offer", offer, partID, remotePartID);

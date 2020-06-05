@@ -148,37 +148,37 @@ async function runSocketServer() {
 		  // console.log(room_list);
 
 
-		  var rooms = socket.adapter.rooms;
-
-		  for(var room in rooms  ) {
-
-			  if( Object.keys(rooms[room].sockets)[0] == room )
-				  continue;
-
-			  var clientsInRoom = io.sockets.adapter.rooms[room];
-			  var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-
-
-
-			  console.log("Number of participant " + numClients + " for room " + room);
-			  var message = {
-				  room: room,
-				  type: "subscribe"
-			  };
-			  var revClient = [];
-			  revClient.push(socket.id);
-
-			  for (const member in clientsInRoom.sockets) {
-
-				  if (member !== message.from) {
-					  message.from = member;
-					  message.desc = revClient;
-					  console.log('unsubscribe: ', message);
-					  io.sockets.connected[serverSocketid].emit('message', message);
-
-				  }
-			  }
-		  }
+		  // var rooms = socket.adapter.rooms;
+		  //
+		  // for(var room in rooms  ) {
+		  //
+			//   if( Object.keys(rooms[room].sockets)[0] == room )
+			// 	  continue;
+		  //
+			//   var clientsInRoom = io.sockets.adapter.rooms[room];
+			//   var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+		  //
+		  //
+		  //
+			//   console.log("Number of participant " + numClients + " for room " + room);
+			//   var message = {
+			// 	  room: room,
+			// 	  type: "subscribe"
+			//   };
+			//   var revClient = [];
+			//   revClient.push(socket.id);
+		  //
+			//   for (const member in clientsInRoom.sockets) {
+		  //
+			// 	  if (member !== message.from) {
+			// 		  message.from = member;
+			// 		  message.desc = revClient;
+			// 		  console.log('unsubscribe: ', message);
+			// 		  io.sockets.connected[serverSocketid].emit('message', message);
+		  //
+			// 	  }
+			//   }
+		  // }
 
 
 
@@ -290,7 +290,7 @@ async function runSocketServer() {
 					objCopy.from = member;
 					objCopy.desc = revClient;
 					console.log('app revMessage: ', objCopy);
-					io.sockets.connected[serverSocketid].emit('message', objCopy);
+					//io.sockets.connected[serverSocketid].emit('message', objCopy);
 
 				}
 			}

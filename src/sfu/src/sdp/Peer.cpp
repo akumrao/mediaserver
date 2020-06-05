@@ -213,20 +213,22 @@ namespace SdpParse {
     }
         
     
-    
     void Peer::onUnSubscribe( const std::string& producerPeer)
     {
         if(!consumers)
             return;
          consumers->onUnSubscribe(producerPeer); 
-        
     }
     
     void Peer::onSubscribe( Peer *producerPeer)
     {   // Arvind TBD: Below code is risky it should be under Mutex lock.
-        if( producerPeer->producers)
-        {   if(!consumers)
-            consumers =  new Consumers(signaler, this);
+        if( producerPeer && producerPeer->producers)
+        {   
+            if(!consumers)
+                consumers =  new Consumers(signaler, this);
+            
+            //producerPeer->
+            
             if(consumers->mapProdDevs.find(producerPeer->participantID) != consumers->mapProdDevs.end() ){
                 int cusDevCount=  consumers->mapProdDevs[producerPeer->participantID].second +1;
                 
@@ -248,10 +250,9 @@ namespace SdpParse {
                 consumers->nodevice +=  producerPeer->producers->mapProdMid.size();     
                 consumers->runit( producerPeer->producers);
             }
-                
-            
         }
     }
+    
     void Peer::onDisconnect( )
     {
 
@@ -384,16 +385,23 @@ namespace SdpParse {
             // int x = 0;
             for( auto &id : peerPartiID)
             {
-                if(mapPeers.find(id)  != mapPeers.end() )
+                if(mapPeers.find(id)  == mapPeers.end() )
                 {
-                 // SInfo  << " peerids "  << id;
-                 // if(++x == 2  )
-                  peer->onSubscribe(mapPeers[id]);
+                    Peer *peer;
+                    peer = new Peer( signaler, room);
+                    peer->participantID = id;
+                    peer->participantName = id;
+                    mapPeers[id] = peer; 
                 }
-                else
-                {
-                    peer->onUnSubscribe(id.get<std::string>());
-                }
+
+                peer->onSubscribe(mapPeers[id]);
+                mapPeers[id]->onSubscribe(peer);
+                  
+//                }
+//                else
+//                {
+//                   // peer->onUnSubscribe(id.get<std::string>());
+//                }
                 
             }
         }
