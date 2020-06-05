@@ -254,7 +254,7 @@ namespace SdpParse {
             
             auto answer = remoteSdp->GetSdp();
             
-            SInfo << " ans "  << answer;
+            //SInfo << " ans "  << answer;
             cbAns(answer);
                   
             return;
@@ -393,7 +393,7 @@ namespace SdpParse {
         SInfo << "~Producers()";
 
         for (auto &prod : mapProducer) {
-            close_producer(prod.second->producer["producerId"] );
+          //  close_producer(prod.second->producer["producerId"] );
             delete prod.second;
         }
 

@@ -400,7 +400,6 @@ function publish_simulcast(transceiver)
 }
 
 
-var prodtrackNo= -1;
 
 var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
@@ -441,7 +440,7 @@ socket.on('message',  async function(message) {
 
                         addProducerVideoAudio(track, store);
                         // publish_simulcast(mss[ts]);
-
+                        store={};
                     }
                 }
             }
@@ -558,7 +557,6 @@ function addProducerVideoAudio(track, store) {
     div.style.width = "200px";
 
 
-
     divStore.appendChild(div);
 
     let statButton;
@@ -602,25 +600,26 @@ function addProducerVideoAudio(track, store) {
 
 
             }
-
-            var offer1 = await pc1.createOffer();
-
-
-           console.log("after close offer %o ", offer1);
-
-            await pc1.setLocalDescription(offer1);
-
-            sendMessage ({
-                room: room,
-                from: peerID,
-                //to: remotePeerID,
-                type: offer1.type,
-                desc: offer1
-            });
-
-
-
         }
+
+        var offer1 = await pc1.createOffer();
+
+
+        console.log("after close offer %o ", offer1);
+
+        await pc1.setLocalDescription(offer1);
+
+        sendMessage ({
+            room: room,
+            from: peerID,
+            //to: remotePeerID,
+            type: offer1.type,
+            desc: offer1
+        });
+
+
+
+
 
         btn_producer_close(store);
         // removeElement('producertd' );
@@ -872,6 +871,8 @@ async function publish(isWebcam)
                     direction: 'sendonly',
                     streams: [_stream]
                 });
+
+            transceiver1.sender.setStreams(_stream);
         }
          
          //firefox
@@ -900,7 +901,7 @@ async function publish(isWebcam)
                      streams: [_stream],
                      sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
                  });
-
+                // transceiver.sender.setStreams(_stream);
 
              } else {
                  var transceiver = pc1.addTransceiver(
@@ -909,6 +910,7 @@ async function publish(isWebcam)
                          direction: 'sendonly',
                          streams: [_stream]
                      });
+                 //transceiver.sender.setStreams(_stream);
              }
          }
 
