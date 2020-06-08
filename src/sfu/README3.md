@@ -4,7 +4,16 @@ Filtering Address(yes or no) Filtering Port(yes or no)
 
 2^4=16
 
-So, there are 16 NAT types defined in RFC 5780~
+So, there are 16 NAT types defined in RFC 5780
+
+
+TURN
+Some routers using NAT employ a restriction called ‘Symmetric NAT ( filter by port and addresss)’. This means the router will only accept connections from peers you’ve previously connected to.
+
+Traversal Using Relays around NAT (TURN) is meant to bypass the Symmetric NAT restriction by opening a connection with a TURN server and relaying all information through that server. You would create a connection with a TURN server and tell all peers to send packets to the server which will then be forwarded to you. This obviously comes with some overhead so it is only used if there are no other alternatives.
+
+
+
 
 https://www.netmanias.com/en/?m=view&id=techdocs&no=6065&xtag=nat-network-protocol&xref=stun-rfc-3489-vs-stun-rfc-5389-5780
 
