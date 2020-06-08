@@ -111,3 +111,46 @@ STUN can also be used to refresh NAT bindings; as a keep-alive mechanism when us
 The STUN Protocol
 
 STUN is a server-client protocol. A STUN server usually operates on both TCP and UDP and listens on port 3478. A client usually contacts the STUN server on a specific IP and port (3478) but the server can hint clients to perform tests on alternate IP address and port number too, as such port and IP are arbitrary.
+
+
+
+
+**TURN**
+Some routers using NAT employ a restriction called ‘Symmetric NAT’. This means the router will only accept connections from peers you’ve previously connected to.
+
+Traversal Using Relays around NAT (TURN) is meant to bypass the Symmetric NAT restriction by opening a connection with a TURN server and relaying all information through that server. You would create a connection with a TURN server and tell all peers to send packets to the server which will then be forwarded to you. This obviously comes with some overhead so it is only used if there are no other alternatives.
+
+First, the client contacts a TURN server with an "Allocate" request. The Allocate request asks the TURN server to allocate some of its resources for the client so that it may contact a peer. If allocation is possible, the server allocates an address for the client to use as a relay, and sends the client an "Allocation Successful" response, which contains an "allocated relayed transport address" located at the TURN server.
+
+Second, the client sends in a CreatePermissions request to the TURN server to create a permissions check system for peer-server communications. In other words, when a peer is finally contacted and sends information back to the TURN server to be relayed to client, the TURN server uses the permissions to verify that the peer-to-TURN server communication is valid.
+
+After permissions have been created, the client has two choices for sending the actual data, (1) it can use the Send mechanism, or (2) it can reserve a channel using the ChannelBind request. The Send mechanism is more straightforward, but contains a larger header, 36 bytes, that can substantially increase the bandwidth in a TURN relayed conversation. By contrast, the ChannelBind method is lighter: the header is only 4 bytes, but it requires a channel to be reserved which needs to be periodically refreshed, among other considerations.
+
+Using either method, Send or channel binding, the TURN server receives the data from the client and relays it to the peer using UDP datagrams, which contain as their Source Address the "Allocated Relayed Transport Address". The peer receives the data and responds, again using a UDP datagram as the transport protocol, sending the UDP datagram to the relay address at the TURN server.
+
+The TURN ser
+
+The TURN protocol utilizes a TURN server to relay data from a client to any number of peers. 
+A TURN client first sends a message to a TURN server to allocate an IP address and port on the TURN server that the client can use to communicate with peers. Once the allocation has succeeded, the client will use this IP address and port as its SIP URI in registrations and as its media address and port in its SDP. All data meant for the client’s peer is then encapsulated in a TURN packet and sent to the TURN server. The TURN packet also contains the destination address of the peer. The TURN server then converts this packet into a UDP packet and sends it on to the peer. In the reverse direction the TURN server receives a UDP packet from the peer and encapsulates this packet into a TURN packet and sends it to the client. The TURN packet also contains the peer’s address so that the client knows where the packet originated.
+
+Consider using the SIP protocol where a SIP device with user Bob sits behind a NAT and wants to register its location with a SIP registrar located on the public Internet. The SIP device has a non-routable Private IP address 192.168.0.10. The SIP device registers its location with the registrar as sip:bob@192.168.0.10:5060. This tells the registrar that Bob can be reached at the IP address 192.168.0.10 at port 5060 (the default SIP port). This private IP address is meaningless to a device on the public Internet and the registrar would not know how to reach Bob.
+
+A second example involves problems in sending RTP media. Alice calls Bob and Alice’s invite contains SDP with her local IP address 10.1.1.10 and media port 1234. Bob accepts Alice’s invite with his SDP containing his local IP address 192.168.0.10 and media port 1234. Both of these IP addresses are meaningless outside the scope of each individual’s private local network and neither party will receive the other’s RTP packets.
+
+In these examples, both Alice and Bob would set up an IP address and port mapping with a TURN server. Alice and Bob would then be able to communicate with each other using the TURN server as an intermediary.
+
+
+TCP TURN Control Connection
+As with any TURN negotiation, the first step of the process is to create an allocation. When using TCP TURN it is necessary that the transport type of the allocation be that of TCP. Although a UDP allocation can be created by using a TCP transport, this property is not reciprocal. In addition, UDP based attributes such as tokens, and even-ports, must be left out of all TCP allocation requests. TCP allocation authentication, success/failure responses, and the creation of permissions are identical to those of UDP TURN. It is important however to identify this allocated connection as a “Control Connection,” as it serves a specific purpose in TCP applications.
+
+TCP TURN Data Connection
+
+At this point, the control connection allocation and permissions have been established with the TURN server, the next step is to create the “data connection” where most of the information transaction will take place. In UDP applications this would normally just take place on the already established connection as long as the proper permissions were in place. With TCP TURN an additional step is necessary.
+
+When creating a connection as the establisher, a Connection request is sent to the server over the control connection. This Connect request must contain the XOR address of the peer with which to establish a connection. If everything is good, and the peer has created the proper permissions on their end to accept contact, the server will send back a success response containing the stun attribute “connectionID.”
+
+Once this response is received, it is necessary to open a new connection with the server using a different local port, but sending data to the same established socket on the TURN server. Once the port is open, a “connectionBind” request can be sent over this new pathway. The connectionBind request must contain the previously sent connectionID, XOR peer address, and any of the negotiated authentications of the established control connection. The inclusion of these attributes greatly reduces the chances of hijacking and improves the security of the established data connection.
+
+Once a success response is received, data may flow over this connection in a normal manner, if additional media types are required, a data connection for each must be established in an appropriate manner adhering to the procedure above. If receiving a connection from the client, the method is the same, but using a “connectionAttempt” to start the process off. As long as a permission is in place for the inquiring address, a connectionBind request will be sent back to the server and a data connection established.
+
+Once both the Control Connection and Data Connections have been established for both client and peer, data may flow from one data connection to the other. All TURN based messaging, such as refreshes, must be sent on the Control Connection. If at any point the client or peer closes the control connection, the related data connection must be closed as well.
