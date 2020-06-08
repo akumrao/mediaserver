@@ -28,7 +28,7 @@ This sfu works with both webrtc and ortc
 *ORTC:* It wokrs with json. MS Edge browser suppots ORTC.  States of producer and consumer are saved at  APP side.
 
 ##supports all the browser
-*Firefox:*  Does not supports RTX. yet. It just resends the original media packet when mediasoup sends a NACK to it. If the packet arrives in disorder after mediasoup sent the NACK, SRTP decrypt will fail for the second one since the original one was already received.
+*Firefox:*  Does not supports RTX. yet. It just resends the original media packet when mediasoup sends a NACK to it. If the packet arrives in disorder after mediaserver sent the NACK, SRTP decrypt will fail for the second one since the original one was already received.
 
 Firfox does not work with self signed certificate.  If you do not have proper certifcate, please do not waste time with firefox.   Check https://letsencrypt.org/
 
