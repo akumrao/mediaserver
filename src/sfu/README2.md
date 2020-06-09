@@ -24,8 +24,7 @@ It also involves sending more bits:
 **Stream Suspension**
 So does this mean simulcast is less efficient for the user? On the contrary, since we can control the simulcast streams individually, simulcast gives us the opportunity to actually save both CPU and bits by turning off the layers aren’t in use. If you’re not the active speaker, then 2 of your 3 layers aren’t needed at all!  
 
-**mplementing Suspension**
-Now let’s see if we can integrate this into the actual code.  There are 2 problems to solve here:
+
 
 -a) On the SFU – figure out when streams aren’t being used and let clients know
 -b) Refresh the stream, delete track recreate with same id 
