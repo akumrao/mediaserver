@@ -1,24 +1,30 @@
+Type of NAT
+
 Mapping Address(yes or no) Maping Port(yes or no)
 
 Filtering Address(yes or no) Filtering Port(yes or no)
 
 2^4=16
-
 So, there are 16 NAT types defined in RFC 5780
 
+Out of 16, 9 are very common.
 
-TURN
+Filtering means: The router will only accept connections from peers you’ve previously connected to. Until internal ip and port are not connected and mentained at translation table, external request can not be routeded to NAT.
+
+
+
+
+
+*TURN Server*
 Some routers using NAT employ a restriction called ‘Symmetric NAT ( filter by port and addresss)’. This means the router will only accept connections from peers you’ve previously connected to.
 
 Traversal Using Relays around NAT (TURN) is meant to bypass the Symmetric NAT restriction by opening a connection with a TURN server and relaying all information through that server. You would create a connection with a TURN server and tell all peers to send packets to the server which will then be forwarded to you. This obviously comes with some overhead so it is only used if there are no other alternatives.
 
 
-
-
 https://www.netmanias.com/en/?m=view&id=techdocs&no=6065&xtag=nat-network-protocol&xref=stun-rfc-3489-vs-stun-rfc-5389-5780
 
 What are the differences between NAT types defined in RFC 3489 and RFC 5780?
-To understand the differences to be explained below, you must be familiar with the Mapping Behavior and Filtering Behavior of a NAT that we covered last time.
+To understand the differences to be explained below, you must be familiar with the Mapping Behavior and Filtering Behavior of a NAT.
 
  
 
@@ -49,7 +55,6 @@ NAT Types Defined in RFC 3489 and 5780
 [Mapping Behavior] A full cone NAT is one where all requests from the same internal IP address and port are mapped to the same external IP address and port.  [Filtering Behavior] Furthermore, any external host can send a packet to the internal host, by sending a packet to the mapped external address. (RFC 3489)
 
  
-
 A full cone NAT in RFC 3489 corresponds to a NAT that uses Endpoint-Independent Mapping ("EIM") and Endpoint-Independent Filtering ("EIF") in RFC 5780. 
 
 Mapping Behavior: The NAT translates any outbound packets with the same (1) source IP and (2) source port into the same Port Mapping value (e.g. translated Port = 1000 in the figure below), regardless of the destination IP or destination port of the packet.
@@ -104,14 +109,12 @@ Error Code 500 – Server error; temporary error and the client should try to se
 https://www.3cx.com/blog/voip-howto/stun-voip-1/
 Purpose of the STUN Protocol
 
-The main purpose of the STUN protocol is to enable a device running behind a NAT device to discover its public IP and what type of NAT is running on the gateway it is connected to. It also enables the device connected behind a gateway to discover the port translation done by the gateway itself (NAT); i.e. which port other devices can use to connect to it from outside the network. Note that gateways and routers do not always make port translations; it depends on the type of NAT they are running and how it is configured. E.g. a full cone NAT configuration does not translate ports.
 
 STUN can also be used to refresh NAT bindings; as a keep-alive mechanism when using Restricted Cone NAT or Port Restricted cone NAT. When passing traffic through such NAT configurations, internal address and port are mapped to a specific external address and port. But if such address translation is not used after a particular amount of time (depending on the device’s configuration), such address mapping is dropped. Therefore when the internal device tries to connect again to an external entity (which could be the same entity previously it connected to) using the same internal IP and port, the router will still assign a different address mapping, i.e. a different IP and port from the previous assigned ones.
 
 The STUN Protocol
 
 STUN is a server-client protocol. A STUN server usually operates on both TCP and UDP and listens on port 3478. A client usually contacts the STUN server on a specific IP and port (3478) but the server can hint clients to perform tests on alternate IP address and port number too, as such port and IP are arbitrary.
-
 
 
 
@@ -128,7 +131,7 @@ After permissions have been created, the client has two choices for sending the 
 
 Using either method, Send or channel binding, the TURN server receives the data from the client and relays it to the peer using UDP datagrams, which contain as their Source Address the "Allocated Relayed Transport Address". The peer receives the data and responds, again using a UDP datagram as the transport protocol, sending the UDP datagram to the relay address at the TURN server.
 
-The TURN ser
+The TURN 
 
 The TURN protocol utilizes a TURN server to relay data from a client to any number of peers. 
 A TURN client first sends a message to a TURN server to allocate an IP address and port on the TURN server that the client can use to communicate with peers. Once the allocation has succeeded, the client will use this IP address and port as its SIP URI in registrations and as its media address and port in its SDP. All data meant for the client’s peer is then encapsulated in a TURN packet and sent to the TURN server. The TURN packet also contains the destination address of the peer. The TURN server then converts this packet into a UDP packet and sends it on to the peer. In the reverse direction the TURN server receives a UDP packet from the peer and encapsulates this packet into a TURN packet and sends it to the client. The TURN packet also contains the peer’s address so that the client knows where the packet originated.
@@ -143,7 +146,7 @@ In these examples, both Alice and Bob would set up an IP address and port mappin
 TCP TURN Control Connection
 As with any TURN negotiation, the first step of the process is to create an allocation. When using TCP TURN it is necessary that the transport type of the allocation be that of TCP. Although a UDP allocation can be created by using a TCP transport, this property is not reciprocal. In addition, UDP based attributes such as tokens, and even-ports, must be left out of all TCP allocation requests. TCP allocation authentication, success/failure responses, and the creation of permissions are identical to those of UDP TURN. It is important however to identify this allocated connection as a “Control Connection,” as it serves a specific purpose in TCP applications.
 
-TCP TURN Data Connection
+*TCP TURN Data Connection*
 
 At this point, the control connection allocation and permissions have been established with the TURN server, the next step is to create the “data connection” where most of the information transaction will take place. In UDP applications this would normally just take place on the already established connection as long as the proper permissions were in place. With TCP TURN an additional step is necessary.
 
