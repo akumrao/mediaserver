@@ -117,8 +117,8 @@ namespace SdpParse
 
 	Sdp::RemoteSdp::MediaSectionIdx Sdp::RemoteSdp::GetNextMediaSectionIdx()
 	{
-		
-
+            
+            // never reuse Mid
 		// If a closed media section is found, return its index.
 		for (auto idx{ 0u }; idx < this->mediaSections.size(); ++idx)
 		{

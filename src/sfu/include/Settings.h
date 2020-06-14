@@ -44,7 +44,7 @@ public:
                 json transport_connect;
                 json transport_produce;
                 json transport_consume;
-                json consumer_resume;
+                json pause_resume;
                 json router_createAudioLevelObserver;
                 json rtpObserver_addProducer;
                 json producer_getStats;

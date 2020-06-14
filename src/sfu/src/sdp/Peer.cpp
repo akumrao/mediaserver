@@ -72,6 +72,11 @@ namespace SdpParse {
         // Get Native RTP capabilities.
         //auto nativeRtpCapabilities = Handler::GetNativeRtpCapabilities(peerConnectionOptions);
         sdpObject = sdptransform::parse(sdp);
+        
+        int sizeofMid = sdpObject["media"].size();
+        json& offerMediaObject = sdpObject["media"][sizeofMid-1];
+        std::string mid = offerMediaObject["mid"].get<std::string>();
+        maxMid = std::stoi(mid);
 
         
        // LInfo("got sdpObject: ", sdpObject.dump(4));
@@ -213,44 +218,21 @@ namespace SdpParse {
     }
         
     
-    void Peer::onUnSubscribe( const std::string& producerPeer)
-    {
-        if(!consumers)
-            return;
-         consumers->onUnSubscribe(producerPeer); 
-    }
+//    void Peer::onUnSubscribe( const std::string& producerPeer)
+//    {
+//        if(!consumers)
+//            return;
+//         consumers->onUnSubscribe(producerPeer); 
+//    }
     
-    void Peer::onSubscribe( Peer *producerPeer)
+    void Peer::onSubscribe(const std::vector < Peer *> &vecProdPeer)
     {   // Arvind TBD: Below code is risky it should be under Mutex lock.
-        if( producerPeer && producerPeer->producers)
-        {   
-            if(!consumers)
-                consumers =  new Consumers(signaler, this);
-            
-            //producerPeer->
-            
-            if(consumers->mapProdDevs.find(producerPeer->participantID) != consumers->mapProdDevs.end() ){
-                int cusDevCount=  consumers->mapProdDevs[producerPeer->participantID].second +1;
-                
-                int diff = producerPeer->producers->mapProdMid.size()- cusDevCount;
-                if(diff )
-                {
-                    consumers->nodevice +=  diff;   
-                    consumers->mapProdDevs[producerPeer->participantID].second = producerPeer->producers->mapProdMid.size() -1;
-                    consumers->runit( producerPeer->producers, cusDevCount);
-                }
-                else
-                {
-                    consumers->runit( producerPeer->producers, -1);
-                }
-            }
-            else
-            {
-                consumers->mapProdDevs[producerPeer->participantID] = std::make_pair((int)consumers->nodevice,  int(producerPeer->producers->mapProdMid.size()-1) );
-                consumers->nodevice +=  producerPeer->producers->mapProdMid.size();     
-                consumers->runit( producerPeer->producers);
-            }
-        }
+  
+      if(!consumers)
+            consumers =  new Consumers(signaler, this);
+
+        consumers->runit(vecProdPeer);
+
     }
     
     void Peer::onDisconnect( )
@@ -382,6 +364,8 @@ namespace SdpParse {
 //        }
 //        else
         {
+            std::vector < Peer *> vecProdPeer;
+                    
             // int x = 0;
             for( auto &id : peerPartiID)
             {
@@ -394,16 +378,15 @@ namespace SdpParse {
                     mapPeers[id] = peer; 
                 }
 
-                peer->onSubscribe(mapPeers[id]);
-                mapPeers[id]->onSubscribe(peer);
-                  
-//                }
-//                else
-//                {
-//                   // peer->onUnSubscribe(id.get<std::string>());
-//                }
+                vecProdPeer.push_back(mapPeers[id]);
                 
+                std::vector < Peer *>revvecProdPeer;
+                revvecProdPeer.push_back(peer);
+                
+                mapPeers[id]->onSubscribe(revvecProdPeer);
             }
+            
+            peer->onSubscribe(vecProdPeer);
         }
     }
 
@@ -503,7 +486,8 @@ namespace SdpParse {
 
     }
 
-    void Peers::resume(std::string& participantID, std::string& consumerID,  bool flag)
+    // HandlerID either producer or conusmer id
+    void Peers::resume(std::string& participantID, std::string& handlerId,  bool flag, bool producer)
     {
          Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
@@ -512,8 +496,11 @@ namespace SdpParse {
              SError << "Peer does not exist. Not a possible state. " << participantID ;
              return ;
         }
-
-        peer->consumers->resume(consumerID,flag );
+        
+        if(producer)
+        peer->producers->resume(handlerId,flag );   
+        else
+        peer->consumers->resume(handlerId,flag );
 
     }
   

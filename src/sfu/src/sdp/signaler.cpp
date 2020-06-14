@@ -161,11 +161,20 @@ namespace SdpParse {
             else if (std::string("subscribe-resume") == type) {
                 
                std::string consumerId = m["desc"].get<std::string>();
-               rooms->resume(room ,from, consumerId,false);
+               rooms->resume(room ,from, consumerId,false,false);
             }
             else if (std::string("subscribe-pause") == type) {
               std::string consumerId = m["desc"].get<std::string>();
-              rooms->resume(room, from , consumerId, true);
+              rooms->resume(room, from , consumerId, true, false);
+            }
+            else if (std::string("publisher-resume") == type) {
+                
+               std::string producerId = m["desc"].get<std::string>();
+               rooms->resume(room ,from, producerId,false, true);
+            }
+            else if (std::string("publisher-pause") == type) {
+              std::string producerId = m["desc"].get<std::string>();
+              rooms->resume(room, from , producerId, true, true);
             }
 
         }

@@ -104,8 +104,8 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.transport_consume = cnfg["transport_consume"];
         }
 	
-        if (cnfg.find("consumer_resume") != cnfg.end()) {
-           Settings::configuration.consumer_resume = cnfg["consumer_resume"];
+        if (cnfg.find("pause_resume") != cnfg.end()) {
+           Settings::configuration.pause_resume = cnfg["pause_resume"];
         }
 	
         

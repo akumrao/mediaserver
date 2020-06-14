@@ -3,7 +3,7 @@
 
 #include "sdp/RemoteSdp.h"
 #include <json.hpp>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include "sdp/Handler.h"
 
@@ -57,10 +57,13 @@ namespace SdpParse {
     nlohmann::json sendingRemoteRtpParametersByKind ;
     nlohmann::json sdpObject;
     
+    int getMaxMid( ){return maxMid;}
+    
+    
     void on_producer_offer( const nlohmann::json &sdp);
     void on_consumer_answer( std::string& to,const nlohmann::json &sdp);
-    void onSubscribe( Peer *);
-    void onUnSubscribe( const std::string& producerPeer);
+    void onSubscribe( const std::vector < Peer *> &vecProdPeer );
+    //void onUnSubscribe( const std::string& producerPeer);
     void onDisconnect();
     
     void producer_getStats(const std::string& producerId); 
@@ -74,9 +77,9 @@ namespace SdpParse {
     private:
         
      //std::map<std::string, Consumers* >  mapOtherConumers;
-     std::map<std::string, Consumers* >  mapSelfConumers;
+     std::unordered_map<std::string, Consumers* >  mapSelfConumers;
      
-     
+     int maxMid;
      
      Room *room;
      Signaler *signaler;
@@ -100,16 +103,15 @@ namespace SdpParse {
         
         void onDisconnect( std::string& participantID);
         
-        void resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag);
+        void resume(std::string& participantID, std::string& handlerId,  bool flag , bool producer);
     
         void producer_getStats( std::string& participantID, const std::string& producerId); 
         void consumer_getStats( std::string& participantID, const std::string& consumerId); 
         void rtpObserver_addProducer( std::string& participantID, bool flag);
         void setPreferredLayers( std::string& participantID,  nlohmann::json &layer);
         
-        void resume(std::string& participantID, std::string& consumerID,  bool flag);
 
-        std::map< std::string, Peer*> mapPeers;
+        std::unordered_map< std::string, Peer*> mapPeers;
         
   
         Signaler *signaler;   

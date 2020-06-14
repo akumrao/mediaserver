@@ -72,14 +72,14 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
    }
 
 
-
-    void Rooms::resume(std::string &room , std::string& participantID, std::string& consumerID,  bool flag)
+    /* HandlerId is Consumer or Producer device id*/
+    void Rooms::resume(std::string &room , std::string& participantID, std::string& handlerId,  bool flag, bool producer)
     {
-        SInfo << "Consumer Resume video for room" <<  room << " : " <<  " for participantID  " << participantID << " for consumerID  " << consumerID;
+        SInfo << "Resume/Pause video for room" <<  room << " : " <<  " for participantID  " << participantID << " for consumerID  " << handlerId;
 
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            peers->resume(participantID, consumerID, flag);
+            peers->resume(participantID, handlerId, flag, producer);
        }
        else
        {

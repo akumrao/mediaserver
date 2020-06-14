@@ -4,7 +4,7 @@
 
 #include "sdp/RemoteSdp.h"
 #include <json.hpp>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <atomic>
 namespace SdpParse {
@@ -57,6 +57,7 @@ namespace SdpParse {
 
     };
 
+    class Consumers;
     class Producers:public Handler
     {
        
@@ -69,22 +70,32 @@ namespace SdpParse {
         void close_producer( const std::string &producerid);
         void runit(std::function<void (const std::string & )> cbAns);
         
+        struct MapProCon
+        {   //std::string answer;
+            Consumers *cons{nullptr};
+            std::string consumerId;
+            bool vaild{true};
+        };
+        
         struct Producer
         {   //std::string answer;
             nlohmann::json producer;
+            std::vector < MapProCon > vecProCon;
         };
         
 
         void producer_getStats(const std::string& producerId); 
         void rtpObserver_addProducer( bool flag);
-
+        void resume(const std::string& producerId, bool pause);
         
-        std::map<std::string, Producer*>  mapProducer;
+        std::unordered_map<std::string, Producer*>  mapProducer;
         // this is to store mid 0 and 1 so that audio and video are sequence during sdp generation.
-        std::map<size_t, std::string>  mapProdMid;  
+        std::map<size_t, std::string>  mapProdMid; 
+        
+        
         
     private:
-        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters, Sdp::RemoteSdp::MediaSectionIdx &mediaSectionIdx, std::string &trackid );
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters,std::string mid, std::string reuseMid,  nlohmann::json &offerMediaObject );
         
         std::string cnameForProducers; 
         
@@ -97,18 +108,18 @@ namespace SdpParse {
         Consumers(Signaler *signaler, Peer * peer);
         ~Consumers();
       
-        void runit(Producers *producers, int mid=0);
+        void runit(std::vector < Peer *> vecProdPeer);
        
-        void sendOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters, const std::string& partID , const std::string& remotePartID);
+        //void sendOffer(const std::string& id, const std::string&  mid , const std::string& kind, const nlohmann::json & rtpParameters, const std::string& partID , const std::string& remotePartID);
 
         void loadAnswer( std::string sdp);
         void resume( const std::string& consumerId , bool pause);
 
         void close_consumer(const std::string& producerid, const std::string& conumserid );
         void consumer_getStats( const std::string& consumerIds); 
-        void onUnSubscribe(const std::string& producerPeer);
+       // void onUnSubscribe(const std::string& producerPeer);
         void setPreferredLayers( nlohmann::json &layer);
-        std::atomic<uint8_t>  nodevice{0};
+        //std::atomic<uint8_t>  nodevice{0};
         
        
         struct Consumer
@@ -116,8 +127,8 @@ namespace SdpParse {
             nlohmann::json consumer;
         };
         std::map<int, std::string>  mapConMid;  // map mid with conusmer id
-        std::map<std::string, Consumer*>  mapConsumer;  // map number of consumer Devices
-        std::map<std::string, std::pair<int, int > > mapProdDevs;  // map number of device mid used from producer 
+        std::unordered_map<std::string, Consumer*>  mapConsumer;  // map number of consumer Devices
+        //std::unordered_map<std::string, std::pair<int, int > > mapProdDevs;  // map number of device mid used from producer 
                                 // pair is for mid range 0 to maximum devices
         bool _probatorConsumerCreated{true};
     private:
