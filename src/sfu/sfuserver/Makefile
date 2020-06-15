@@ -8,7 +8,7 @@ SOURCES=$(wildcard *.cpp ../src/*.cpp ../src/RTCP/*.cpp ../src/Codecs/*.cpp ../s
 
 CXXFLAGS   := -g -std=c++11 -Wno-inconsistent-missing-override -Wno-uninitialized
 
-CPPFLAGS   := -I../include/ -I../../json/include/ -I../../json/include/json -I../../signal/include -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ -I../deps/openssl/openssl/include -I../deps/libsdptransform/include/ -I../deps/libsrtp/srtp/include -I../deps/libwebrtc/ -I../deps/libwebrtc/libwebrtc -I../deps/libwebrtc/deps/abseil-cpp/abseil-cpp -DMS_LITTLE_ENDIAN -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DDEBUG -DMS_LOG_TRACE -DMS_LOG_FILE_LINE
+CPPFLAGS   := -I../include/ -I../../json/include/ -I../../json/include/json -I../../signal/include -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ -I../deps/openssl/openssl/include -I../deps/usrsctp/usrsctp/usrsctplib -I../deps/libsdptransform/include/ -I../deps/libsrtp/srtp/include -I../deps/libwebrtc/ -I../deps/libwebrtc/libwebrtc -I../deps/libwebrtc/deps/abseil-cpp/abseil-cpp -DMS_LITTLE_ENDIAN -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DDEBUG -DMS_LOG_TRACE -DMS_LOG_FILE_LINE
 
 LDFLAGS   := -L../out/Release/
 

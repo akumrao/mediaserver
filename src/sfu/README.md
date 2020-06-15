@@ -16,6 +16,14 @@ git log ..test # if you're curious
 git merge test
 git push
 
+for ssh git
+ssh-keygen -t rsa -C "your_email@example.com"
+Copy the contents of the file ~/.ssh/id_rsa.pub to your SSH keys in your GitHub account settings.
+
+Test SSH key:
+$ ssh -T git@github.com
+git remote set-url origin git@github.com:akumrao/mediaserver.git
+
 ##Debug at Browser
 
 chrome://webrtc-internals

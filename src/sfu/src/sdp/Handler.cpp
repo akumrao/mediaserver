@@ -689,6 +689,7 @@ namespace SdpParse {
 //            return ;
 //        }
         int nodevice = 0;
+        if( prodpeer->producers)
         for (auto& prodMid : prodpeer->producers->mapProdMid) {
 
             if( prodpeer->producers->mapProducer.find(prodMid.second) == prodpeer->producers->mapProducer.end() )
