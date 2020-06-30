@@ -157,3 +157,23 @@ Once this response is received, it is necessary to open a new connection with th
 Once a success response is received, data may flow over this connection in a normal manner, if additional media types are required, a data connection for each must be established in an appropriate manner adhering to the procedure above. If receiving a connection from the client, the method is the same, but using a “connectionAttempt” to start the process off. As long as a permission is in place for the inquiring address, a connectionBind request will be sent back to the server and a data connection established.
 
 Once both the Control Connection and Data Connections have been established for both client and peer, data may flow from one data connection to the other. All TURN based messaging, such as refreshes, must be sent on the Control Connection. If at any point the client or peer closes the control connection, the related data connection must be closed as well.
+
+
+*Priority vs Network cost*
+
+  {
+        candidate =         {
+            candidate = "candidate:221570572 1 udp 2122260223 10.38.75.211 53939 typ host generation 0 ufrag AARMn2XiRl3qLszV network-id 3 network-cost 999";
+            sdpMLineIndex = 0;
+            sdpMid = audio;
+        };
+        connectionId = "mc_KTktpm2UnEHceD0s";
+        type = media;
+    };
+    
+
+This document describes an extension to the Interactive Connectivity Establishment (ICE) that enables ICE agents to exchange information about the relative cost of network interfaces and dynamically choose the selected ICE candidate pair based on the cost of both the local  and remote network interfaces.  For example, if a cellular network
+interface has a higher cost than a Wi-Fi network interface, the ICE  agents can use that information to prefer candidate pairs with Wi-Fi   rather than cellular when possible, and only use cellular when  necessary.  This document additionally describes a second piece of information, network ID, that goes along with the network cost and can be used to  know when a network interface has changed, even if two network interfaces have the same network cost.
+
+Ufrag(useser fragment) and password is for sturn and turn server .
+
