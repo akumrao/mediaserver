@@ -54,9 +54,37 @@ $ cmake . -Bbuild \
   -DLIBWEBRTC_BINARY_PATH:PATH=/home/foo/src/webrtc-checkout/src/out/m84/obj
 
 $ make -C build/
+**********************************************************************************************************************************************************
+For windows
+1. Install git:
+
+if you haven’t installed a copy of git, open https://git-for-windows.github.io/, download and install, suggest to select “Use Git from Windows Command Prompt” during installation.
+
+2. Fetch depot_tools:
+
+follow http://dev.chromium.org/developers/how-tos/install-depot-tools, use 7z to extract to E:\webrtc\depot_tools
+
+3. Run depot_tools:
+
+http://www.chromium.org/developers/how-tos/build-instructions-windows
+
+mkdir webrtc-checkout
+cd webrtc-checkout
+fetch --nohooks webrtc
+
+do not forget to set for using visual studio for builing code
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+
+cd src
+git branch -r
+git checkout branch-heads/m75
+
+gn gen out/x64/Debug --args="is_debug=true use_rtti=true target_cpu=\"x64\""
+ninja -C out/x64/Debug boringssl field_trial_default protobuf_full p2p
 
 **********************************************************************************************************************************************************
 For android
+
 export PATH=/workspace/depot_tools:$PATH
 
 mkdir webrtc_android/
