@@ -62,11 +62,11 @@ if you haven’t installed a copy of git, open https://git-for-windows.github.io
 
 2. Fetch depot_tools:
 
-follow http://dev.chromium.org/developers/how-tos/install-depot-tools, use 7z to extract to E:\webrtc\depot_tools
+follow https://sourcey.com/articles/building-and-installing-webrtc-on-windows use 7z to extract to c:\webrtc\depot_tools
 
-3. Run depot_tools:
+set system path 
 
-http://www.chromium.org/developers/how-tos/build-instructions-windows
+open git cmd not git basah
 
 mkdir webrtc-checkout
 cd webrtc-checkout
