@@ -2,8 +2,8 @@
 "webrtc": {
       "dtlsCertificateFile": "/var/tmp/key/certificate.crt",
       "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
-      "rtcMinPort": 10000,
-      "rtcMaxPort": 10100,
+      "rtcMinPort": 11501,
+      "rtcMaxPort": 12560,
       "logLevel": "trace",
       "logTags": [
         "info",
