@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title></title>
+
+
+
+
+</head>
+<body>
+    <button type="button">Beep!</button>
+
+
+
+
+<script src="./soundplayer.js"></script>
+<script>
+
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const audio = new AudioContext();
+
+ // (new SoundPlayer(audio)).play(440.0, 0.8, "sine").stop(0.5);
+
+
+
+document.getElementsByTagName("button")[0].addEventListener("click", function () {
+  //  var button = this;
+    (new SoundPlayer(audio)).play(440.0, 1, "sine").stop(0.5);
+    (new SoundPlayer(audio)).play(440, 0.5, "square").setFrequency(880, 0.1).stop(0.2);
+
+    (new SoundPlayer(audio)).play(587.3, 0.5, "sine").stop(0.25);
+(new SoundPlayer(audio)).play(587.3, 0.5, "sine", 0.3).stop(0.35);
+(new SoundPlayer(audio)).play(659.3, 0.5, "sine", 0.4).stop(0.55);
+(new SoundPlayer(audio)).play(587.3, 0.5, "sine", 0.6).stop(0.75);
+(new SoundPlayer(audio)).play(784.0, 0.5, "sine", 0.8).stop(0.95);
+(new SoundPlayer(audio)).play(740.0, 0.5, "sine", 1.0).stop(1.40);
+
+
+});
+
+</script>
+
+
+
+</body>
+</html>

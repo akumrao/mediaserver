@@ -140,7 +140,7 @@ var isStarted = false;
 //var remoteStream;
 //var turnReady;
 
-var room = 'foo'; /*think as a group  peerName@room */
+var roomId = 'foo'; /*think as a group  peerName@room */
 //var  remotePeerID;
 var  peerID;
 var  remotePeerName;
@@ -334,7 +334,7 @@ function subscribe_simulcast(trackid)
                 if (radioButtons[i].checked == true) {
                     desc["data"]={"spatialLayer":i};
                     sendMessage({
-                        room: room,
+                        room: roomId,
                         from: peerID,
                         type: 'setPreferredLayers',
                         desc: desc
@@ -481,7 +481,7 @@ async function doAnswer(remotePeerID) {
         pc2Connected = true;
         console.log('Sending answer to peer.');
         sendMessage({
-            room: room,
+            room: roomId,
             from: peerID,
             to: remotePeerID,
             type: answer.type,
@@ -610,7 +610,7 @@ function addProducerVideoAudio(track, store) {
         await pc1.setLocalDescription(offer1);
 
         sendMessage ({
-            room: room,
+            room: roomId,
             from: peerID,
             //to: remotePeerID,
             type: offer1.type,
@@ -806,7 +806,7 @@ async function getUserMedia1( isWebcam) {
 async function btn_subscribe_resume(consumerid ) {
 
     sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           type: "subscribe-resume",
           desc: consumerid
@@ -816,7 +816,7 @@ async function btn_subscribe_resume(consumerid ) {
 async function btn_subscribe_pause(consumerid ) {
 
     sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           type: "subscribe-pause",
           desc: consumerid
@@ -893,8 +893,8 @@ async function publish(isWebcam)
 
           // Mormal without simulcast
          if(videotrack ) {
-             var checkBox = document.getElementById("chk_simulcast");
-             if (checkBox.checked && isWebcam ) {
+             let checkBox = document.getElementById("chk_simulcast");
+             if ( checkBox && checkBox.checked && isWebcam ) {
 
                  var transceiver = pc1.addTransceiver(videotrack, {
                      direction: 'sendonly',
@@ -918,7 +918,7 @@ async function publish(isWebcam)
 
         var offer = await pc1.createOffer();
 
-        console.log( "publish offer: %o", offer);
+        console.log( "PC1 offer made: %o", offer);
 
          await pc1.setLocalDescription(offer);
 
@@ -933,7 +933,7 @@ async function publish(isWebcam)
 
 
         sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           //to: remotePeerID,
           type: pc1.localDescription.type,
@@ -956,7 +956,7 @@ async function subscribe() {
 
 
   sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           type: "subscribe",
         });
@@ -986,7 +986,7 @@ async function btn_audio_level_start()
 {
 
   sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           to: remotePeerID,
           type: "rtpObserver_addProducer",
@@ -997,7 +997,7 @@ async function btn_audio_level_stop()
 {
 
   sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           to: remotePeerID,
           type: "rtpObserver_removeProducer",
@@ -1009,7 +1009,7 @@ async function btn_producer_close(producerids)
 {
 
     sendMessage ({
-        room: room,
+        room: roomId,
         from: peerID,
         type: "producer_close",
         desc: producerids
@@ -1021,7 +1021,7 @@ async function btn_producer_stats(producerid)
 {
 
   sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           type: "producer_getStats",
           desc: producerid
@@ -1033,7 +1033,7 @@ async function btn_subscribe_stats(consumerid)
 {
 
   sendMessage ({
-          room: room,
+          room: roomId,
           from: peerID,
           type: "consumer_getStats",
           desc: consumerid

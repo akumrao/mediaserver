@@ -45,7 +45,7 @@ void Settings::SetConfiguration(json &cnfg)
         }
             
             
-        if (cnfg.find("logLevel") != cnfg.end()) {
+        if (cnfg.find("logLevel") != cnfg.end()) {   // trace, debug, info, warn
             //TBD // Move logger setting from main to here
                 // Initialize the Logger.
             

@@ -91,7 +91,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
     void Rooms::onSubscribe(std::string &room , std::string& participantID, const json& peerPartiID)
     {
   
-        SInfo << "Consumer subscribe to join room" <<  room << " : " <<  " from participantID  " << participantID  << " peerids" << peerPartiID.dump(4);
+        SInfo << "Consumer subscribe to join room: " <<  room << " : " <<  " from participantID  " << participantID  << " peerids" << peerPartiID.dump(4);
 
         
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())

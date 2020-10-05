@@ -95,12 +95,12 @@ module.exports.sockets = function(http) {
         socket.room = roomId;
         console.log("roomId : " + socket.room);
 
-        /// code for webrtc
-        /////////////////////////////////////////////////////////////
-        var clientsInRoom = io.sockets.adapter.rooms[roomId];
-        var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-        log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
 
+        if( serverSocketid == null || io.sockets.connected[serverSocketid] == null)
+          return  console.error("SFU server is down");
+
+
+ 
 
         // webrtc code
         ////////////////////////////////////////////////////////////
@@ -110,26 +110,28 @@ module.exports.sockets = function(http) {
 
 
         ///////////////////////////////////////////////////
-        if (numClients === 0 ) {
+       var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
 
-          log('Client ID ' + socket.id + ' created room ' + roomId);
+      log('Room ' + roomId + ' now has ' + numClients + ' client(s)');
+
+      if (numClients === 1 ) {
+       
+        log('Client ID ' + socket.id + ' created room ' + roomId);
+      
+        io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid);
 
 
-          io.sockets.connected[serverSocketid].emit('created', roomId, serverSocketid);
+        socket.emit('created', roomId, socket.id);
 
+        socket.emit('joined', roomId, socket.id);
 
-          socket.emit('created', room, socket.id);
+      } else if (numClients > 1 ) {
+        log('Client ID ' + socket.id + ' joined room ' + roomId);
+        io.sockets.in(roomId).emit('join', roomId, socket.id);
 
-          socket.emit('joined', room, socket.id);
-
-        } else if (numClients ) {
-          log('Client ID ' + socket.id + ' joined room ' + roomId);
-          io.sockets.in(roomId).emit('join', roomId, socket.id);
-
-          socket.emit('joined', roomId, socket.id);
-          io.sockets.in(roomId).emit('ready');
-        }
-
+        socket.emit('joined', roomId, socket.id);
+        io.sockets.in(roomId).emit('ready');
+      } 
         /////////////////////////////
 
 
@@ -144,11 +146,13 @@ module.exports.sockets = function(http) {
     });
 
 //////////////////////////////////////////////////////////////////////////
-    socket.on('sfu-message', function(message) {
+socket.on('sfu-message', function(message) {
 
 
       if(message.type ==="subscribe")
       {
+        console.log("subscribe");
+
         var clientsInRoom = io.sockets.adapter.rooms[message.room];
         var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 
@@ -169,14 +173,14 @@ module.exports.sockets = function(http) {
 
           if( member !==  message.from ) {
 
-            console.log("member "+ member);
+            //console.log("member "+ member);
 
             clients.push(member);
 
             objCopy.from = member;
             objCopy.desc = revClient;
             console.log('app revMessage: ', objCopy);
-            io.sockets.connected[serverSocketid].emit('message', objCopy);
+            //io.sockets.connected[serverSocketid].emit('message', objCopy);
 
           }
         }
@@ -189,7 +193,7 @@ module.exports.sockets = function(http) {
 
       console.log('app message: ', message);
       if(io.sockets.connected[serverSocketid])
-        io.sockets.connected[serverSocketid].emit('message', message);
+      io.sockets.connected[serverSocketid].emit('message', message);
 
 
 
@@ -198,13 +202,13 @@ module.exports.sockets = function(http) {
 
     socket.on('postAppMessage', function(message) {
 
-      console.log('notification ' + JSON.stringify(message, null, 4) );
+    //console.log('notification ' + JSON.stringify(message, null, 4) );
 
-      if ('to' in message) {
-        socket.to(message.to).emit('message', message);
-      }
+    if ('to' in message) {
+      socket.to(message.to).emit('message', message);
+    }
 
-    });
+  });
 
 
 
@@ -256,6 +260,14 @@ module.exports.sockets = function(http) {
 
     //for popping disconnection message.
     socket.on("disconnect", function() {
+
+      if(!userStack[socket.username])
+      {
+         console.log("disconnect " + socket.username );
+         return ;
+      }
+
+
       console.log(socket.username + "  logged out");
       socket.broadcast.emit("broadcast", {
         description: socket.username + " Logged out"
@@ -265,6 +277,8 @@ module.exports.sockets = function(http) {
 
       _.unset(userSocket, socket.username);
       userStack[socket.username] = "Offline";
+
+      console.log("userSocket " + userStack[socket.username] );
 
       ioChat.emit("onlineStack", userStack);
 
@@ -286,7 +300,7 @@ module.exports.sockets = function(http) {
       else
       {
         if( serverSocketid &&  io.sockets.connected[serverSocketid] &&  socket.room)
-          io.sockets.connected[serverSocketid].emit('disconnectClient', socket.room, socket.id);
+          io.sockets.connected[serverSocketid].emit('disconnectClient', socket.id);
       }
 
 

@@ -250,12 +250,16 @@ async function runSocketServer() {
 
 	socket.on('message', function(message) {
 
-			  socket.to(message.to).emit('message', message);
+		console.log('sfuserver message: ', message);
+
+		message.from = socket.id;
+		 socket.to(message.to).emit('message', message);
 	  });
 
 //////////////////////////////////////////////////////////////////////////
 	socket.on('sfu-message', function(message) {
 
+		message.from = socket.id;
 
 		if(message.type ==="subscribe")
 		{
@@ -265,7 +269,10 @@ async function runSocketServer() {
 			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 
 			if(numClients ===1)
+			{
+				console.log("Number of participant " + numClients );
 				return;
+			}
 
 			console.log("Number of participant " + numClients );
 			let objCopy = Object.assign({}, message);
@@ -312,8 +319,8 @@ async function runSocketServer() {
 
 	socket.on('postAppMessage', function(message) {
 
-		//console.log('notification ' + JSON.stringify(message, null, 4) );
-
+		console.log('notification ' + JSON.stringify(message, null, 4) );
+		message.from = socket.id;
 		if ('to' in message) {
 			socket.to(message.to).emit('message', message);
 		}

@@ -1887,10 +1887,10 @@ static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modi
     if (aCodec["clockRate"] != bCodec["clockRate"])
         return false;
 
-    if (aCodec.contains("channels") != bCodec.contains("channels"))
-        return false;
+  //  if (aCodec.contains("channels") != bCodec.contains("channels"))
+  //      return false;
 
-    if (aCodec.contains("channels") && aCodec["channels"] != bCodec["channels"])
+    if (aCodec.contains("channels") && bCodec.contains("channels") && aCodec["channels"] != bCodec["channels"])
         return false;
 
     // Match H264 parameters.

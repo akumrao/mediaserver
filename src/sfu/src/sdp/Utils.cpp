@@ -133,6 +133,7 @@ namespace SdpParse
 					}
 
 					// Get RTCP feedback for each codec.
+                                        if(m.find("rtcpFb") != m.end())
 					for (auto& fb : m["rtcpFb"])
 					{
 						auto jsonCodecIt = codecsMap.find(std::stoi(fb["payload"].get<std::string>()));

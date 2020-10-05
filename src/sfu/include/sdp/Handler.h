@@ -70,17 +70,16 @@ namespace SdpParse {
         void close_producer( const std::string &producerid);
         void runit(std::function<void (const std::string & )> cbAns);
         
-        struct MapProCon
-        {   //std::string answer;
-            Consumers *cons{nullptr};
-            std::string consumerId;
-            bool vaild{true};
-        };
+//        struct MapProCon
+//        {   //std::string answer;
+//           // Consumers *cons{nullptr};
+//            std::string consumerId;
+//        };
         
         struct Producer
         {   //std::string answer;
             nlohmann::json producer;
-            std::vector < MapProCon > vecProCon;
+            std::unordered_map < Consumers*, std::string > mapProCon;   // std::string consumerId;
         };
         
 
@@ -117,6 +116,7 @@ namespace SdpParse {
 
         void close_consumer(const std::string& producerid, const std::string& conumserid );
         void consumer_getStats( const std::string& consumerIds); 
+         void sendSDP(std::string &from);
        // void onUnSubscribe(const std::string& producerPeer);
         void setPreferredLayers( nlohmann::json &layer);
         //std::atomic<uint8_t>  nodevice{0};
@@ -125,6 +125,7 @@ namespace SdpParse {
         struct Consumer
         {  // std::string offer;
             nlohmann::json consumer;
+            Producers *producers;
         };
         std::map<int, std::string>  mapConMid;  // map mid with conusmer id
         std::unordered_map<std::string, Consumer*>  mapConsumer;  // map number of consumer Devices

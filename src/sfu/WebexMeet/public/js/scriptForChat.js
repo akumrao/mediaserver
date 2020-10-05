@@ -155,6 +155,7 @@ $ (function(){
     var totalOnline = 0;
     for (var user in stack){
       //setting txt1. shows users button.
+      console.log("username"+ user);
 
       var txt1 = $('<span></span>').text(user);
 
@@ -390,101 +391,91 @@ $ (function(){
   var  peerName;
 
 
-  var pc1;
-  var pc2;
-
-  socket.on('created', function(room) {
-    console.log('Created room ' + room);
-    isInitiator = true;
-  });
-
-  socket.on('full', function(room) {
-    console.log('Room ' + room + ' is full');
-  });
-
-  socket.on('join', function (room, id){
-    //console.log('Another peer made a request to join room ' + room);
-    console.log('This peer is the initiator of room ' + room + '!' +" client id " + id);
-    isChannelReady = true;
-
-    // ////////////////////
-    //
-    //   sendMessage ({
-    //       room: room,
-    //       from: peerID,
-    //       to: remotePeerID,
-    //       type: "subscribe",
-    //       desc: id
-    //   });
-    // ////////////////////
+var pc1;
+var pc2;
+var pc2Connected= false;
 
 
-  });
+socket.on('created', function(room) {
+  console.log('Created room ' + room);
+  isInitiator = true;
+});
 
-  socket.on('joined', function(room, id) {
-    console.log('joined: ' + room + ' with peerID: ' + id);
-    //log('joined: ' + room + ' with peerID: ' + id);
-    isChannelReady = true;
-    peerID = id;
+socket.on('full', function(room) {
+  console.log('Room ' + room + ' is full');
+});
+
+socket.on('join', function (room, id){
+  //console.log('Another peer made a request to join room ' + room);
+  console.log('This peer is the initiator of room ' + room + '!' +" client id " + id);
+  isChannelReady = true;
+
+  // ////////////////////
+  //
+  //   sendMessage ({
+  //       room: room,
+  //       from: peerID,
+  //       to: remotePeerID,
+  //       type: "subscribe",
+  //       desc: id
+  //   });
+  // ////////////////////
 
 
-    initPC2();
+});
+
+socket.on('joined', function(room, id) {
+ console.log('joined: ' + room + ' with peerID: ' + id);
+ //log('joined: ' + room + ' with peerID: ' + id);
+  isChannelReady = true;
+  peerID = id;
+
+
+   initPC2();
     // Handle RTCPeerConnection connection status.
 
 
-  });
+});
 
-
-  function initPC2()
-  {
+function initPC2()
+{
     pc2 = new RTCPeerConnection(
         {
-          iceServers         : [],
-          iceTransportPolicy : 'all',
-          bundlePolicy       : 'max-bundle',
-          rtcpMuxPolicy      : 'require',
-          sdpSemantics       : 'unified-plan'
+            iceServers         : [],
+            iceTransportPolicy : 'all',
+            bundlePolicy       : 'max-bundle',
+            rtcpMuxPolicy      : 'require',
+            sdpSemantics       : 'unified-plan'
         });
 
     pc2.addEventListener('iceconnectionstatechange', () =>
     {
-      switch (pc2.iceConnectionState)
-      {
-        case 'checking':
-          console.log( 'subscribing...');
-          break;
-        case 'connected':
-        case 'completed':
-          //  document.querySelector('#local_video').srcObject = stream;
-          // $txtPublish.innerHTML = 'published';
-          // $fsPublish.disabled = true;
-          // $fsSubscribe.disabled = false;
-          pc2Connected = true;
-          console.log( 'subscribed...');
+        switch (pc2.iceConnectionState)
+        {
+            case 'checking':
+                console.log( 'subscribing...');
+                break;
+            case 'connected':
+            case 'completed':
 
-          break;
-        case 'failed':
-          pc2.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'failed...');
-          break;
-        case 'disconnected':
-          pc2.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'Peerconnection disconnected...');
-          break;
-        case 'closed':
-          pc2.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'failed...');
-          break;
-      }
+                pc2Connected = true;
+                console.log( 'subscribed...');
+
+                break;
+            case 'failed':
+                pc2.close();
+
+                console.log( 'failed...');
+                break;
+            case 'disconnected':
+                pc2.close();
+                console.log( 'Peerconnection disconnected...');
+                break;
+            case 'closed':
+                pc2.close();
+                console.log( 'failed...');
+                break;
+        }
     });
 
 
@@ -494,83 +485,60 @@ $ (function(){
 
     pc1 = new RTCPeerConnection(
         {
-          iceServers         : [],
-          iceTransportPolicy : 'all',
-          bundlePolicy       : 'max-bundle',
-          rtcpMuxPolicy      : 'require',
-          sdpSemantics       : 'unified-plan'
+            iceServers         : [],
+            iceTransportPolicy : 'all',
+            bundlePolicy       : 'max-bundle',
+            rtcpMuxPolicy      : 'require',
+            sdpSemantics       : 'unified-plan'
         });
 
     // Handle RTCPeerConnection connection status.
     pc1.addEventListener('iceconnectionstatechange', () =>
     {
-      switch (pc1.iceConnectionState)
-      {
-        case 'checking':
-          console.log( 'publishing...');
-          break;
-        case 'connected':
-        case 'completed':
+        switch (pc1.iceConnectionState)
+        {
+            case 'checking':
+                console.log( 'publishing...');
+                break;
+            case 'connected':
+            case 'completed':
 
-          // const streamV = new MediaStream();
-          // streamV.addTrack(videotrack);
-          //
-          // el.srcObject = streamV;
-          //
-          // el.play()
-          //     .then(()=>{})
-          //     .catch((e) => {
-          //         err(e);
-          //     });
-
-
-          // $txtPublish.innerHTML = 'published';
-          // $fsPublish.disabled = true;
-          // $fsSubscribe.disabled = false;
-          console.log( 'published...');
-          break;
-        case 'failed':
-          pc1.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'failed...');
-          break;
-        case 'disconnected':
-          pc1.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'failed...');
-          break;
-        case 'closed':
-          pc1.close();
-          // $txtPublish.innerHTML = 'failed';
-          // $fsPublish.disabled = false;
-          // $fsSubscribe.disabled = true;
-          console.log( 'failed...');
-          break;
-      }
+                console.log( 'published...');
+                break;
+            case 'failed':
+                pc1.close();
+                console.log( 'failed...');
+                break;
+            case 'disconnected':
+                pc1.close();
+                console.log( 'failed...');
+                break;
+            case 'closed':
+                pc1.close();
+                 console.log( 'failed...');
+                break;
+        }
     });
 
 
-  }
+}
 
 
-  socket.on('log', function(array) {
-    console.log.apply(console, array);
-  });
+socket.on('log', function(array) {
+  console.log.apply(console, array);
+});
 
 ////////////////////////////////////////////////
 
-  function sendMessage(message) {
-    console.log('Client sending message: ', message);
-    socket.emit('sfu-message', message);
-  }
+function sendMessage(message) {
+
+  console.log('sending message: ', message.type);
+  socket.emit('sfu-message', message);
+}
 
 
-  async  function processOffer( remotePeerID,  sdp)
-  {
+async  function processOffer( remotePeerID,  sdp)
+{
 
     console.log( " Pc2 offers %o", sdp);
 
@@ -580,192 +548,185 @@ $ (function(){
     const ret = await doAnswer(remotePeerID);
 
     return ret;
-  }
+}
 
 
 
 
 //////////////////////////////////////////////////////////////////////
-  function subscribe_simulcast(trackid)
-  {
+function subscribe_simulcast(trackid)
+{
     for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
 
-      var div = document.createElement('div');
-      var radio = document.createElement('input');
-      var label = document.createElement('label');
-      radio.type = 'radio';
-      radio.name = `radioConsumer`;
-      // radio.checked = currentLayer == undefined ?
-      //     (i === stats.length-1) :
-      //     (i === currentLayer);
-
-      radio.onchange = () => {
-        var desc= {};
-        desc["id"]=trackid;
-
-        var radioButtons = document.getElementsByName("radioConsumer");
-        for(var i = 0; i < radioButtons.length; i++) {
-          if (radioButtons[i].checked == true) {
-            desc["data"]={"spatialLayer":i};
-            sendMessage({
-              room: roomId,
-              from: peerID,
-              type: 'setPreferredLayers',
-              desc: desc
-            });
+        var div = document.createElement('div');
+        var radio = document.createElement('input');
+        var label = document.createElement('label');
+        radio.type = 'radio';
+        radio.name = `radioConsumer`;
 
 
-          }
-        }
+        radio.onchange = () => {
+            var desc= {};
+            desc["id"]=trackid;
 
-      };
-      // let bitrate = Math.floor(s.bitrate / 1000);
-      label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
-      div.appendChild(radio);
-      div.appendChild(label);
-      //container.appendChild(div);
-      $('#TRSubscribe').append(div);
+            var radioButtons = document.getElementsByName("radioConsumer");
+            for(var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked == true) {
+                    desc["data"]={"spatialLayer":i};
+                    sendMessage({
+                        room: roomId,
+                        from: peerID,
+                        type: 'setPreferredLayers',
+                        desc: desc
+                    });
+
+
+                }
+            }
+
+        };
+        // let bitrate = Math.floor(s.bitrate / 1000);
+        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
+        div.appendChild(radio);
+        div.appendChild(label);
+        //container.appendChild(div);
+        $('#TRSubscribe').append(div);
 
     }
-  }
+}
 
 
-  function publish_simulcast(transceiver)
-  {
+function publish_simulcast(transceiver)
+{
 
     for (let s of CAM_VIDEO_SIMULCAST_ENCODINGS) {
 
-      var div = document.createElement('div');
-      var radio = document.createElement('input');
-      var label = document.createElement('label');
-      radio.type = 'radio';
-      radio.name = `radioProducer`;
-      // radio.checked = currentLayer == undefined ?
-      //     (i === stats.length-1) :
-      //     (i === currentLayer);
-      radio.onchange = () => {
-        console.log('ask server to set layers ' + i);
-        // sig('consumer-set-layers', { consumerId: consumer.id,
-        //  spatialLayer: i });
+        var div = document.createElement('div');
+        var radio = document.createElement('input');
+        var label = document.createElement('label');
+        radio.type = 'radio';
+        radio.name = `radioProducer`;
+        // radio.checked = currentLayer == undefined ?
+        //     (i === stats.length-1) :
+        //     (i === currentLayer);
+        radio.onchange = () => {
+            console.log('ask server to set layers ' + i);
+            // sig('consumer-set-layers', { consumerId: consumer.id,
+            //  spatialLayer: i });
 
-        const parameters =  transceiver.sender.getParameters();
-        var radioButtons = document.getElementsByName("radioProducer");
-        for(var i = 0; i < radioButtons.length; i++) {
-          if (radioButtons[i].checked == true) {
-            parameters.encodings[i].active = true;
+            const parameters =  transceiver.sender.getParameters();
+            var radioButtons = document.getElementsByName("radioProducer");
+            for(var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked == true) {
+                    parameters.encodings[i].active = true;
 
-          } else
-            parameters.encodings[i].active = false;
-        }
+                } else
+                    parameters.encodings[i].active = false;
+            }
 
-        transceiver.sender.setParameters(parameters);
+            transceiver.sender.setParameters(parameters);
 
-      };
-      // let bitrate = Math.floor(s.bitrate / 1000);
-      label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
+        };
+        // let bitrate = Math.floor(s.bitrate / 1000);
+        label.innerHTML = s.rid + " " + ( (s.scaleResolutionDownBy != null) ? s.scaleResolutionDownBy:'full') ;
 
-      div.appendChild(radio);
-      div.appendChild(label);
-      //container.appendChild(div);
-      $('#local_video').append(div);
+        div.appendChild(radio);
+        div.appendChild(label);
+        //container.appendChild(div);
+        $('#local_video').append(div);
 
     }
 
-  }
+}
 
 
-  var prodtrackNo= -1;
 
-  var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
+var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 // This client receives a message
-  socket.on('message',  async function(message) {
-    console.log('Client received message:', message);
+socket.on('message',  async function(message) {
+  console.log('Client received message:', message.type);
 
-    if (message.type === 'offer') {
+  if (message.type === 'offer') {
 
       return _awaitQueue.push(
           async () =>  processOffer(message.from, message.desc  ));
-      //await processOffer(message.from, message.desc  );
+     //await processOffer(message.from, message.desc  );
 
-    } else if (message.type === 'answer' && isStarted) {
-      //remotePeerID=message.from;
-      console.log("publish andwer %o", message)
-      pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
-          .then(function ()
-          {
-            // subscribe();
-            //////
+  } else if (message.type === 'answer' && isStarted) {
+    //remotePeerID=message.from;
+    console.log("publish andwer %o", message)
+    pc1.setRemoteDescription(new RTCSessionDescription(message.desc))
+        .then(function ()
+        {
+            subscribe();
+           //////
 
-            var mss = pc1.getTransceivers();
+
+            const myNode = document.getElementById("traddCtrl1");
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.lastChild);
+            }
+
+            var transceivers = pc1.getTransceivers();
 
             var store={};
 
-            for (var ts in mss) {
-              if( ts > prodtrackNo  ) {
-                prodtrackNo = ts;
-                var track = mss[ts].sender.track;
-                store [track.kind] = track.id
-                if (track.kind === 'video') {
+            for (var ts in transceivers) {
+                if( transceivers[ts].currentDirection != 'inactive' &&  transceivers[ts].direction != 'inactive') {
+                    var track = transceivers[ts].sender.track;
+                    store [track.kind] = track.id;
+                    if (track.kind === 'video') {
 
-                  addProducerVideoAudio(track, store);
-                  publish_simulcast(mss[ts]);
-
+                        addProducerVideoAudio(track, store);
+                        // publish_simulcast(mss[ts]);
+                        store={};
+                    }
                 }
-              }
             }
 
 
-          }, function (error) {
+            }, function (error) {
 
             console.error(error);
 
-          });
+        });
 
-
-
-    } else if (message.type === 'candidate' && isStarted) {
-      var candidate = new RTCIceCandidate({
-        sdpMLineIndex: message.candidate.sdpMLineIndex,
-        sdpMid: message.candidate.sdpMid,
-        candidate: message.candidate.candidate
-      });
-      pc.addIceCandidate(candidate);
-    } else if (message.type === 'bye' && isStarted) {
-      handleRemoteHangup();
-    } else if (message.type === 'soundlevel' && isStarted) {
-      soundlevel(message.desc);
-    }else if (message.type === 'prodstats' && isStarted) {
-      prodstats(message.desc);
-    }else if (message.type === 'constats') {
-      constats(message.desc);
-    }
-
-  });
-
-  var trackNo= -1;
-
-  async function sleep(ms) {
-    return new Promise((r) => setTimeout(() => r(), ms));
+  } else if (message.type === 'bye' && isStarted) {
+    handleRemoteHangup();
+  } else if (message.type === 'soundlevel' && isStarted) {
+    soundlevel(message.desc);
+  }else if (message.type === 'prodstats' && isStarted) {
+    prodstats(message.desc);
+  }else if (message.type === 'constats') {
+    constats(message.desc);
   }
 
-  async function doAnswer(remotePeerID) {
+});
+
+//var trackNo= -1;
+
+async function sleep(ms) {
+    return new Promise((r) => setTimeout(() => r(), ms));
+}
+
+async function doAnswer(remotePeerID) {
 
 
-    const answer = await  pc2.createAnswer();
+  const answer = await  pc2.createAnswer();
 
-    await pc2.setLocalDescription(answer);
+  await pc2.setLocalDescription(answer);
 
     if(!pc2Connected) {
-      pc2Connected = true;
-      console.log('Sending answer to peer.');
-      sendMessage({
-        room: roomId,
-        from: peerID,
-        to: remotePeerID,
-        type: answer.type,
-        desc: answer
-      });
+        pc2Connected = true;
+        console.log('Sending answer to peer.');
+        sendMessage({
+            room: roomId,
+            from: peerID,
+            to: remotePeerID,
+            type: answer.type,
+            desc: answer
+        });
     }
 
 
@@ -776,132 +737,149 @@ $ (function(){
     // }
 
 
-    console.log("answer %o", answer.type);
+    console.log("answer %o", answer);
 
 
 
+    //$('#traddCtrl2').remove();
 
-    // console.log( "transceivers %o", transceivers);
-    // if (!transceivers)
-    //     throw new Error('new RTCRtpTransceiver not found');
-
-
-    var mss = pc2.getRemoteStreams();
-
-
-    for (var ts in mss) {
-      if (ts > trackNo) {
-        // console.log("ts%o:%o, ", ts, mss[ts]);
-
-        var ms = mss[ts];
-        trackNo = ts;
-        addConumerVideoAudio(ms);
-      }
+    const myNode = document.getElementById("traddCtrl2");
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.lastChild);
     }
 
 
+    var transceivers = pc2.getTransceivers();
 
+    for (var tsn in transceivers) {
 
+        if(transceivers[tsn].direction != 'inactive' && transceivers[tsn].currentDirection != 'inactive')
+            addConumerVideoAudio(transceivers[tsn]);
+    }
 
     return  true;
-  }
+}
 
-  function removeElement(elementId) {
+function removeElement(elementId) {
     // Removes an element from the document
     var element = document.getElementById(elementId);
     element.parentNode.removeChild(element);
-  }
+}
 
-  function addProducerVideoAudio(track, store) {
+function addProducerVideoAudio(track, store) {
 
 
-
-    // var track = ms;
+   // var track = ms;
 
     var divStore = document.createElement('div');
 
-    var statButton;
 
-
-    if(track.kind === 'video') {
-      statButton = document.createElement('button');
-      statButton.id=track.id;
-      statButton.innerHTML += 'video Stats';
-      statButton.onclick = function(){
-        // alert('here be dragons');return false;
-        btn_producer_stats(statButton.id);
-        return false;
-      };
-    }
-
-    if(statButton)
-      divStore.appendChild(statButton);
 
     let el = document.createElement("video");
 
     el.setAttribute('playsinline', true);
     el.setAttribute('autoplay', true);
 
+    el.class='video';
+
+    el.style.width = "200px";
+    el.style.hight = "200px";
 
     var div = document.createElement('div');
-    div.textContent = track.id;
+   // div.textContent = track.id;
     div.potato= store;
 
+    var para = document.createElement("P");
+    para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  peerID  + "<br>" +   "</small> </span>";
+    div.appendChild(para);
+
     div.appendChild(el);
-    var td = document.createElement('td');
+    div.style.width = "200px";
 
-    td.appendChild(div);
-    td.appendChild(divStore);
 
+    divStore.appendChild(div);
+
+    let statButton;
+
+    if(track.kind === 'video') {
+        statButton = document.createElement('button');
+        statButton.id=track.id;
+        statButton.innerHTML += 'video Stats';
+        statButton.onclick = function(){
+            // alert('here be dragons');return false;
+            btn_producer_stats(statButton.id);
+            return false;
+        };
+    }
+
+    if(statButton)
+        divStore.appendChild(statButton);
 
     var closeButton = document.createElement('button');
     closeButton.innerHTML += 'close';
     closeButton.onclick = async function(){
 
-      var mss = pc1.getTransceivers();
+        var mss = pc1.getTransceivers();
 
-      // console.log( "ravind1 : %o", mss);
+        // console.log( "ravind1 : %o", mss);
 
-      for (var ts in mss) {
+        for (var ts in mss) {
 
 
-        let ltrack = mss[ts].sender.track;
+            let ltrack = mss[ts].sender.track;
 
-        if ( ltrack && store[ltrack.kind] === ltrack.id) {
+            if ( ltrack && store[ltrack.kind] === ltrack.id) {
 
-          mss[ts].sender.replaceTrack(null);
+                mss[ts].sender.replaceTrack(null);
 
-          pc1.removeTrack(mss[ts].sender);
+                pc1.removeTrack(mss[ts].sender);
 
-          mss[ts].direction = "inactive";
+                mss[ts].direction = "inactive";
 
-          //  this._remoteSdp.closeMediaSection(transceiver.mid)
+                //  this._remoteSdp.closeMediaSection(transceiver.mid)
 
-          var offer = await pc1.createOffer();
 
-          console.log( "arvind removed offer: %o", offer);
-          console.log('removded ' + ts);
-
+            }
         }
 
-        // var mss1 = pc1.getTransceivers();
-        console.log(ts);
+        var offer1 = await pc1.createOffer();
 
 
-      }
+        console.log("after close offer %o ", offer1);
 
-      btn_producer_close(store);
-      // removeElement('producertd' );
-      return false;
+        await pc1.setLocalDescription(offer1);
+
+        sendMessage ({
+            room: roomId,
+            from: peerID,
+            //to: remotePeerID,
+            type: offer1.type,
+            desc: offer1
+        });
+
+
+
+
+
+        btn_producer_close(store);
+        // removeElement('producertd' );
+        return false;
 
     };
 
-    td.appendChild(closeButton);
+    divStore.appendChild(closeButton);
 
-    td.id = 'producertd';
+    var td = document.createElement('td');
+    td.appendChild(divStore);
 
-    $('#local_video').append(td);
 
+
+
+    td.id = 'td' + track.id;
+    td.class='td';
+    td.style.width = "200px";
+
+    $('#traddCtrl1').append(td);
 
 
     const streamV = new MediaStream();
@@ -912,86 +890,51 @@ $ (function(){
     el.play()
         .then(()=>{})
         .catch((e) => {
-          err(e);
+            err(e);
         });
 
 
     return true;
 
-  }
+}
 
-  function addConumerVideoAudio(ms) {
+function addConumerVideoAudio(transiver) {
+
 
     var store={};
 
-    var tracks = ms.getTracks();
+    var track = transiver.receiver.track;
 
-    var divStore = document.createElement('div');
+    if(track.kind === 'audio')
+        return ;
 
-    var statButton;
 
-    for( const tno in tracks)
+    var mss = pc2.getRemoteStreams();
+    let ms;
+    for( var msn in mss   )
     {
-      var track = tracks[tno];
-      store [track.kind] = track.id
+       var lms = mss[msn];
 
-      let pause = document.createElement('span'),
-          checkbox = document.createElement('input'),
-          label = document.createElement('label');
-      pause.classList = 'nowrap';
-      checkbox.type = 'checkbox';
-      checkbox.id=track.id;
-      checkbox.checked = false;
-      checkbox.onchange = async () => {
-        if (checkbox.checked) {
-          await btn_subscribe_pause (checkbox.id);
-        } else {
-          await btn_subscribe_resume(checkbox.id);
-        }
+       var tracks = lms.getTracks();
+       for(var tc of tracks )
+       {
+           if ( tc ==track)
+           {
+               ms = lms;
+           }
+       }
 
-      }
-      label.id = `consumer-stats-${track.id}`;
-      label.innerHTML = "Pause " + track.kind;
-
-
-      if(track.kind === 'video') {
-        statButton = document.createElement('button');
-        statButton.id=track.id;
-        statButton.innerHTML += 'video Stats';
-        statButton.onclick = function(){
-          // alert('here be dragons');return false;
-          btn_subscribe_stats(statButton.id);
-          return false;
-        };
-
-
-      }
-
-
-      // if (consumer.paused) {
-      //     label.innerHTML = '[consumer paused]'
-      // } else {
-      //     let stats = lastPollSyncData[myPeerId].stats[consumer.id],
-      //         bitrate = '-';
-      //     if (stats) {
-      //         bitrate = Math.floor(stats.bitrate / 1000.0);
-      //     }
-      //     label.innerHTML = `[consumer playing ${bitrate} kb/s]`;
-      // }
-      pause.appendChild(checkbox);
-      pause.appendChild(label);
-      // pause.appendChild(checkbox);
-      divStore.appendChild(pause);
-
+       if(ms)
+           break;
     }
 
-    if(statButton)
-      divStore.appendChild(statButton);
+    store [track.kind] = track.id;
 
-    let el = document.createElement("video");
-// set some attributes on our audio and video elements to make
-// mobile Safari happy. note that for audio to play you need to be
-// capturing from the mic/camera
+
+    let el = document.createElement(track.kind);
+    // set some attributes on our audio and video elements to make
+    // mobile Safari happy. note that for audio to play you need to be
+    // capturing from the mic/camera
     el.setAttribute('playsinline', true);
     el.setAttribute('autoplay', true);
 
@@ -1001,21 +944,69 @@ $ (function(){
     div.potato= store;
 
     div.appendChild(el);
-    var td = document.createElement('td');
 
+
+
+    let pause = document.createElement('span'),
+    checkbox = document.createElement('input'),
+    label = document.createElement('label');
+    pause.classList = 'nowrap';
+    checkbox.type = 'checkbox';
+    checkbox.id=track.id;
+    checkbox.checked = false;
+    checkbox.onchange = async () => {
+        if (checkbox.checked) {
+            await btn_subscribe_pause (checkbox.id);
+        } else {
+            await btn_subscribe_resume(checkbox.id);
+        }
+
+        }
+    label.id = `consumer-stats-${track.id}`;
+    label.innerHTML = "Pause " + track.kind;
+
+    let statButton;
+    if(track.kind === 'video') {
+        statButton = document.createElement('button');
+        statButton.id=track.id;
+        statButton.innerHTML += 'video Stats';
+        statButton.onclick = function(){
+           // alert('here be dragons');return false;
+            btn_subscribe_stats(statButton.id);
+            return false;
+        };
+
+        }
+
+
+        pause.appendChild(checkbox);
+        pause.appendChild(label);
+
+
+    var divStore = document.createElement('div');
+
+   // pause.appendChild(checkbox);
+    divStore.appendChild(pause);
+
+    if(statButton)
+        divStore.appendChild(statButton);
+
+
+    var td = document.createElement('td');
     td.appendChild(div);
     td.appendChild(divStore);
 
-    $('#TRSubscribe').append(td);
+    $('#traddCtrl2').append(td);
 
 
-    subscribe_simulcast(store.video);
-
-    el.srcObject = ms;
+    el.srcObject = new MediaStream([ track.clone() ]);
+    // let's "yield" and return before playing, rather than awaiting on
+    // play() succeeding. play() will not succeed on a producer-paused
+    // track until the producer unpauses.
     el.play()
         .then(()=>{})
         .catch((e) => {
-          err(e);
+            err(e);
         });
 
 
@@ -1023,196 +1014,199 @@ $ (function(){
 
     return true;
 
+}
+
+function onCreateSessionDescriptionError(error) {
+  //log('Failed to create session description: ' + error.toString());
+  console.log('Failed to create session description: ' + error.toString());
+  
+}
+
+
+
+async function getUserMedia1( isWebcam) {
+
+
+  let stream;
+  try {
+
+  //stream =  await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+
+   stream = isWebcam ?
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true }) :
+      await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+  } catch (err) {
+    console.error('getUserMedia() failed:', err.message);
+    throw err;
   }
-
-  function onCreateSessionDescriptionError(error) {
-    //log('Failed to create session description: ' + error.toString());
-    console.log('Failed to create session description: ' + error.toString());
-
-  }
-
-
-
-  async function getUserMedia1( isWebcam) {
-
-
-    let stream;
-    try {
-
-      //stream =  await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-
-      stream = isWebcam ?
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: true }) :
-          await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
-    } catch (err) {
-      console.error('getUserMedia() failed:', err.message);
-      throw err;
-    }
-    return stream;
-  }
+  return stream;
+}
 
 /////////////////////////////////////////////////////////////////////////////
-  async function btn_subscribe_resume(consumerid ) {
+async function btn_subscribe_resume(consumerid ) {
 
     sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "subscribe-resume",
-      desc: consumerid
-    });
-  }
+          room: roomId,
+          from: peerID,
+          type: "subscribe-resume",
+          desc: consumerid
+        });
+}
 
-  async function btn_subscribe_pause(consumerid ) {
+async function btn_subscribe_pause(consumerid ) {
 
     sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "subscribe-pause",
-      desc: consumerid
-    });
-  }
+          room: roomId,
+          from: peerID,
+          type: "subscribe-pause",
+          desc: consumerid
+        });
+}
 
 
-  const CAM_VIDEO_SIMULCAST_ENCODINGS =
-      [
-        {rid: 'q', scaleResolutionDownBy: 4.0},
-        {rid: 'h', scaleResolutionDownBy: 2.0},
-        {rid: 'f'}
-      ];
+const CAM_VIDEO_SIMULCAST_ENCODINGS =
+[
+    {rid: 'q', scaleResolutionDownBy: 4.0},
+    {rid: 'h', scaleResolutionDownBy: 2.0},
+    {rid: 'f'}
+];
 ///////////////////////////////////////////////////////////////////////////
 
 //var pc1
-  async function publish(isWebcam)
-  {
-    // const isWebcam = (e.target.id === 'btn_webcam');
-    // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
+async function publish(isWebcam)
+{
+  // const isWebcam = (e.target.id === 'btn_webcam');
+  // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
 
-    var parser = new URL(window.location.href);
-    var istcp = parser.searchParams;
-    const tcpValue = istcp.get('forceTcp') ? true : false;
-
-
-    let stream;
-
-    stream =  await getUserMedia1(isWebcam);
-    let  videotrack;
-    let audiotrack;
+  var parser = new URL(window.location.href); 
+  var istcp = parser.searchParams;
+  const tcpValue = istcp.get('forceTcp') ? true : false;
 
 
+   let stream;
 
-    //if ($('#chk_video').prop('checked'))
-      videotrack = stream.getVideoTracks()[0];
-
-    //if ($('#chk_audio').prop('checked'))
-      audiotrack = stream.getAudioTracks()[0];
-
-
-    //var encodings;
-    var _stream = new MediaStream();
+   stream =  await getUserMedia1(isWebcam);
+   let  videotrack;
+   let audiotrack;
 
 
-    if(audiotrack) {
-      var transceiver1 = pc1.addTransceiver(
-          audiotrack,
-          {
-            direction: 'sendonly',
-            streams: [_stream]
-          });
-    }
 
-    //firefox
-    // var parameters = transceiver.sender.getParameters();
-    // console.log("simulcast parameters %o", parameters);
+   //if ($('#chk_video').prop('checked'))
+   videotrack = stream.getVideoTracks()[0];
 
-    //  if (!parameters.encodings) {
-    //  parameters.encodings = [{}];
-    //  }
-
-    // var encodings = [
-    //           { rid: 'r0', maxBitrate: 100000 },
-    //           { rid: 'r1', maxBitrate: 500000 }
-    //       ];
-    // parameters.encodings = encodings;
-    // transceiver.sender.setParameters(parameters);
+   if ($('#chk_audio').prop('checked'))
+    audiotrack = stream.getAudioTracks()[0];
 
 
-    // Mormal without simulcast
-    if(videotrack ) {
-      //var checkBox = document.getElementById("chk_simulcast");
-      //if (checkBox.checked)
-      if(true)
-      {
 
-        var transceiver = pc1.addTransceiver(videotrack, {
-          direction: 'sendonly',
-          streams: [_stream],
-          sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
+
+        //var encodings;
+        var _stream = new MediaStream();
+
+
+        if(audiotrack) {
+            var transceiver1 = pc1.addTransceiver(
+                audiotrack,
+                {
+                    direction: 'sendonly',
+                    streams: [_stream]
+                });
+
+            transceiver1.sender.setStreams(_stream);
+        }
+         
+         //firefox
+        // var parameters = transceiver.sender.getParameters();
+        // console.log("simulcast parameters %o", parameters);
+
+        //  if (!parameters.encodings) {
+        //  parameters.encodings = [{}];
+        //  }
+
+        // var encodings = [
+        //           { rid: 'r0', maxBitrate: 100000 },
+        //           { rid: 'r1', maxBitrate: 500000 }
+        //       ];
+        // parameters.encodings = encodings;
+        // transceiver.sender.setParameters(parameters);
+
+
+          // Mormal without simulcast
+         if(videotrack ) {
+             let checkBox = document.getElementById("chk_simulcast");
+             if ( checkBox && checkBox.checked && isWebcam ) {
+
+                 var transceiver = pc1.addTransceiver(videotrack, {
+                     direction: 'sendonly',
+                     streams: [_stream],
+                     sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
+                 });
+                // transceiver.sender.setStreams(_stream);
+
+             } else {
+                 var transceiver = pc1.addTransceiver(
+                     videotrack,
+                     {
+                         direction: 'sendonly',
+                         streams: [_stream]
+                     });
+                 //transceiver.sender.setStreams(_stream);
+             }
+         }
+
+         
+
+        var offer = await pc1.createOffer();
+
+        console.log( "PC1 offer made: %o", offer);
+
+         await pc1.setLocalDescription(offer);
+
+        // We can now get the transceiver.mid.
+        //const localId = transceiver.mid;
+
+        //console.log("arvind transceiver.mid " + transceiver.mid);
+
+        isStarted = true;
+
+        //document.querySelector('#local_video').srcObject = stream;
+
+
+        sendMessage ({
+          room: roomId,
+          from: peerID,
+          //to: remotePeerID,
+          type: pc1.localDescription.type,
+          desc: pc1.localDescription
         });
 
 
-      } else {
-        var transceiver = pc1.addTransceiver(
-            videotrack,
-            {
-              direction: 'sendonly',
-              streams: [_stream]
-            });
-      }
-    }
 
 
-
-    var offer = await pc1.createOffer();
-
-    console.log( "publish offer: %o", offer);
-
-    await pc1.setLocalDescription(offer);
-
-    // We can now get the transceiver.mid.
-    //const localId = transceiver.mid;
-
-    //console.log("arvind transceiver.mid " + transceiver.mid);
-
-    isStarted = true;
-
-    //document.querySelector('#local_video').srcObject = stream;
-
-
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      //to: remotePeerID,
-      type: pc1.localDescription.type,
-      desc: pc1.localDescription
-    });
-
-
-
-
-
-  }
+ 
+}
 /////////////////////////////End Publish
 
 
-  async function subscribe() {
+async function subscribe() {
 
-    var parser = new URL(window.location.href);
-    var istcp = parser.searchParams;
-    const tcpValue = istcp.get('forceTcp') ? true : false;
-
-
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "subscribe",
-    });
+  var parser = new URL(window.location.href); 
+  var istcp = parser.searchParams;
+  const tcpValue = istcp.get('forceTcp') ? true : false;
 
 
-  }//end subscribe
+  sendMessage ({
+          room: roomId,
+          from: peerID,
+          type: "subscribe",
+        });
+
+ 
+}//end subscribe 
 
 
 
-// async function pollit()
+// async function pollit() 
 // {
 
 
@@ -1226,88 +1220,88 @@ $ (function(){
 //       }, 1000);
 
 
-// }//end simulcast
+// }//end simulcast 
 
-  async function btn_audio_level_start()
-  {
+async function btn_audio_level_start()
+{
 
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      to: remotePeerID,
-      type: "rtpObserver_addProducer",
-    });
-  }
+  sendMessage ({
+          room: roomId,
+          from: peerID,
+          to: remotePeerID,
+          type: "rtpObserver_addProducer",
+        });
+}
 
-  async function btn_audio_level_stop()
-  {
+async function btn_audio_level_stop()
+{
 
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      to: remotePeerID,
-      type: "rtpObserver_removeProducer",
-    });
-  }
+  sendMessage ({
+          room: roomId,
+          from: peerID,
+          to: remotePeerID,
+          type: "rtpObserver_removeProducer",
+        });
+}
 
 
-  async function btn_producer_close(producerids)
-  {
-
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "producer_close",
-      desc: producerids
-    });
-
-  }
-
-  async function btn_producer_stats(producerid)
-  {
+async function btn_producer_close(producerids)
+{
 
     sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "producer_getStats",
-      desc: producerid
+        room: roomId,
+        from: peerID,
+        type: "producer_close",
+        desc: producerids
     });
 
-  }
+}
 
-  async function btn_subscribe_stats(consumerid)
-  {
+async function btn_producer_stats(producerid)
+{
 
-    sendMessage ({
-      room: roomId,
-      from: peerID,
-      type: "consumer_getStats",
-      desc: consumerid
-    });
+  sendMessage ({
+          room: roomId,
+          from: peerID,
+          type: "producer_getStats",
+          desc: producerid
+        });
 
-  }
+}
+
+async function btn_subscribe_stats(consumerid)
+{
+
+  sendMessage ({
+          room: roomId,
+          from: peerID,
+          type: "consumer_getStats",
+          desc: consumerid
+        });
+
+}
 
 
-  function soundlevel(level)
-  {
-    //console.log(level);
+function soundlevel(level)
+{
+  //console.log(level);
 
-    sound_level.innerHTML = JSON.stringify(level, undefined, 4);
-  }
+  sound_level.innerHTML = JSON.stringify(level, undefined, 4); 
+}
 
-  function prodstats(desc)
-  {
-    //console.log(level);
+function prodstats(desc)
+{
+  //console.log(level);
 
-    prod_stat.innerHTML = JSON.stringify(desc, undefined, 4);
-  }
+  prod_stat.innerHTML = JSON.stringify(desc, undefined, 4); 
+}
 
-  function constats(desc)
-  {
-    //console.log(level);
+function constats(desc)
+{
+  //console.log(level);
 
-    cons_stat.innerHTML = JSON.stringify(desc, undefined, 4);
-  }
+  cons_stat.innerHTML = JSON.stringify(desc, undefined, 4); 
+}
 
 
 ///////////////////////////////////////////////////////////////////////

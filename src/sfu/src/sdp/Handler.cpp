@@ -11,7 +11,8 @@
 
 using json = nlohmann::json;
 
-namespace SdpParse {
+namespace SdpParse
+{
 
     nlohmann::json Handler::_setupTransport(const json & sdpObject, const std::string & localDtlsRole) {
 
@@ -44,15 +45,17 @@ namespace SdpParse {
             json &trans = Settings::configuration.createWebRtcTransport;
             transportId = uuid4::uuid();
 
-            SInfo << "transportId: " << transportId;
+            STrace << "transportId: " << transportId;
 
-            if (!forceTcp) {
+            if (!forceTcp)
+            {
                 trans["data"]["enableUdp"] = true;
                 trans["data"]["preferUdp"] = true;
             }
 
             trans["data"]["listenIps"] = Settings::configuration.listenIps;
-            raiseRequest(param, trans, [&](const json & ack_resp) {
+            raiseRequest(param, trans, [&](const json & ack_resp)
+            {
                 const json &ackdata = ack_resp["data"];
                 createSdp(ackdata["iceParameters"], ackdata["iceCandidates"], ackdata["dtlsParameters"]);
             });
@@ -64,7 +67,8 @@ namespace SdpParse {
             param.push_back("maxbitrate");
             param.push_back(peer->participantID);
             json &trans = Settings::configuration.maxbitrate;
-            raiseRequest(param, trans, [](const json & ack_resp) {
+            raiseRequest(param, trans, [](const json & ack_resp)
+            {
 
             });
         }
@@ -92,7 +96,8 @@ namespace SdpParse {
         json &trans = Settings::configuration.transport_connect;
         //STrace << "peer->dtlsParameters " << dtlsParameters;
         trans["data"]["dtlsParameters"] = dtlsParameters;
-        raiseRequest(param, trans, [&](const json & ack_resp) {
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
             //if(ack_resp)["accepted"] ) // arvind TBD later	
             transport_connect = true;
 
@@ -105,24 +110,25 @@ namespace SdpParse {
         transportCreate();
     }
 
-    void Producers::GetAnswer(std::string& kind , json &sendingRtpParameters, std::string mid, std::string reuseMid, json &offerMediaObject) {
+    void Producers::GetAnswer(std::string& kind, json &sendingRtpParameters, std::string mid, std::string reuseMid, json &offerMediaObject) {
 
 
         sendingRtpParameters = peer->sendingRtpParametersByKind[kind];
-        
+
         //SInfo << "offerMediaObject " << offerMediaObject.dump(4);
-        
+
         sendingRtpParameters["mid"] = mid;
-           
+
         //sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
-        sendingRtpParameters["rtcp"]["cname"] = peer->participantID;   // arvind risky code. I am changing cname and msid to particpant id
+        sendingRtpParameters["rtcp"]["cname"] = peer->participantID; // arvind risky code. I am changing cname and msid to particpant id
 
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
 
         json encodings = json::array();
 
-        if (offerMediaObject.find("rids") != offerMediaObject.end()) {
+        if (offerMediaObject.find("rids") != offerMediaObject.end())
+        {
             int size = offerMediaObject["rids"].size();
 
             encodings.push_back({
@@ -142,17 +148,20 @@ namespace SdpParse {
         }
 
 
-        if (!encodings.size()) {
+        if (!encodings.size())
+        {
 
             sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
-        }            // Set RTP encodings by parsing the SDP offer and complete them with given
+        }// Set RTP encodings by parsing the SDP offer and complete them with given
             // one if just a single encoding has been given.
-        else if (encodings.size() == 1) {
+        else if (encodings.size() == 1)
+        {
             auto newEncodings = Sdp::Utils::getRtpEncodings(offerMediaObject);
             //  Object.assign(newEncodings[0], encodings[0]);  // TBD // this is for FID most probabily we need to check
             sendingRtpParameters["encodings"] = newEncodings;
-        }            // Otherwise if more than 1 encoding are given use them verbatim.
-        else {
+        }// Otherwise if more than 1 encoding are given use them verbatim.
+        else
+        {
             sendingRtpParameters["encodings"] = encodings;
         }
 
@@ -162,8 +171,10 @@ namespace SdpParse {
 
         std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
 
-        if (sendingRtpParameters["encodings"].size() > 1 && (mimeType == "video/vp8" || mimeType == "video/h264")) {
-            for (auto& encoding : sendingRtpParameters["encodings"]) {
+        if (sendingRtpParameters["encodings"].size() > 1 && (mimeType == "video/vp8" || mimeType == "video/h264"))
+        {
+            for (auto& encoding : sendingRtpParameters["encodings"])
+            {
                 encoding["scalabilityMode"] = "S1T3";
             }
         }
@@ -182,129 +193,107 @@ namespace SdpParse {
                 codecOptions);
 
     }
-    void Producers::close_producer( const std::string &producerid)
-    {
+
+    void Producers::close_producer(const std::string &producerid) {
         json param = json::array();
         param.push_back("producer.close");
         param.push_back(peer->participantID);
         json &trans = Settings::configuration.producer_getStats;
-        trans["internal"]["producerId"] = producerid;//uuid4::uuid();
+        trans["internal"]["producerId"] = producerid; //uuid4::uuid();
         trans["method"] = "producer.close";
-        raiseRequest(param, trans, [&](const json & ack_resp) {
-        //SInfo <<  " Deleted " << ack_resp;
+         SInfo <<  " close_producer producerid " << producerid; 
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+            //SInfo <<  " Deleted " << ack_resp;
         });
     }
+
     void Producers::runit(std::function<void (const std::string &) > cbAns) {
 
 
-        if(!transport_connect)
-        transportConnect(peer->sdpObject, "server");
+        if (!transport_connect)
+            transportConnect(peer->sdpObject, "server");
 
         int sizeofMid = peer->sdpObject["media"].size();
-        
-//        if(sizeofMid == mapProdMid.size()) 
-//        {
-//            
-//            for (int i = 0; i < sizeofMid ; ++i) {
-//
-//              json& offerMediaObject = peer->sdpObject["media"][i];
-//              std::string producerId = mapProdMid[i];  
-//              std::string direction = offerMediaObject["direction"].get<std::string>();
-//              if( direction == "inactive" &&  (mapProducer.find(producerId) !=  mapProducer.end()))
-//              {
-//                  std::string mid = offerMediaObject["mid"].get<std::string>();
-//                  remoteSdp->CloseMediaSection(mid);
-//                  std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject);
-//                  SInfo << "ProducerClose Mid " << mid << " Producer id "  << trackid;
-//                          
-//                  if( producerId != trackid)
-//                  {
-//                      SError<< "Producer Close Mid Error " << mid << " Producer id "  << trackid;
-//                      exit(-1);
-//                  }
-//                  
-//                  delete mapProducer[trackid];
-//                  mapProducer.erase(trackid);
-//                  
-//                  close_producer(trackid);
-//              
-//              }
-//                 
-//            }
-//            
-//            auto answer = remoteSdp->GetSdp();
-//            
-//            //SInfo << " ans "  << answer;
-//            cbAns(answer);
-//                  
-//            return;
-//        }
 
-        for (int i = 0; i < sizeofMid ; ++i) {
-            
+
+        for (int i = 0; i < sizeofMid; ++i)
+        {
+
             json& offerMediaObject = peer->sdpObject["media"][i];
 
             std::string kind = offerMediaObject["type"].get<std::string>();
 
-            std::string trackid= Sdp::Utils::extractTrackID(offerMediaObject);
+            std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject); // trackid is producerid
 
             //SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
 
             auto midIt = offerMediaObject.find("mid");
 
-            if (midIt == offerMediaObject.end()) {
-            SError << "Found no mid in SDP";
-            throw "Found no mid in SDP";
+            if (midIt == offerMediaObject.end())
+            {
+                SError << "Found no mid in SDP";
+                throw "Found no mid in SDP";
             }
-            
+
             std::string smid = (*midIt).get<std::string>();
             int mid = std::stoi(smid);
-    
+
             //////////////////////////////////////
-            std::string producerId = mapProdMid[mid];  
+            std::string producerId = mapProdMid[mid];
             std::string direction = offerMediaObject["direction"].get<std::string>();
-            if( direction == "inactive" &&  (mapProducer.find(producerId) !=  mapProducer.end()))
+            if (direction == "inactive" && (mapProducer.find(producerId) != mapProducer.end()))
             {
                 //std::string mid = offerMediaObject["mid"].get<std::string>();
                 remoteSdp->CloseMediaSection(smid);
                 std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject);
-                SInfo << "ProducerClose Mid " << mid << " Producer id "  << trackid;
+                SInfo << "ProducerClose Mid " << mid << " Producer id " << trackid << " for particpantid" << peer->participantID;
 
-                if( producerId != trackid)
+                if (producerId != trackid)
                 {
-                    SError<< "Producer Close Mid Error " << mid << " Producer id "  << trackid;
+                    SError << "Producer Close Mid Error " << mid << " Producer id " << trackid;
                     exit(-1);
                 }
 
-                delete mapProducer[trackid];
+                for (auto proCon = mapProducer[trackid]->mapProCon.begin(); proCon != mapProducer[trackid]->mapProCon.end(); ) {
+                    proCon->first->close_consumer(trackid, proCon->second);
+                    SInfo  <<  "Delete consumer id " << proCon->second;
+                    proCon->first->mapConsumer.erase(proCon->second);
+                    proCon = mapProducer[trackid]->mapProCon.erase(proCon); // note it will = next(it) after erase
+                }
+
+                delete mapProducer[trackid]; // track id is produer id
                 mapProducer.erase(trackid);
                 mapProdMid.erase(mid);
-                
+              //  close_producer(trackid); below already producer close code exist
+
                 json param = json::array();
                 param.push_back("producer.close");
                 param.push_back(peer->participantID);
                 json &trans = Settings::configuration.producer_getStats;
-                trans["internal"]["producerId"] = trackid;//uuid4::uuid();
+                trans["internal"]["producerId"] = trackid; //uuid4::uuid();
                 trans["method"] = "producer.close";
-                raiseRequest(param, trans, [&](const json & ack_resp) {
-                    
-                     if (sizeofMid == i+1) {
+                raiseRequest(param, trans, [&](const json & ack_resp)
+                {
+                    if (sizeofMid == i + 1)
+                    {
                         auto answer = remoteSdp->GetSdp();
-                                cbAns(answer);
+                        cbAns(answer);
                     }
-                
+
                 });
 
+                continue;
             }
             //////////////////////////////////////////
-        
-           if( (mapProducer.find(producerId) ==  mapProducer.end()))
-           {
+
+            if ((mapProducer.find(producerId) == mapProducer.end()))
+            {
 
                 json sendingRtpParameters;
                 Producer *p = new Producer();
 
-             //   Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
+                //   Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
 
                 GetAnswer(kind, sendingRtpParameters, *midIt, "", offerMediaObject);
 
@@ -313,24 +302,28 @@ namespace SdpParse {
                 param.push_back(peer->participantID);
                 json &trans = Settings::configuration.transport_produce;
 
-                trans["internal"]["producerId"] = trackid;//uuid4::uuid();
+                trans["internal"]["producerId"] = trackid; //uuid4::uuid();
 
 
                 /////////////////////
-                if (constructor_name != "PipeTransport") {
+                if (constructor_name != "PipeTransport")
+                {
                     // If CNAME is given and we don't have yet a CNAME for Producers in this
                     // Transport, take it.
-                    if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end()) {
+                    if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end())
+                    {
                         cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
                     }
                     // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
                     // do not include CNAME, create a random one.
-                    if (cnameForProducers.empty()) {
+                    if (cnameForProducers.empty())
+                    {
                         cnameForProducers = base::util::randomString(8);
                     }
                     // Override Producer's CNAME.
 
-                    if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end()) {
+                    if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end())
+                    {
                         sendingRtpParameters["rtcp"] = json::object();
                     }
 
@@ -359,43 +352,46 @@ namespace SdpParse {
 
                 trans["data"] = data;
 
-                raiseRequest(param, trans, [&](const json & ack_resp) {
+                raiseRequest(param, trans, [&](const json & ack_resp)
+                {
 
                     p->producer = {
                         { "id", trans["internal"]["producerId"]},
                         {"kind", kind},
                         {"recvRtpCapabilities", peer->GetRtpCapabilities()}, //{"rtpParameters", sendingRtpParameters},
                         {"type", ack_resp["data"]["type"]},
+                         {"mid", std::to_string(mid)},
                         { "consumableRtpParameters", consumableRtpParameters}
                     };
 
                     // SInfo << "Final Producer " << p->producer.dump(4);
                     mapProducer[p->producer["id"]] = p;
                     mapProdMid[ mid] = p->producer["id"];
-                    SInfo << "mid : " <<  mid << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
+                    SInfo << "mid : " << mid << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
 
-                    if (sizeofMid == i+1) {
+                    if (sizeofMid == i + 1)
+                    {
                         auto answer = remoteSdp->GetSdp();
                                 cbAns(answer);
                     }
 
 
                 });
-        }
+            }
 
 
-       
+
 
         }
     }
 
     void Producers::producer_getStats(const std::string& producerId) {
 
-        
-        if( mapProducer.find(producerId) == mapProducer.end() )
+
+        if (mapProducer.find(producerId) == mapProducer.end())
         {
             SError << "ProdStats: Could not find consumer  " << producerId << " for particpant " << peer->participantID;
-            return ;
+            return;
         }
 
         auto &prod = mapProducer[producerId];
@@ -408,40 +404,77 @@ namespace SdpParse {
         json &trans = Settings::configuration.producer_getStats;
 
         trans["internal"]["producerId"] = producer["id"];
-        raiseRequest(param, trans, [&](const json & ack_resp) {
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
 
-        //SInfo << "stats: " << ack_resp.dump(4);
+            //SInfo << "stats: " << ack_resp.dump(4);
 
-        json m;
-        m["type"] = "prodstats";
-        m["desc"] = ack_resp;
-        m["to"] = peer->participantID;
-        signaler->postAppMessage(m);
+            json m;
+            m["type"] = "prodstats";
+            m["desc"] = ack_resp;
+            m["to"] = peer->participantID;
+            signaler->postAppMessage(m);
 
         });
 
-        
+
     }
 
     Producers::~Producers() {
         SInfo << "~Producers()";
 
-        for (auto &prod : mapProducer) {
-          //  close_producer(prod.second->producer["producerId"] );
-            delete prod.second;
+        std::unordered_set<Consumers*> setConsumer;
+        
+
+        for (auto it = mapProducer.begin(); it != mapProducer.end(); ) {
+            
+               
+            std::string producerid = it->first;
+            Producer * producer = it->second;
+            
+            for (auto proCon = producer->mapProCon.begin(); proCon != producer->mapProCon.end(); ) {
+       
+                std::string consumerID = proCon->second;
+                Consumers *consumers = proCon->first;
+                SInfo << "delete  ProducerID " <<  producerid << "  ConsumerID "   << consumerID;
+                consumers->close_consumer(producerid, consumerID);
+                setConsumer.insert(consumers);
+                proCon = producer->mapProCon.erase(proCon); // note it will = next(it) after erase
+                SInfo  <<  "Delete consumer id " << consumerID;
+                consumers->mapConsumer.erase(consumerID);
+            }
+
+            std::string mid = producer->producer["mid"].get<std::string>();
+
+            SInfo << "Close Mid: " << mid << " Producer ID: " << producerid << " Participant id " << peer->participantID;
+            remoteSdp->CloseMediaSection(mid);
+            mapProdMid.erase(std::stoi(mid));
+            //mapProdMid.erase(mid);
+            close_producer(producerid);
+            
+             
+            delete producer; // track id is produer id
+            it = mapProducer.erase(it); // note it will = next(it) after erase
+
+            // delete prod.second;
         }
 
-        mapProducer.clear();
-        mapProdMid.clear();
+
+        for(auto& con:setConsumer)
+        {
+            con->sendSDP(peer->participantID);
+        }
     }
 
     void Producers::rtpObserver_addProducer(bool flag) {
 
-        for (auto &prod : mapProducer) {
+        for (auto &prod : mapProducer)
+        {
 
             json &producer = prod.second->producer;
-            
-            if (producer["kind"] == "audio") {
+
+            if (producer["kind"] == "audio")
+            {
 
 
                 json param = json::array();
@@ -464,7 +497,8 @@ namespace SdpParse {
                 {
                     signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producer["id"]] = peer->participantID;
                 }
-                raiseRequest(param, trans, [&](const json & ack_resp) {
+                raiseRequest(param, trans, [&](const json & ack_resp)
+                {
 
                 });
 
@@ -475,34 +509,38 @@ namespace SdpParse {
 
     void Producers::resume(const std::string& producerId, bool pause) {
 
-           if( mapProducer.find(producerId) == mapProducer.end() )
-           {
-               SError << "Could not find Producer  " << producerId << " for particpant " << peer->participantID;
-               return ;
-           }
-           
-            auto &prods = mapProducer[producerId];
+        if (mapProducer.find(producerId) == mapProducer.end())
+        {
+            SError << "Could not find Producer  " << producerId << " for particpant " << peer->participantID;
+            return;
+        }
 
-            json &producer = prods->producer;
- 
-            json &trans = Settings::configuration.pause_resume;
-            json param = json::array();
-            if (pause) {
-                param.push_back("producer.pause");
-                trans["method"] = "producer.pause";
-            } else {
-                param.push_back("producer.resume");
-                trans["method"] = "producer.resume";
-            }
-            param.push_back(peer->participantID);
+        auto &prods = mapProducer[producerId];
 
-            trans["internal"]["producerId"] = producer["id"];
-          
-            raiseRequest(param, trans, [&](const json & ack_resp) {
+        json &producer = prods->producer;
 
-            });
+        json &trans = Settings::configuration.pause_resume;
+        json param = json::array();
+        if (pause)
+        {
+            param.push_back("producer.pause");
+            trans["method"] = "producer.pause";
+        } else
+        {
+            param.push_back("producer.resume");
+            trans["method"] = "producer.resume";
+        }
+        param.push_back(peer->participantID);
+
+        trans["internal"]["producerId"] = producer["id"];
+
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+
+        });
 
     }
+
     /*************************************************************************************************************
         Consumer starts
      *************************************************************************************************************/
@@ -511,57 +549,38 @@ namespace SdpParse {
         transportCreate();
     }
 
-
-    //    std::string Consumers::GetOffer(const std::string& id, const std::string&  mid, const std::string& kind, const json& rtpParameters) {
-    //
-    //        // mid is optional, check whether it exists and is a non empty string.
-    ////        auto midIt = rtpParameters.find("mid");
-    ////        if (midIt != rtpParameters.end() && (midIt->is_string() && !midIt->get<std::string>().empty()))
-    ////            localId = midIt->get<std::string>();
-    ////        else
-    ////            localId = std::to_string(mid++);
-    //        
-    //       
-    //
-    //        auto& cname = rtpParameters["rtcp"]["cname"];
-    //
-    //        this->remoteSdp->Receive(mid, kind, rtpParameters, cname, id);
-    //
-    //        auto offer = this->remoteSdp->GetSdp();
-    //
-    //        STrace << "offer: " << offer;
-    //        return offer;
-    //    }
-
     void Consumers::resume(const std::string& consumerId, bool pause) {
 
-           if( mapConsumer.find(consumerId) == mapConsumer.end() )
-           {
-               SError << "Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
-               return ;
-           }
-           
-            auto &cons = mapConsumer[consumerId];
+        if (mapConsumer.find(consumerId) == mapConsumer.end())
+        {
+            SError << "Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
+            return;
+        }
 
-            json &consumer = cons->consumer;
+        auto &cons = mapConsumer[consumerId];
 
-            json &trans = Settings::configuration.pause_resume;
-            json param = json::array();
-            if (pause) {
-                param.push_back("consumer.pause");
-                trans["method"] = "consumer.pause";
-            } else {
-                param.push_back("consumer.resume");
-                trans["method"] = "consumer.resume";
-            }
-            param.push_back(peer->participantID);
+        json &consumer = cons->consumer;
 
-            trans["internal"]["producerId"] = consumer["producerId"];
-            trans["internal"]["consumerId"] = consumer["id"];
+        json &trans = Settings::configuration.pause_resume;
+        json param = json::array();
+        if (pause)
+        {
+            param.push_back("consumer.pause");
+            trans["method"] = "consumer.pause";
+        } else
+        {
+            param.push_back("consumer.resume");
+            trans["method"] = "consumer.resume";
+        }
+        param.push_back(peer->participantID);
 
-            raiseRequest(param, trans, [&](const json & ack_resp) {
+        trans["internal"]["producerId"] = consumer["producerId"];
+        trans["internal"]["consumerId"] = consumer["id"];
 
-            });
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+
+        });
 
     }
 
@@ -577,298 +596,267 @@ namespace SdpParse {
         transportConnect(ansdpObject, "client");
 
     }
-    
-//    void Consumers::sendOffer(const std::string& id, const std::string&  mid, const std::string& kind, const json& rtpParameters , const std::string& partID , const std::string& remotePartID) {
-            
-//        int iMid = remoteSdp->MediaSectionSize();
-//        std::string localId;
-//        localId = std::to_string(iMid);
-//        mapConMid[iMid] = id;
-//        auto& cname = rtpParameters["rtcp"]["cname"];
-//
-//
-//       // SInfo <<  localId << " Sendffer  for consumer" << id << " kind " << kind;
-//
-//        this->remoteSdp->Receive(localId, kind, rtpParameters, cname, id);
-//
-//        if( remoteSdp->MediaSectionSize() == nodevice )
-//        {
-//            SInfo << "mid " <<  localId << " Sendffer  for consumer" << id << " nodevice " <<  (int) nodevice << " remoteSdp->MediaSectionSize() " << remoteSdp->MediaSectionSize();
-//
-//            auto offer = this->remoteSdp->GetSdp();
-//           // SInfo << "offer: " << offer;
-//            signaler->sendSDP("offer", offer, partID, remotePartID);
-//        }
-           
 
- //    }
-    
-//    void Consumers::onUnSubscribe( const std::string& producerPeer)
-//    {
-//        
-//        for( int mid = mapProdDevs[producerPeer].first ; mid <= mapProdDevs[producerPeer].second ;  ++mid)
-//        {
-//            std::string conumserid = mapConMid[mid ];
-//            if( mapConsumer.find(conumserid) != mapConsumer.end()    )
-//            {
-//                SInfo << "Logout: Close Mid: " <<  mid << " Conumer id: " << conumserid ; 
-//                remoteSdp->CloseMediaSection(std::to_string(mid));
-//                delete mapConsumer[conumserid];
-//                mapConsumer.erase(conumserid);
-//            }
-//        }
-//        
-//        auto offer = this->remoteSdp->GetSdp();
-//           // SInfo << "offer: " << offer;
-//        signaler->sendSDP("offer", offer, peer->participantID, producerPeer);
-//            
-//    }
-
-    void Consumers::close_consumer(const std::string& producerid, const std::string& conumserid )
-    {
-         json param = json::array();
+    void Consumers::close_consumer(const std::string& producerid, const std::string& conumserid) {
+        json param = json::array();
         param.push_back("consumer.close");
         param.push_back(peer->participantID);
         json &trans = Settings::configuration.consumer_getStats;
-        trans["method"]="consumer.close";
-        trans["internal"]["producerId"] = producerid ;
+        trans["method"] = "consumer.close";
+        trans["internal"]["producerId"] = producerid;
         trans["internal"]["consumerId"] = conumserid;
+        SInfo <<  " close_consumer id " << conumserid;
+        
+        
+         std::string mid = mapConsumer[conumserid ]->consumer["mid"].get<std::string>();
 
-        raiseRequest(param, trans, [&](const json & ack_resp) {
+         remoteSdp->CloseMediaSection(mid);
+            
+         mapConMid.erase(std::stoi(mid));
+
+         SInfo << "Close Mid: " << mid << " Conumer id: " << conumserid << " Producer ID: " << producerid << " Participant id " << peer->participantID;
+         delete mapConsumer[conumserid];
+
+
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+           // SInfo <<  " close_consumer ack " << ack_resp.dump(4);
+        
 
         });
     }
+
     void Consumers::runit(std::vector < Peer *> vecProdPeer) {
-        
-       
+
+
         bool lastDevice = false;
-        int noProd=0 ;      
-        for ( auto & prodpeer : vecProdPeer)
+        int noProd = 0;
+        for (auto & prodpeer : vecProdPeer)
         {
-         
-          ++noProd;
 
-            
-//        if(mid < 0)
-//        {
-//            
-//            for (auto& prodMid : producers->mapProdMid) {
-//               if( producers->mapProducer.find(prodMid.second) == producers->mapProducer.end() )
-//               {
-//                   int mid = mapProdDevs[producers->peer->participantID].first  + prodMid.first;
-//                   std::string conumserid = mapConMid[mid ];
-//                   if( mapConsumer.find(conumserid) !=  mapConsumer.end()  )
-//                   {
-//                        SInfo << "Close Mid: " <<  mid << " Conumer id: " << conumserid << " Producer ID: " << prodMid.second; 
-//                        remoteSdp->CloseMediaSection(std::to_string(mid));
-//                        
-//                        if( prodMid.second != mapConsumer[conumserid]->consumer["producerId"] )
-//                        {
-//                            SError << "Not a vaid state. Some thing is terrible wrong " << prodMid.second  << " " <<  mapConsumer[conumserid]->consumer["producerId"];
-//                            exit(-1);
-//                        }
-//                        
-//                        delete mapConsumer[conumserid];
-//                        mapConsumer.erase(conumserid);
-//                        
-//                        ////////////////////////////
-//                       
-//                      //  close_consumer(prodMid.second , conumserid );  // no need since porducer already closed, it will close dependent consumers
-//
-//                        ////////////////////////////
-//                        
-//                   }
-//               }
-//
-//          }
-//            
-//            auto offer = this->remoteSdp->GetSdp();
-//           // SInfo << "offer: " << offer;
-//            signaler->sendSDP("offer", offer, peer->participantID, producers->peer->participantID);
-//            
-//            return ;
-//        }
-        int nodevice = 0;
-        if( prodpeer->producers)
-        for (auto& prodMid : prodpeer->producers->mapProdMid) {
+            ++noProd;
 
-            if( prodpeer->producers->mapProducer.find(prodMid.second) == prodpeer->producers->mapProducer.end() )
-              continue;   
-            
-            ++nodevice;
-            if( nodevice == prodpeer->producers->mapProdMid.size() )
-            {
-                if( noProd == vecProdPeer.size())
+            int nodevice = 0;
+            if (prodpeer->producers)
+                for (auto& prodMid : prodpeer->producers->mapProdMid)
                 {
-                    lastDevice = true;
+
+                    if (prodpeer->producers->mapProducer.find(prodMid.second) == prodpeer->producers->mapProducer.end())
+                        continue;
+
+                    ++nodevice;
+                    if (nodevice == prodpeer->producers->mapProdMid.size())
+                    {
+                        if (noProd == vecProdPeer.size())
+                        {
+                            lastDevice = true;
+                        }
+                    }
+
+                    json &producer = prodpeer->producers->mapProducer[prodMid.second]->producer;
+
+                    std::unordered_map <Consumers*, std::string > &vecProCon = prodpeer->producers->mapProducer[prodMid.second]->mapProCon;
+
+                    if (vecProCon.find(this) != vecProCon.end())
+                    {
+                        std::string consumerId = vecProCon[this];
+
+                        if (mapConsumer.find(consumerId) != mapConsumer.end())
+                        {
+
+                            if (lastDevice)
+                            {
+      
+                                sendSDP( prodpeer->producers->peer->participantID);
+                            }
+
+                        } else
+                        {
+                            SError << "Not a vaid state. Some thing is terrible wrong. Peerid " << prodpeer->producers->peer->participantID << " " << consumerId;
+                        }
+
+                        continue;
+                    }
+
+                    json param = json::array();
+                    param.push_back("transport.consume");
+                    param.push_back(peer->participantID);
+                    json trans = Settings::configuration.transport_consume;
+
+                    trans["internal"]["producerId"] = producer["id"];
+                    trans["internal"]["consumerId"] = uuid4::uuid();
+
+
+
+                    //json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
+                    json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], producer["recvRtpCapabilities"]);
+                    //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
+
+                    //STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
+
+                    //bool paused = producer["kind"] == "video" ? true : false;
+
+                    json reqData = {
+                        {"kind", producer["kind"]},
+                        {"rtpParameters", rtpParameters},
+                        {"type", producer["type"]},
+                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
+                        {"paused", false}
+                    };
+
+                    trans["data"] = reqData;
+
+
+                    raiseRequest(param, trans, [&](const json & ack_resp)
+                    {
+                        // SInfo << ack_resp.dump(4);
+                        const json &ackdata = ack_resp["data"];
+
+                        int iMid = remoteSdp->MediaSectionSize();
+                        std::string localId;
+                        localId = std::to_string(iMid);
+
+                        // SInfo << localId << " GetOffer " << trans["internal"]["consumerId"] << " kind " << reqData["kind"];
+                        Consumer *c = new Consumer();
+                        c->consumer = {
+
+                            {"id", trans["internal"]["consumerId"]},
+                            {"producerId", producer["id"]},
+                            {"kind", trans["data"]["kind"]},
+                            {"rtpParameters", trans["data"]["rtpParameters"]},
+                            {"type", trans["data"]["type"]},
+                            {"paused", ackdata["paused"]},
+                            {"producerPaused", ackdata["producerPaused"]},
+                            {"score", ackdata["score"]},
+                            {"preferredLayers", ackdata["preferredLayers"]},
+                            {"mid", localId}
+
+                        };
+                        
+                        c->producers = prodpeer->producers;
+
+                        //SInfo <<  localId << " GetOffer " << c->consumer["id"] << " kind " << c->consumer["kind"];
+                        mapConsumer[ c->consumer["id"]] = c;
+
+                        auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
+
+                        mapConMid[iMid] = c->consumer["id"];
+
+                        vecProCon[this] = c->consumer["id"];
+
+                        this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
+
+                        if (lastDevice)
+                        {
+                            sendSDP( prodpeer->producers->peer->participantID);
+                        }
+
+                        // sendOffer(c->consumer["id"], "" , c->consumer["kind"], c->consumer["rtpParameters"], peer->participantID, producers->peer->participantID );
+
+
+                    });
+
+                    ////////////////////////////////////////////////////////////////////////////////
+
+                    //            if (!_probatorConsumerCreated && producer["kind"] == "video") {
+                    //                _probatorConsumerCreated = true;
+                    //                {
+                    //                    json probatorRtpParameters = ortc::generateProbatorRtpParameters(rtpParameters);
+                    //
+                    //                    ///////////////
+                    //
+                    //                    json param = json::array();
+                    //                    param.push_back("transport.consume");
+                    //                    param.push_back(peer->participantID);
+                    //                    json &trans = Settings::configuration.transport_consume;
+                    //
+                    //                    trans["internal"]["producerId"] = producer["id"];
+                    //                    trans["internal"]["consumerId"] = "probator";
+                    //
+                    //
+                    //                    json reqData = {
+                    //                        {"kind", producer["kind"]},
+                    //                        {"rtpParameters", probatorRtpParameters},
+                    //                        {"type", producer["type"]},
+                    //                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
+                    //                        {"paused", false}
+                    //                    };
+                    //
+                    //                    trans["data"] = reqData;
+                    //                    raiseRequest(param, trans, [this, trans, reqData, producer](const json & ack_resp) {
+                    //
+                    //                        const json &ackdata = ack_resp["data"];
+                    //
+                    //                        Consumer *c = new Consumer();
+                    //                        c->consumer = {
+                    //
+                    //                            {"id", trans["internal"]["consumerId"]},
+                    //                            {"producerId", producer["id"]},
+                    //                            {"kind", trans["data"]["kind"]},
+                    //                            {"rtpParameters", trans["data"]["rtpParameters"]},
+                    //                            {"type", trans["data"]["type"]},
+                    //                            {"paused", ackdata["paused"]},
+                    //                            {"producerPaused", ackdata["producerPaused"]},
+                    //                            {"score", ackdata["score"]},
+                    //                            {"preferredLayers", ackdata["preferredLayers"]}
+                    //
+                    //                        };
+                    //
+                    //
+                    //                        //  GetOffer(c->consumer["id"], "probator" , c->consumer["kind"], c->consumer["rtpParameters"]);
+                    //                        //SInfo <<  localId << " GetOffer " << trans["internal"]["consumerId"]<< " kind " << reqData["kind"];
+                    //                        mapConsumer[ c->consumer["id"]] = c;
+                    //
+                    //                        auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
+                    ////                        remoteSdp->Receive("probator", c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
+                    ////                        if (sizeofMid == remoteSdp->MediaSectionSize()) {
+                    ////                            auto offer = this->remoteSdp->GetSdp();
+                    ////                                    cboffer(offer);
+                    ////                        }
+                    //
+                    //                        //////////
+                    //                    });
+                    //
+                    //
+                    //                }
+                    //
                 }
-            }
-            
-            json &producer = prodpeer->producers->mapProducer[prodMid.second]->producer;
-            std::vector < Producers::MapProCon > &vecProCon = prodpeer->producers->mapProducer[prodMid.second]->vecProCon;
 
-            json param = json::array();
-            param.push_back("transport.consume");
-            param.push_back(peer->participantID);
-            json trans = Settings::configuration.transport_consume;
+        }
 
-            trans["internal"]["producerId"] = producer["id"];
-            trans["internal"]["consumerId"] = uuid4::uuid();
-
-
-
-            //json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
-            json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], producer["recvRtpCapabilities"]);
-            //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
-
-            //STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
-
-            //bool paused = producer["kind"] == "video" ? true : false;
-
-            json reqData = {
-                {"kind", producer["kind"]},
-                {"rtpParameters", rtpParameters},
-                {"type", producer["type"]},
-                {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
-                {"paused", false}
-            };
-
-            trans["data"] = reqData;
-
-           
-            raiseRequest(param, trans, [&](const json & ack_resp) {
-               // SInfo << ack_resp.dump(4);
-                const json &ackdata = ack_resp["data"];
-               // SInfo << localId << " GetOffer " << trans["internal"]["consumerId"] << " kind " << reqData["kind"];
-                Consumer *c = new Consumer();
-                c->consumer = {
-
-                    {"id", trans["internal"]["consumerId"]},
-                    {"producerId", producer["id"]},
-                    {"kind", trans["data"]["kind"]},
-                    {"rtpParameters", trans["data"]["rtpParameters"]},
-                    {"type", trans["data"]["type"]},
-                    {"paused", ackdata["paused"]},
-                    {"producerPaused", ackdata["producerPaused"]},
-                    {"score", ackdata["score"]},
-                    {"preferredLayers", ackdata["preferredLayers"]}
-
-                };
-
-               
-                //SInfo <<  localId << " GetOffer " << c->consumer["id"] << " kind " << c->consumer["kind"];
-                mapConsumer[ c->consumer["id"]] = c;
-
-                auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
-                
-                int iMid = remoteSdp->MediaSectionSize();
-                std::string localId;
-                localId = std::to_string(iMid);
-                mapConMid[iMid] = c->consumer["id"];
-                
-                Producers::MapProCon mapProCon;
-                mapProCon.cons = this;
-                mapProCon.consumerId = c->consumer["id"];
-                
-                vecProCon.push_back(mapProCon);
-            
-                this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
-                
-                if( lastDevice )
-                {
-                    SInfo << "mid " <<  localId << " Sendffer  for consumer" << c->consumer["id"] <<  " remoteSdp->MediaSectionSize() " << remoteSdp->MediaSectionSize();
-
-                    auto offer = this->remoteSdp->GetSdp();
-                   // SInfo << "offer: " << offer;
-                    signaler->sendSDP("offer", offer, peer->participantID, prodpeer->producers->peer->participantID);
-                }
-               
-                // sendOffer(c->consumer["id"], "" , c->consumer["kind"], c->consumer["rtpParameters"], peer->participantID, producers->peer->participantID );
-
-
-            });
-
-            ////////////////////////////////////////////////////////////////////////////////
-
-//            if (!_probatorConsumerCreated && producer["kind"] == "video") {
-//                _probatorConsumerCreated = true;
-//                {
-//                    json probatorRtpParameters = ortc::generateProbatorRtpParameters(rtpParameters);
-//
-//                    ///////////////
-//
-//                    json param = json::array();
-//                    param.push_back("transport.consume");
-//                    param.push_back(peer->participantID);
-//                    json &trans = Settings::configuration.transport_consume;
-//
-//                    trans["internal"]["producerId"] = producer["id"];
-//                    trans["internal"]["consumerId"] = "probator";
-//
-//
-//                    json reqData = {
-//                        {"kind", producer["kind"]},
-//                        {"rtpParameters", probatorRtpParameters},
-//                        {"type", producer["type"]},
-//                        {"consumableRtpEncodings", producer["consumableRtpParameters"]["encodings"]},
-//                        {"paused", false}
-//                    };
-//
-//                    trans["data"] = reqData;
-//                    raiseRequest(param, trans, [this, trans, reqData, producer](const json & ack_resp) {
-//
-//                        const json &ackdata = ack_resp["data"];
-//
-//                        Consumer *c = new Consumer();
-//                        c->consumer = {
-//
-//                            {"id", trans["internal"]["consumerId"]},
-//                            {"producerId", producer["id"]},
-//                            {"kind", trans["data"]["kind"]},
-//                            {"rtpParameters", trans["data"]["rtpParameters"]},
-//                            {"type", trans["data"]["type"]},
-//                            {"paused", ackdata["paused"]},
-//                            {"producerPaused", ackdata["producerPaused"]},
-//                            {"score", ackdata["score"]},
-//                            {"preferredLayers", ackdata["preferredLayers"]}
-//
-//                        };
-//
-//
-//                        //  GetOffer(c->consumer["id"], "probator" , c->consumer["kind"], c->consumer["rtpParameters"]);
-//                        //SInfo <<  localId << " GetOffer " << trans["internal"]["consumerId"]<< " kind " << reqData["kind"];
-//                        mapConsumer[ c->consumer["id"]] = c;
-//
-//                        auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
-////                        remoteSdp->Receive("probator", c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
-////                        if (sizeofMid == remoteSdp->MediaSectionSize()) {
-////                            auto offer = this->remoteSdp->GetSdp();
-////                                    cboffer(offer);
-////                        }
-//
-//                        //////////
-//                    });
-//
-//
-//                }
-//
-            }
-
+        if (!lastDevice  && vecProdPeer.size())
+        {
+           // auto offer = this->remoteSdp->GetSdp();
+           // SInfo << "offer: " << peer->participantID;
+           // signaler->sendSDP("offer", offer, peer->participantID, );
+           sendSDP(vecProdPeer[0]->producers->peer->participantID); 
         }
 
     }
 
-    void Consumers::consumer_getStats(const std::string& consumerId ) {
-        
-        if( mapConsumer.find(consumerId) == mapConsumer.end() )
+    void Consumers::sendSDP(std::string &from) {
+        if (remoteSdp->MediaSectionSize())
         {
-            SError << "GetStats: Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
-            return ;
+            SInfo << " Send offer to particpant " << peer->participantID << " from particpant " << from << " tolal mid " << remoteSdp->MediaSectionSize();
+
+            auto offer = this->remoteSdp->GetSdp();
+            // SInfo << "offer: " << offer;
+            signaler->sendSDP("offer", offer, peer->participantID, from);
         }
 
-         auto &cons = mapConsumer[consumerId];
+    }
 
-           
+    void Consumers::consumer_getStats(const std::string& consumerId) {
+
+        if (mapConsumer.find(consumerId) == mapConsumer.end())
+        {
+            SError << "GetStats: Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
+            return;
+        }
+
+        auto &cons = mapConsumer[consumerId];
+
+
         json &consumer = cons->consumer;
 
 
@@ -880,40 +868,64 @@ namespace SdpParse {
         trans["internal"]["producerId"] = consumer["producerId"];
         trans["internal"]["consumerId"] = consumer["id"];
 
-        raiseRequest(param, trans, [&](const json & ack_resp) {
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
 
-        // SInfo << "stats: " << ack_resp.dump(4);
+            // SInfo << "stats: " << ack_resp.dump(4);
 
-        json m;
-        m["type"] = "constats";
-        m["desc"] = ack_resp;
-        m["to"] = peer->participantID;
-        signaler->postAppMessage(m);
+            json m;
+            m["type"] = "constats";
+            m["desc"] = ack_resp;
+            m["to"] = peer->participantID;
+            signaler->postAppMessage(m);
 
 
-         });
+        });
 
 
     }
 
     Consumers::~Consumers() {
-        for (auto &cons : mapConsumer) {
+        
+        int sz = mapConsumer.size();
+        for (auto cons =mapConsumer.begin(); cons != mapConsumer.end(); ) {
             
-            close_consumer(cons.second->consumer["producerId"], cons.second->consumer["id"] );
-            delete cons.second;
-        }
+            
+             SInfo  <<  "Delete consumer id " << cons->first;
+             
+            std::string consumerid  = cons->second->consumer["id"].get<std::string>();
+            std::string  producerId= cons->second->consumer["producerId"].get<std::string>();
+            SInfo  <<  "Delete consumer id " << consumerid  << " producerId  "  << producerId;
+              
+            Producers *producers = cons->second->producers;
+         
+            close_consumer(producerId, consumerid);
+            producers->mapProducer[producerId]->mapProCon.erase(this);
+            
+            cons = mapConsumer.erase(cons);
+         }
+        
         mapConsumer.clear();
-        mapConMid.clear();
+         
+//        for (auto &cons : mapConsumer)
+//        {
+//            std:string consumerid = cons.second->consumer["id"].get<std::string>();
+//            close_consumer(cons.second->consumer["producerId"], consumerid); 
+//            //delete cons.second; // already delted at close_consumer
+//        }
+        
+  //      mapConsumer.clear(); // reace conditon   // movdeed the code inside
+  //      mapConMid.clear(); // reace conditon 
     }
 
     void Consumers::setPreferredLayers(json &layer) {
 
         std::string consumerId = layer["id"].get<std::string>();
-        
-        if( mapConsumer.find(consumerId) == mapConsumer.end() )
+
+        if (mapConsumer.find(consumerId) == mapConsumer.end())
         {
             SError << "setPreferredLayers: Could not find consumer  " << consumerId << " for particpant " << peer->participantID;
-            return ;
+            return;
         }
 
         auto &cons = mapConsumer[consumerId];
@@ -921,7 +933,8 @@ namespace SdpParse {
 
         //SInfo << " setPreferredLayers conusmer: " << consumer.dump(4);
 
-        if (consumer["kind"] == "video" && consumer["type"] == "simulcast") {
+        if (consumer["kind"] == "video" && consumer["type"] == "simulcast")
+        {
             json param = json::array();
             param.push_back("consumer_setPreferredLayers");
             param.push_back(peer->participantID);
@@ -929,13 +942,14 @@ namespace SdpParse {
             trans["internal"]["producerId"] = consumer["producerId"];
             trans["internal"]["consumerId"] = consumer["id"];
             trans["data"] = layer["data"];
-            raiseRequest(param, trans, [](const json & ack_resp) {
+            raiseRequest(param, trans, [](const json & ack_resp)
+            {
                 SInfo << ack_resp.dump(4);
             });
         }
 
     }
-   
+
 
 
 } // namespace SdpParse
