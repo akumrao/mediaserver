@@ -44,8 +44,8 @@ namespace base
 	std::unordered_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
 
 
-	uint16_t PortManager::rtcMinPort = 10000 ;
-    uint16_t PortManager::rtcMaxPort = 59999 ;
+        uint16_t PortManager::rtcMinPort = 11501 ;
+        uint16_t PortManager::rtcMaxPort = 12560 ;
 
 	/* Class methods. */
 
