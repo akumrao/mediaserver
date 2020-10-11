@@ -268,7 +268,7 @@ async function runSocketServer() {
 			var clientsInRoom = io.sockets.adapter.rooms[message.room];
 			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
 
-			if(numClients ===1)
+			if(numClients < 1)
 			{
 				console.log("Number of participant " + numClients );
 				return;

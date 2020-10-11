@@ -829,6 +829,7 @@ namespace SdpParse
            // auto offer = this->remoteSdp->GetSdp();
            // SInfo << "offer: " << peer->participantID;
            // signaler->sendSDP("offer", offer, peer->participantID, );
+           if(vecProdPeer[0]->producers)
            sendSDP(vecProdPeer[0]->producers->peer->participantID); 
         }
 
