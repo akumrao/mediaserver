@@ -12,6 +12,273 @@
 #include "sdp/scalabilityMode.h"
 
 
+
+typedef std::map<std::string, std::string> CodecParameterMap;
+
+
+const char kProfileLevelId[] = "profile-level-id";
+const char kLevelAsymmetryAllowed[] = "level-asymmetry-allowed";
+const uint8_t kConstraintSet3Flag = 0x10;
+
+
+
+enum Profile {
+  kProfileConstrainedBaseline,
+  kProfileBaseline,
+  kProfileMain,
+  kProfileConstrainedHigh,
+  kProfileHigh,
+  kProfile_Invalid=-1
+};
+
+enum H264Level {
+  kLevel_Invalid=-1,
+  kLevel1_b = 0,
+  kLevel1 = 10,
+  kLevel1_1 = 11,
+  kLevel1_2 = 12,
+  kLevel1_3 = 13,
+  kLevel2 = 20,
+  kLevel2_1 = 21,
+  kLevel2_2 = 22,
+  kLevel3 = 30,
+  kLevel3_1 = 31,
+  kLevel3_2 = 32,
+  kLevel4 = 40,
+  kLevel4_1 = 41,
+  kLevel4_2 = 42,
+  kLevel5 = 50,
+  kLevel5_1 = 51,
+  kLevel5_2 = 52
+};
+
+// kProfilePatterns is statically initialized.
+constexpr uint8_t ByteMaskString(char c, const char (&str)[9]) {
+  return (str[0] == c) << 7 | (str[1] == c) << 6 | (str[2] == c) << 5 |
+         (str[3] == c) << 4 | (str[4] == c) << 3 | (str[5] == c) << 2 |
+         (str[6] == c) << 1 | (str[7] == c) << 0;
+}
+
+
+class BitPattern {
+ public:
+  explicit constexpr BitPattern(const char (&str)[9])
+      : mask_(~ByteMaskString('x', str)),
+        masked_value_(ByteMaskString('1', str)) {}
+
+  bool IsMatch(uint8_t value) const { return masked_value_ == (value & mask_); }
+
+ private:
+  const uint8_t mask_;
+  const uint8_t masked_value_;
+};
+
+struct ProfilePattern {
+  const uint8_t profile_idc;
+  const BitPattern profile_iop;
+  const Profile profile;
+};
+
+struct ProfileLevelId {
+  constexpr ProfileLevelId(Profile profile, H264Level level)
+      : profile(profile), level(level) {}
+  Profile profile;
+  H264Level level;
+};
+
+
+constexpr ProfilePattern kProfilePatterns[] = {
+    {0x42, BitPattern("x1xx0000"), kProfileConstrainedBaseline},
+    {0x4D, BitPattern("1xxx0000"), kProfileConstrainedBaseline},
+    {0x58, BitPattern("11xx0000"), kProfileConstrainedBaseline},
+    {0x42, BitPattern("x0xx0000"), kProfileBaseline},
+    {0x58, BitPattern("10xx0000"), kProfileBaseline},
+    {0x4D, BitPattern("0x0x0000"), kProfileMain},
+    {0x64, BitPattern("00000000"), kProfileHigh},
+    {0x64, BitPattern("00001100"), kProfileConstrainedHigh}};
+
+// Parse profile level id that is represented as a string of 3 hex bytes.
+// Nothing will be returned if the string is not a recognized H264
+// profile level id.
+ProfileLevelId ParseProfileLevelId(const char* str) {
+  // The string should consist of 3 bytes in hexadecimal format.
+   ProfileLevelId nullopt{kProfile_Invalid,kLevel_Invalid};
+           
+  if (strlen(str) != 6u)
+    return  nullopt;
+  const uint32_t profile_level_id_numeric = strtol(str, nullptr, 16);
+  if (profile_level_id_numeric == 0)
+    return nullopt;
+
+  // Separate into three bytes.
+  const uint8_t level_idc =
+      static_cast<uint8_t>(profile_level_id_numeric & 0xFF);
+  const uint8_t profile_iop =
+      static_cast<uint8_t>((profile_level_id_numeric >> 8) & 0xFF);
+  const uint8_t profile_idc =
+      static_cast<uint8_t>((profile_level_id_numeric >> 16) & 0xFF);
+
+  // Parse level based on level_idc and constraint set 3 flag.
+  H264Level level;
+  switch (level_idc) {
+    case kLevel1_1:
+      level = (profile_iop & kConstraintSet3Flag) != 0 ? kLevel1_b : kLevel1_1;
+      break;
+    case kLevel1:
+    case kLevel1_2:
+    case kLevel1_3:
+    case kLevel2:
+    case kLevel2_1:
+    case kLevel2_2:
+    case kLevel3:
+    case kLevel3_1:
+    case kLevel3_2:
+    case kLevel4:
+    case kLevel4_1:
+    case kLevel4_2:
+    case kLevel5:
+    case kLevel5_1:
+    case kLevel5_2:
+      level = static_cast<H264Level>(level_idc);
+      break;
+    default:
+      // Unrecognized level_idc.
+      return nullopt;
+  }
+
+  // Parse profile_idc/profile_iop into a Profile enum.
+  for (const ProfilePattern& pattern : kProfilePatterns) {
+    if (profile_idc == pattern.profile_idc &&
+        pattern.profile_iop.IsMatch(profile_iop)) {
+      return ProfileLevelId(pattern.profile, level);
+    }
+  }
+
+  // Unrecognized profile_idc/profile_iop combination.
+  return nullopt;
+}
+
+ProfileLevelId ParseSdpProfileLevelId(
+    const CodecParameterMap& params) {
+  // TODO(magjed): The default should really be kProfileBaseline and kLevel1
+  // according to the spec: https://tools.ietf.org/html/rfc6184#section-8.1. In
+  // order to not break backwards compatibility with older versions of WebRTC
+  // where external codecs don't have any parameters, use
+  // kProfileConstrainedBaseline kLevel3_1 instead. This workaround will only be
+  // done in an interim period to allow external clients to update their code.
+  // http://crbug/webrtc/6337.
+  static const ProfileLevelId kDefaultProfileLevelId(
+      kProfileConstrainedBaseline, kLevel3_1);
+
+  const auto profile_level_id_it = params.find(kProfileLevelId);
+  return (profile_level_id_it == params.end())
+             ? kDefaultProfileLevelId
+             : ParseProfileLevelId(profile_level_id_it->second.c_str());
+}
+
+
+static bool IsSameH264Profile(const CodecParameterMap& params1,
+                              const CodecParameterMap& params2) {
+  const ProfileLevelId profile_level_id =
+     ParseSdpProfileLevelId(params1);
+  const ProfileLevelId other_profile_level_id =
+     ParseSdpProfileLevelId(params2);
+  // Compare H264 profiles, but not levels.
+  return profile_level_id.profile > -1  && other_profile_level_id.profile > -1 &&
+         profile_level_id.profile == other_profile_level_id.profile;
+}
+
+std::string ProfileLevelIdToString(
+    const ProfileLevelId& profile_level_id) {
+  // Handle special case level == 1b.
+  if (profile_level_id.level == kLevel1_b) {
+    switch (profile_level_id.profile) {
+      case kProfileConstrainedBaseline:
+        return {"42f00b"};
+      case kProfileBaseline:
+        return {"42100b"};
+      case kProfileMain:
+        return {"4d100b"};
+      // Level 1b is not allowed for other profiles.
+      default:
+        return "error please fix profile id";
+       }
+  }
+
+  const char* profile_idc_iop_string;
+  switch (profile_level_id.profile) {
+    case kProfileConstrainedBaseline:
+      profile_idc_iop_string = "42e0";
+      break;
+    case kProfileBaseline:
+      profile_idc_iop_string = "4200";
+      break;
+    case kProfileMain:
+      profile_idc_iop_string = "4d00";
+      break;
+    case kProfileConstrainedHigh:
+      profile_idc_iop_string = "640c";
+      break;
+    case kProfileHigh:
+      profile_idc_iop_string = "6400";
+      break;
+    // Unrecognized profile.
+    default:
+       return "error please fix profile id";
+  }
+
+  char str[7];
+  snprintf(str, 7u, "%s%02x", profile_idc_iop_string, profile_level_id.level);
+  return {str};
+}
+
+
+bool IsLevelAsymmetryAllowed(const CodecParameterMap& params) {
+  const auto it = params.find(kLevelAsymmetryAllowed);
+  return it != params.end() && strcmp(it->second.c_str(), "1") == 0;
+}
+
+void GenerateProfileLevelIdForAnswer(
+    const CodecParameterMap& local_supported_params,
+    const CodecParameterMap& remote_offered_params,
+    CodecParameterMap* answer_params) {
+  // If both local and remote haven't set profile-level-id, they are both using
+  // the default profile. In this case, don't set profile-level-id in answer
+  // either.
+  if (!local_supported_params.count(kProfileLevelId) &&
+      !remote_offered_params.count(kProfileLevelId)) {
+    return;
+  }
+
+  // Parse profile-level-ids.
+  const ProfileLevelId local_profile_level_id =
+      ParseSdpProfileLevelId(local_supported_params);
+  const ProfileLevelId remote_profile_level_id =
+      ParseSdpProfileLevelId(remote_offered_params);
+
+
+  // Parse level information.
+  const bool level_asymmetry_allowed =
+      IsLevelAsymmetryAllowed(local_supported_params) &&
+      IsLevelAsymmetryAllowed(remote_offered_params);
+  const H264Level local_level = local_profile_level_id.level;
+  const H264Level remote_level = remote_profile_level_id.level;
+  const H264Level min_level = std::min(local_level, remote_level);
+
+  // Determine answer level. When level asymmetry is not allowed, level upgrade
+  // is not allowed, i.e., the level in the answer must be equal to or lower
+  // than the level in the offer.
+  const H264Level answer_level = level_asymmetry_allowed ? local_level : min_level;
+
+  // Set the resulting profile-level-id in the answer parameters.
+  (*answer_params)[kProfileLevelId] = ProfileLevelIdToString(
+      ProfileLevelId(local_profile_level_id.profile, answer_level));
+}
+
+
+
+
+
 using json = nlohmann::json;
 using namespace SdpParse;
 
@@ -242,10 +509,14 @@ namespace SdpParse {
                 json consumableCodecPt = (*consumableCodecPtr)["mappedPayloadType"];
 
                 json &capCodecs = caps["codecs"];
+                
+                
+                //std::string mimeb = codec["mimeType"].get<std::string>();
+                // SInfo  << " mimetype " << params;
 
                 auto matchedCapCodecItr =
-                        std::find_if(capCodecs.begin(), capCodecs.end(), [&consumableCodecPt](json & capCodec) {
-                            return capCodec["preferredPayloadType"] == consumableCodecPt;
+                        std::find_if(capCodecs.begin(), capCodecs.end(), [&consumableCodecPt, &codec](json & capCodec) {
+                            return capCodec["preferredPayloadType"] == consumableCodecPt &&  capCodec["mimeType"].get<std::string>() == codec["mimeType"].get<std::string>()  ;
                         });
 
                 auto matchedCapCodec = *matchedCapCodecItr;
@@ -265,8 +536,8 @@ namespace SdpParse {
 
                 json &capRtxCodecs = caps["codecs"];
 
-                auto consumableCapRtxCodecItr = std::find_if(capRtxCodecs.begin(), capRtxCodecs.end(), [&consumableCodec](json & capRtxCodec) {
-                    return (isRtxCodec(capRtxCodec) && (capRtxCodec["parameters"]["apt"] == consumableCodec["payloadType"]));
+                auto consumableCapRtxCodecItr = std::find_if(capRtxCodecs.begin(), capRtxCodecs.end(), [&consumableCodec,  &codec](json & capRtxCodec) {
+                    return (isRtxCodec(capRtxCodec) && (capRtxCodec["parameters"]["apt"] == consumableCodec["payloadType"])&&( capRtxCodec["mimeType"].get<std::string>() == codec["mimeType"].get<std::string>())    );
                 });
 
                 
@@ -1903,39 +2174,38 @@ static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modi
 
         // If strict matching check profile-level-id.  // arvind TBD
         if (strict) {
-            //			webrtc::H264::CodecParameterMap aParameters;
-            //			webrtc::H264::CodecParameterMap bParameters;
-            //
-            //			aParameters["level-asymmetry-allowed"] = std::to_string(getH264LevelAssimetryAllowed(aCodec));
-            //			aParameters["packetization-mode"]      = std::to_string(aPacketizationMode);
-            //			aParameters["profile-level-id"]        = getH264ProfileLevelId(aCodec);
-            //			bParameters["level-asymmetry-allowed"] = std::to_string(getH264LevelAssimetryAllowed(bCodec));
-            //			bParameters["packetization-mode"]      = std::to_string(bPacketizationMode);
-            //			bParameters["profile-level-id"]        = getH264ProfileLevelId(bCodec);
-            //
-            //			if (!webrtc::H264::IsSameH264Profile(aParameters, bParameters))
-            //				return false;
-            //
-            //			webrtc::H264::CodecParameterMap newParameters;
-            //
-            //			try
-            //			{
-            //				webrtc::H264::GenerateProfileLevelIdForAnswer(aParameters, bParameters, &newParameters);
-            //			}
-            //			catch (std::runtime_error)
-            //			{
-            //				return false;
-            //			}
-            //
-            //			if (modify)
-            //			{
-            //				auto profileLevelIdIt = newParameters.find("profile-level-id");
-            //
-            //				if (profileLevelIdIt != newParameters.end())
-            //					aCodec["parameters"]["profile-level-id"] = profileLevelIdIt->second;
-            //				else
-            //					aCodec["parameters"].erase("profile-level-id");
-            //			}
+            
+            
+            			CodecParameterMap aParameters;
+           			CodecParameterMap bParameters;
+                                
+                               // SInfo << "aCodec " << aCodec.dump(4);
+                               // SInfo << "bCodec " << bCodec.dump(4);
+                                            
+            			aParameters["level-asymmetry-allowed"] = std::to_string(getH264LevelAssimetryAllowed(aCodec));
+            			aParameters["packetization-mode"]      = std::to_string(aPacketizationMode);
+            			aParameters["profile-level-id"]        = getH264ProfileLevelId(aCodec);
+                                
+                                bParameters["level-asymmetry-allowed"] = std::to_string(getH264LevelAssimetryAllowed(bCodec));
+            			bParameters["packetization-mode"]      = std::to_string(bPacketizationMode);
+            			bParameters["profile-level-id"]        = getH264ProfileLevelId(bCodec);
+            
+            			if (!IsSameH264Profile(aParameters, bParameters))
+            				return false;
+            
+            			CodecParameterMap newParameters;
+          
+            			GenerateProfileLevelIdForAnswer(aParameters, bParameters, &newParameters);
+
+            			if (modify)
+            			{
+            				auto profileLevelIdIt = newParameters.find("profile-level-id");
+            
+            				if (profileLevelIdIt != newParameters.end())
+            					aCodec["parameters"]["profile-level-id"] = profileLevelIdIt->second;
+           				else
+            					aCodec["parameters"].erase("profile-level-id");
+            			}
         }
     }        // Match VP9 parameters.
     else if (aMimeType == "video/vp9") {

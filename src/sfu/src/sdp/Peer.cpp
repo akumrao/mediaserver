@@ -129,6 +129,12 @@ namespace SdpParse {
             { "video", ortc::getSendingRemoteRtpParameters("video", extendedRtpCapabilities)}
         };
         
+
+       // LInfo("sendingRtpParametersByKind: ", sendingRtpParametersByKind.dump(4));
+
+
+       // LInfo("sendingRemoteRtpParametersByKind: ", sendingRemoteRtpParametersByKind.dump(4));
+
         
         this->loaded = true;
     }
