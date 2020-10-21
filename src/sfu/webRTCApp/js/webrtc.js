@@ -172,7 +172,7 @@ socket.on('join', function (room, id){
   //
   //   sendMessage ({
   //       room: room,
-  //       from: peerID,
+  //       
   //       to: remotePeerID,
   //       type: "subscribe",
   //       desc: id
@@ -335,7 +335,6 @@ function subscribe_simulcast(trackid)
                     desc["data"]={"spatialLayer":i};
                     sendMessage({
                         room: roomId,
-                        from: peerID,
                         type: 'setPreferredLayers',
                         desc: desc
                     });
@@ -482,8 +481,6 @@ async function doAnswer(remotePeerID) {
         console.log('Sending answer to peer.');
         sendMessage({
             room: roomId,
-            from: peerID,
-            to: remotePeerID,
             type: answer.type,
             desc: answer
         });
@@ -611,7 +608,6 @@ function addProducerVideoAudio(track, store) {
 
         sendMessage ({
             room: roomId,
-            from: peerID,
             //to: remotePeerID,
             type: offer1.type,
             desc: offer1
@@ -807,7 +803,6 @@ async function btn_subscribe_resume(consumerid ) {
 
     sendMessage ({
           room: roomId,
-          from: peerID,
           type: "subscribe-resume",
           desc: consumerid
         });
@@ -817,7 +812,6 @@ async function btn_subscribe_pause(consumerid ) {
 
     sendMessage ({
           room: roomId,
-          from: peerID,
           type: "subscribe-pause",
           desc: consumerid
         });
@@ -934,7 +928,6 @@ async function publish(isWebcam)
 
         sendMessage ({
           room: roomId,
-          from: peerID,
           //to: remotePeerID,
           type: pc1.localDescription.type,
           desc: pc1.localDescription
@@ -957,7 +950,6 @@ async function subscribe() {
 
   sendMessage ({
           room: roomId,
-          from: peerID,
           type: "subscribe",
         });
 
@@ -987,8 +979,6 @@ async function btn_audio_level_start()
 
   sendMessage ({
           room: roomId,
-          from: peerID,
-          to: remotePeerID,
           type: "rtpObserver_addProducer",
         });
 }
@@ -998,8 +988,6 @@ async function btn_audio_level_stop()
 
   sendMessage ({
           room: roomId,
-          from: peerID,
-          to: remotePeerID,
           type: "rtpObserver_removeProducer",
         });
 }
@@ -1010,7 +998,6 @@ async function btn_producer_close(producerids)
 
     sendMessage ({
         room: roomId,
-        from: peerID,
         type: "producer_close",
         desc: producerids
     });
@@ -1022,7 +1009,6 @@ async function btn_producer_stats(producerid)
 
   sendMessage ({
           room: roomId,
-          from: peerID,
           type: "producer_getStats",
           desc: producerid
         });
@@ -1034,7 +1020,6 @@ async function btn_subscribe_stats(consumerid)
 
   sendMessage ({
           room: roomId,
-          from: peerID,
           type: "consumer_getStats",
           desc: consumerid
         });
