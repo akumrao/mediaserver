@@ -31,7 +31,7 @@ libuv is a multi-platform support library with a focus on asynchronous I/O. It w
 for building 
 apt install build-essential
 
-install clang 5 or above
+install clang 8 or above
 
 
 apt-get install libc++abi-dev
