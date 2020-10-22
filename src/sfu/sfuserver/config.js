@@ -352,10 +352,10 @@
             "ip": "127.0.0.1"
           }
         ],
-        "enableUdp": false,
+        "enableUdp": true,
         "enableTcp": true,
-        "preferUdp": false,
-        "preferTcp": true,
+        "preferUdp": true,
+        "preferTcp": false,
         "initialAvailableOutgoingBitrate": 1000000,
         "enableSctp": false,
         "numSctpStreams": {
