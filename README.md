@@ -33,9 +33,33 @@ apt install build-essential
 
 install clang 8 or above
 
+Install the gcc-7 packages:
 
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install g++-7 -y
+Set it up so the symbolic links gcc, g++ point to the newer version:
+
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
+                         --slave /usr/bin/g++ g++ /usr/bin/g++-7 
+sudo update-alternatives --config gcc
+gcc --version
+g++ --version
+clang --version
+clang++ --version
+
+optional
 apt-get install libc++abi-dev
-
 apt-get install libc++-dev
 apt-get install libsctp-dev
 apt-get install libstdc++5
+
+
+To compile 
+cd /workspace/mediaserver/src/sfu
+make 
+
+cd /workspace/mediaserver/src/sfu/sfuserver
+make
+./sfu
