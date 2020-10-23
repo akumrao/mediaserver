@@ -149,7 +149,6 @@ var  peerName;
 
 var pc1;
 var pc2;
-var pc2Connected= false;
 
 var socket = io.connect();
 
@@ -359,21 +358,21 @@ function initPC2()
             case 'connected':
             case 'completed':
 
-                pc2Connected = true;
+
                 console.log( 'subscribed...');
 
                 break;
             case 'failed':
-                pc2.close();
+               // pc2.close();
 
                 console.log( 'failed...');
                 break;
             case 'disconnected':
-                pc2.close();
+               // pc2.close();
                 console.log( 'Peerconnection disconnected...');
                 break;
             case 'closed':
-                pc2.close();
+                //pc2.close();
                 console.log( 'failed...');
                 break;
         }
@@ -407,15 +406,15 @@ function initPC2()
                 console.log( 'published...');
                 break;
             case 'failed':
-                pc1.close();
+               // pc1.close();
                 console.log( 'failed...');
                 break;
             case 'disconnected':
-                pc1.close();
+               // pc1.close();
                 console.log( 'failed...');
                 break;
             case 'closed':
-                pc1.close();
+               // pc1.close();
                  console.log( 'failed...');
                 break;
         }
@@ -617,22 +616,14 @@ async function doAnswer(remotePeerID) {
 
   await pc2.setLocalDescription(answer);
 
-    if(!pc2Connected) {
-        pc2Connected = true;
+   
         console.log('Sending answer to peer.');
         sendMessage({
             room: roomId,
             type: answer.type,
             desc: answer
         });
-    }
 
-
-    // while (!pc2Connected) {
-    //     console.log(' transport connstate', pc2Connected );
-    //     await sleep(100);
-    //
-    // }
 
 
     console.log("answer %o", answer);
@@ -998,6 +989,14 @@ async function publish(isWebcam)
         //var encodings;
         var _stream = new MediaStream();
 
+        if (pc1.addTransceiver){
+
+        }
+        else
+        {
+             console.log(" pc.addTransceiver is not supported in this broswer, do pc.addTrack")
+            /// else do pc.addTrack
+        }
 
         if(audiotrack) {
             var transceiver1 = pc1.addTransceiver(
@@ -1007,7 +1006,7 @@ async function publish(isWebcam)
                     streams: [_stream]
                 });
 
-            transceiver1.sender.setStreams(_stream);
+            //transceiver1.sender.setStreams(_stream);
         }
          
          //firefox
