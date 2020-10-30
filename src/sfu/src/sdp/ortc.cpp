@@ -1859,7 +1859,7 @@ namespace SdpParse {
                 }
 
                 // NOTE: We assume a single media codec plus an optional RTX codec.
-                break;
+               // break;
             }
 
             for (auto& extendedExtension : extendedRtpCapabilities["headerExtensions"]) {
