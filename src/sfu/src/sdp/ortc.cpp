@@ -493,7 +493,10 @@ namespace SdpParse {
                 {"rtcp", json::object()}
             };
 
-//            SInfo  << " params " << params;
+           // SInfo  << " params " << params.dump(4);
+           // SInfo  << " caps " << caps.dump(4);
+           // SInfo  << " rtpMapping " << rtpMapping.dump(4);
+            
             for (auto& codec : params["codecs"]) 
             {
                 if (isRtxCodec(codec))
@@ -505,6 +508,8 @@ namespace SdpParse {
                         std::find_if(entrys.begin(), entrys.end(), [&codec](json & entry) {
                             return entry["payloadType"] == codec["payloadType"];
                         });
+                        
+                if(consumableCodecPtr == entrys.end()) continue;
 
                 json consumableCodecPt = (*consumableCodecPtr)["mappedPayloadType"];
 
@@ -512,12 +517,18 @@ namespace SdpParse {
                 
                 
                 //std::string mimeb = codec["mimeType"].get<std::string>();
-                // SInfo  << " mimetype " << params;
+                //SInfo  << " codec " << codec.dump(4);
 
+                
                 auto matchedCapCodecItr =
                         std::find_if(capCodecs.begin(), capCodecs.end(), [&consumableCodecPt, &codec](json & capCodec) {
                             return capCodec["preferredPayloadType"] == consumableCodecPt &&  capCodec["mimeType"].get<std::string>() == codec["mimeType"].get<std::string>()  ;
                         });
+                        
+                if(matchedCapCodecItr == capCodecs.end()) 
+                { 
+                    continue;
+                }
 
                 auto matchedCapCodec = *matchedCapCodecItr;
                 json consumableCodec = {
