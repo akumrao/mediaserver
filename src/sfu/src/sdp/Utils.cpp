@@ -17,6 +17,13 @@ namespace SdpParse
 		{
                         std::string extractTrackID(const json& offerMediaObject)
                         {
+
+                            if( offerMediaObject.find("msid") == offerMediaObject.end())
+                            {
+				SError << "msid is missing at offerMediaObject";
+                        	return "";
+                            }
+
                             auto msid = offerMediaObject["msid"];
 
                             auto v = SdpParse::Utils::split(msid.get<std::string>(), ' ');

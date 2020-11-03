@@ -140,7 +140,7 @@ var isStarted = false;
 //var remoteStream;
 //var turnReady;
 
-var roomId = 'foo'; /*think as a group  peerName@room */
+var roomId = 'sfuroom'; /*think as a group  peerName@room */
 //var  remotePeerID;
 var  peerID;
 var  remotePeerName;

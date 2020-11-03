@@ -74,6 +74,26 @@ namespace SdpParse {
         sdpObject = sdptransform::parse(sdp);
         
         int sizeofMid = sdpObject["media"].size();
+
+         //Arind validate  SDP 
+     /*
+        auto iter = sdpObject["media"].cbegin();
+        for (; iter != sdpObject["media"].cend();) {
+            json offerMediaObject = *iter;
+            if( offerMediaObject.find("msid") == offerMediaObject.end())
+            {
+                iter = sdpObject["media"].erase(iter);
+            }
+            else 
+            {
+                ++iter;
+            }
+        }
+        
+        sizeofMid = sdpObject["media"].size();
+        */
+       
+
         json& offerMediaObject = sdpObject["media"][sizeofMid-1];
         std::string mid = offerMediaObject["mid"].get<std::string>();
         maxMid = std::stoi(mid);
