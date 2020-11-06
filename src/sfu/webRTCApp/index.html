@@ -37,6 +37,11 @@
 </style>
 <body>
   <table>
+    <tr 
+    <div id="divStatus">Status</div>
+    </tr>
+    <tr id="roomCtrl">
+    </tr>
     <tr id="traddCtrl1">
     </tr>
     <tr id="traddCtrl2">
@@ -72,7 +77,7 @@
           <legend>Publishing</legend>
           <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
           <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
-          <div><label><input type="checkbox" id="chk_video" > video</label></div>
+          <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
           <div>
             <button id="btn_webcam">Start Webcam</button>
             <span id="webcam_status"></span>
@@ -114,10 +119,10 @@
   window.localStorage.setItem('debug', 'mediaserver-client:*');
 </script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+<!--   <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script> -->
+   <!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script> -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<!--   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
 
   <script src="js/main.js" async  ></script>
   <script src="js/webrtc.js" async></script>

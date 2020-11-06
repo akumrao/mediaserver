@@ -199,8 +199,9 @@ namespace base {
 
             virtual ~WebSocketConnection() ;
 
-            void onSocketRecv(const std::string& buffer);
+            void onSocketRecv( std::string buffer);
 
+            std::string storeBuf;
 
             void send(const char* data, size_t len)
             {

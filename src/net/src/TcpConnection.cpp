@@ -102,7 +102,7 @@ namespace base {
             if (this->closed)
                 return;
 
-            int err;
+           // int err;
 
             this->closed = true;
 
@@ -208,7 +208,7 @@ namespace base {
             this->localPort = port;
 
 
-            int r;
+            //int r;
 
             auto req = new uv_connect_t();
             req->data = this;

@@ -62,7 +62,7 @@ namespace net
 
 	inline uv_udp_t* PortManager::BindUdp(std::string& ip)
 	{
-            int foundPort;
+        
 		return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip));
 	}
 

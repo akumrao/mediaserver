@@ -18,15 +18,15 @@
 #include "define.h"
 
 // Shared library exports
-#if defined(base_WIN) && defined(base_SHARED_LIBRARY)
-    #if defined(Base_EXPORTS)
-        #define Base_API __declspec(dllexport)
-    #else
-        #define Base_API __declspec(dllimport)
-    #endif
-#else
-    #define Base_API // nothing
-#endif
-
+// #if defined(base_WIN) && defined(base_SHARED_LIBRARY)
+//     #if defined(Base_EXPORTS)
+//         #define Base_API __declspec(dllexport)
+//     #else
+//         #define Base_API __declspec(dllimport)
+//     #endif
+// #else
+//     #define Base_API // nothing
+// #endif
+#define Base_API
 
 #endif // base_H

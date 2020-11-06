@@ -18,13 +18,13 @@
 #include "base/util.h"
 
 #include <time.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 
 #include <assert.h>
 #include <iterator>
 
 
-#define base_ENABLE_LOGGING 1
+
 
 using std::endl;
 
@@ -347,8 +347,16 @@ namespace base {
         //    OutputSDebugtring(temp.c_str());
         //#endif
 
+#if defined(__ANDROID__)
 
-#if !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
+        // Android log function wrappers
+        static const char* kTAG = "jnilog";
+
+        __android_log_print(ANDROID_LOG_ERROR, kTAG, "%s", ss.str().c_str());
+
+        //udpClient->send((char*) ss.str().c_str(), ss.str().length());
+
+#elif !defined(WIN32) || defined(_CONSOLE) || defined(_DEBUG)
         std::cout << ss.str() << std::flush;
 #endif
 

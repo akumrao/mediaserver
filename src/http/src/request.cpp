@@ -11,7 +11,7 @@
 
 
 #include "http/request.h"
-#include "http/util.h"
+#include "http/httputil.h"
 
 #include <assert.h>
 
