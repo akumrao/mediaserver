@@ -38,8 +38,8 @@ namespace base {
             ~HttpConnection() override;
 
         public:
-            void send(const char* data, size_t len);
-            void Close();
+            void send(const char* data, size_t len) override;
+            void  Close() override;
 
             /* Pure virtual methods inherited from ::HttpConnection. */
         public:
@@ -54,9 +54,9 @@ namespace base {
            // virtual void onParserEnd();
 
             /// HTTP connection and server interface
-            virtual void onHeaders();
-            virtual void on_payload(const char* data, size_t len);
-            virtual void onComplete();
+            virtual void onHeaders() override;
+            virtual void on_payload(const char* data, size_t len) override;
+            virtual void onComplete() override;
          
 
             /// Send the outdoing HTTP header.

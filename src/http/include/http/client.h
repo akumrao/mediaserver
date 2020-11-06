@@ -66,7 +66,7 @@ namespace base {
             
 
             virtual void setReadStream(std::ostream* os) {
-            };
+            }
             
             virtual std::stringstream* readStream()
             {
@@ -75,21 +75,20 @@ namespace base {
 		// Returns the cast read stream pointer or nullptr.
 	
             
-            virtual void send(const char* data, size_t len){};
-            virtual void send(){};
-            virtual void send(Request& req){};
-            virtual void send(const std::string &str){};
+            virtual void send(const char* data, size_t len){}
+            virtual void send(){}
+            virtual void send(Request& req){}
+            virtual void send(const std::string &str){}
             
 
-            void Close() {
-            };
+            void Close() {}
 
             virtual void onHeaders() {
-            };
+            }
             virtual void on_payload(const char* data, size_t len);
 
             virtual void onComplete() {
-            };
+            }
     
             
            // ProgressSignal IncomingProgress; ///< Fired on download progress

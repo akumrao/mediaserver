@@ -28,17 +28,17 @@ struct Bitwise
     {
     }
 
-    virtual void reset() { data = 0; };
+    virtual void reset() { data = 0; }
     virtual void set(unsigned flag)
     {
         if (!has(flag))
             data |= flag;
     }
 
-    virtual void add(unsigned flag) { data |= flag; };
-    virtual void remove(unsigned flag) { data &= ~flag; };
-    virtual void toggle(unsigned flag) { data ^= flag; };
-    virtual bool has(unsigned flag) const { return (data & flag) == flag; };
+    virtual void add(unsigned flag) { data |= flag; }
+    virtual void remove(unsigned flag) { data &= ~flag; }
+    virtual void toggle(unsigned flag) { data ^= flag; }
+    virtual bool has(unsigned flag) const { return (data & flag) == flag; }
 };
     
     
@@ -66,7 +66,7 @@ struct IPacket{
     }
     
     
-     virtual size_t size() const { return 0; };
+     virtual size_t size() const { return 0; }
 
     /// The packet data pointer for buffered packets.
     virtual char* data() const { return nullptr; }

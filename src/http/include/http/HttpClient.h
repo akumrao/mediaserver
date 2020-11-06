@@ -37,22 +37,22 @@ namespace base {
             void connect();
 
         public:
-            void tcpsend(const char* data, size_t len);
-            void send(const char* data, size_t len);
-            void send();
-            void send(Request& req);
-            void send(const std::string &str);
-            void Close();
+            void tcpsend(const char* data, size_t len) override;
+            void send(const char* data, size_t len) override;
+            void send() override;
+            void send(Request& req) override;
+            void send(const std::string &str) override;
+            void Close() override;
             
 
-            void on_connect();
-            void on_close();
+            void on_connect() override;
+            void on_close() override;
 
-            virtual void cbDnsResolve(addrinfo* res, std::string ip);
+            virtual void cbDnsResolve(addrinfo* res, std::string ip) override;
 
             /* Pure virtual methods inherited from ::TcpHTTPConnection. */
         public:
-            void on_read(const char* data, size_t len);
+            void on_read(const char* data, size_t len) override;
 
             /*  /// HTTP Parser interface
               virtual void onParserHeader(const std::string& name, const std::string& value);
@@ -62,9 +62,9 @@ namespace base {
               virtual void onParserEnd();
              */
             /// HTTP connection and server interface
-            virtual void onHeaders();
-            void on_payload(const char* data, size_t len);
-            virtual void onComplete();
+            virtual void onHeaders() override;
+            void on_payload(const char* data, size_t len) override;
+            virtual void onComplete() override;
   
 
             //   Message* incomingHeader();
@@ -79,7 +79,7 @@ namespace base {
             /// Set true to prevent auto-sending HTTP headers.
             void shouldSendHeader(bool flag);
 
-            void setReadStream(std::ostream* os);
+            void setReadStream(std::ostream* os) override;
 
         private:
             // Passed by argument.
@@ -91,8 +91,8 @@ namespace base {
             // Response _response;
             //Parser _parser;
 
-            Message* incomingHeader();
-            Message* outgoingHeader();
+            Message* incomingHeader() override;
+            Message* outgoingHeader() override;
 
 
             URL _url;
@@ -102,9 +102,9 @@ namespace base {
             std::vector<std::string> _outgoingBuffer;
             std::unique_ptr<std::ostream> _readStream;
             
-           std::stringstream* readStream()
+           std::stringstream* readStream() override
            {
-		return dynamic_cast<std::stringstream*>(_readStream.get());
+		      return (std::stringstream*)_readStream.get();
            }
 
 

@@ -286,7 +286,7 @@ namespace base {
 
             // Release any file handles
             if (_readStream) {
-                auto fstream = dynamic_cast<std::ofstream*> (_readStream.get());
+                std::ofstream* fstream = (std::ofstream*) (_readStream.get());
                 if (fstream) {
                     // LTrace("Closing file stream")
                     fstream->close();

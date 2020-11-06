@@ -35,7 +35,7 @@ namespace base {
 template <class TKey, class TValue> class AbstractCollection
 {
 public:
-    AbstractCollection(){};
+    AbstractCollection(){}
     virtual ~AbstractCollection() {}
 
     virtual bool add(const TKey& key, TValue* item, bool whiny = true) = 0;

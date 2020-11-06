@@ -147,8 +147,8 @@ var  remotePeerName;
 var  peerName;
 
 
-var pc1;
-var pc2;
+let pc1 =null;
+let pc2 = null;
 
 var socket = io.connect();
 
@@ -188,7 +188,7 @@ socket.on('joined', function(room, id) {
   peerID = id;
 
 
-   initPC2();
+   initPC();
     // Handle RTCPeerConnection connection status.
 
 
@@ -196,7 +196,7 @@ socket.on('joined', function(room, id) {
 
 
 
-function initPC2()
+function initPC()
 {
     pc2 = new RTCPeerConnection(
         {
@@ -964,6 +964,18 @@ async function publish(isWebcam)
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
 
+  if(pc1 == null)
+  {
+
+    var str = "Not connected yet, press connect button first";
+    var result = str.fontcolor("red");
+    document.getElementById("divStatus").innerHTML = result;
+
+    return ;
+  }
+  else
+    document.getElementById("divStatus").innerHTML = "";
+
   var parser = new URL(window.location.href); 
   var istcp = parser.searchParams;
   const tcpValue = istcp.get('forceTcp') ? true : false;
@@ -1082,6 +1094,19 @@ async function publish(isWebcam)
 
 
 async function subscribe() {
+
+
+  if(pc2 == null)
+  {
+
+    var str = "Not connected yet, press connect button first";
+    var result = str.fontcolor("red");
+    document.getElementById("divStatus").innerHTML = result;
+
+    return ;
+  }
+  else
+    document.getElementById("divStatus").innerHTML = "";
 
   var parser = new URL(window.location.href); 
   var istcp = parser.searchParams;

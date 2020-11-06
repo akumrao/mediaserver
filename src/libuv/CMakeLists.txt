@@ -21,7 +21,7 @@ endif()
 
 set(uv_sources
     src/fs-poll.cpp
-    #src/idna.cpp
+    src/idna.cpp
     src/inet.cpp
     src/random.cpp
     src/strscpy.cpp

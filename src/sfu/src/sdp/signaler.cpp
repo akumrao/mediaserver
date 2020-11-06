@@ -191,7 +191,7 @@ namespace SdpParse {
 
         void Signaler::connect(const std::string& host, const uint16_t port) {
 
-            worker = new Worker();
+            worker = new Worker();  // moved this code to CreateRoom. One room will have one worker thread
 
            // room = rm;
 

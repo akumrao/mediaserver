@@ -27,6 +27,8 @@ namespace base {
         PacketProcessor() {
         }
 
+        virtual ~PacketProcessor(){}
+
         /// This method performs processing on the given
         /// packet and emits the result.
         ///
@@ -34,20 +36,20 @@ namespace base {
         /// the current thread scope) then packet data must be copied.
         /// Copied data can be freed directly aFter the async call to
         /// emit() the outgoing packet.
-        virtual void process(IPacket& packet) {};
+        virtual void process(IPacket& packet) {}
 
         /// This method ensures compatibility with the given
         /// packet type. Return false to reject the packet.
 
         virtual bool accepts(IPacket*) {
             return true;
-        };
+        }
 
         virtual void emit(IPacket& packet) {
 
             if (cbProcess)
                 cbProcess(packet);
-        };
+        }
         /// This method ensures compatibility with the given
         /// packet type. Return false to reject the packet.
 
@@ -89,7 +91,7 @@ namespace base {
 
             if (cbProcess)
                 cbProcess(packet);
-        };
+        }
         /// This method ensures compatibility with the given
         /// packet type. Return false to reject the packet.
 

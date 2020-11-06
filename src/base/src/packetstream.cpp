@@ -68,7 +68,7 @@ namespace base {
 
             source->cbProcess = std::bind(&PacketStream::process, this, _1);
 
-            auto startable = dynamic_cast<base::Thread*> (source);
+            base::Thread* startable = (base::Thread*) (source);
             if (startable) {
                 startable->start();
             } else
@@ -83,7 +83,7 @@ namespace base {
         for (auto source : _sources) {
             std::lock_guard<std::mutex> guard(_procMutex);
 
-            auto startable = dynamic_cast<base::Thread*> (source);
+            base::Thread* startable = (base::Thread*) (source);
             if (startable) {
                 startable->stop();
             } else

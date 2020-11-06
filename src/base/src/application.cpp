@@ -151,7 +151,7 @@ namespace base {
 
 #ifdef _DEBUG
                 // Print active handles
-                uv_walk(loop, Application::onPrintHandle, nullptr);
+            //    uv_walk(loop, Application::onPrintHandle, nullptr);
 #endif
 
         // Shutdown the garbage collector to safely free memory before the app exists

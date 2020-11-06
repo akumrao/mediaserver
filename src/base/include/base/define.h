@@ -29,7 +29,7 @@
 #define base_SHARED_LIBRARY
 
 // Disable logging
-#define base_ENABLE_LOGGING
+#define base_ENABLE_LOGGING 1
 
 // Attempt to recover from internal exceptions
 // Exceptions thrown inside thread and stream context will be caught, logged and
@@ -67,7 +67,7 @@
 /* #undef HAVE_INTTYPES_H */
 
 // Enable macros for format specifiers in <inttypes.h>
-#define __STDC_FORMAT_MACROS
+//#define __STDC_FORMAT_MACROS
 
 // Define to 1 if your processor stores words with the most significant byte
 // first (like Motorola and SPARC, unlike Intel and VAX).

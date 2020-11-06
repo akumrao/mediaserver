@@ -39,8 +39,8 @@ namespace base {
             ~HttpsConnection() override;
 
         public:
-            void send(const char* data, size_t len);
-            void Close();
+            void send(const char* data, size_t len) override;
+            void Close() override;
 
             /* Pure virtual methods inherited from ::HttpsConnection. */
         public:
@@ -55,16 +55,16 @@ namespace base {
             virtual void onParserEnd();
 */
             /// HTTP connection and server interface
-            virtual void onHeaders();
-            virtual void on_payload(const char* data, size_t len);
-            virtual void onComplete();
+            virtual void onHeaders() override;
+            virtual void on_payload(const char* data, size_t len) override;
+            virtual void onComplete() override;
             // virtual void onClose() ;
 
          //   Message* incomingHeader();
          //   Message* outgoingHeader();
 
             /// Send the outdoing HTTP header.
-            virtual long sendHeader();
+            virtual long sendHeader() ;
 
             WebSocketConnection *wsAdapter{ nullptr};
 

@@ -156,7 +156,7 @@ namespace base {
                     std::string disp("form-data; name=\"");
                     disp.append(pit->name);
                     disp.append("\"");
-                    auto filePart = dynamic_cast<FilePart*> (pit->part);
+                    FilePart* filePart = (FilePart*) (pit->part);
                     if (filePart) {
                         std::string filename = filePart->filename();
                         if (!filename.empty()) {
@@ -280,7 +280,7 @@ namespace base {
                                 std::string disp("form-data; name=\"");
                                 disp.append(p.name);
                                 disp.append("\"");
-                                auto filePart = dynamic_cast<FilePart*> (p.part);
+                                FilePart* filePart = (FilePart*) (p.part);
                                 if (filePart) {
                                     std::string filename = filePart->filename();
                                     if (!filename.empty()) {
@@ -547,6 +547,8 @@ namespace base {
             } else if (_istr.bad())
                 throw std::runtime_error("Cannot read multipart source file: " +
                     _filename);
+
+            return false;
         }
 
         bool FilePart::write(FormWriter& writer) {
@@ -569,6 +571,8 @@ namespace base {
             } else if (_istr.bad())
                 throw std::runtime_error("Cannot read multipart source file: " +
                     _filename);
+
+            return false;
         }
 
         void FilePart::write(std::ostream& ostr) {

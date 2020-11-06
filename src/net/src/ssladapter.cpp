@@ -20,11 +20,31 @@
 #include <stdexcept>
 #include <vector>
 
+#define FROMFILE 1
+
 using namespace std;
 
 
 namespace base {
     namespace net {
+
+        const char defaultCertificate[] = "-----BEGIN CERTIFICATE-----\n"
+                                          "MIICwjCCAaqgAwIBAgIJAOKZBPq4tcY7MA0GCSqGSIb3DQEBCwUAMBkxFzAVBgNV\n"
+                                          "BAMTDkFydmluZFNjb3BlQXBwMB4XDTIwMDYxMzA0MjE0N1oXDTMwMDYxMTA0MjE0\n"
+                                          "N1owGTEXMBUGA1UEAxMOQXJ2aW5kU2NvcGVBcHAwggEiMA0GCSqGSIb3DQEBAQUA\n"
+                                          "A4IBDwAwggEKAoIBAQDAPJVsM+7tQxKy2IBp+8i2aCuv3xl1wftDxXqG7GYuatDi\n"
+                                          "d8rwHBH68JcnTU09T8RHi+Ezj+0YPYV4IDGTUDufxK1snv5V6wdKESZM2ZYvzDID\n"
+                                          "uHCiXrtl5Tee+tnh1XYk4CXk9h+SsB/X70FXIW98XqR+2iVl1ezwjEeu7X1ET9wh\n"
+                                          "1UHOiLB0do5+dSDo/nNIP+K+QnG/YC9vYUViozWO1JvZ0KgEybOrTbRKWsHKRyRN\n"
+                                          "OyZtXNUMcLt2vJLCm5dmDfPCeqbEagyNZLPpucd+HRoZ1U1aXvZ36l30sJlvIjnk\n"
+                                          "eLkccd3Bv85fhAvzK5WoAqSsB0nFOAYmDIVcyDcfAgMBAAGjDTALMAkGA1UdEwQC\n"
+                                          "MAAwDQYJKoZIhvcNAQELBQADggEBAC5KyEK9/Z4VM2CSNbFm6IzND0AACqYT2e8d\n"
+                                          "HsT5/cLo+Zc7NWvMagq+myAAYEptarbvHNVWS/gsYWSg5+pHhrs1VPCXZTLjelGG\n"
+                                          "nSqEZSXl4ANV9yNP/KdG8z8zruHKsqwJ0LDLem2KOnA0WzcEO1IRH59EnVsV4CkT\n"
+                                          "Cs1DH2i20NCZklwFREd3AOgkPR7pruxITN6hQ6MH/MHC6FyQbbvJEl7ceV1adON/\n"
+                                          "XJNYomKwCVkxLss8PV/TcyPA9CWJA/c9blh/GPRAerqbBF7OwPVKmt3RxBr02tGT\n"
+                                          "TFTokCgkm2d9DYtf0rtQOOL82zZB/YmgQytMYxaiUCf31xJTR/I=\n"
+                                          "-----END CERTIFICATE-----";
 
 
         static SSL_CTX *ctx = nullptr;
@@ -60,27 +80,62 @@ namespace base {
         
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+            #if FROMFILE
             if (SSL_CTX_load_verify_locations(ctx, CertFile, nullptr) != 1)
                     ERR_print_errors_fp(stderr);
 
             if (SSL_CTX_set_default_verify_paths(ctx) != 1)
                     ERR_print_errors_fp(stderr);
                 
-                    /* set the local certificate from CertFile */
+
             if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
                 ERR_print_errors_fp(stderr);
                 abort();
             }
-            
+            #else
+
+            X509 *cert = NULL;
+            BIO *bio = NULL;
+
+            bio = BIO_new_mem_buf((char *)defaultCertificate, -1);
+
+            if(bio == NULL) {
+                fprintf(stderr,"BIO_new_mem_buf failed\n");
+                abort();
+            }
+
+            /* use it to read the PEM formatted certificate from memory into an X509
+             * structure that SSL can use
+             */
+            cert = PEM_read_bio_X509(bio, NULL, 0, NULL);
+            if(cert == NULL) {
+                fprintf(stderr, "PEM_read_bio_X509 failed...\n");
+                abort();
+            }
+
+
+            if (SSL_CTX_use_certificate(ctx, cert ) <= 0) {
+                ERR_print_errors_fp(stderr);
+                abort();
+            }
+
+            if(bio)
+                BIO_free(bio);
+
+            if(cert)
+                X509_free(cert);
+
+          #endif
+
             
 //                
 
            if (server) {
                 //New lines //for server side only 
 
-                
+                #if FROMFILE
                 SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) "12345678");
+		#endif
                 
                 if (SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0) {
                     ERR_print_errors_fp(stderr);
@@ -94,6 +149,7 @@ namespace base {
 
             
             }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -304,7 +360,7 @@ namespace base {
 
       /* Arvind TBD. Below code does not work with lower version of OpenSSL.
         In future I will replace TLS with DTLS
-
+      */
         void SSLAdapter::flushReadBIO() {
             size_t npending = BIO_ctrl_pending(_readBIO);
             if (npending > 0) {
@@ -317,7 +373,8 @@ namespace base {
                 }
             }
         }
-        */ 
+
+        /*
         void SSLAdapter::flushReadBIO() {
             size_t npending = BIO_ctrl_pending(_readBIO);
             if (npending > 0) {
@@ -333,7 +390,7 @@ namespace base {
                 }
                 _socket->on_read(buffer, ntotal); // arvind
             }
-        }
+        }*/
 
         void SSLAdapter::flushWriteBIO() {
             size_t npending = BIO_ctrl_pending(_writeBIO);

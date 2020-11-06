@@ -28,9 +28,9 @@ issue during thread join.
 #include "uv.h"
 
 
-#ifdef ANDROID
-#define __linux__ ANDROID
-#endif
+// #ifdef ANDROID
+// #define __linux__ ANDROID
+// #endif
 
 #if defined (WIN32) || defined(_WIN32)
 #include <windows.h>
@@ -71,7 +71,7 @@ namespace base
     {
     public:
 
-        Thread() : isrunning_(false), exit(false) { }
+        Thread() : exit(false),isrunning_(false) { }
         virtual ~Thread(void);
 
         virtual void start(entry fun, void* arg) {
@@ -93,7 +93,7 @@ namespace base
 
         virtual void run() {
             printf("Thread\n");
-        };
+        }
 
         void join();
 
@@ -118,7 +118,7 @@ namespace base
 
         virtual bool stopped() const {
             return exit.load();
-        };
+        }
 
     protected:
         std::atomic<bool> exit;
@@ -153,17 +153,17 @@ class ThreadSafe {
 public:
   ThreadSafe(const T value) : _value(value) {
     uv_mutex_init(&_mutex);
-  };
+  }
 
   void set(const T value) {
     guard guard(_mutex);
     _value = value;
-  };
+  }
 
   T get() {
     guard guard(_mutex);
     return _value;
-  };
+  }
 
 private:
   T _value;
@@ -177,7 +177,7 @@ public:
   CondWait() {
     uv_mutex_init(&mutex);
     uv_cond_init(&cond);
-  };
+  }
 
   ~CondWait() {
     uv_mutex_destroy(&mutex);
@@ -194,7 +194,7 @@ public:
 
   void signal() {
     uv_cond_signal(&cond);
-  };
+  }
 
   void wait() {
     uv_cond_wait(&cond, &mutex);

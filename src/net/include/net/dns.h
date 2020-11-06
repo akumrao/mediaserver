@@ -36,7 +36,7 @@ namespace base {
 
     
             static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
-                struct getaddrinfo_req* req;
+                //struct getaddrinfo_req* req;
                 
                 GetAddrInfoReq *obj = (GetAddrInfoReq*) handle->data;
                 
@@ -65,7 +65,7 @@ namespace base {
                 req.data = this;
                 int r;
 
-                struct addrinfo hints;
+             //   struct addrinfo hints;
                 //hints.ai_family = PF_INET;
                 //hints.ai_socktype = SOCK_STREAM;
                 //hints.ai_protocol = IPPROTO_TCP;

@@ -65,13 +65,10 @@ namespace SdpParse {
             void request(string const& room, json const& data, bool isAck,  std::function<void (const json& )> func);
 
         protected:
-#if USE_SSL
-            //  SocketioSecClient *client;
-#else
+
             SocketioClient *client;
             Socket *socket;
 
-#endif
 //            wrtc::MultiplexMediaCapturer _capturer;
 //            wrtc::PeerFactoryContext _context;
 

@@ -58,7 +58,7 @@ public:
     /// Closes the socket forcefully.
 //    virtual void close() override;
 
-    void send(const char* data, size_t len);
+    void send(const char* data, size_t len) override;
  
 
     /// Use the given SSL context for this socket.
