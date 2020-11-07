@@ -94,6 +94,11 @@ $(document).ready(function(){
     console.log("arvind");
           $("#div1").html("<h2>btn_connect!</h2>");
    socket.emit('create or join', roomId);
+
+    var str = "Connected";
+    var result = str.fontcolor("green");
+    document.getElementById("divStatus").innerHTML = result;
+
  // const data = await socket.request('getRouterRtpCapabilities');
 
   });
