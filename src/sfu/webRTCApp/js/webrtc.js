@@ -140,7 +140,13 @@ var isStarted = false;
 //var remoteStream;
 //var turnReady;
 
-var roomId = 'sfuroom'; /*think as a group  peerName@room */
+var roomId = document.getElementById("roomCtrl").options[document.getElementById("roomCtrl").selectedIndex].text;
+
+function roomCtrlOnChange() {
+  var x = document.getElementById("roomCtrl").value;
+  roomId = x;
+}
+
 //var  remotePeerID;
 var  peerID;
 var  remotePeerName;
@@ -162,10 +168,11 @@ socket.on('full', function(room) {
   console.log('Room ' + room + ' is full');
 });
 
-socket.on('join', function (room, id){
+socket.on('join', function (room, id, numClients){
   //console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!' +" client id " + id);
   isChannelReady = true;
+  document.getElementById("divParticipants").innerHTML = numClients;
 
   // ////////////////////
   //
@@ -178,19 +185,38 @@ socket.on('join', function (room, id){
   //   });
   // ////////////////////
 
-
 });
 
-socket.on('joined', function(room, id) {
+socket.on('leave', function (room, id, numClients){
+  //console.log('Another peer made a request to join room ' + room);
+  if( id == -1 && numClients -1 )
+  {
+
+     var str = "SFU server is down.";
+     var result = str.fontcolor("red");
+    document.getElementById("divStatus").innerHTML = result;
+  }
+  else
+  {
+      console.log("Disconnect client id " + id);
+      isChannelReady = true;
+      document.getElementById("divParticipants").innerHTML = numClients;
+  }
+});
+
+
+
+socket.on('joined', function(room, id, numClients) {
  console.log('joined: ' + room + ' with peerID: ' + id);
  //log('joined: ' + room + ' with peerID: ' + id);
   isChannelReady = true;
   peerID = id;
 
-
    initPC();
     // Handle RTCPeerConnection connection status.
-
+  // var str = numClients;
+   //var result = str.fontcolor("green");
+   document.getElementById("divParticipants").innerHTML = numClients;
 
 });
 
@@ -974,7 +1000,7 @@ async function publish(isWebcam)
     return ;
   }
   else
-    document.getElementById("divStatus").innerHTML = "";
+    document.getElementById("divStatus").innerHTML = "publishing";
 
   var parser = new URL(window.location.href); 
   var istcp = parser.searchParams;
@@ -1106,7 +1132,7 @@ async function subscribe() {
     return ;
   }
   else
-    document.getElementById("divStatus").innerHTML = "";
+    document.getElementById("divStatus").innerHTML = "subscribed";
 
   var parser = new URL(window.location.href); 
   var istcp = parser.searchParams;

@@ -37,12 +37,32 @@
 </style>
 <body>
   <table>
-    <tr 
-    <div id="divStatus">Status</div>
+    <tr>
+    <td> 
+        status:
+    </td>
+    <td> 
+        <div id="divStatus">Not Connected</div>
+    </td>
+    <td> 
+        select room:
+    </td>
+    <td>
+        <select id="roomCtrl" onchange="roomCtrlOnChange()">>
+        <option value="room">Sfu-Room</option>
+        <option>Teresa-Room</option>
+        <option>Foo-Hall</option>
+        <option>Lincoln-Hall</option>
+       </select>
+    </td>
+     <td> 
+        Participants:
+    </td>
+    <td> 
+        <div id="divParticipants"></div>
+    </td>
     </tr>
-    <tr id="roomCtrl">
-    </tr>
-    <tr id="traddCtrl1">
+     <tr id="traddCtrl1">
     </tr>
     <tr id="traddCtrl2">
     </tr>
