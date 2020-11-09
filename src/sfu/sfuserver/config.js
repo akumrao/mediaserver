@@ -334,9 +334,9 @@
         "rtpObserverId": "bfbdb9b3-f43f-4250-b362-b290638a6880"
       },
       "data": {
-        "maxEntries": 1,
-        "threshold": -80,
-        "interval": 800
+        "maxEntries": 10,
+        "threshold": -70,
+        "interval": 2000
       }
     },
     "createWebRtcTransport": {

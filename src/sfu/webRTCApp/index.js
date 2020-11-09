@@ -342,8 +342,8 @@ async function runSocketServer() {
 
 		console.log('notification ' + JSON.stringify(message, null, 4) );
 		message.from = socket.id;
-		if ('to' in message) {
-			socket.to(message.to).emit('message', message);
+		if ('roomid' in message) {
+			socket.to(message.roomid).emit('message', message);
 		}
 
 	});

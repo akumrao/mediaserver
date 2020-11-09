@@ -495,7 +495,7 @@ namespace SdpParse
 
                 if (flag) // && ok ack  TBD
                 {
-                    signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producer["id"]] = peer->participantID;
+                    signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producer["id"]] = peer->roomId;
                 }
                 raiseRequest(param, trans, [&](const json & ack_resp)
                 {
