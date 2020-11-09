@@ -2,6 +2,7 @@
 #include "sdp/Utils.h"
 #include "LoggerTag.h"
 #include "base/error.h"
+#include "base/uuid.h"
 #include "Utils.h"
 #include <algorithm> // ::transform
 #include <cctype>    // ::tolower
@@ -20,8 +21,8 @@ namespace SdpParse
 
                             if( offerMediaObject.find("msid") == offerMediaObject.end())
                             {
-				SError << "msid is missing at offerMediaObject";
-                        	return "";
+								SError << "msid is missing at offerMediaObject";
+                        		return uuid4::uuid();
                             }
 
                             auto msid = offerMediaObject["msid"];

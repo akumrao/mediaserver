@@ -82,10 +82,6 @@
 
 
 
-
-
-
-
 $(document).ready(function(){
  
 
