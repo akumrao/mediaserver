@@ -184,7 +184,7 @@ namespace RTC
 
 			Channel::Notifier::Emit(this->id, "volumes", data);
 		}
-		else if (!this->silence)
+		else if (!this->silence)  // arvind compelete silence in room, very rare case
 		{
 			this->silence = true;
 

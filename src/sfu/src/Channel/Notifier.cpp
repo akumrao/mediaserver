@@ -41,13 +41,13 @@ namespace Channel
 
                 json jsonNotification = json::object();
 
-		jsonNotification["targetId"] = targetId;
-		jsonNotification["event"]    = event;
-		jsonNotification["desc"]     = data;
-                
+				//jsonNotification["targetId"] = targetId;
+				jsonNotification["event"]    = event;
+				jsonNotification["desc"]     = data;
+		                
                 if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
                 {
-                    jsonNotification["to"]= m_sig->mapNotification[targetId][data.at(0)["producerId"]];
+                    jsonNotification["roomid"]= m_sig->mapNotification[targetId][data.at(0)["producerId"]];
                     jsonNotification["type"]= "soundlevel";
                 }
                 
