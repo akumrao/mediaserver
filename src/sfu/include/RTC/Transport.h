@@ -1,6 +1,6 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
-// #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+#define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.h"
 #include "base/application.h"
