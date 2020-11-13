@@ -69,13 +69,13 @@ namespace RTC
 
 		this->sendTransmissionTrend.Update(sendBitrate, nowMs);
 
-		// TODO: Remove.
-		// MS_DEBUG_DEV(
-		// 	"[wideSeq:%" PRIu16 ", size:%zu, isProbation:%s, bitrate:%" PRIu32 "]",
-		// 	sentInfo.wideSeq,
-		// 	sentInfo.size,
-		// 	sentInfo.isProbation ? "true" : "false",
-		// 	sendBitrate);
+		// TODO: Remove.// umrao
+		MS_DEBUG_DEV(
+			"[wideSeq:%" PRIu16 ", size:%zu, isProbation:%s, bitrate:%" PRIu32 "]",
+			sentInfo.wideSeq,
+			sentInfo.size,
+			sentInfo.isProbation ? "true" : "false",
+			sendBitrate);
 	}
 
 	void SenderBandwidthEstimator::ReceiveRtcpTransportFeedback(
