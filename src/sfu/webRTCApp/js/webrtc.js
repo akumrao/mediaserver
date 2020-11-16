@@ -156,6 +156,8 @@ var  peerName;
 let pc1 =null;
 let pc2 = null;
 
+var flipSoundLevel = 0;
+
 var socket = io.connect();
 
 
@@ -271,10 +273,13 @@ function initPC()
 
         div.appendChild(el);
 
+        div.id = `consumer-div-${track.id}`;
+
 
         let pause = document.createElement('span'),
         checkbox = document.createElement('input'),
         label = document.createElement('label');
+
         pause.classList = 'nowrap';
         checkbox.type = 'checkbox';
         checkbox.id=track.id;
@@ -294,6 +299,10 @@ function initPC()
         }
         else if(track.kind === 'audio') {
         label.innerHTML = "Mute " + track.kind;
+        let labelName = document.createElement('label');
+        labelName.id = `consumer-name-${track.id}`;
+        div.appendChild(labelName);
+
         }
 
         let statButton;
@@ -618,7 +627,7 @@ socket.on('message',  async function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
-    soundlevel(message.desc);
+    soundlevel(message);
   }else if (message.type === 'prodstats' && isStarted) {
     prodstats(message.desc);
   }else if (message.type === 'constats') {
@@ -1307,11 +1316,36 @@ async function btn_subscribe_stats(consumerid)
 }
 
 
-function soundlevel(level)
+function soundlevel(message)
 {
-  //console.log(level);
+    //console.log(message);
 
-  sound_level.innerHTML = JSON.stringify(level, undefined, 4); 
+
+  
+    flipSoundLevel = (++flipSoundLevel)%2;
+
+
+    for (const element of message.desc) 
+    {
+       //console.log(element.producerId);
+
+       var nameEl = document.getElementById(`consumer-div-${element.producerId}`); 
+       if(nameEl != null)
+       {    
+           if(flipSoundLevel==1)
+            nameEl.style.border = "thick dashed #00FF00   ";
+           else
+            nameEl.style.border = "thick dashed #00FFFF   ";
+
+       }
+       
+   }
+
+
+   
+
+  sound_level.innerHTML = JSON.stringify(message.desc, undefined, 4); 
+
 }
 
 function prodstats(desc)

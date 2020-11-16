@@ -368,6 +368,10 @@ namespace SdpParse
                     mapProducer[p->producer["id"]] = p;
                     mapProdMid[ mid] = p->producer["id"];
                     SInfo << "mid : " << mid << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
+                    if (p->producer["kind"] == "audio")
+                    {
+                        rtpObserver_addProducer(p->producer["id"], true);
+                    }
 
                     if (sizeofMid == i + 1)
                     {
@@ -466,6 +470,39 @@ namespace SdpParse
         }
     }
 
+    
+    void Producers::rtpObserver_addProducer(std::string producerID, bool flag) {
+
+      
+        json param = json::array();
+        if (flag)
+            param.push_back("rtpObserver_addProducer");
+        else
+            param.push_back("rtpObserver_removeProducer");
+
+        param.push_back(peer->participantID);
+        json &trans = Settings::configuration.rtpObserver_addProducer;
+        trans["internal"]["producerId"] = producerID;
+
+        if (flag)
+            trans["method"] = "rtpObserver.addProducer";
+        else
+            trans["method"] = "rtpObserver.removeProducer";
+
+
+        if (flag)
+        {
+            signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producerID] = peer->roomId;
+        }
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+             SInfo << ack_resp.dump(4);
+
+        });
+  
+    }
+    
+    
     void Producers::rtpObserver_addProducer(bool flag) {
 
         for (auto &prod : mapProducer)
@@ -475,33 +512,7 @@ namespace SdpParse
 
             if (producer["kind"] == "audio")
             {
-
-
-                json param = json::array();
-                if (flag)
-                    param.push_back("rtpObserver_addProducer");
-                else
-                    param.push_back("rtpObserver_removeProducer");
-
-                param.push_back(peer->participantID);
-                json &trans = Settings::configuration.rtpObserver_addProducer;
-                trans["internal"]["producerId"] = producer["id"];
-
-                if (flag)
-                    trans["method"] = "rtpObserver.addProducer";
-                else
-                    trans["method"] = "rtpObserver.removeProducer";
-
-
-                if (flag) // && ok ack  TBD
-                {
-                    signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producer["id"]] = peer->roomId;
-                }
-                raiseRequest(param, trans, [&](const json & ack_resp)
-                {
-
-                });
-
+                rtpObserver_addProducer(producer["id"], flag);
             }
 
         }
@@ -684,7 +695,7 @@ namespace SdpParse
                     json trans = Settings::configuration.transport_consume;
 
                     trans["internal"]["producerId"] = producer["id"];
-                    trans["internal"]["consumerId"] = uuid4::uuid();
+                    trans["internal"]["consumerId"] = producer["id"];//uuid4::uuid();
 
 
 
