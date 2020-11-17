@@ -1352,7 +1352,7 @@ function soundlevel(message)
 
    
 
-  sound_level.innerHTML = JSON.stringify(message.desc, undefined, 4); 
+  sound_level.innerHTML = JSON.stringify(message, undefined, 4); 
 
 }
 
