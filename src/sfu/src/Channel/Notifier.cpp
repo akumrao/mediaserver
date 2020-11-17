@@ -22,7 +22,6 @@ namespace Channel
 
 	void Notifier::Emit(const std::string& targetId, const char* event)
 	{
-            
 
                 json jsonNotification = json::object();
 
@@ -31,25 +30,36 @@ namespace Channel
                 
                 m_sig->postAppMessage(jsonNotification);
                 return;
-
-             
+   
 	}
 
 	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
 	{       
-                 STrace <<  "Emit: " << data.dump(4);
+                STrace <<  "Emit: " << targetId << " " << data.dump(4);
 
                 json jsonNotification = json::object();
 
 				//jsonNotification["targetId"] = targetId;
-				jsonNotification["event"]    = event;
-				jsonNotification["desc"]     = data;
+                jsonNotification["event"]    = event;
+                jsonNotification["desc"]     = data;
 		                
-                if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
+                if( std::string(event) == std::string("volumes"))
                 {
-                    jsonNotification["roomid"]= m_sig->mapNotification[targetId][data.at(0)["producerId"]];
+                    jsonNotification["roomid"]= targetId;
                     jsonNotification["type"]= "soundlevel";
                 }
+                else
+                {
+                    int sizeit = m_sig->mapNotification.size();
+                    
+                    if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
+                    {
+                        jsonNotification["roomid"]= m_sig->mapNotification[targetId];
+                        jsonNotification["type"]= event;
+                    }
+                
+                }
+                
                 
                 
                 m_sig->postAppMessage(jsonNotification);

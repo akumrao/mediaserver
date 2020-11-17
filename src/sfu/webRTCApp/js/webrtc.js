@@ -273,7 +273,7 @@ function initPC()
 
         div.appendChild(el);
 
-        div.id = `consumer-div-${track.id}`;
+        div.id = `consumer-div-${track.id.substring(0, 36)}`;
 
 
         let pause = document.createElement('span'),
@@ -627,7 +627,9 @@ socket.on('message',  async function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
-    soundlevel(message);
+    soundlevel(message.desc);
+  } else if (message.type === 'score' && isStarted) {
+    score(message.desc);
   }else if (message.type === 'prodstats' && isStarted) {
     prodstats(message.desc);
   }else if (message.type === 'constats') {
@@ -1315,7 +1317,13 @@ async function btn_subscribe_stats(consumerid)
 
 }
 
+function score(message)
+{
+    //console.log(message);
 
+    document.getElementById("divProducerScore").innerHTML = message.producerScore;
+    document.getElementById("divConsumerScore").innerHTML = message.score;
+}
 function soundlevel(message)
 {
     //console.log(message);
@@ -1325,7 +1333,7 @@ function soundlevel(message)
     flipSoundLevel = (++flipSoundLevel)%2;
 
 
-    for (const element of message.desc) 
+    for (const element of message) 
     {
        //console.log(element.producerId);
 

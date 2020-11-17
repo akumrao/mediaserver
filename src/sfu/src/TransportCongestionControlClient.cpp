@@ -292,7 +292,7 @@ namespace RTC
 		else
 			this->bitrates.availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
 
-		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);
+		//MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);
 
 		MayEmitAvailableBitrateEvent(previousAvailableBitrate);
 	}

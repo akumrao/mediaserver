@@ -483,6 +483,9 @@ namespace SdpParse
         param.push_back(peer->participantID);
         json &trans = Settings::configuration.rtpObserver_addProducer;
         trans["internal"]["producerId"] = producerID;
+        trans["internal"]["routerId"] = peer->roomId;
+        trans["internal"]["rtpObserverId"] = peer->roomId;
+            
 
         if (flag)
             trans["method"] = "rtpObserver.addProducer";
@@ -490,10 +493,6 @@ namespace SdpParse
             trans["method"] = "rtpObserver.removeProducer";
 
 
-        if (flag)
-        {
-            signaler->mapNotification[trans["internal"]["rtpObserverId"]][ producerID] = peer->roomId;
-        }
         raiseRequest(param, trans, [&](const json & ack_resp)
         {
              SInfo << ack_resp.dump(4);
@@ -624,6 +623,8 @@ namespace SdpParse
          remoteSdp->CloseMediaSection(mid);
             
          mapConMid.erase(std::stoi(mid));
+         
+         signaler->mapNotification.erase(conumserid);
 
          SInfo << "Close Mid: " << mid << " Conumer id: " << conumserid << " Producer ID: " << producerid << " Participant id " << peer->participantID;
          delete mapConsumer[conumserid];
@@ -639,7 +640,8 @@ namespace SdpParse
 
     void Consumers::runit(std::vector < Peer *> vecProdPeer) {
 
-
+        std::string consumerUuid = std::string("#") + uuid4::uuid().substr (0,3);
+        
         bool lastDevice = false;
         int noProd = 0;
         for (auto & prodpeer : vecProdPeer)
@@ -694,8 +696,8 @@ namespace SdpParse
                     param.push_back(peer->participantID);
                     json trans = Settings::configuration.transport_consume;
 
-                    trans["internal"]["producerId"] = producer["id"];
-                    trans["internal"]["consumerId"] = producer["id"];//uuid4::uuid();
+                    trans["internal"]["producerId"] = producer["id"].get<std::string>();
+                    trans["internal"]["consumerId"] = producer["id"].get<std::string>() +  consumerUuid;
 
 
 
@@ -748,6 +750,8 @@ namespace SdpParse
 
                         //SInfo <<  localId << " GetOffer " << c->consumer["id"] << " kind " << c->consumer["kind"];
                         mapConsumer[ c->consumer["id"]] = c;
+                        
+                        signaler->mapNotification[c->consumer["id"]] = peer->participantID;
 
                         auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
 

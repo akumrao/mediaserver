@@ -87,7 +87,9 @@ $(document).ready(function(){
 
   $("#btn_connect").click(function(){
 
-    console.log("arvind");
+   $("#btn_connect").attr("disabled", true);
+
+    console.log("connect");
           $("#div1").html("<h2>btn_connect!</h2>");
    socket.emit('create or join', roomId);
 
@@ -101,7 +103,7 @@ $(document).ready(function(){
 
 
   $("#btn_webcam").click(function(){
-
+    $("#btn_webcam").attr("disabled", true);
     console.log("btn_webcam click");
 
    publish(true);
