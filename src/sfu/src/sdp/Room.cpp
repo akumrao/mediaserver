@@ -14,7 +14,7 @@
 
 #include "sdp/Room.h"
 #include "LoggerTag.h"
-#include "base/uuid.h"
+//#include "base/uuid.h"
 #include "sdp/signaler.h"
 
 namespace SdpParse {
@@ -65,6 +65,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
             param.push_back(data[1].get<std::string>());
             json &trans = Settings::configuration.router_createAudioLevelObserver;
             trans["internal"]["routerId"] = roomName;
+            trans["internal"]["rtpObserverId"] = roomName;
             param.push_back(trans);
             signaler->request("createAudioLevelObserver", param, true,  [&](const json & ack_resp){});
        

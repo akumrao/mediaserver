@@ -27,7 +27,7 @@ namespace SdpParse {
             
             std::string  sfuID;
             
-            std::map< std::string, std::map<std::string, std::string> > mapNotification;
+            std::map< std::string, std::string > mapNotification;
             
         protected:
 
