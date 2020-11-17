@@ -111,6 +111,8 @@ $(document).ready(function(){
 
   $("#btn_screen").click(function(){
 
+    $("#btn_screen").attr("disabled", true);
+
         console.log("btn_screen click");
 
         publish(false);
