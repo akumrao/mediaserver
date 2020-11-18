@@ -85,6 +85,7 @@ namespace SdpParse {
 
         void producer_getStats(const std::string& producerId); 
         void rtpObserver_addProducer( bool flag);
+        void rtpObserver_addProducer(std::string producerID, bool flag);
         void resume(const std::string& producerId, bool pause);
         
         std::unordered_map<std::string, Producer*>  mapProducer;

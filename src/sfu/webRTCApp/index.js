@@ -96,12 +96,8 @@ async function runWebServer() {
 
 async function runSocketServer() {
 
-    console.error('runSocketServer');
-
-
-   io = socketIO.listen(webServer);
-
-
+  console.error('runSocketServer');
+  io = socketIO.listen(webServer);
 
   io.sockets.on('connection', function(socket) {
 
@@ -113,13 +109,8 @@ async function runSocketServer() {
 		 console.log(array);
 	}
 
-
-    
-
 	socket.on('disconnect', function() {
 	   
-
-
 
 	  if( socket.id == serverSocketid)
 	  {

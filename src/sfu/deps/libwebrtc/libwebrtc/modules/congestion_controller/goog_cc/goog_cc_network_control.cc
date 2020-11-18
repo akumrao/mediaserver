@@ -356,9 +356,9 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
   starting_rate_ = new_constraints.starting_rate;
   ClampConstraints();
 
-  MS_DEBUG_DEV(
-    "calling bandwidth_estimation_->SetBitrates() [max_data_rate_.bps_or(-1):%" PRIi64 "]",
-    max_data_rate_.bps_or(-1));
+  // MS_DEBUG_DEV(
+  //   "calling bandwidth_estimation_->SetBitrates() [max_data_rate_.bps_or(-1):%" PRIi64 "]",
+  //   max_data_rate_.bps_or(-1));
 
   bandwidth_estimation_->SetBitrates(starting_rate_, min_data_rate_,
                                      max_data_rate_, new_constraints.at_time);
@@ -655,10 +655,10 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
                                          probes.begin(), probes.end());
     update->pacer_config = GetPacingRates(at_time);
 
-    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
-                 at_time.ms(),
-                 last_pushback_target_rate_.bps(),
-                 last_raw_target_rate_.bps());
+    // MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
+    //              at_time.ms(),
+    //              last_pushback_target_rate_.bps(),
+    //              last_raw_target_rate_.bps());
   }
 }
 
