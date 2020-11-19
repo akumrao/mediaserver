@@ -148,7 +148,7 @@ namespace RTC
 		}
 	}
 
-	void TcpConnection::Send(const uint8_t* data, size_t len, onSendCallback* cb)
+	void TcpConnection::Send(const uint8_t* data, size_t len, onSendCallback cb)
 	{
 //		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
                  
@@ -165,9 +165,9 @@ namespace RTC
 		int r = base::net::TcpConnectionBase::Write((const char*)frameLen, 2, (const char*) data, len); //arvind
                 if(r==len && cb)
                 {
-                    (*cb)(true);
+                    (cb)(true);
                 }else if (cb)
-                    (*cb)(false);
+                    (cb)(false);
 
 	}
         

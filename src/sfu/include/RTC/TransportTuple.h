@@ -37,7 +37,7 @@ namespace RTC
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
-		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr);
+		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback cb = nullptr);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;
@@ -113,7 +113,7 @@ namespace RTC
 	}
 
 	inline void TransportTuple::Send(
-	  const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb)
+	  const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback cb)
 	{
 		if (this->protocol == Protocol::UDP)
 			this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);

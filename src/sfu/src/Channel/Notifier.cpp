@@ -50,8 +50,6 @@ namespace Channel
                 }
                 else
                 {
-                    int sizeit = m_sig->mapNotification.size();
-                    
                     if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
                     {
                         jsonNotification["roomid"]= m_sig->mapNotification[targetId];

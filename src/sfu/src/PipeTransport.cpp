@@ -253,7 +253,7 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback cb)
 	{
 		MS_TRACE();
 
@@ -261,9 +261,8 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
+				(cb)(false);
 
-				delete cb;
 			}
 
 			return;

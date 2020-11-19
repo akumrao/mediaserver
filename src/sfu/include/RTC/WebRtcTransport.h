@@ -43,7 +43,7 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendSctpData(const uint8_t* data, size_t len) override;

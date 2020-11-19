@@ -823,8 +823,9 @@ namespace RTC
 					
 					if (
 						(
-							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-							consumer->GetType() == RTC::RtpParameters::Type::SVC
+							//consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							//consumer->GetType() == RTC::RtpParameters::Type::SVC
+                                                        consumer->GetType() >= RTC::RtpParameters::Type::SIMPLE
 						) &&
 						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
 						std::any_of(
@@ -852,8 +853,9 @@ namespace RTC
 					
 					else if (
 						(
-							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-							consumer->GetType() == RTC::RtpParameters::Type::SVC
+							//consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							//consumer->GetType() == RTC::RtpParameters::Type::SVC
+                                                        consumer->GetType() >= RTC::RtpParameters::Type::SIMPLE
 						) &&
 						rtpHeaderExtensionIds.absSendTime != 0u &&
 						std::any_of(
@@ -908,8 +910,9 @@ namespace RTC
 				if (
 					!this->senderBwe &&
 					(
-						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-						consumer->GetType() == RTC::RtpParameters::Type::SVC
+						//consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+						//consumer->GetType() == RTC::RtpParameters::Type::SVC
+                                                consumer->GetType() >= RTC::RtpParameters::Type::SIMPLE
 					) &&
 					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
 					std::any_of(
@@ -2256,7 +2259,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = base::Application::GetTimeMs();
 
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto cb =  onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, base::Application::GetTimeMs());
@@ -2324,7 +2327,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = base::Application::GetTimeMs();
 
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto cb =  onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, base::Application::GetTimeMs());
@@ -2620,7 +2623,7 @@ namespace RTC
 			sentInfo.isProbation = true;
 			sentInfo.sendingAtMs = base::Application::GetTimeMs();
 
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto cb =  onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, base::Application::GetTimeMs());
@@ -2677,10 +2680,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
+//		MS_DEBUG_DEV(
+//		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
+//		  availableBitrate,
+//		  previousAvailableBitrate);
 
 		// TODO: Uncomment once just SenderBandwidthEstimator is used.
 		// DistributeAvailableOutgoingBitrate();

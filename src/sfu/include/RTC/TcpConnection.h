@@ -23,7 +23,7 @@ namespace RTC
 
 	public:
                 using onSendCallback = const std::function<void(bool sent)>;
-		void Send(const uint8_t* data, size_t len, onSendCallback* cb);
+		void Send(const uint8_t* data, size_t len, onSendCallback cb);
 
 		/* Pure virtual methods inherited from ::TcpConnection. */
 	public:

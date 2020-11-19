@@ -106,7 +106,7 @@ namespace RTC
 		struct TraceEventTypes
 		{
 			bool probation{ false };
-			bool bwe{ false };
+			bool bwe{ true };
 		};
 
 	public:
@@ -144,7 +144,7 @@ namespace RTC
 		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;
 		RTC::DataConsumer* GetDataConsumerFromRequest(Channel::Request* request) const;
 		virtual bool IsConnected() const                                                 = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendCallback cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;

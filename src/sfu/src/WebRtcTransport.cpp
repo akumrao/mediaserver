@@ -704,7 +704,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback cb)
 	{
 		MS_TRACE();
 
@@ -712,9 +712,8 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
+				(cb)(false);
 
-				delete cb;
 			}
 
 			return;
@@ -727,9 +726,8 @@ namespace RTC
 
 			if (cb)
 			{
-				(*cb)(false);
+				(cb)(false);
 
-				delete cb;
 			}
 
 			return;
@@ -742,9 +740,8 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
+				(cb)(false);
 
-				delete cb;
 			}
 
 			return;
