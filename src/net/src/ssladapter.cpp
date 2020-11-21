@@ -398,7 +398,7 @@ namespace base {
                 char buffer[npending];
                 int nread = BIO_read(_writeBIO, buffer, npending);
                 if (nread > 0) {
-                    _socket->Write(buffer, nread); // arvind
+                    _socket->Write(buffer, nread,nullptr); // arvind
                 }
             }
         }

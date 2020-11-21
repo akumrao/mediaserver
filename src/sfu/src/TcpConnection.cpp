@@ -152,26 +152,16 @@ namespace RTC
 	{
 //		 SDebug << len <<  " len send: " <<  GetLocalIp() << ":" << GetLocalPort() << "  remote: " <<  GetPeerIp() << ":" << GetPeerPort();
                  
-//                if (cb)
-//                {
-//                   m_cb =cb;
-//                }
-                 
-		// Write according to Framing RFC 4571.
 
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		int r = base::net::TcpConnectionBase::Write((const char*)frameLen, 2, (const char*) data, len); //arvind
-                if(r==len && cb)
-                {
-                    (cb)(true);
-                }else if (cb)
-                    (cb)(false);
+		base::net::TcpConnectionBase::Write((const char*)frameLen, 2, (const char*) data, len,cb); //arvind
+                
 
 	}
         
-         void TcpConnection::on_close() {
+        void TcpConnection::on_close() {
 
             listener->on_close(this);
         }

@@ -116,7 +116,7 @@ namespace RTC
 	  const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback cb)
 	{
 		if (this->protocol == Protocol::UDP)
-			this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+			this->udpSocket->send((const char *)data, len, this->udpRemoteAddr, cb);
 		else
 			this->tcpConnection->Send(data, len, cb);
 	}

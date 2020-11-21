@@ -13,6 +13,7 @@
 
 #include <uv.h>
 #include <string>
+#include <functional>
 
 
 namespace base
@@ -26,16 +27,32 @@ namespace base
 
         class TcpConnectionBase: public Listener
         {
-        public:
+        protected:
+        using onSendCallback =  std::function<void(bool sent)>;
+
         
         public:
 
-            /* Struct for the data field of uv_req_t when writing into the connection. */
             struct UvWriteData
             {
+                explicit UvWriteData(size_t storeSize)
+                {
+                    this->store = new uint8_t[storeSize];
+                }
+
+                // Disable copy constructor because of the dynamically allocated data (store).
+                UvWriteData(const UvWriteData&) = delete;
+
+                ~UvWriteData()
+                {
+                    delete[] this->store;
+                }
+
                 uv_write_t req;
-                char store[1];
+                uint8_t* store{ nullptr };
+                TcpConnectionBase::onSendCallback cb{ nullptr };
             };
+
 
             // Let the TcpServerBase class directly call the destructor of TcpConnectionBase.
             friend class TcpServerBase;
@@ -62,8 +79,8 @@ namespace base
             bool IsClosed() const;
             uv_tcp_t* GetUvHandle() const;
             void Start();
-            int Write(const char* data, size_t len);
-            int Write(const char* data1, size_t len1, const char* data2, size_t len2);
+            int Write(const char* data, size_t len,TcpConnectionBase::onSendCallback cb);
+            int Write(const char* data1, size_t len1, const char* data2, size_t len2,TcpConnectionBase::onSendCallback cb);
             int Write(const std::string& data);
             void ErrorReceiving();
             const struct sockaddr* GetLocalAddress() const;
@@ -81,7 +98,7 @@ namespace base
         public:
             void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
             void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-            void OnUvWrite(int status);
+            void OnUvWrite(int status,onSendCallback cb);
 
           
 
@@ -135,7 +152,7 @@ namespace base
         }
 
         inline int TcpConnectionBase::Write(const std::string& data) {
-           return Write(reinterpret_cast<const char*> (data.c_str()), data.size());
+           return Write(reinterpret_cast<const char*> (data.c_str()), data.size(),nullptr);
         }
 
         inline const struct sockaddr* TcpConnectionBase::GetLocalAddress() const {

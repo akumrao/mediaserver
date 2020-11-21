@@ -90,7 +90,7 @@ namespace base {
             // bypassing the WebSocketConnection
 
              STrace << head;
-             Write(head.c_str(), head.length());
+             Write(head.c_str(), head.length(),nullptr);
              return head.length();
         }
         
@@ -121,7 +121,7 @@ namespace base {
 
             // Utils::Byte::Set2Bytes(frameLen, 0, len);
             // TcpConnectionBase::Write(frameLen, 2, data, len);
-            Write(data, len);
+            Write(data, len,nullptr);
         }
 
        

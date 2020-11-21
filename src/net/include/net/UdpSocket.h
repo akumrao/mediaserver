@@ -15,17 +15,35 @@
 #include <uv.h>
 #include <string>
 #include "net/IP.h"
+#include <functional>
 
 namespace base {
     namespace net {
 
         class UdpSocket {
-        public:
+        protected:
+            using onSendCallback = std::function<void(bool sent)>;
 
+        public:
             /* Struct for the data field of uv_req_t when sending a datagram. */
-            struct UvSendData {
+            struct UvSendData
+            {
+                explicit UvSendData(size_t storeSize)
+                {
+                    this->store = new uint8_t[storeSize];
+                }
+
+                // Disable copy constructor because of the dynamically allocated data (store).
+                UvSendData(const UvSendData&) = delete;
+
+                ~UvSendData()
+                {
+                    delete[] this->store;
+                }
+
                 uv_udp_send_t req;
-                char store[1];
+                uint8_t* store{ nullptr };
+                UdpSocket::onSendCallback cb{ nullptr };
             };
 
         public:
@@ -56,7 +74,7 @@ namespace base {
             }
 
 
-            int send(const char* data, unsigned int len, const struct sockaddr* add=nullptr);
+            int send(const char* data, unsigned int len, const struct sockaddr* add=nullptr, UdpSocket::onSendCallback cb=nullptr);
            // void send(const std::string& data, const struct sockaddr* addr);
             int send(const char* data, unsigned int len, const std::string ip, int port);
             int send(const std::string& data, const std::string& ip, uint16_t port);
@@ -74,7 +92,7 @@ namespace base {
         public:
             void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
             void OnUvRecv(ssize_t nread, const uv_buf_t* buf,  struct sockaddr* addr, unsigned int flags);
-            void OnUvSend(int error);
+            void OnUvSend(int status, UdpSocket::onSendCallback cb);
             void bind();
             void connect();
 

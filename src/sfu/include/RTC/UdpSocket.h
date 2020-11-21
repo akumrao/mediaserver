@@ -17,13 +17,12 @@ namespace RTC
 			  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
 		};
         protected:
-	using onSendCallback = const std::function<void(bool sent)>;
 
 	public:
 		UdpSocket(Listener* listener, std::string& ip);
 		~UdpSocket() override;
                 
-                void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb);
+                //void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb);
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
@@ -34,7 +33,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-                onSendCallback m_cb{ nullptr };
+                
 	};
 } // namespace RTC
 

@@ -33,17 +33,17 @@ namespace RTC
 		this->listener->OnUdpSocketPacketReceived(this, (const uint8_t*)data, len, addr);
 	}
         
-        void UdpSocket::Send( const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb)
-        {
-            
-
-            int r = base::net::UdpSocket::send((const char*)data, len, addr); //arvind
-            if(r==len && cb)
-            {
-                (cb)(true);
-            }else if (cb)
-                (cb)(false);
-
-	}
+//        void UdpSocket::Send( const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb)
+//        {
+//            
+//
+//            int r = base::net::UdpSocket::send((const char*)data, len, addr); //arvind
+//            if(r==len && cb)
+//            {
+//                (cb)(true);
+//            }else if (cb)
+//                (cb)(false);
+//
+//	}
         
 } // namespace RTC
