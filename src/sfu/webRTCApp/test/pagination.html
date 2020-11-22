@@ -16,17 +16,24 @@ table, td, th {
 
 
 
+<img src="speaker1.png" id="myImg">
+ <button onclick="myImage()">Try it</button>
+
 <p>records per page</p>
 
 <input type="number" type="text" id="myInput"  value="2" onchange="myFunction()" min="1" max="5">
 
-
-
 <p id="demo"></p>
 
 <script>
-	var records_per_page = 2;
-	var current_page = 1;
+
+function myImage() {
+  document.getElementById("myImg").src = "speaker.png";
+  //document.getElementById("myImg").src = "speaker1.png";
+}
+
+var records_per_page = 2;
+var current_page = 1;
 
 function myFunction() {
   var x = document.getElementById("myInput").value;
