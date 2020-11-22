@@ -113,14 +113,10 @@ namespace RTC
 		uint16_t seq = packet->GetSequenceNumber();
 
 
-   		/* // For rtp packet debugging
-	   	MS_DEBUG_TAG(
-			  rtp,
-			  " packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-		*/
+   		 // For rtp packet debugging
 
+
+		//SInfo <<  "ReceivePacket: ssrc:" << packet->GetSsrc() << " sequence:" << packet->GetSequenceNumber() << " payloadType:" << (int)packet->GetPayloadType();
 
 
 		// If this is the first packet seen, initialize stuff.
