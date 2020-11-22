@@ -638,7 +638,7 @@
       }
     },
     "consumer_setPreferredLayers": {
-      "id": 60,
+      "id": 41,
       "method": "consumer.setPreferredLayers",
       "internal": {
         "routerId": "48584627-a161-42d2-83bd-dd578ef4dd3a",
@@ -648,6 +648,17 @@
       },
       "data": {
         "spatialLayer": 0
+      }
+    },
+    "transport_enableTraceEvent": {
+      "id": 42,
+      "method": "transport.enableTraceEvent",
+      "internal": {
+        "routerId": "2e32062d-f04a-4c2d-a656-b586e50498ef",
+        "transportId": "e5302612-283c-4532-8acb-8f3cbb87a8a5"
+      },
+      "data": {
+        "types":["bwe"]
       }
     }
   }

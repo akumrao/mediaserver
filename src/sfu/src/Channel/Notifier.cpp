@@ -50,8 +50,11 @@ namespace Channel
                 }
                 else
                 {
+                   // SInfo <<  "Emit: " << targetId << " " << data.dump(4);
                     if( m_sig->mapNotification.find(targetId) != m_sig->mapNotification.end())
                     {
+                      //   SInfo <<  "Emit223: " << targetId ;
+
                         jsonNotification["roomid"]= m_sig->mapNotification[targetId];
                         jsonNotification["type"]= event;
                     }

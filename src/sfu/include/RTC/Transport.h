@@ -106,7 +106,7 @@ namespace RTC
 		struct TraceEventTypes
 		{
 			bool probation{ false };
-			bool bwe{ true };
+			bool bwe{ false };
 		};
 
 	public:

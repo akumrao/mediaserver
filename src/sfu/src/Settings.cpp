@@ -129,6 +129,10 @@ void Settings::SetConfiguration(json &cnfg)
            Settings::configuration.consumer_setPreferredLayers = cnfg["consumer_setPreferredLayers"];
         }
 
+        if (cnfg.find("transport_enableTraceEvent") != cnfg.end()) {
+           Settings::configuration.maxbitrate = cnfg["transport_enableTraceEvent"];
+        }
+
 	/* Post configuration. */
 
 	// Set logTags.
