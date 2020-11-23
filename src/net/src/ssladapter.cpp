@@ -412,7 +412,7 @@ namespace base {
                     LTrace("SSL_ERROR_ZERO_RETURN")
                     return;
                 case SSL_ERROR_WANT_READ:
-                    LTrace("SSL_ERROR_WANT_READ")
+                    //LTrace("SSL_ERROR_WANT_READ")
                     flushWriteBIO();
                     break;
                 case SSL_ERROR_WANT_WRITE:

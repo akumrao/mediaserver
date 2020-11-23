@@ -37,7 +37,7 @@ namespace base {
             }
 
             virtual void onClose() {
-            };
+            }
 
             HttpBase* connection() {
                 return _connection;
