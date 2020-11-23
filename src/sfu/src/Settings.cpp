@@ -130,7 +130,7 @@ void Settings::SetConfiguration(json &cnfg)
         }
 
         if (cnfg.find("transport_enableTraceEvent") != cnfg.end()) {
-           Settings::configuration.maxbitrate = cnfg["transport_enableTraceEvent"];
+           Settings::configuration.transport_enableTraceEvent = cnfg["transport_enableTraceEvent"];
         }
 
 	/* Post configuration. */
