@@ -321,8 +321,8 @@ function initPC()
 
             var labelName = document.createElement("label");
             //name.type = "text";
-            labelName.id = `proName-${peerID}`;
-            labelName.innerHTML =  peerID.substring(0, 6);
+            labelName.id = `conName-${stream.id}`;
+            //labelName.innerHTML =  stream.id.substring(0, 6);
            
             divStore.appendChild(labelName);
 
@@ -687,6 +687,8 @@ socket.on('message',  async function(message) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
     soundlevel(message.desc);
+  } else if (message.type === 'name' && isStarted) {
+    setName(message);
   } else if (message.type === 'score' && isStarted) {
     score(message.desc);
   }else if (message.type === 'prodstats' && isStarted) {
@@ -786,7 +788,19 @@ function addProducerVideoAudio() {
                 name.id = `proName-${peerID}`;
                 name.value = "Your Name?";
                 name.onchange = async function(){
-                    //alert("sdf");
+                    
+                    if(name.value != "Your Name?")
+                    {
+
+ 
+                        var send = {
+                            room: roomId,
+                            type: 'name',
+                            desc: name.value
+                            };
+
+                        socket.emit('postAppMessage', send);
+                    }
                 }
 
                 var para = document.createElement("P");
@@ -1416,10 +1430,25 @@ function score(message)
     document.getElementById("divProducerScore").innerHTML = message.producerScore;
     document.getElementById("divConsumerScore").innerHTML = message.score;
 }
+
+
+function setName(message)
+{
+   
+    //console.log("setName %o" + message.from);
+   // alert(message);
+
+   var nameEl = document.getElementById(`conName-${message.from}`); 
+   if(nameEl != null)
+   {  
+        nameEl.innerHTML =  message.desc;
+   }
+   
+}
+
 function soundlevel(message)
 {
     //console.log(message);
-
 
   
     flipSoundLevel = (++flipSoundLevel)%2;
@@ -1445,14 +1474,9 @@ function soundlevel(message)
            console.log(`${ 70 + element.volume}px`);
            audLevel.style.height =  `${ 70 + element.volume}px` ;
        }
-
-
-
        
    }
 
-
-   
 
   sound_level.innerHTML = JSON.stringify(message, undefined, 4); 
 

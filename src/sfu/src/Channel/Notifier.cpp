@@ -45,7 +45,7 @@ namespace Channel
 		                
                 if( std::string(event) == std::string("volumes"))
                 {
-                    jsonNotification["roomid"]= targetId;
+                    jsonNotification["room"]= targetId;
                     jsonNotification["type"]= "soundlevel";
                 }
                 else
@@ -55,7 +55,7 @@ namespace Channel
                     {
                       //   SInfo <<  "Emit223: " << targetId ;
 
-                        jsonNotification["roomid"]= m_sig->mapNotification[targetId];
+                        jsonNotification["room"]= m_sig->mapNotification[targetId];
                         jsonNotification["type"]= event;
                     }
                 

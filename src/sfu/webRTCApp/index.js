@@ -333,8 +333,8 @@ async function runSocketServer() {
 
 		console.log('notification ' + JSON.stringify(message, null, 4) );
 		message.from = socket.id;
-		if ('roomid' in message) {
-			socket.to(message.roomid).emit('message', message);
+		if ('room' in message) {
+			socket.to(message.room).emit('message', message);
 		}
 
 	});
