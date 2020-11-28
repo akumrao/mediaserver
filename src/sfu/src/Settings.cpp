@@ -132,6 +132,9 @@ void Settings::SetConfiguration(json &cnfg)
         if (cnfg.find("transport_enableTraceEvent") != cnfg.end()) {
            Settings::configuration.transport_enableTraceEvent = cnfg["transport_enableTraceEvent"];
         }
+        if (cnfg.find("transport_close") != cnfg.end()) {
+           Settings::configuration.transport_close = cnfg["transport_close"];
+        }
 
 	/* Post configuration. */
 

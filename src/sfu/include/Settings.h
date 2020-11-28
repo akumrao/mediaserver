@@ -51,6 +51,7 @@ public:
                 json consumer_getStats;
                 json consumer_setPreferredLayers;
                 json transport_enableTraceEvent;
+                json transport_close;
 	};
 
 public:

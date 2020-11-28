@@ -22,13 +22,9 @@ namespace SdpParse {
         {
             
         }
-        ~Handler()
-        {
-            if (remoteSdp) {
-                delete remoteSdp;
-                remoteSdp = nullptr;
-            }
-        }
+        
+        ~Handler();
+        
         
         void transportCreate();
         void transportConnect(const nlohmann::json& sdpObject, const std::string& localDtlsRole);

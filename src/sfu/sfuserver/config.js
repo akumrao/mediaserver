@@ -660,6 +660,16 @@
       "data": {
         "types":["bwe"]
       }
+    },
+   "transport_close": {
+      "id": 45,
+      "method": "transport.close",
+      "internal": {
+        "routerId": "2e32062d-f04a-4c2d-a656-b586e50498ef",
+        "transportId": "e5302612-283c-4532-8acb-8f3cbb87a8a5"
+      }
     }
+
+
   }
 }

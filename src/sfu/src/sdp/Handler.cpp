@@ -35,6 +35,30 @@ namespace SdpParse
         remoteSdp = new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, nullptr);
     }
 
+
+
+
+    Handler::~Handler()
+    {
+        SInfo << "~Handler()";
+        
+                
+        json param = json::array();
+        param.push_back("transport_close");
+        param.push_back(peer->participantID);
+        json &trans = Settings::configuration.transport_close;
+        raiseRequest(param, trans, [](const json & ack_resp)
+        {
+            SInfo << "~Handler(): " << ack_resp.dump(4);
+        });
+         
+
+        if (remoteSdp) {
+            delete remoteSdp;
+            remoteSdp = nullptr;
+        }
+    }
+
     void Handler::transportCreate() {
         {
 
@@ -901,7 +925,9 @@ namespace SdpParse
 
     }
 
-    Consumers::~Consumers() {
+    Consumers::~Consumers()
+    {
+        SInfo << "~Consumers()";
         
         int sz = mapConsumer.size();
         for (auto cons =mapConsumer.begin(); cons != mapConsumer.end(); ) {
