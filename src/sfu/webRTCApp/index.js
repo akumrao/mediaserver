@@ -213,7 +213,7 @@ async function runSocketServer() {
 
 	});
 
-	socket.on('create or join', function(roomId) {
+	socket.on('create or join', function(roomId, user) {
 
 		log('Received request to create or join room ' + roomId);
 
@@ -227,10 +227,12 @@ async function runSocketServer() {
 		if(socket.room)
         	socket.leave(socket.room);
 
-    		socket.room = roomId;
+		socket.room = roomId;
 
-    		socket.join(roomId);
+		socket.join(roomId);
 
+        	if(user)
+    		socket.user = user;
 
 		var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
 
@@ -265,7 +267,11 @@ async function runSocketServer() {
 		console.log('sfuserver message: ', message);
 
 		message.from = socket.id;
-		 socket.to(message.to).emit('message', message);
+		
+		if(socket.user)
+		message.user = socket.user;
+
+		socket.to(message.to).emit('message', message);
 	  });
 
 //////////////////////////////////////////////////////////////////////////
@@ -330,6 +336,11 @@ async function runSocketServer() {
 
 
 	socket.on('postAppMessage', function(message) {
+
+		if(message.type ==="user")
+		{
+			message.user = message.desc;
+		}
 
 		console.log('notification ' + JSON.stringify(message, null, 4) );
 		message.from = socket.id;

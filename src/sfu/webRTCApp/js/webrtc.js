@@ -320,10 +320,8 @@ function initPC()
 
 
             var labelName = document.createElement("label");
-            //name.type = "text";
-            labelName.id = `conName-${stream.id}`;
+            labelName.id = `conNameVid-${stream.id}`;
             //labelName.innerHTML =  stream.id.substring(0, 6);
-           
             divStore.appendChild(labelName);
 
     	}
@@ -373,6 +371,10 @@ function initPC()
             divLevel.id=`consoundLevel-${track.id.substring(0, 36)}`;
             // tr.appendChild(divLevel);
 
+            var labelName = document.createElement("label");
+            labelName.id = `conNameAud-${stream.id}`;
+            //labelName.innerHTML =  stream.id.substring(0, 6);
+            
 
             var tr = document.createElement('tr');
             var td = document.createElement('td');
@@ -380,6 +382,7 @@ function initPC()
             var trImg = document.createElement('img');
             trImg.src ="speaker.png"
             td.appendChild(trImg);
+            td.appendChild(labelName);
             td.appendChild(divLevel);
             tr.appendChild(td);
 
@@ -687,7 +690,7 @@ socket.on('message',  async function(message) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
     soundlevel(message.desc);
-  } else if (message.type === 'name' && isStarted) {
+  } else if (message.type === 'user' && isStarted) {
     setName(message);
   } else if (message.type === 'score' && isStarted) {
     score(message.desc);
@@ -792,10 +795,14 @@ function addProducerVideoAudio() {
                     if(name.value != "Your Name?")
                     {
 
- 
+                        var nameElA = document.getElementById(`prodNameAud-${peerID}`); 
+                       	if(nameElA != null)
+                       	{  
+                            nameElA.innerHTML =  name.value;
+                       	}
                         var send = {
                             room: roomId,
-                            type: 'name',
+                            type: 'user',
                             desc: name.value
                             };
 
@@ -929,6 +936,10 @@ function addProducerVideoAudio() {
                 //divLevel.id=`consoundLevel-${track.id}`;
                // tr.appendChild(divLevel);
                 
+                 var labelName = document.createElement("label");
+                labelName.id = `prodNameAud-${peerID}`;
+               // labelName.innerHTML =  peerID.substring(0, 6);
+
 
                 var tr = document.createElement('tr');
                 var td = document.createElement('td');
@@ -936,6 +947,7 @@ function addProducerVideoAudio() {
                 var trImg = document.createElement('img');
                 trImg.src ="speaker.png"
                 td.appendChild(trImg);
+                td.appendChild(labelName);
                 td.appendChild(divLevel);
                 tr.appendChild(td);
 
@@ -997,131 +1009,6 @@ function addProducerVideoAudio() {
     return true;
 
 }
-/*
-function addConumerVideoAudio(transiver) {
-
-
-    var store={};
-
-    var track = transiver.receiver.track;
-
-    if(track.kind === 'audio')
-        return ;
-
-
-    var mss = pc2.getRemoteStreams();
-    let ms;
-    for( var msn in mss   )
-    {
-       var lms = mss[msn];
-
-       var tracks = lms.getTracks();
-       for(var tc of tracks )
-       {
-           if ( tc ==track)
-           {
-               ms = lms;
-           }
-       }
-
-       if(ms)
-           break;
-    }
-
-    store [track.kind] = track.id;
-
-
-    let el = document.createElement(track.kind);
-    // set some attributes on our audio and video elements to make
-    // mobile Safari happy. note that for audio to play you need to be
-    // capturing from the mic/camera
-    el.setAttribute('playsinline', true);
-    el.setAttribute('autoplay', true);
-
-
-    var div = document.createElement('div');
-    div.textContent = ms.id;
-    div.potato= store;
-
-    div.appendChild(el);
-
-
-
-    let pause = document.createElement('span'),
-    checkbox = document.createElement('input'),
-    label = document.createElement('label');
-    pause.classList = 'nowrap';
-    checkbox.type = 'checkbox';
-    checkbox.id=track.id;
-    checkbox.checked = false;
-    checkbox.onchange = async () => {
-        if (checkbox.checked) {
-            await btn_subscribe_pause (checkbox.id);
-        } else {
-            await btn_subscribe_resume(checkbox.id);
-        }
-
-        }
-    label.id = `consumer-stats-${track.id}`;
-    label.innerHTML = "Pause " + track.kind;
-
-    let statButton;
-    if(track.kind === 'video') {
-        statButton = document.createElement('button');
-        statButton.id=track.id;
-        statButton.innerHTML += 'video Stats';
-        statButton.onclick = function(){
-           // alert('here be dragons');return false;
-            btn_subscribe_stats(statButton.id);
-            return false;
-        };
-
-        }
-
-
-        pause.appendChild(checkbox);
-        pause.appendChild(label);
-
-
-    var divStore = document.createElement('div');
-
-   // pause.appendChild(checkbox);
-    divStore.appendChild(pause);
-
-    if(statButton)
-        divStore.appendChild(statButton);
-
-
-    var td = document.createElement('td');
-    td.appendChild(div);
-    td.appendChild(divStore);
-
-    $('#traddCtrl2').append(td);
-
-
-    el.srcObject = new MediaStream([ track.clone() ]);
-    // let's "yield" and return before playing, rather than awaiting on
-    // play() succeeding. play() will not succeed on a producer-paused
-    // track until the producer unpauses.
-    el.play()
-        .then(()=>{})
-        .catch((e) => {
-            console.log("play eror %o ", e);
-        });
-
-
-
-
-    return true;
-
-}
-
-function onCreateSessionDescriptionError(error) {
-  //log('Failed to create session description: ' + error.toString());
-  console.log('Failed to create session description: ' + error.toString());
-  
-}
-*/
 
 
 async function getUserMedia1( isWebcam) {
@@ -1438,10 +1325,17 @@ function setName(message)
     //console.log("setName %o" + message.from);
    // alert(message);
 
-   var nameEl = document.getElementById(`conName-${message.from}`); 
-   if(nameEl != null)
+   var nameElV = document.getElementById(`conNameVid-${message.from}`); 
+   if(nameElV != null)
    {  
-        nameEl.innerHTML =  message.desc;
+        nameElV.innerHTML =  message.desc;
+   }
+
+
+   var nameElA = document.getElementById(`conNameAud-${message.from}`); 
+   if(nameElA != null)
+   {  
+        nameElA.innerHTML =  message.desc;
    }
    
 }
