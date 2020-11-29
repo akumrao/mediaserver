@@ -204,6 +204,19 @@ socket.on('leave', function (room, id, numClients){
       isChannelReady = true;
       document.getElementById("divParticipants").innerHTML = numClients;
   }
+
+  if(pc2)
+    {
+        pc2.close();
+        pc2 = null;
+    }
+
+    if(pc1)
+    {
+        pc1.close();
+        pc1 = null;
+    }
+    
 });
 
 
@@ -222,6 +235,21 @@ socket.on('joined', function(room, id, numClients) {
 
 });
 
+ socket.on('disconnect', function () {
+
+    
+    if(pc2)
+    {
+        pc2.close();
+        pc2 = null;
+    }
+
+    if(pc1)
+    {
+        pc1.close();
+        pc1 = null;
+    }
+});
 
 
 function initPC()
