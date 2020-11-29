@@ -204,19 +204,6 @@ socket.on('leave', function (room, id, numClients){
       isChannelReady = true;
       document.getElementById("divParticipants").innerHTML = numClients;
   }
-
-  if(pc2)
-    {
-        pc2.close();
-        pc2 = null;
-    }
-
-    if(pc1)
-    {
-        pc1.close();
-        pc1 = null;
-    }
-    
 });
 
 
@@ -237,18 +224,6 @@ socket.on('joined', function(room, id, numClients) {
 
  socket.on('disconnect', function () {
 
-    
-    if(pc2)
-    {
-        pc2.close();
-        pc2 = null;
-    }
-
-    if(pc1)
-    {
-        pc1.close();
-        pc1 = null;
-    }
 });
 
 
@@ -294,14 +269,12 @@ function initPC()
         var para = document.createElement("P");
         para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  stream.id  + "<br>" +   "</small> </span>";
         div.appendChild(para);
-
         
 
         //div.textContent = `streamid-${stream.id}`
        // div.potato= store;
-        if(track.kind === 'video') {
-            div.appendChild(el);
-        }
+
+        div.appendChild(el);
 
         div.id = `consumer-div-${track.id.substring(0, 36)}`;
 
