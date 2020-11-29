@@ -16,11 +16,12 @@ namespace RTC
 	TcpConnection::TcpConnection(Listener* listener)
 	  : TcpConnectionBase(false), listener(listener)
 	{
-		
+            LInfo("RTC::TcpConnection()");
 	}
 
 	TcpConnection::~TcpConnection()
 	{
+             LInfo("RTC::~TcpConnection()");
 		
 	}
 
@@ -162,6 +163,7 @@ namespace RTC
 	}
         
         void TcpConnection::on_close() {
+            LInfo("RTC::onClose");
 
             listener->on_close(this);
         }
