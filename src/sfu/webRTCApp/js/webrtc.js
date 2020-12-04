@@ -351,11 +351,17 @@ function initPC()
         } 
         else
         {
-        	var td = document.createElement('td');
+        	var td = document.createElement('fieldset');
         	td.id = `stream-${stream.id}`;
         	td.appendChild(div);
         	if(track.kind === 'video')
+            {
         	   td.appendChild(divStore);
+
+               objJson[`stream-${stream.id}`]= td;
+               changePage(current_page);
+
+            }
         }
 
         if (track.kind === 'audio') {
@@ -402,8 +408,8 @@ function initPC()
             $('#traddCtrl0').append(trExt);
 
         }
-        else if(track.kind === 'video')
-        $('#traddCtrl2').append(td);
+        // else if(track.kind === 'video')
+        // $('#traddCtrl2').append(td);
     }
 
 
@@ -770,10 +776,11 @@ function addProducerVideoAudio() {
 
             if (track.kind === 'video') {
 
-                var td = document.createElement('td');
-
-                var tr = document.createElement('tr');
+                var divtd = document.createElement('fieldset');
+                
                 var divStore = document.createElement('div');
+                divStore.className="form-group";
+
                 let el = document.createElement("video");
 
                 el.setAttribute('playsinline', true);
@@ -864,7 +871,7 @@ function addProducerVideoAudio() {
 
                 divStore.appendChild(name);
 
-                divStore.appendChild(closeButton);
+                
 
                 let pause = document.createElement('span'),
                 checkbox = document.createElement('input'),
@@ -884,29 +891,32 @@ function addProducerVideoAudio() {
                 label.id = `video-check-${track.id}`;
                 label.innerHTML = "Pause " + track.kind;
 
-                pause.appendChild(checkbox);
-                pause.appendChild(label);
-                divStore.appendChild(pause);
+                divtd.appendChild(divStore);
+
+                divtd.appendChild(closeButton);
+
+                divtd.appendChild(checkbox);
+                divtd.appendChild(label);
+                divtd.appendChild(pause);
 
                 ///////////////////////////////
-                let statButton;
+                // let statButton;
               
-                statButton = document.createElement('button');
-                statButton.id=track.id;
-                statButton.innerHTML += 'video Stats';
-                statButton.onclick = function(){
-                    // alert('here be dragons');return false;
-                    btn_producer_stats(statButton.id);
-                    return false;
-                };
+                // statButton = document.createElement('button');
+                // statButton.id=track.id;
+                // statButton.innerHTML += 'video Stats';
+                // statButton.onclick = function(){
+                //     // alert('here be dragons');return false;
+                //     btn_producer_stats(statButton.id);
+                //     return false;
+                // };
 
-                if(statButton)
-                divStore.appendChild(statButton);
+                // if(statButton)
+                // divStore.appendChild(statButton);
                 //////////////////////////////
 
-                tr.appendChild(divStore);
+                
 
-                td.appendChild(tr);
 
                 const streamV = new MediaStream();
                 streamV.addTrack(track);
@@ -921,11 +931,9 @@ function addProducerVideoAudio() {
                 });
 
 
-                td.id = 'td' + track.id;
-                td.class='td';
-                td.style.width = "200px";
+                divtd.id = 'td' + track.id;
 
-                $('#traddCtrl1').append(td);
+                $('#traddCtrl1').append(divtd);
                
             }
             else if (track.kind === 'audio') {
@@ -937,20 +945,20 @@ function addProducerVideoAudio() {
                 //divLevel.id=`consoundLevel-${track.id}`;
                // tr.appendChild(divLevel);
                 
-                 var labelName = document.createElement("label");
+                var labelName = document.createElement("label");
                 labelName.id = `prodNameAud-${peerID}`;
-               // labelName.innerHTML =  peerID.substring(0, 6);
+                labelName.innerHTML =  peerID.substring(0, 6);
 
 
-                var tr = document.createElement('tr');
-                var td = document.createElement('td');
+                var tr = document.createElement('fieldset');
+               // var td = document.createElement('td');
 
                 var trImg = document.createElement('img');
                 trImg.src ="speaker.png"
-                td.appendChild(trImg);
-                td.appendChild(labelName);
-                td.appendChild(divLevel);
-                tr.appendChild(td);
+                tr.appendChild(trImg);
+                tr.appendChild(labelName);
+                tr.appendChild(divLevel);
+                //tr.appendChild(td);
 
                 var divStore = document.createElement('div');
 

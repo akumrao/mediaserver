@@ -13,10 +13,10 @@
   }
   table {
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
   }
   table td {
-    width: 33.33%;
+/*    width: 33.33%;*/
     vertical-align: top;
   }
   fieldset {
@@ -47,84 +47,120 @@
   }
 </style>
 <body>
-  <table>
-    <tr>
-    <td> 
-        status:
-    </td>
-    <td> 
-        <div id="divStatus">Not Connected</div>
-    </td>
-    <td> 
-        select room:
-    </td>
-    <td>
+
+<!-- DivTable.com -->
+<!-- https://divtable.com/generator/ -->
+<table border="0" cellpadding="0">
+<tbody>
+<tr style="background-color: #1ffff0;">
+<th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;ScopeAr SFU</th>
+</tr>
+<tr style="background-color: #f9ecf2;">
+<td colspan="3">
+  
+  <div class="block">
+
+        <label>status:</label>
+
+        <label id="divStatus">Not Connected</label>
+        &nbsp;
+
+        <label>select room:</label>
+    
         <select id="roomCtrl" onchange="roomCtrlOnChange()">>
         <option value="room">Sfu-Room</option>
         <option>Teresa-Room</option>
         <option>Foo-Hall</option>
         <option>Lincoln-Hall</option>
        </select>
-    </td>
-     <td> 
-        Participants:
-    </td>
-    <td> 
-        <div id="divParticipants"></div>
-    </td>
-    <td> 
-      <tr>
-        <td> 
-          Prodcucer Score[0-10]:
-        </td>
-        <td> 
-        <div id="divProducerScore">10</div>
-        </td>
-      </tr>
-       <tr>
-        <td> 
-          Consumer Score[0-10]:
-        </td>
-        <td> 
-        <div id="divConsumerScore">10</div>
-        </td>
-       </tr>
-       
-    </td>
+       &nbsp;
+       <label>Participants:</label>
+       <label id="divParticipants"></label>
 
-    </tr>
-    <tr>
-      <td id="traddCtrl0"></td>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td style="width: 160px; background-color: #ffff00;">&nbsp;Audio</td>
+<td style="background-color: #b3d1ff;">
+
+ <div class="block">
+         <label>Video per page:</label>
+         <input type="number" type="text" id="myInput"  value="2" onchange="RecordPerPage()" min="1" max="5">
+ </div>
+
+</td>
+<td style="background-color: #8fffff;">&nbsp;Stats</td>
+</tr>
+<tr>
+<td style="width: 160px; background-color: #ffff00;" >
+<table id="traddCtrl0" border="0" ></table>
+
+</td>
+<td style="background-color: #b3d1ff;">
+ 
+ <table border="0" >
+   <tr>
       <td id="traddCtrl1"></td>
       <td id="traddCtrl2"></td>
     </tr>
-    <tr>
-      <td>
+ </table>
+
+ <a href="javascript:prevPage()" id="btn_prev">Prev</a>&nbsp
+  <a href="javascript:nextPage()" id="btn_next"> Next</a>
+  page: <span id="page"></span>
+
+</td>
+<td style="background-color: #8fffff;">
+  <table  border="0" >
+    
+    <tr id="listingStats">
+     <!--  <td id="traddCtrl1"></td>
+      <td id="traddCtrl2"></td> -->
+      <fieldset>
+
+       <label>Prodcucer Score[0-10]:</label>
+
+       <label id="divProducerScore">10</label>
+       
+
+       </fieldset> 
+        &nbsp;
+
+       <fieldset>
+       <label>Consumer Score[0-10]:</label>
+
+       <label id="divConsumerScore">10</label>
+       </fieldset> 
+        &nbsp;
+
+
         <div>Local Stats</div>
-         <p id="prod_stat"></p>
-      </td>
-       <td>
+        <p id="prod_stat"></p>
+
         <div>Sound Level</div>
-         <p id="sound_level"></p>
-      </td>
-      <td>
+        <p id="sound_level"></p>
+
         <div>Remote Stats</div>
         <p id="cons_stat"></p>
-      </td>
+
 
     </tr>
 
-  </table>
-  <br>
-  <table>
-    <tr>
-      <td>
+  </table
+</td>
+</tr>
+<tr style="background-color: #00ff00;">
+<td>
+
         <fieldset id="fs_connection">
           <legend>Connection</legend>
           <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
         </fieldset>
-      </td>
-      <td>
+
+</td>
+<td>  
         <fieldset id="fs_publish">
           <legend>Publishing</legend>
           <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
@@ -148,8 +184,10 @@
             <button id="btn_producer_stats">Stats</button>
           </div>
         </fieldset>
-      </td>
-      <td>
+
+</td>
+
+<td>
         <fieldset id="fs_subscribe" >
           <legend>Subscription</legend>
             <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
@@ -158,9 +196,13 @@
 <!--            <div><button id="btn_subscribe_stats">stats</button> <span id="sub_status"></span>-->
           </div>
         </fieldset>
-      </td>
-    </tr>
-  </table>
+</td>
+</tr>
+</tbody>
+</table>
+
+
+
 
 
 
