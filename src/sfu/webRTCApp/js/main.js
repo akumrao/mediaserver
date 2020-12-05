@@ -16,107 +16,20 @@ var objJson = {}; // Can be obtained from another source, such as your objJson v
 
 
 
-var len = Object.keys(objJson).length
+// var len = Object.keys(objJson).length
 
-if (objJson.hasOwnProperty(2))
-{
-     console.log("found it");
-}
+// if (objJson.hasOwnProperty(2))
+// {
+//      console.log("found it");
+// }
 
 //delete  objJson[1];
 
 
-for (var key in objJson) {
-    console.log("key " + key , "value = " + objJson[key]);
-}
+// for (var key in objJson) {
+//     console.log("key " + key , "value = " + objJson[key]);
+// }
 
-function videoDisplay( count)
-{
-
-
-        let el = document.createElement('video');
-
-        el.setAttribute('playsinline', true);
-        el.setAttribute('autoplay', true);
-        el.setAttribute('id', `va-${count}`);
-        //el.id = `video-${count}`;
-
-
-        // set some attributes on our audio and video elements to make
-        // mobile Safari happy. note that for audio to play you need to be
-
-
-        var div = document.createElement('div');
-
-        var para = document.createElement("P");
-        para.innerHTML = "<span> <small> trackid:" +  count  + "<br>"+  "peerID:" +  count + "<br>" +   "</small> </span>";
-        div.appendChild(para);
-
-        
-
-        //div.textContent = `streamid-${count}`
-       // div.potato= store;
-    
-        div.appendChild(el);
-        
-        div.id = `consumer-div-${count}`;
-
-
-        let pause = document.createElement('span'),
-        checkbox = document.createElement('input'),
-        label = document.createElement('label');
-
-        pause.classList = 'nowrap';
-        checkbox.type = 'checkbox';
-        checkbox.id=count;
-        checkbox.checked = false;
-        checkbox.onchange = async () => {
-        if (checkbox.checked) {
-            await btn_subscribe_pause (checkbox.id);
-        } else {
-            await btn_subscribe_resume(checkbox.id);
-        }
-
-        }
-        label.id = `consumer-stats-${count}`;
-        
-
-        label.innerHTML = "Pause Video";
-        
-
-        var divStore = document.createElement('div');
-
-        
-
-        var labelName = document.createElement("label");
-        labelName.id = `conNameVid-${count}`;
-        //labelName.innerHTML =  count.substring(0, 6);
-        divStore.appendChild(labelName);
-
-
-        pause.appendChild(checkbox);
-        pause.appendChild(label);
-
-
-        
-
-    // pause.appendChild(checkbox);
-        divStore.appendChild(pause);
-
-             
-        var td = document.createElement('td');
-        td.id = `stream-${count}`;
-        td.appendChild(div);
-
-        td.appendChild(divStore);
-
-       console.log(td);
-
-       console.log("arvind %o", td);
-       
-
-       return td;
-}
 
 function prevPage()
 {
@@ -155,7 +68,7 @@ function changePage(page)
 
        if (  i >= (page-1) * records_per_page && i < (page * records_per_page)) {
             console.log("key=" + key + " i=" + i);
-            listing_table.innerHTML += "<div class=\"box\">" + objJson[key].innerHTML + "</div>";
+            listing_table.innerHTML += "<div class=\"box\" id=\"" + key +"\">" + objJson[key].innerHTML + "</div>";
             // listing_table.innerHTML += "<div class=\"box\"> <div>" + i + "</div></div>";
         }
     }

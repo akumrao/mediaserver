@@ -352,7 +352,7 @@ function initPC()
         else
         {
         	var td = document.createElement('div');
-        	td.id = `stream-${stream.id}`;
+        	//td.id = `stream-${stream.id}`;
         	td.appendChild(div);
         	if(track.kind === 'video')
             {
@@ -433,7 +433,20 @@ function initPC()
         parentVideo.removeChild(childVideo);
     }
 
-    delete objJson[`stream-${stream.id}`];
+
+    var len1 = Object.keys(objJson).length
+
+    if (objJson.hasOwnProperty(`stream-${stream.id}`))
+    {
+         console.log("found it");
+         delete objJson[`stream-${stream.id}`];
+    }
+
+
+    var len2 = Object.keys(objJson).length
+
+
+
 
 
     var parentAudio = document.getElementById("traddCtrl0");
