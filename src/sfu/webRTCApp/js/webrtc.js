@@ -307,6 +307,7 @@ function initPC()
         }
 
         var divStore = document.createElement('div');
+        
 
         let statButton;
         if(track.kind === 'video') {
@@ -323,6 +324,7 @@ function initPC()
             var labelName = document.createElement("label");
             labelName.id = `conNameVid-${stream.id}`;
             //labelName.innerHTML =  stream.id.substring(0, 6);
+            //divStore.className="divTableRow";
             divStore.appendChild(labelName);
 
     	}
@@ -330,11 +332,9 @@ function initPC()
 
         pause.appendChild(checkbox);
         pause.appendChild(label);
+  
 
-
-        
-
-    // pause.appendChild(checkbox);
+        // pause.appendChild(checkbox);
         divStore.appendChild(pause);
 
         if(statButton)
@@ -351,12 +351,14 @@ function initPC()
         } 
         else
         {
-        	var td = document.createElement('fieldset');
+        	var td = document.createElement('div');
         	td.id = `stream-${stream.id}`;
         	td.appendChild(div);
         	if(track.kind === 'video')
             {
-        	   td.appendChild(divStore);
+               //td.className="divTable";
+
+               td.appendChild(divStore);
 
                objJson[`stream-${stream.id}`]= td;
                changePage(current_page);
@@ -383,15 +385,16 @@ function initPC()
             //labelName.innerHTML =  stream.id.substring(0, 6);
             
 
-            var tr = document.createElement('tr');
-            var td = document.createElement('td');
+            var tr = document.createElement('fieldset');
+            // var td = document.createElement('td');
 
             var trImg = document.createElement('img');
             trImg.src ="speaker.png"
-            td.appendChild(trImg);
-            td.appendChild(labelName);
-            td.appendChild(divLevel);
-            tr.appendChild(td);
+            tr.appendChild(trImg);
+            tr.appendChild(labelName);
+            tr.appendChild(divLevel);
+
+
 
             var para = document.createElement("P");
             para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  stream.id  + "<br>" +   "</small> </span>";
@@ -405,7 +408,7 @@ function initPC()
             trExt.class='tr';
             //trExt.style.width = "200px";
 
-            $('#traddCtrl0').append(trExt);
+            document.getElementById("traddCtrl0").append(trExt);
 
         }
         // else if(track.kind === 'video')
@@ -429,6 +432,9 @@ function initPC()
     if (parentVideo != null && childVideo != null) {
         parentVideo.removeChild(childVideo);
     }
+
+    delete objJson[`stream-${stream.id}`];
+
 
     var parentAudio = document.getElementById("traddCtrl0");
     var childAudio = document.getElementById(`ConAudiostream-${stream.id}`);
@@ -696,11 +702,11 @@ socket.on('message',  async function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
-    soundlevel(message.desc);
+    //soundlevel(message.desc);
   } else if (message.type === 'user' && isStarted) {
     setName(message);
   } else if (message.type === 'score' && isStarted) {
-    score(message.desc);
+    //score(message.desc);
   }else if (message.type === 'prodstats' && isStarted) {
     prodstats(message.desc);
   }else if (message.type === 'constats') {
@@ -776,10 +782,11 @@ function addProducerVideoAudio() {
 
             if (track.kind === 'video') {
 
-                var divtd = document.createElement('fieldset');
+                var divtd = document.createElement('div');
+                divtd.className="divTable";
                 
                 var divStore = document.createElement('div');
-                divStore.className="form-group";
+                divStore.className="divTableRow";
 
                 let el = document.createElement("video");
 
@@ -823,7 +830,7 @@ function addProducerVideoAudio() {
                 div.appendChild(para);
 
                 div.appendChild(el);
-                div.style.width = "200px";
+                //div.style.width = "200px";
 
                 divStore.appendChild(div);
 
@@ -933,7 +940,7 @@ function addProducerVideoAudio() {
 
                 divtd.id = 'td' + track.id;
 
-                $('#traddCtrl1').append(divtd);
+                document.getElementById("traddCtrl1").append(divtd);
                
             }
             else if (track.kind === 'audio') {
@@ -1002,7 +1009,7 @@ function addProducerVideoAudio() {
                 trExt.class='tr';
                 //trExt.style.width = "200px";
 
-                $('#traddCtrl0').append(trExt);
+                document.getElementById("traddCtrl0").append(trExt);
 
             }
 
@@ -1115,12 +1122,12 @@ async function publish(isWebcam)
    let  videotrack;
    let audiotrack;
 
+  
 
-
-   if ($('#chk_video').prop('checked'))
+   if (document.getElementById("chk_video").checked)
    videotrack = stream.getVideoTracks()[0];
 
-   if ($('#chk_audio').prop('checked'))
+   if ( document.getElementById("chk_audio").checked )
     audiotrack = stream.getAudioTracks()[0];
 
 

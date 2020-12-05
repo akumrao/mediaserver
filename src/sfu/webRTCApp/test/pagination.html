@@ -5,9 +5,75 @@
 
 <head>
 <style>
-table, td, th {
-  border: 1px solid black;
+  body {
+    font: .9rem arial, serif;
+  }
+  table {
+    max-width: 1200px;
+  }
+  table td {
+/*    width: 33.33%;*/
+    vertical-align: top;
+  }
+  fieldset {
+    min-height: 100%;
+    border: 1px solid silver;
+    padding: 10px;
+  }
+  button {
+    padding: 1px;
+    margin: 1px;
+  }
+  video {
+    width: 100%;
+  }
+  span {
+    font-family: monospace;
+  }
+
+.container {
+   /*height: 380px; MODIFY THIS*/
+  
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-content: flex-start;
+    
 }
+
+.box {
+  width: 250px;
+  height: 300px;
+  background-color: lightblue;
+  margin: 1px;
+  /*line-height: 300px;*/
+  text-align: left;
+  top: 0;s
+}
+
+
+/* DivTable.com */
+.divTable{
+  display: table;
+}
+.divTableRow {
+  display: table-row;
+}
+
+.divTableCell {
+  border: 1px solid #999999;
+  display: table-cell;
+}
+
+
+  .mystyle {
+  
+  border-left: 6px solid green;
+  height: 1px;
+  left: 50%;
+  margin-left: -3px;
+  top: 0;
+  
 
 
 </style>
@@ -46,16 +112,9 @@ function myFunction() {
 
 </script>
 
+ <div class="container" id="listingTable" >
+  </div>
 
-<table>
-
-
-	<tr id="listingTable"></tr>
-	
-
-
-
-</table>
 	<a href="javascript:prevPage()" id="btn_prev">Prev</a>&nbsp
 	<a href="javascript:nextPage()" id="btn_next"> Next</a>
 	page: <span id="page"></span>
@@ -108,7 +167,9 @@ function changePage(page)
     listing_table.innerHTML = "";
 
     for (var i = (page-1) * records_per_page; i < (page * records_per_page); i++) {
-        listing_table.innerHTML += "<td><div>" + objJson[i].adName + "</div></td>";
+        listing_table.innerHTML += "<div class=\"box\"> " + i + "</div>";
+        //listing_table.innerHTML += "<td><div>" + objJson[i].adName + "</div></td>";
+        //listing_table.innerHTML += "<div class=\"box\"> <div>" + i + "</div></div>";
     }
     page_span.innerHTML = page;
 

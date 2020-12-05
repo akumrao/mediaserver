@@ -12,7 +12,6 @@
     font: .9rem arial, serif;
   }
   table {
-    width: 100%;
     max-width: 1200px;
   }
   table td {
@@ -25,8 +24,8 @@
     padding: 10px;
   }
   button {
-    padding: 5px;
-    margin: 5px;
+    padding: 1px;
+    margin: 1px;
   }
   video {
     width: 100%;
@@ -34,6 +33,40 @@
   span {
     font-family: monospace;
   }
+
+.container {
+   /*height: 380px; MODIFY THIS*/
+  
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-content: flex-start;
+ 	
+}
+
+.box {
+  width: 250px;
+  height: 300px;
+  background-color: lightblue;
+  margin: 1px;
+  /*line-height: 300px;*/
+  text-align: left;
+  top: 0;s
+}
+
+
+/* DivTable.com */
+.divTable{
+  display: table;
+}
+.divTableRow {
+  display: table-row;
+}
+
+.divTableCell {
+  border: 1px solid #999999;
+  display: table-cell;
+}
 
 
   .mystyle {
@@ -87,7 +120,7 @@
 
  <div class="block">
          <label>Video per page:</label>
-         <input type="number" type="text" id="myInput"  value="2" onchange="RecordPerPage()" min="1" max="5">
+         <input type="number" type="text" id="myInput"  value="3" onchange="RecordPerPage()" min="2" max="8">
  </div>
 
 </td>
@@ -100,24 +133,23 @@
 </td>
 <td style="background-color: #b3d1ff;">
  
- <table border="0" >
-   <tr>
-      <td id="traddCtrl1"></td>
-      <td id="traddCtrl2"></td>
-    </tr>
- </table>
+ <div class="container" >
+    <div class="box" id="traddCtrl1" ></div>
+  </div>
 
- <a href="javascript:prevPage()" id="btn_prev">Prev</a>&nbsp
+  <div class="container" id="traddCtrl2" >
+  </div>
+
+  <a href="javascript:prevPage()" id="btn_prev">Prev</a>&nbsp
   <a href="javascript:nextPage()" id="btn_next"> Next</a>
-  page: <span id="page"></span>
+  <!-- page: <span id="page"></span> -->
 
 </td>
 <td style="background-color: #8fffff;">
   <table  border="0" >
     
     <tr id="listingStats">
-     <!--  <td id="traddCtrl1"></td>
-      <td id="traddCtrl2"></td> -->
+
       <fieldset>
 
        <label>Prodcucer Score[0-10]:</label>
@@ -212,7 +244,7 @@
   // window.localStorage.setItem('debug', 'mediaserver-client:WARN* mediaserver-client:ERROR*');
   window.localStorage.setItem('debug', 'mediaserver-client:*');
 </script>
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!--   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
 <!--   <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script> -->
    <!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script> -->
   <script src="/socket.io/socket.io.js"></script>

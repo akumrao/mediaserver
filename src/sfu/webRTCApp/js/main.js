@@ -6,7 +6,7 @@ var current_page = 1;
 function RecordPerPage() {
   var x = document.getElementById("myInput").value;
   document.getElementById("demo").innerHTML = "You wrote: " + x;
-  records_per_page =x;
+  records_per_page =x-1;
   changePage(current_page);
 }
 
@@ -14,15 +14,6 @@ function RecordPerPage() {
 
 var objJson = {}; // Can be obtained from another source, such as your objJson variable
 
-// var obj0 = videoDisplay(0);
-// var obj1 = videoDisplay(1);
-// var obj2 = videoDisplay(2);
-// var obj3 = videoDisplay(3);
-
-// objJson['0']= obj0;
-// objJson['1']= obj1;
-// objJson['2']= obj2;
-// objJson['3']= obj3;
 
 
 var len = Object.keys(objJson).length
@@ -148,7 +139,7 @@ function changePage(page)
     var btn_next = document.getElementById("btn_next");
     var btn_prev = document.getElementById("btn_prev");
     var listing_table = document.getElementById("traddCtrl2");
-    var page_span = document.getElementById("page");
+    //var page_span = document.getElementById("page");
  
     // Validate page
     if (page < 1) page = 1;
@@ -164,14 +155,15 @@ function changePage(page)
 
        if (  i >= (page-1) * records_per_page && i < (page * records_per_page)) {
             console.log("key=" + key + " i=" + i);
-            listing_table.innerHTML += "<td><div>" + objJson[key].innerHTML + "</div></td>";
+            listing_table.innerHTML += "<div class=\"box\">" + objJson[key].innerHTML + "</div>";
+            // listing_table.innerHTML += "<div class=\"box\"> <div>" + i + "</div></div>";
         }
     }
 
      
    
 
-    page_span.innerHTML = page;
+    //page_span.innerHTML = page;
 
     if (page == 1) {
         btn_prev.style.visibility = "hidden";
@@ -273,15 +265,15 @@ function numPages()
 
 
 
-$(document).ready(function(){
+window.onload = function(){
  
 
-  $("#btn_connect").click(function(){
+  document.getElementById("btn_connect").onclick = function(){
 
-   $("#btn_connect").attr("disabled", true);
+   document.getElementById("btn_connect").disabled = true;
 
     console.log("connect");
-          $("#div1").html("<h2>btn_connect!</h2>");
+
    socket.emit('create or join', roomId);
 
     var str = "Connected";
@@ -290,78 +282,78 @@ $(document).ready(function(){
 
  // const data = await socket.request('getRouterRtpCapabilities');
 
-  });
+  };
 
 
-  $("#btn_webcam").click(function(){
-    $("#btn_webcam").attr("disabled", true);
+  document.getElementById("btn_webcam").onclick = function(){
+    document.getElementById("btn_webcam").disabled = true;
+
     console.log("btn_webcam click");
 
    publish(true);
-  });
+  };
 
-  $("#btn_screen").click(function(){
-
-    $("#btn_screen").attr("disabled", true);
+  document.getElementById("btn_screen").onclick = function(){
+    document.getElementById("btn_screen").disabled = true;
 
         console.log("btn_screen click");
 
         publish(false);
-  });
+  };
 
 
-  $("#btn_subscribe").click(function(){
+  document.getElementById("btn_subscribe").onclick = function(){
 
     console.log("btn_subscribe click");
 
    subscribe();
-  });
+  };
 
- $("#btn_subscribe_resume").click(function(){
+ // document.getElementById("btn_subscribe_resume").onclick = function(){
 
-    console.log("btn_subscribe_resume click");
+ //    console.log("btn_subscribe_resume click");
 
-   btn_subscribe_resume();
-  });
+ //   btn_subscribe_resume();
+ //  };
 
   
-  $("#btn_subscribe_pause").click(function(){
+ //  document.getElementById("btn_subscribe_pause").onclick = function(){
 
-    console.log("btn_subscribe_pause click");
+ //    console.log("btn_subscribe_pause click");
 
-   btn_subscribe_pause();
-  });
+ //   btn_subscribe_pause();
+ //  };
 
 
-  $("#btn_audio_level_start").click(function(){
+  document.getElementById("btn_audio_level_start").onclick = function(){
 
     console.log("btn_audio_level_start click");
     btn_audio_level_start();
-  });
+  };
 
-   $("#btn_audio_level_stop").click(function(){
+   document.getElementById("btn_audio_level_stop").onclick = function(){
 
     console.log("btn_audio_level_start click");
 
    btn_audio_level_stop();
-  });
+  };
 
 
-  $("#btn_producer_stats").click(function(){
+  document.getElementById("btn_producer_stats").onclick = function(){
 
     console.log("btn_producer_stats click");
 
    btn_producer_stats();
-  });
+  };
 
   
-  $("#btn_subscribe_stats").click(function(){
+  // document.getElementById("btn_subscribe_stats").onclick = function(){
 
-    console.log("btn_subscribe_stats click");
-   btn_subscribe_stats();
-  });
-
-
+  //   console.log("btn_subscribe_stats click");
+  //  btn_subscribe_stats();
+  // };
 
 
- });
+
+
+ }
