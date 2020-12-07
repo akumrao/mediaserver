@@ -78,6 +78,47 @@
   top: 0;
   
   }
+
+    
+    .time {
+      color: red;
+      font-family: "Ubuntu";
+      text-align: right;
+    }
+
+    .message {
+      display: inline;
+    }
+    #messages {
+        list-style-type: none;
+    }
+    .me {
+      font-family: sans-serif, "Courier New", Courier, monospace;
+      text-align: right;
+    }
+    .you {
+      font-family: sans-serif, "Courier New", Courier, monospace;
+      text-align: left;
+     
+    }
+    .yourDiv {
+      position: relative;
+      right: 10;
+      width: 50%;
+      background-color: blue;
+      color: white;
+    }
+    .myDiv {
+      position: relative;
+      left: 40%;
+      width: 50%;
+      background-color: violet;
+    }
+
+
+
+
+
 </style>
 <body>
 
@@ -86,16 +127,15 @@
 <table border="0" cellpadding="0">
 <tbody>
 <tr style="background-color: #1ffff0;">
-<th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;ScopeAr SFU</th>
+<th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;ScopeAr Worklink Router</th>
 </tr>
 <tr style="background-color: #f9ecf2;">
 <td colspan="3">
   
   <div class="block">
 
-        <label>status:</label>
-
-        <label id="divStatus">Not Connected</label>
+        <input type="text" id="fname" name="fname" value="Your Name?">
+        
         &nbsp;
 
         <label>select room:</label>
@@ -108,12 +148,67 @@
        </select>
        &nbsp;
        <label>Participants:</label>
-       <label id="divParticipants"></label>
+       <label id="divParticipants">0</label>
+       &nbsp;
+       <label>status:</label>
+       <label id="divStatus">Not Connected</label>
 
   </div>
 </td>
 </tr>
+<tr style="background-color: #00ff00;">
+<td>
 
+        <fieldset id="fs_connection">
+          <legend>Connection</legend>
+          <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
+        </fieldset>
+
+</td>
+<td>  
+        <fieldset id="fs_publish">
+          <legend>Publishing</legend>
+          <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
+          <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
+          <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
+          <div>
+            <button id="btn_webcam">Start Webcam</button>
+            <span id="webcam_status"></span>
+          </div>
+          <div>
+            <button id="btn_screen">Share Screen</button>
+            <span id="screen_status"></span>
+          </div>
+           <div>
+            <button id="btn_audio_level_start">Start Audio Level</button> 
+          </div>
+           <div>
+            <button id="btn_audio_level_stop">stop Audio Level</button> 
+          </div>
+           <div>
+            <button id="btn_producer_stats">Stats</button>
+          </div>
+          <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
+<!--            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>-->
+<!--            <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>-->
+<!--            <div><button id="btn_subscribe_stats">stats</button> <span id="sub_status"></span>-->
+          </div>
+        </fieldset>
+
+</td>
+
+<td>
+        <legend>Chat</legend>
+        <form>
+          <input type="text" id="m" maxlength="40" size="40" /> <br>
+          <input type="submit" id="submitButton" value="submit" />
+        </form>
+        <div id="chatDiv" style="overflow-y: auto; height:250px; ">
+    
+          <ul id="messages"></ul>
+        </div>
+</td>
+</tr>
 <tr>
 <td style="width: 160px; background-color: #ffff00;">&nbsp;Audio</td>
 <td style="background-color: #b3d1ff;">
@@ -150,22 +245,18 @@
     
     <tr id="listingStats">
 
-      <fieldset>
 
        <label>Prodcucer Score[0-10]:</label>
 
        <label id="divProducerScore">10</label>
-       
+       <br>
 
-       </fieldset> 
-        &nbsp;
 
-       <fieldset>
        <label>Consumer Score[0-10]:</label>
 
        <label id="divConsumerScore">10</label>
-       </fieldset> 
-        &nbsp;
+ 
+       <br>
 
 
         <div>Local Stats</div>
@@ -183,53 +274,14 @@
   </table
 </td>
 </tr>
-<tr style="background-color: #00ff00;">
-<td>
 
-        <fieldset id="fs_connection">
-          <legend>Connection</legend>
-          <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
-        </fieldset>
 
-</td>
-<td>  
-        <fieldset id="fs_publish">
-          <legend>Publishing</legend>
-          <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
-          <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
-          <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
-          <div>
-            <button id="btn_webcam">Start Webcam</button>
-            <span id="webcam_status"></span>
-          </div>
-          <div>
-            <button id="btn_screen">Share Screen</button>
-            <span id="screen_status"></span>
-          </div>
-           <div>
-            <button id="btn_audio_level_start">Start Audio Level</button> 
-          </div>
-           <div>
-            <button id="btn_audio_level_stop">stop Audio Level</button> 
-          </div>
-           <div>
-            <button id="btn_producer_stats">Stats</button>
-          </div>
-        </fieldset>
+<tr style="background-color: #f9ecf2;">
+<td colspan="3"> Worklink rounter is a SFU, which route Augmented VR contents. It supports Android and IOS devices. It helps in rapid diagnostics of Worklink. Also in audio and video conference<br> If you need access of this server, please contant Brent or Arvind <td>
+  
 
-</td>
+</tr>  
 
-<td>
-        <fieldset id="fs_subscribe" >
-          <legend>Subscription</legend>
-            <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
-<!--            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>-->
-<!--            <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>-->
-<!--            <div><button id="btn_subscribe_stats">stats</button> <span id="sub_status"></span>-->
-          </div>
-        </fieldset>
-</td>
-</tr>
 </tbody>
 </table>
 

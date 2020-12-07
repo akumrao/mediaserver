@@ -718,7 +718,10 @@ socket.on('message',  async function(message) {
     //soundlevel(message.desc);
   } else if (message.type === 'user' && isStarted) {
     setName(message);
-  } else if (message.type === 'score' && isStarted) {
+  } else if (message.type === 'chat' ) {
+    message.to = socket.id;
+    displayMessage(message);
+  }else if (message.type === 'score' && isStarted) {
     //score(message.desc);
   }else if (message.type === 'prodstats' && isStarted) {
     prodstats(message.desc);
@@ -814,29 +817,29 @@ function addProducerVideoAudio() {
                 var div = document.createElement('div');
                // div.textContent = track.id;
                // div.potato= store;
-                var name = document.createElement("input");
-                name.type = "text";
-                name.id = `proName-${peerID}`;
-                name.value = "Your Name?";
-                name.onchange = async function(){
+                // var name = document.createElement("input");
+                // name.type = "text";
+                // name.id = `proName-${peerID}`;
+                // name.value = "Your Name?";
+                // name.onchange = async function(){
                     
-                    if(name.value != "Your Name?")
-                    {
+                //     if(name.value != "Your Name?")
+                //     {
 
-                        var nameElA = document.getElementById(`prodNameAud-${peerID}`); 
-                       	if(nameElA != null)
-                       	{  
-                            nameElA.innerHTML =  name.value;
-                       	}
-                        var send = {
-                            room: roomId,
-                            type: 'user',
-                            desc: name.value
-                            };
+                //         var nameElA = document.getElementById(`prodNameAud-${peerID}`); 
+                //        	if(nameElA != null)
+                //        	{  
+                //             nameElA.innerHTML =  name.value;
+                //        	}
+                //         var send = {
+                //             room: roomId,
+                //             type: 'user',
+                //             desc: name.value
+                //             };
 
-                        socket.emit('postAppMessage', send);
-                    }
-                }
+                //         socket.emit('postAppMessage', send);
+                //     }
+                // }
 
                 var para = document.createElement("P");
                 para.innerHTML = "<span> <small> videotrackid:" +  track.id  + "<br>"+  "peerID:" +  peerID  + "<br>" +   "</small> </span>";
@@ -889,7 +892,7 @@ function addProducerVideoAudio() {
                 };
 
 
-                divStore.appendChild(name);
+                //divStore.appendChild(name);
 
                 
 
@@ -1420,3 +1423,44 @@ function constats(desc)
 }
 
 
+function displayMessage(data) {
+      console.log( "chat %o", data);
+      console.log( "chat text " + data.desc);
+      let authorClass = "";
+      let divClass = "";
+      //verify that the user ID and the message sent ID is similar 
+      if (data.to === data.from) {
+          console.log("This person has sent a message")
+        authorClass = "me";
+        divClass = "myDiv";
+      } else {
+        authorClass = "you";
+        divClass = "yourDiv";
+      }
+      const div = document.createElement("div");
+      div.className = divClass;
+      const li = document.createElement("li");
+      const p = document.createElement("p");
+      p.className = "time";
+      var dd = new Date();
+      p.innerText = dd.getHours() + ":" + dd.getMinutes();
+      div.innerHTML =
+        '<p class="' +
+        authorClass +
+        '">' +
+        data.user +
+        "</p>" +
+        '<p class="message"> ' +
+        data.desc +
+        "</p>";
+      div.appendChild(p);
+      li.appendChild(div);
+
+      document.getElementById("messages").appendChild(li);
+
+      var myDiv = document.getElementById("chatDiv");
+      myDiv.scrollTop = myDiv.scrollHeight;
+
+      //scroll to the bottom
+     // window.scrollTo(0, document.body.scrollHeight);
+    }

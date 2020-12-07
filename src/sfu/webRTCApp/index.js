@@ -344,9 +344,25 @@ async function runSocketServer() {
 
 		console.log('notification ' + JSON.stringify(message, null, 4) );
 		message.from = socket.id;
-		if ('room' in message) {
-			socket.to(message.room).emit('message', message);
+		
+		if(socket.user)
+		message.user = socket.user;
+
+		if(message.type ==="chat")
+		{
+			if ('room' in message) {
+				io.in(message.room).emit('message', message);
+			}
 		}
+		else
+		{
+			if ('room' in message) {
+				socket.to(message.room).emit('message', message);
+			}
+
+		}
+
+
 
 	});
 
