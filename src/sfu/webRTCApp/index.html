@@ -19,9 +19,9 @@
     vertical-align: top;
   }
   fieldset {
-    min-height: 100%;
+/*    min-height: 100%;*/
     border: 1px solid silver;
-    padding: 10px;
+    padding: 2px;
   }
   button {
     padding: 1px;
@@ -46,7 +46,7 @@
 
 .box {
   width: 250px;
-  height: 300px;
+  height: 250px;
   background-color: lightblue;
   margin: 1px;
   /*line-height: 300px;*/
@@ -80,16 +80,12 @@
   }
 
     
-    .time {
-      color: red;
-      font-family: "Ubuntu";
-      text-align: right;
-    }
+ 
 
-    .message {
+    .chatmessage {
       display: inline;
     }
-    #messages {
+    #chatmessages {
         list-style-type: none;
     }
     .me {
@@ -134,7 +130,7 @@
   
   <div class="block">
 
-        <input type="text" id="fname" name="fname" value="Your Name?">
+        <input type="text" id="fname" name="fname" value="Your Name?" maxlength="16" size="16">
         
         &nbsp;
 
@@ -158,54 +154,49 @@
 </tr>
 <tr style="background-color: #00ff00;">
 <td>
-
+        <legend>Connection</legend>
         <fieldset id="fs_connection">
-          <legend>Connection</legend>
-          <div><button id="btn_connect">Connect</button> <span id="connection_status"></span></div>
+          
+          <div><button id="btn_connect">Connect</button> </div>
         </fieldset>
 
 </td>
 <td>  
+        <legend>Publishing</legend>
         <fieldset id="fs_publish">
-          <legend>Publishing</legend>
+         
           <div><label><input type="checkbox" id="chk_simulcast" > Use Simulcast</label></div>
           <div><label><input type="checkbox" id="chk_audio" checked> audio</label></div>
           <div><label><input type="checkbox" id="chk_video" checked> video</label></div>
           <div>
             <button id="btn_webcam">Start Webcam</button>
-            <span id="webcam_status"></span>
           </div>
           <div>
             <button id="btn_screen">Share Screen</button>
-            <span id="screen_status"></span>
           </div>
-           <div>
-            <button id="btn_audio_level_start">Start Audio Level</button> 
-          </div>
-           <div>
-            <button id="btn_audio_level_stop">stop Audio Level</button> 
-          </div>
-           <div>
-            <button id="btn_producer_stats">Stats</button>
-          </div>
-          <div><button id="btn_subscribe">Subscribe</button> <span id="sub_status"></span>
+           
 <!--            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>-->
 <!--            <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>-->
 <!--            <div><button id="btn_subscribe_stats">stats</button> <span id="sub_status"></span>-->
-          </div>
         </fieldset>
 
+          <div>Diagnostic Test<br>
+          <button id="btn_audio_level_start" disabled>Start Audio Level</button> 
+          <button id="btn_audio_level_stop" disabled>stop Audio Level</button> 
+          <button id="btn_producer_stats" disabled>Stats</button>
+          <button id="btn_subscribe" disabled>Subscribe</button> 
+          </div>
 </td>
 
 <td>
         <legend>Chat</legend>
-        <form>
-          <input type="text" id="m" maxlength="40" size="40" /> <br>
-          <input type="submit" id="submitButton" value="submit" />
-        </form>
-        <div id="chatDiv" style="overflow-y: auto; height:250px; ">
+
+          <input type="text" id="chatInput" maxlength="240" size="40" /> <br>
+          <input type="submit" id="btn_submitchat" value="submit" />
+
+        <div id="chatDiv" style="overflow-y: auto; height:130px; ">
     
-          <ul id="messages"></ul>
+          <ul id="chatmessages"></ul>
         </div>
 </td>
 </tr>
@@ -248,17 +239,15 @@
 
        <label>Prodcucer Score[0-10]:</label>
 
-       <label id="divProducerScore">10</label>
+       <label id="divProducerScore">-</label>
        <br>
 
 
        <label>Consumer Score[0-10]:</label>
 
-       <label id="divConsumerScore">10</label>
+       <label id="divConsumerScore">-</label>
  
        <br>
-
-
         <div>Local Stats</div>
         <p id="prod_stat"></p>
 

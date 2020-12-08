@@ -191,8 +191,11 @@ window.onload = function(){
     {
 
       let r = Math.random().toString(36).substring(7);
-
-        name.value = r;
+      name.value = r;
+    }
+    else
+    {
+      name.value=name.value.replace(" ",".");
     }
 
     name.disabled = true;
@@ -270,6 +273,15 @@ window.onload = function(){
    btn_producer_stats();
   };
 
+  document.getElementById("btn_submitchat").onclick = function(){
+
+    console.log("btn_submitchat click");
+
+   btn_chat();
+  };
+
+  
+
   
   // document.getElementById("btn_subscribe_stats").onclick = function(){
 
@@ -277,68 +289,6 @@ window.onload = function(){
   //  btn_subscribe_stats();
   // };
 
-//////////////////////////////////////////////////////////////////
- document.getElementById('m').focus()
-    //when form is submitted, capture the input value and then send it to server
-    document
-      .getElementsByTagName("form")[0]
-      .addEventListener("submit", function (event) {
-        event.preventDefault();
-        var name = document.getElementById("fname")
-
-        var send = {
-                            room: roomId,
-                            type: 'chat',
-                            desc: document.getElementById("m").value
-                            };
-
-                         socket.emit('postAppMessage', send);
-
-        
-
-        document.getElementById("m").value = "";
-      });
-
-function displayMessage(data) {
-      console.log( "chat %o", data);
-      console.log( "chat text " + data.desc);
-      let authorClass = "";
-      let divClass = ""
-      //verify that the user ID and the message sent ID is similar 
-      if (data.id === ID) {
-          console.log("This person has sent a message")
-        authorClass = "me";
-        divClass = "myDiv";
-      } else {
-        authorClass = "you";
-        divClass = "yourDiv";
-      }
-      const div = document.createElement("div");
-      div.className = divClass;
-      const li = document.createElement("li");
-      const p = document.createElement("p");
-      p.className = "time";
-      p.innerText = moment().format("hh:mm");
-      div.innerHTML =
-        '<p class="' +
-        authorClass +
-        '">' +
-        data.data.user +
-        "</p>" +
-        '<p class="message"> ' +
-        data.data.value +
-        "</p>";
-      div.appendChild(p);
-      li.appendChild(div);
-
-      document.getElementById("messages").appendChild(li);
-      //scroll to the bottom
-      window.scrollTo(0, document.body.scrollHeight);
-    }
-
-
-
-/////////////////////////////////////////////////////////////////////////
 
 
  }

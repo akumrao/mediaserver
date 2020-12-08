@@ -257,6 +257,8 @@ function initPC()
         el.setAttribute('playsinline', true);
         el.setAttribute('autoplay', true);
         el.setAttribute('id', `va-${track.id}`);
+        el.controls= true;
+        //videoPlayerElement.load();
         //el.id = `video-${track.id}`;
 
 
@@ -1423,44 +1425,72 @@ function constats(desc)
 }
 
 
+////////////////////////// chat start ////////////////////////////////////////
+function btn_chat()
+{  
+       
+        if(pc2 == null)
+        {
+
+            var str = "Not connected yet, press connect button first";
+            var result = str.fontcolor("red");
+            document.getElementById("divStatus").innerHTML = result;
+
+            return ;
+        }
+        else
+        {
+            document.getElementById("divStatus").innerHTML = "Chatting";
+
+        }
+
+        var send = {
+                        room: roomId,
+                        type: 'chat',
+                        desc: document.getElementById("chatInput").value
+                    };
+
+        socket.emit('postAppMessage', send);
+
+        document.getElementById("chatInput").value = "";
+}
+
+
+
+
 function displayMessage(data) {
       console.log( "chat %o", data);
       console.log( "chat text " + data.desc);
-      let authorClass = "";
+
       let divClass = "";
       //verify that the user ID and the message sent ID is similar 
       if (data.to === data.from) {
           console.log("This person has sent a message")
-        authorClass = "me";
         divClass = "myDiv";
       } else {
-        authorClass = "you";
         divClass = "yourDiv";
       }
       const div = document.createElement("div");
       div.className = divClass;
       const li = document.createElement("li");
-      const p = document.createElement("p");
-      p.className = "time";
+      //const p = document.createElement("p");
+     // p.className = "time";
       var dd = new Date();
-      p.innerText = dd.getHours() + ":" + dd.getMinutes();
+      dd = dd.getHours() + ":" + dd.getMinutes();
       div.innerHTML =
-        '<p class="' +
-        authorClass +
-        '">' +
-        data.user +
-        "</p>" +
-        '<p class="message"> ' +
+        '<p class="chatmessage"> ' + data.user + "[" + dd + "] " + 
         data.desc +
         "</p>";
-      div.appendChild(p);
+      //div.appendChild(p);
       li.appendChild(div);
 
-      document.getElementById("messages").appendChild(li);
+      document.getElementById("chatmessages").appendChild(li);
 
       var myDiv = document.getElementById("chatDiv");
       myDiv.scrollTop = myDiv.scrollHeight;
 
-      //scroll to the bottom
-     // window.scrollTo(0, document.body.scrollHeight);
+
     }
+
+
+    //////////////////////////////chat end ////////////////////////////////////
