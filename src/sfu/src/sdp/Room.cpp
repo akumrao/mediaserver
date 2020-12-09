@@ -89,7 +89,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
     }
     
-    void Rooms::onSubscribe(std::string &room , std::string& participantID, const json& peerPartiID)
+    void Rooms::onSubscribe(std::string &room , std::string& participantID,  std::string& user, const json& peerPartiID)
     {
   
         SInfo << "Consumer subscribe to join room: " <<  room << " : " <<  " from participantID  " << participantID  << " peerids" << peerPartiID.dump(4);
@@ -97,7 +97,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
         
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
-            peers->onSubscribe(room, participantID, peerPartiID);
+            peers->onSubscribe(room, participantID, user, peerPartiID);
        }
        else
        {
@@ -106,7 +106,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
 
     }
 
-    void Rooms::on_producer_offer(std::string &room , std::string& participantID, const json &sdp)
+    void Rooms::on_producer_offer(std::string &room , std::string& participantID, std::string& user, const json &sdp)
     {
        SInfo << "Producer Offer to join room" <<  room << " : " <<  " from participantID  " << participantID ;
        
@@ -114,7 +114,7 @@ void Rooms::createRoom(std::string const& name, json const& data, bool isAck, js
        if( signaler->worker->mapRouters.find(room) !=  signaler->worker->mapRouters.end())
        {
           
-            peers->on_producer_offer(room, participantID,  sdp);
+            peers->on_producer_offer(room, participantID, user,  sdp);
        }
        else
        {

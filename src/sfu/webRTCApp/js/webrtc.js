@@ -801,8 +801,9 @@ function addProducerVideoAudio() {
             if (track.kind === 'video') {
 
                 var divtd = document.createElement('div');
-                divtd.className="divTable";
-                
+                divtd.className="box";
+
+
                 var divStore = document.createElement('div');
                 divStore.className="divTableRow";
 
@@ -811,43 +812,27 @@ function addProducerVideoAudio() {
                 el.setAttribute('playsinline', true);
                 el.setAttribute('autoplay', true);
 
-                el.class='video';
+                //el.class='video';
 
-                el.style.width = "200px";
-                el.style.hight = "200px";
+                el.style.width = "100px";
+                el.style.hight = "100px";
 
                 var div = document.createElement('div');
-               // div.textContent = track.id;
-               // div.potato= store;
-                // var name = document.createElement("input");
-                // name.type = "text";
-                // name.id = `proName-${peerID}`;
-                // name.value = "Your Name?";
-                // name.onchange = async function(){
-                    
-                //     if(name.value != "Your Name?")
-                //     {
-
-                //         var nameElA = document.getElementById(`prodNameAud-${peerID}`); 
-                //        	if(nameElA != null)
-                //        	{  
-                //             nameElA.innerHTML =  name.value;
-                //        	}
-                //         var send = {
-                //             room: roomId,
-                //             type: 'user',
-                //             desc: name.value
-                //             };
-
-                //         socket.emit('postAppMessage', send);
-                //     }
-                // }
+                //div.textContent = track.id;
+                //div.potato= store;
+                var name = document.createElement("label");
+                //name.type = "text";
+                //name.id = `proName-${peerID}`;
+                name.innerHTML = "me";
+       
 
                 var para = document.createElement("P");
                 para.innerHTML = "<span> <small> videotrackid:" +  track.id  + "<br>"+  "peerID:" +  peerID  + "<br>" +   "</small> </span>";
                 div.appendChild(para);
 
                 div.appendChild(el);
+
+
                 //div.style.width = "200px";
 
                 divStore.appendChild(div);
@@ -887,14 +872,14 @@ function addProducerVideoAudio() {
                     });
 
 
-                    btn_producer_close(store);
+
                     // removeElement('producertd' );
                     return false;
 
                 };
 
 
-                //divStore.appendChild(name);
+                divStore.appendChild(name);
 
                 
 
@@ -972,7 +957,7 @@ function addProducerVideoAudio() {
                 
                 var labelName = document.createElement("label");
                 labelName.id = `prodNameAud-${peerID}`;
-                labelName.innerHTML =  peerID.substring(0, 6);
+                labelName.innerHTML =  "me";
 
 
                 var tr = document.createElement('fieldset');
@@ -1311,16 +1296,7 @@ async function btn_audio_level_stop()
 }
 
 
-async function btn_producer_close(producerids)
-{
 
-    sendMessage ({
-        room: roomId,
-        type: "producer_close",
-        desc: producerids
-    });
-
-}
 
 async function btn_producer_stats(producerid)
 {

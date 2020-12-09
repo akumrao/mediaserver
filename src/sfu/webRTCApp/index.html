@@ -184,7 +184,7 @@
           <button id="btn_audio_level_start" disabled>Start Audio Level</button> 
           <button id="btn_audio_level_stop" disabled>stop Audio Level</button> 
           <button id="btn_producer_stats" disabled>Stats</button>
-          <button id="btn_subscribe" disabled>Subscribe</button> 
+          <button id="btn_subscribe">Subscribe</button> 
           </div>
 </td>
 
@@ -202,7 +202,7 @@
 </tr>
 <tr>
 <td style="width: 160px; background-color: #ffff00;">&nbsp;Audio</td>
-<td style="background-color: #b3d1ff;">
+<td style="background-color: #b3d1ff;" colspan="2">
 
  <div class="block">
          <label>Video per page:</label>
@@ -210,17 +210,16 @@
  </div>
 
 </td>
-<td style="background-color: #8fffff;">&nbsp;Stats</td>
+
 </tr>
 <tr>
 <td style="width: 160px; background-color: #ffff00;" >
 <table id="traddCtrl0" border="0" ></table>
 
 </td>
-<td style="background-color: #b3d1ff;">
+<td style="background-color: #b3d1ff;" colspan="2">
  
- <div class="container" >
-    <div class="box" id="traddCtrl1" ></div>
+  <div class="container" id="traddCtrl1">
   </div>
 
   <div class="container" id="traddCtrl2" >
@@ -231,11 +230,17 @@
   <!-- page: <span id="page"></span> -->
 
 </td>
-<td style="background-color: #8fffff;">
+
+</tr>
+
+<tr>
+  <td style="background-color: #8fffff;" colspan="3" >
   <table  border="0" >
     
     <tr id="listingStats">
 
+       <b> Statistics </b>
+       <br>  
 
        <label>Prodcucer Score[0-10]:</label>
 

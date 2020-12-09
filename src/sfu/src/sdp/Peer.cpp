@@ -347,7 +347,7 @@ namespace SdpParse {
     }
     
 
-    void Peers::on_producer_offer( std::string &room, std::string& participantID, const json &sdp)
+    void Peers::on_producer_offer( std::string &room, std::string& participantID, std::string& user, const json &sdp)
     {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {
@@ -358,7 +358,7 @@ namespace SdpParse {
         {
             peer = new Peer( signaler, room);
             peer->participantID = participantID;
-            peer->participantName = participantID;
+            peer->participantName = user;
             mapPeers[participantID] = peer;
         }
         peer->on_producer_offer(sdp);
@@ -366,7 +366,7 @@ namespace SdpParse {
         //onSubscribe(participantID,"");
     }
     
-    void Peers::onSubscribe(std::string &room, std::string& participantID, const json& peerPartiID)
+    void Peers::onSubscribe(std::string &room, std::string& participantID, std::string& user, const json& peerPartiID)
     {
         bool ifexist= false;
         Peer *peer;
@@ -378,7 +378,7 @@ namespace SdpParse {
             SInfo << " New Peer " << participantID ;
             peer = new Peer( signaler, room);
             peer->participantID = participantID;
-            peer->participantName = participantID;
+            peer->participantName = user;
             mapPeers[participantID] = peer;
             ifexist = true;
         }
@@ -400,6 +400,7 @@ namespace SdpParse {
             {
                 if(mapPeers.find(id)  == mapPeers.end() )
                 {
+                    SError << "onSubscribe::Peer does not exist. Not a possible state. " << participantID ;
                     Peer *peer;
                     peer = new Peer( signaler, room);
                     peer->participantID = id;
@@ -420,7 +421,7 @@ namespace SdpParse {
     }
 
     
-    void Peers::on_consumer_answer( std::string& participantID,  std::string& to, const json &sdp)
+    void Peers::on_consumer_answer( std::string& participantID, std::string& to, const json &sdp)
     {
         Peer *peer;
         if (mapPeers.find(participantID) != mapPeers.end()) {

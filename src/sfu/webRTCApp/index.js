@@ -231,8 +231,8 @@ async function runSocketServer() {
 
 		socket.join(roomId);
 
-        	if(user)
-    		socket.user = user;
+		if(user)
+			socket.user = user;
 
 		var numClients = io.sockets.adapter.rooms[roomId].length;  //For socket.io versions >= 1.4:
 
@@ -325,6 +325,9 @@ async function runSocketServer() {
 
 			//return;
 		}
+
+		if(socket.user)
+		message.user = socket.user;
 
 		console.log('app message: ', message);
 		if(io.sockets.connected[serverSocketid])

@@ -79,6 +79,7 @@ namespace SdpParse {
             std::string type;
             std::string room;
             std::string to;
+            std::string user;
             
             
             if (m.find("to") != m.end()) {
@@ -116,6 +117,14 @@ namespace SdpParse {
                 return;
             }
             
+             if (m.find("user") != m.end()) {
+                user = m["user"].get<std::string>();
+            }
+            else
+            {
+                SWarn << " On Peer message is missing user name ";
+            }
+            
 
           //  SInfo << "On Peer message for room:" << room << " from: " << from << " type: " << type ;
             
@@ -126,7 +135,7 @@ namespace SdpParse {
 
                 //std::string remotePeerID = from;
                 //onffer(room, from, m["desc"]);
-                rooms->on_producer_offer( room,  from, m["desc"] );
+                rooms->on_producer_offer( room, from, user, m["desc"] );
 
             } else if (std::string("answer") == type) {
                // recvSDP(from, m["desc"]);
@@ -142,7 +151,7 @@ namespace SdpParse {
                   peerIds =m["desc"];
                 }
                // SInfo << " PeerIds " << peerIds.dump(4); 
-                rooms->onSubscribe(room, from, peerIds);
+                rooms->onSubscribe(room, from,user, peerIds);
             } else if (std::string("producer_getStats") == type) {
                 std::string producerId = m["desc"].get<std::string>();
                 rooms->producer_getStats(room, from, producerId );

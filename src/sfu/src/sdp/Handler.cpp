@@ -144,8 +144,8 @@ namespace SdpParse
         sendingRtpParameters["mid"] = mid;
 
         //sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
-        sendingRtpParameters["rtcp"]["cname"] = peer->participantID; // arvind risky code. I am changing cname and msid to particpant id
-
+        sendingRtpParameters["rtcp"]["cname"] = peer->participantName;
+  
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
 
@@ -720,13 +720,14 @@ namespace SdpParse
                     param.push_back(peer->participantID);
                     json trans = Settings::configuration.transport_consume;
 
-                    trans["internal"]["producerId"] = producer["id"].get<std::string>();
-                    trans["internal"]["consumerId"] = producer["id"].get<std::string>() +  consumerUuid;
-
-
-
                     //json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], (json&) peer->GetRtpCapabilities());
                     json rtpParameters = SdpParse::ortc::getConsumerRtpParameters(producer["consumableRtpParameters"], producer["recvRtpCapabilities"]);
+                    auto& cname = rtpParameters["rtcp"]["cname"];  //arvind
+                    
+                    trans["internal"]["producerId"] = producer["id"].get<std::string>();
+                    trans["internal"]["consumerId"] = producer["id"].get<std::string>() +  consumerUuid + "#"+ cname.get<std::string>();
+
+
                     //  const internal = Object.assign(Object.assign({}, this._internal), { consumerId: v4_1.default(), producerId });
 
                     //STrace << "getConsumerRtpParameters " << rtpParameters.dump(4);
@@ -777,13 +778,13 @@ namespace SdpParse
                         
                         signaler->mapNotification[c->consumer["id"]] = peer->participantID;
 
-                        auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
+                        //auto& cname = c->consumer["rtpParameters"]["rtcp"]["cname"];
 
                         mapConMid[iMid] = c->consumer["id"];
 
                         vecProCon[this] = c->consumer["id"];
-
-                        this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"], cname, c->consumer["id"]);
+                                                                                                            // msid and                                trackid
+                        this->remoteSdp->Receive(localId, c->consumer["kind"], c->consumer["rtpParameters"],  prodpeer->producers->peer->participantID, c->consumer["id"]);  
 
                         if (lastDevice)
                         {

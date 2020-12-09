@@ -96,10 +96,10 @@ namespace SdpParse {
         
         ~Peers();
         
-        void on_producer_offer(std::string &room, std::string& participantID, const nlohmann::json &sdp);
+        void on_producer_offer(std::string &room, std::string& participantID, std::string& user, const nlohmann::json &sdp);
         void on_consumer_answer( std::string& participantID, std::string& to, const nlohmann::json &sdp);
         
-        void onSubscribe(std::string &room, std::string& participantID, const nlohmann::json& peerPartiID);
+        void onSubscribe(std::string &room, std::string& participantID, std::string& user, const nlohmann::json& peerPartiID);
         
         void onDisconnect( std::string& participantID);
         

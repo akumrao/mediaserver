@@ -1,12 +1,12 @@
 
 
-var records_per_page = 2;
+var records_per_page = 3;
 var current_page = 1;
 
 function RecordPerPage() {
   var x = document.getElementById("myInput").value;
   document.getElementById("demo").innerHTML = "You wrote: " + x;
-  records_per_page =x-1;
+  records_per_page =x;
   changePage(current_page);
 }
 
