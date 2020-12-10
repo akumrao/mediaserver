@@ -249,6 +249,16 @@ namespace SdpParse
             std::string kind = offerMediaObject["type"].get<std::string>();
 
             std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject); // trackid is producerid
+            if( trackid.empty() )
+            {
+                if (sizeofMid == i + 1)
+                {
+                    auto answer = remoteSdp->GetSdp();
+                    cbAns(answer);
+                    return;
+                }
+                continue;
+            }
 
             //SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
 
@@ -266,47 +276,58 @@ namespace SdpParse
             //////////////////////////////////////
             std::string producerId = mapProdMid[mid];
             std::string direction = offerMediaObject["direction"].get<std::string>();
-            if (direction == "inactive" && (mapProducer.find(producerId) != mapProducer.end()))
+            if (direction == "inactive" )
             {
+                if ((mapProducer.find(producerId) != mapProducer.end()))
+                {
                 //std::string mid = offerMediaObject["mid"].get<std::string>();
-                remoteSdp->CloseMediaSection(smid);
-                std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject);
-                SInfo << "ProducerClose Mid " << mid << " Producer id " << trackid << " for particpantid" << peer->participantID;
+                    remoteSdp->CloseMediaSection(smid);
+                    std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject);
+                    SInfo << "ProducerClose Mid " << mid << " Producer id " << trackid << " for particpantid" << peer->participantID;
 
-                if (producerId != trackid)
-                {
-                    SError << "Producer Close Mid Error " << mid << " Producer id " << trackid;
-                    exit(-1);
-                }
-
-                for (auto proCon = mapProducer[trackid]->mapProCon.begin(); proCon != mapProducer[trackid]->mapProCon.end(); ) {
-                    proCon->first->close_consumer(trackid, proCon->second);
-                    SInfo  <<  "Delete consumer id " << proCon->second;
-                    proCon->first->mapConsumer.erase(proCon->second);
-                    proCon = mapProducer[trackid]->mapProCon.erase(proCon); // note it will = next(it) after erase
-                }
-
-                delete mapProducer[trackid]; // track id is produer id
-                mapProducer.erase(trackid);
-                mapProdMid.erase(mid);
-              //  close_producer(trackid); below already producer close code exist
-
-                json param = json::array();
-                param.push_back("producer.close");
-                param.push_back(peer->participantID);
-                json &trans = Settings::configuration.producer_getStats;
-                trans["internal"]["producerId"] = trackid; //uuid4::uuid();
-                trans["method"] = "producer.close";
-                raiseRequest(param, trans, [&](const json & ack_resp)
-                {
-                    if (sizeofMid == i + 1)
+                    if (producerId != trackid)
                     {
-                        auto answer = remoteSdp->GetSdp();
-                        cbAns(answer);
+                        SError << "Producer Close Mid Error " << mid << " Producer id " << trackid;
+                        exit(-1);
                     }
 
-                });
+                    for (auto proCon = mapProducer[trackid]->mapProCon.begin(); proCon != mapProducer[trackid]->mapProCon.end(); ) {
+                        proCon->first->close_consumer(trackid, proCon->second);
+                        SInfo  <<  "Delete consumer id " << proCon->second;
+                        proCon->first->mapConsumer.erase(proCon->second);
+                        proCon = mapProducer[trackid]->mapProCon.erase(proCon); // note it will = next(it) after erase
+                    }
 
+                    delete mapProducer[trackid]; // track id is produer id
+                    mapProducer.erase(trackid);
+                    mapProdMid.erase(mid);
+                  //  close_producer(trackid); below already producer close code exist
+
+                    json param = json::array();
+                    param.push_back("producer.close");
+                    param.push_back(peer->participantID);
+                    json &trans = Settings::configuration.producer_getStats;
+                    trans["internal"]["producerId"] = trackid; //uuid4::uuid();
+                    trans["method"] = "producer.close";
+                    raiseRequest(param, trans, [&sizeofMid,&cbAns,i,this](const json & ack_resp)
+                    {
+                        if (sizeofMid == i + 1)
+                        {
+                            auto answer = remoteSdp->GetSdp();
+                            cbAns(answer);
+                        }
+
+                    });
+                    
+                    continue;
+                }
+            
+                if (sizeofMid == i + 1)
+                {
+                    auto answer = remoteSdp->GetSdp();
+                    cbAns(answer);
+                    return;
+                }
                 continue;
             }
             //////////////////////////////////////////
@@ -376,7 +397,7 @@ namespace SdpParse
 
                 trans["data"] = data;
 
-                raiseRequest(param, trans, [&](const json & ack_resp)
+                raiseRequest(param, trans, [&p,&kind,&mid, &consumableRtpParameters, &sizeofMid,&cbAns, i,this](const json & ack_resp)
                 {
 
                     p->producer = {
@@ -405,6 +426,15 @@ namespace SdpParse
 
 
                 });
+            }
+            else
+            {
+                if (sizeofMid == i + 1)
+                {
+                    auto answer = remoteSdp->GetSdp();
+                    cbAns(answer);
+                    return;
+                }
             }
 
 

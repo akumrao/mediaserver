@@ -21,8 +21,8 @@ namespace SdpParse
 
                             if( offerMediaObject.find("msid") == offerMediaObject.end())
                             {
-								SError << "msid is missing at offerMediaObject";
-                        		return uuid4::uuid();
+                                SWarn << "msid is missing at offerMediaObject. This track might be closed already";
+                                return "";
                             }
 
                             auto msid = offerMediaObject["msid"];

@@ -305,7 +305,6 @@ function initPC()
         else if(track.kind === 'audio') {
         label.innerHTML = "Mute " + track.kind;
 
-
         }
 
         var divStore = document.createElement('div');
@@ -325,7 +324,7 @@ function initPC()
 
             var labelName = document.createElement("label");
             labelName.id = `conNameVid-${stream.id}`;
-            //labelName.innerHTML =  stream.id.substring(0, 6);
+            labelName.innerHTML =  stream.id.substring(40);
             //divStore.className="divTableRow";
             divStore.appendChild(labelName);
 
@@ -343,71 +342,88 @@ function initPC()
     	divStore.appendChild(statButton);
 
 
-        var streamEl = document.getElementById(`stream-${stream.id}`); 
-        if(streamEl != null) 
+        // var streamEl = document.getElementById(`stream-${stream.id}`); 
+        // if(streamEl != null) 
+        // {
+        // 	streamEl.appendChild(div);
+        // 	if(track.kind === 'video')
+        //     {
+        // 	   streamEl.appendChild(divStore);
+        //        objJson[track.id]= td;
+        //        changePage(current_page);
+        //     }
+
+        // } 
+        // else
+        // {
+        // 	var td = document.createElement('div');
+        //     td.className ="box";
+        // 	//td.id = `stream-${stream.id}`;
+        // 	td.appendChild(div);
+        // 	if(track.kind === 'video')
+        //     {
+        //        //td.className="divTable";
+
+        //        td.appendChild(divStore);
+
+        //        //objJson[track.id]= td;
+        //        changePage(current_page);
+
+        //     }
+        // }
+
+        if(track.kind === 'video')
         {
-        	streamEl.appendChild(div);
-        	if(track.kind === 'video')
-        	   streamEl.appendChild(divStore);
-
-        } 
-        else
-        {
-        	var td = document.createElement('div');
-        	//td.id = `stream-${stream.id}`;
-        	td.appendChild(div);
-        	if(track.kind === 'video')
-            {
-               //td.className="divTable";
-
-               td.appendChild(divStore);
-
-               objJson[`stream-${stream.id}`]= td;
-               changePage(current_page);
-
-            }
+            var td = document.createElement('div');
+            td.className ="box";
+            td.id = `box-${track.id}`;
+            td.appendChild(div);
+            
+            td.appendChild(divStore);
+             document.getElementById("traddCtrl2").append(td);
+           
         }
 
         if (track.kind === 'audio') {
 
             var trExt = document.createElement('tr');
-            trExt.id = `ConAudiostream-${stream.id}`;
+            trExt.id = `ConAudiostream-${track.id}`;
 
             var tr = document.createElement('tr');
 
 
-            var divLevel = document.createElement('div');
-            divLevel.className = "mystyle";
+            var divLevel = document.createElement('hr');
+            divLevel.className = "new4";
             //divLevel.id=`consoundLevel-${track.id}`;
             divLevel.id=`consoundLevel-${track.id.substring(0, 36)}`;
             // tr.appendChild(divLevel);
 
             var labelName = document.createElement("label");
-            labelName.id = `conNameAud-${stream.id}`;
-            //labelName.innerHTML =  stream.id.substring(0, 6);
+            //labelName.id = `conNameAud-${stream.id}`;
+            labelName.innerHTML =  track.id.substring(41)
             
 
             var tr = document.createElement('fieldset');
             // var td = document.createElement('td');
 
-            var trImg = document.createElement('img');
-            trImg.src ="speaker.png"
-            tr.appendChild(trImg);
+            //var trImg = document.createElement('img');
+           // trImg.src ="speaker.png"
+            //tr.appendChild(trImg);
+            
             tr.appendChild(labelName);
             tr.appendChild(divLevel);
-
-
-
-            var para = document.createElement("P");
-            para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  stream.id  + "<br>" +   "</small> </span>";
-  
             tr.appendChild(div);
+
+            // var para = document.createElement("P");
+            // para.innerHTML = "<span> <small> trackid:" +  track.id  + "<br>"+  "peerID:" +  stream.id  + "<br>" +   "</small> </span>";
+  
+            
             tr.appendChild(divStore);
 
             trExt.appendChild(tr);
 
             //trExt.id = 'constd' + track.id;
-            trExt.class='tr';
+           // trExt.class='tr';
             //trExt.style.width = "200px";
 
             document.getElementById("traddCtrl0").append(trExt);
@@ -429,8 +445,10 @@ function initPC()
     }//if(transceiver
     stream.onremovetrack = (event) =>{
 
+     console.log("stream.onremovetrack " + track.id);
+
     var parentVideo = document.getElementById("traddCtrl2");
-    var childVideo = document.getElementById(`stream-${stream.id}`);
+    var childVideo = document.getElementById(`box-${track.id}`);
     if (parentVideo != null && childVideo != null) {
         parentVideo.removeChild(childVideo);
     }
@@ -438,21 +456,18 @@ function initPC()
 
     var len1 = Object.keys(objJson).length
 
-    if (objJson.hasOwnProperty(`stream-${stream.id}`))
+    if (objJson.hasOwnProperty(track.id))
     {
          console.log("found it");
-         delete objJson[`stream-${stream.id}`];
+         delete objJson[track.id];
     }
 
 
     var len2 = Object.keys(objJson).length
 
 
-
-
-
     var parentAudio = document.getElementById("traddCtrl0");
-    var childAudio = document.getElementById(`ConAudiostream-${stream.id}`);
+    var childAudio = document.getElementById(`ConAudiostream-${track.id}`);
     if (parentAudio != null && childAudio != null) {
         parentAudio.removeChild(childAudio);
     }
@@ -460,15 +475,32 @@ function initPC()
 
 
 
-    console.log("stream.onremovetrack");
+   
     }
-    transceiver.receiver.track.onmute = () => console.log("transceiver.receiver.track.onmute");
-    transceiver.receiver.track.onended = () => console.log("transceiver.receiver.track.onended");
+    transceiver.receiver.track.onmute = () => console.log("transceiver.receiver.track.onmute " + track.id);
+    transceiver.receiver.track.onended = () => {
+
+
+         var parentVideo = document.getElementById("traddCtrl2");
+        var childVideo = document.getElementById(`box-${track.id}`);
+        if (parentVideo != null && childVideo != null) {
+            parentVideo.removeChild(childVideo);
+        }
+
+        var parentAudio = document.getElementById("traddCtrl0");
+        var childAudio = document.getElementById(`ConAudiostream-${track.id}`);
+        if (parentAudio != null && childAudio != null) {
+            parentAudio.removeChild(childAudio);
+        }
+
+
+        console.log("transceiver.receiver.track.onended " + track.id)
+    };
     transceiver.receiver.track.onunmute = (event) => {
-    console.log("transceiver.receiver.track.onunmute");
+    console.log("transceiver.receiver.track.onunmute " + track.id);
     var elVideo = document.getElementById(`va-${track.id}`); 
     if(elVideo != null)  
-    elVideo.srcObject = stream;
+    elVideo.srcObject = new MediaStream([ track.clone() ]);
 
     };
 
@@ -717,14 +749,14 @@ socket.on('message',  async function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   } else if (message.type === 'soundlevel' && isStarted) {
-    //soundlevel(message.desc);
+    soundlevel(message.desc);
   } else if (message.type === 'user' && isStarted) {
-    setName(message);
+    //setName(message);
   } else if (message.type === 'chat' ) {
     message.to = socket.id;
     displayMessage(message);
   }else if (message.type === 'score' && isStarted) {
-    //score(message.desc);
+    score(message.desc);
   }else if (message.type === 'prodstats' && isStarted) {
     prodstats(message.desc);
   }else if (message.type === 'constats') {
@@ -840,19 +872,36 @@ function addProducerVideoAudio() {
 
                 var closeButton = document.createElement('button');
                     closeButton.innerHTML += 'close';
+                    closeButton.id=track.id;
                     closeButton.onclick = async function(){
-
                     var mss = pc1.getTransceivers();
                     for (var ts in mss) {
                         let ltrack = mss[ts].sender.track;
 
-                        if ( ltrack && track.id === ltrack.id) {
-
+                        if ( ltrack && this.id === ltrack.id) {
+                            console.log("close track " + ltrack.id);
                             mss[ts].sender.replaceTrack(null);
 
                             pc1.removeTrack(mss[ts].sender);
 
                             mss[ts].direction = "inactive";
+                            if ( ts > 0) {
+                                let strack = mss[ts-1].sender.track;
+                                if ( strack && strack.kind == "audio") {
+                                    console.log("close track " + strack.id);
+                                    mss[ts-1].sender.replaceTrack(null);
+
+                                    pc1.removeTrack(mss[ts-1].sender);
+
+                                    mss[ts-1].direction = "inactive";
+
+                                }
+
+                                /////////////
+                                document.getElementById("btn_webcam").disabled = true;
+                                document.getElementById("btn_screen").disabled = true;
+                                ////////////
+                            }
 
                             //  this._remoteSdp.closeMediaSection(transceiver.mid)
                         }
@@ -1329,26 +1378,26 @@ function score(message)
 }
 
 
-function setName(message)
-{
+// function setName(message)
+// {
    
-    //console.log("setName %o" + message.from);
-   // alert(message);
+//     //console.log("setName %o" + message.from);
+//    // alert(message);
 
-   var nameElV = document.getElementById(`conNameVid-${message.from}`); 
-   if(nameElV != null)
-   {  
-        nameElV.innerHTML =  message.desc;
-   }
+//    var nameElV = document.getElementById(`conNameVid-${message.from}`); 
+//    if(nameElV != null)
+//    {  
+//         nameElV.innerHTML =  message.desc;
+//    }
 
 
-   var nameElA = document.getElementById(`conNameAud-${message.from}`); 
-   if(nameElA != null)
-   {  
-        nameElA.innerHTML =  message.desc;
-   }
+//    var nameElA = document.getElementById(`conNameAud-${message.from}`); 
+//    if(nameElA != null)
+//    {  
+//         nameElA.innerHTML =  message.desc;
+//    }
    
-}
+// }
 
 function soundlevel(message)
 {
@@ -1376,7 +1425,7 @@ function soundlevel(message)
        if(audLevel != null)
        {    
            console.log(`${ 70 + element.volume}px`);
-           audLevel.style.height =  `${ 70 + element.volume}px` ;
+           audLevel.style.width =  `${ 70 + element.volume}px` ;
        }
        
    }
