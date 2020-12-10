@@ -397,7 +397,7 @@ namespace SdpParse
 
                 trans["data"] = data;
 
-                raiseRequest(param, trans, [&p,&kind,&mid, &consumableRtpParameters, &sizeofMid,&cbAns, i,this](const json & ack_resp)
+                raiseRequest(param, trans, [&p, &trans, &kind,&mid, &consumableRtpParameters, &sizeofMid,&cbAns, i,this](const json & ack_resp)
                 {
 
                     p->producer = {
