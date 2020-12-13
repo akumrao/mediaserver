@@ -68,7 +68,7 @@ function changePage(page)
 
        if (  i >= (page-1) * records_per_page && i < (page * records_per_page)) {
             console.log("key=" + key + " i=" + i);
-           // listing_table.innerHTML += "<div class=\"box\" id=\"" + `box-${key}` +"\">" + objJson[key].innerHTML + "</div>";
+            //listing_table.innerHTML +=  objJson[key].outerHTML;
             // listing_table.innerHTML += "<div class=\"box\"> <div>" + i + "</div></div>";
         }
     }
