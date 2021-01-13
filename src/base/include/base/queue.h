@@ -249,7 +249,71 @@ protected:
 //
 // Synchronization Queue
 //
+template <class T>
+class SyncQueue : public RunnableQueue<T>
+{
+public:
+    typedef RunnableQueue<T> Queue;
 
+    
+    
+    SyncQueue(int limit = 2048, int timeout = 0)
+        : Queue(limit, timeout)
+    {
+    }
+
+
+    virtual void run()
+    {
+       
+        while (!Queue::stopped()) {
+           
+            std::unique_lock<std::mutex> lck(_mutex);
+            //cv.wait(lck, !Queue::empty());
+            //cv.wait(lck);
+            if(Queue::empty())
+            cv.wait(lck );
+            else
+            {
+                lck.unlock();
+                Queue::dispatchNext();
+            }
+           // base::sleep(1);
+            // base::sleep(dispatchNext() ? 1 : 50);
+        }
+    }
+
+    /// Pushes an item onto the queue.
+    /// Item pointers are now managed by the SyncQueue.
+    virtual void push(T* item)
+    {
+        Queue::push(item);
+        cv.notify_one();
+    }
+
+    virtual void stop(bool flag = true) 
+    {
+       
+        Queue::clear();
+        Queue::stop(true);
+        cv.notify_one();
+         
+    }
+
+        /// Destruction is deferred to allow enough
+    /// time for all callbacks to return.
+    virtual ~SyncQueue()
+    {
+       Queue::clear();
+      // Queue::join();
+    }
+   
+
+protected:
+    std::condition_variable cv;
+    mutable std::mutex _mutex;
+
+};
 
 /// SyncQueue extends Synchronizer to implement a synchronized FIFO
 /// queue which receives T objects from any thread and synchronizes
