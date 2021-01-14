@@ -27,6 +27,17 @@
 //}
 
 
+
+  
+template <class T>
+inline Worker<T>::~Worker()
+{
+ 
+     if (!this->closed)
+           Close();   
+ }
+  
+
 template <class T>
 inline void Worker<T>::Close()
 {
@@ -269,7 +280,26 @@ inline void Worker<T>::OnChannelClosed()
 
 	Close();
 }
-template Worker<Channel::Request>;
+
+
+template <class T>
+inline void  Worker<T>::dispatch(T& item)
+{
+    OnChannelRequest(&item);
+    
+}
+
+template <class T>
+inline void  Worker<T>::run()
+{
+    base::Application app;
+    
+    Queue::run();
+    
+    app.run();
+}
+
+
 
 
 // void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
@@ -311,3 +341,5 @@ template Worker<Channel::Request>;
 //		}
 //	}
 //}
+
+template void Worker<Channel::Request>::~Worker();

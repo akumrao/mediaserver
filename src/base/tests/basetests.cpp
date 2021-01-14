@@ -58,20 +58,20 @@ public:
 
 
 
-   template <class T>
-    inline mySyncQueue<T>::mySyncQueue(int maxSize )
-        : Queue(maxSize)
-    {
-    }
-    // virtual ~Thread2(void);
 template <class T>
-    inline void  mySyncQueue<T>::dispatch(T& item)
-    {
-        std::cout << " mySyncQueue pop item " << item <<   std::endl << std::flush;
-        //if (ondispatch)
-          //  ondispatch(item);
+inline mySyncQueue<T>::mySyncQueue(int maxSize )
+    : Queue(maxSize)
+{
+}
+// virtual ~Thread2(void);
+template <class T>
+inline void  mySyncQueue<T>::dispatch(T& item)
+{
+    std::cout << " mySyncQueue pop item " << item <<   std::endl << std::flush;
+    //if (ondispatch)
+      //  ondispatch(item);
 
-    }
+}
 
 
 //template MyArray<double, 5>;template MyArray<string, 5>;

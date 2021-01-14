@@ -15,11 +15,12 @@ namespace SdpParse {
             
            rooms =  new Rooms(this);
            
-           worker = new Worker<Channel::Request>(); 
-
         }
 
         Signaler::~Signaler() {
+            
+            worker->stop();
+            worker->join();
             if(worker)
             delete worker;
             
@@ -67,8 +68,10 @@ namespace SdpParse {
             json jsonRequest = data[2];
             jsonRequest["id"] = reqId++;
             LDebug("arvind ", cnfg::stringify(jsonRequest))
-            Channel::Request req(jsonRequest, func);
-            worker->OnChannelRequest(&req);
+            Channel::Request *req = new Channel::Request(jsonRequest, func);
+            //worker->OnChannelRequest(&req);
+
+            worker->push(req);
 
         }
 
@@ -202,7 +205,9 @@ namespace SdpParse {
 
         void Signaler::connect(const std::string& host, const uint16_t port) {
 
-            worker = new Worker<Channel::Request>(10);  // moved this code to CreateRoom. One room will have one worker thread
+            worker = new Worker<Channel::Request>(105);  // moved this code to CreateRoom. One room will have one worker thread
+            
+            worker->start();
 
            // room = rm;
 
@@ -291,5 +296,6 @@ namespace SdpParse {
 
         }
 
-
 } // namespace SdpParse 
+
+

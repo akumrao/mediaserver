@@ -29,28 +29,22 @@ public:
 
         }
 
-        ~Worker()
-        {
-           // if (!this->closed)
-             //       Close();
-        }
-        
-
-       
-
+        ~Worker();
+      
 private:
 	void Close();
        	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
+        void OnChannelRequest(Channel::Request* request);
+        void dispatch(T& item);
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
         
-        void OnChannelRequest(Channel::Request* request);
-        
-
+       
+        void run();
 	void OnChannelClosed() ;
 
 	/* Methods inherited from SignalsHandler::Listener. */
