@@ -17,6 +17,7 @@
 #include "base/logger.h"
 #include "base/filesystem.h"
 #include "base/platform.h"
+#include "base/queue.h"
 
 using std::cout;
 using std::cerr;
@@ -26,6 +27,19 @@ using base::test::Test;
 
 namespace base {
 
+template <class T = int>
+class mySyncQueue : public SyncQueue<T>
+{
+public:
+    typedef SyncQueue<T> Queue;
+     //typedef SyncQueue<T> Queue;
+    mySyncQueue(int maxSize = 1024);
+      
+    // virtual ~Thread2(void);
+
+    void dispatch(T& item);
+
+};
 
 }
 

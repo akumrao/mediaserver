@@ -11,7 +11,6 @@
 #include "basetests.h"
 #include "base/uuid.h"
 
-#include "base/queue.h"
 
 using std::cout;
 using std::cerr;
@@ -58,37 +57,24 @@ public:
 };
 
 
-template <class T = int>
-class mySyncQueue : public SyncQueue<T>
-{
-public:
-    typedef SyncQueue<T> Queue;
-     mySyncQueue(int maxSize = 1024)
+
+   template <class T>
+    inline mySyncQueue<T>::mySyncQueue(int maxSize )
         : Queue(maxSize)
     {
-
-
-       int *x = new int;
-       *x=8;
-
-       Queue::push(x);
-
-       int *y = new int;
-       *y=9;
-
-       Queue::push(y);
     }
     // virtual ~Thread2(void);
-
-    void dispatch(T& item)
+template <class T>
+    inline void  mySyncQueue<T>::dispatch(T& item)
     {
         std::cout << " mySyncQueue pop item " << item <<   std::endl << std::flush;
         //if (ondispatch)
           //  ondispatch(item);
 
     }
-};
 
+
+//template MyArray<double, 5>;template MyArray<string, 5>;
 
 int main(int argc, char** argv) {
 
@@ -250,18 +236,18 @@ int main(int argc, char** argv) {
     describe("mySyncQueue", []()
     {
         
-        mySyncQueue<int> test;
+        mySyncQueue<int> *test = new mySyncQueue<int>();
         
-        test.start();
+        test->start();
 
         int *y = new int;
         *y=10;
-        test.push(y);
+        test->push(y);
         
         base::sleep(500);
         
-        test.stop();
-        test.join();
+        test->stop();
+        test->join();
 
         
     });
