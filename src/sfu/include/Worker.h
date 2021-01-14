@@ -10,36 +10,59 @@
 #include <string>
 #include <unordered_map>
 
+#include "base/logger.h"
+#include "base/thread.h"
+#include "base/queue.h"
+#include "LoggerTag.h"
+
 using json = nlohmann::json;
 
-class Worker :  public base::SignalsHandler::Listener
+
+template <class T = Channel::Request>
+class Worker: public base::SyncQueue<T>
 {
 public:
-	 Worker();
-	~Worker();
+    typedef base::SyncQueue<T> Queue;
+        Worker(int maxSize = 1024)
+           : Queue(maxSize)
+        {
+
+        }
+
+        ~Worker()
+        {
+           // if (!this->closed)
+             //       Close();
+        }
+        
+
+       
 
 private:
 	void Close();
-	void FillJson(json& jsonObject) const;
+       	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-	void OnChannelRequest(Channel::Request* request) ;
+        
+        void OnChannelRequest(Channel::Request* request);
+        
+
 	void OnChannelClosed() ;
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
-	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
+	//void OnSignal(SignalsHandler* signalsHandler, int signum) override;
         std::unordered_map<std::string, RTC::Router*> mapRouters;
 
 private:
 	// Passed by argument.
 	//Channel::UnixStreamSocket* channel{ nullptr };
 	// Allocated by this.
-	SignalsHandler* signalsHandler{ nullptr };
+	//SignalsHandler* signalsHandler{ nullptr };
 	
 	// Others.
 	bool closed{ false };

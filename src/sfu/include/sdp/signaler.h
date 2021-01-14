@@ -23,7 +23,7 @@ namespace SdpParse {
             void startStreaming(const std::string& file, bool loop = true);
             void connect(const std::string& host, const uint16_t port);
             
-            Worker *worker{nullptr};
+            Worker<Channel::Request> *worker;
             
             std::string  sfuID;
             

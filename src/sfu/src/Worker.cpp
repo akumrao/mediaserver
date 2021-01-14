@@ -8,35 +8,27 @@
 
 /* Instance methods. */
 
-Worker::Worker() //: channel(channel)
-{
+//Worker::Worker(int maxSize = 1024): Queue(maxSize) //: channel(channel)
+//{
+//
+//	// Set us as Channel's listener.
+//       // if(this->channel)
+//	//this->channel->SetListener(this);
+//
+//	// Set the signals handler.
+////	this->signalsHandler = new SignalsHandler(this);
+////
+////	// Add signals to handle.
+////	this->signalsHandler->AddSignal(SIGINT, "INT");
+////	this->signalsHandler->AddSignal(SIGTERM, "TERM");
+//
+//	// Tell the Node process that we are running. // arvind
+//	//Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
+//}
 
-	// Set us as Channel's listener.
-       // if(this->channel)
-	//this->channel->SetListener(this);
 
-	// Set the signals handler.
-	this->signalsHandler = new SignalsHandler(this);
-
-	// Add signals to handle.
-	this->signalsHandler->AddSignal(SIGINT, "INT");
-	this->signalsHandler->AddSignal(SIGTERM, "TERM");
-
-	// Tell the Node process that we are running. // arvind
-	//Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
-
-
-}
-
-Worker::~Worker()
-{
-	
-
-    if (!this->closed)
-            Close();
-}
-
-void Worker::Close()
+template <class T>
+inline void Worker<T>::Close()
 {
 	
 
@@ -46,7 +38,7 @@ void Worker::Close()
 	this->closed = true;
 
 	// Delete the SignalsHandler.
-	delete this->signalsHandler;
+	//delete this->signalsHandler;
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
@@ -61,7 +53,8 @@ void Worker::Close()
 	//delete this->channel;
 }
 
-void Worker::FillJson(json& jsonObject) const
+template <class T>
+inline void Worker<T>::FillJson(json& jsonObject) const
 {
 	const int64_t pid{ static_cast<int64_t>(uv_os_getpid()) }; //arvind
 
@@ -80,7 +73,8 @@ void Worker::FillJson(json& jsonObject) const
 	}
 }
 
-void Worker::FillJsonResourceUsage(json& jsonObject) const
+template <class T>
+inline void Worker<T>::FillJsonResourceUsage(json& jsonObject) const
 {
 	
 
@@ -143,7 +137,8 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
-void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
+template <class T>
+inline void Worker<T>::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
 {
 	
 
@@ -158,7 +153,8 @@ void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& r
 		base::uv::throwError("a Router with same routerId already exists");
 }
 
-RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
+template <class T>
+inline RTC::Router* Worker<T>::GetRouterFromRequest(Channel::Request* request) const
 {
 	
 
@@ -177,7 +173,9 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
- void Worker::OnChannelRequest(Channel::Request* request)
+template <class T>
+inline void Worker<T>::OnChannelRequest(Channel::Request* request)
+
 {
 	MS_DEBUG_DEV(
 	  "Channel request received method: ", request->method," id:" , request->id);
@@ -260,7 +258,8 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	}
 }
 
- void Worker::OnChannelClosed()
+template <class T>
+inline void Worker<T>::OnChannelClosed()
 {
 	MS_TRACE_STD();
 
@@ -270,43 +269,45 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 
 	Close();
 }
+template Worker<Channel::Request>;
 
- void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
-{
-	
 
-	if (this->closed)
-		return;
-
-	switch (signum)
-	{
-		case SIGINT:
-		{
-			if (this->closed)
-				return;
-
-			MS_DEBUG_DEV("INT signal received, closing myself");
-
-			Close();
-
-			break;
-		}
-
-		case SIGTERM:
-		{
-			if (this->closed)
-				return;
-
-			MS_DEBUG_DEV("TERM signal received, closing myself");
-
-			Close();
-
-			break;
-		}
-
-		default:
-		{
-			MS_WARN_DEV("received a non handled signal [signum:] ", signum);
-		}
-	}
-}
+// void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
+//{
+//	
+//
+//	if (this->closed)
+//		return;
+//
+//	switch (signum)
+//	{
+//		case SIGINT:
+//		{
+//			if (this->closed)
+//				return;
+//
+//			MS_DEBUG_DEV("INT signal received, closing myself");
+//
+//			Close();
+//
+//			break;
+//		}
+//
+//		case SIGTERM:
+//		{
+//			if (this->closed)
+//				return;
+//
+//			MS_DEBUG_DEV("TERM signal received, closing myself");
+//
+//			Close();
+//
+//			break;
+//		}
+//
+//		default:
+//		{
+//			MS_WARN_DEV("received a non handled signal [signum:] ", signum);
+//		}
+//	}
+//}

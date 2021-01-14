@@ -14,6 +14,8 @@ namespace SdpParse {
             Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
             
            rooms =  new Rooms(this);
+           
+           worker = new Worker<Channel::Request>(); 
 
         }
 
@@ -200,7 +202,7 @@ namespace SdpParse {
 
         void Signaler::connect(const std::string& host, const uint16_t port) {
 
-            worker = new Worker();  // moved this code to CreateRoom. One room will have one worker thread
+            worker = new Worker<Channel::Request>(10);  // moved this code to CreateRoom. One room will have one worker thread
 
            // room = rm;
 
