@@ -3,10 +3,10 @@
 
 #ifdef HAVE_FFMPEG
 
-#include "rtc_base/refcountedobject.h"
+//#include "rtc_base/refcountedobject.h"
 #include "rtc_base/thread.h"
-#include "rtc_base/timeutils.h"
-
+//#include "rtc_base/timeutils.h"
+#include "rtc_base/time_utils.h"
 #include "base/logger.h"
 
 
@@ -125,7 +125,7 @@ void AudioPacketModule::updateProcessing(bool start)
 {
     if (start) {
         if (!_processThread) {
-            _processThread.reset(new rtc::Thread());
+           // _processThread.reset(new rtc::Thread());  //arvind
             _processThread->Start();
         }
         _processThread->Post(RTC_FROM_HERE, this, MSG_START_PROCESS);

@@ -1,3 +1,15 @@
+ffmpeg complile 
+
+git clone git@github.com:FFmpeg/FFmpeg.git  ffmpeg
+git checkout release/3.3
+
+./configure --disable-yasm --enable-shared  --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
+
+ ./configure --disable-yasm --enable-shared  --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
+
+make -j8
+
+
 To debug webrtc
 
 
@@ -38,7 +50,7 @@ https://webrtc.github.io/webrtc-org/native-code/development/
 - In OSX 10.14.16 this works:
 - $ gn gen out/m84 --args='is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true mac_deployment_target="10.11" use_custom_libcxx=false'
 - In Linux Debian Stretch with GCC 6.3 this works:
-- $ gn gen out/m84 --args='is_debug=false is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
+- $ gn gen out/m84 --args='is_debug=true is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
 
 
 - Then build it:

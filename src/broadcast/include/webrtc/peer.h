@@ -6,9 +6,9 @@
 #include "webrtc/peerfactorycontext.h"
 
 #include "api/jsep.h"
-#include "api/peerconnectioninterface.h"
-#include "api/test/fakeconstraints.h"
-#include "p2p/client/basicportallocator.h"
+//#include "api/peerconnectioninterface.h"
+//#include "api/test/fakeconstraints.h"
+//#include "p2p/client/basicportallocator.h"
 
 
 namespace base {
@@ -37,7 +37,7 @@ public:
 
     /// Create the local media stream.
     /// Only necessary when we are creating the offer.
-    virtual rtc::scoped_refptr<webrtc::MediaStreamInterface> createMediaStream();
+  //  virtual rtc::scoped_refptr<webrtc::MediaStreamInterface> createMediaStream();
 
     /// Create the peer connection once configuration, constraints and
     /// streams have been created.
@@ -67,7 +67,7 @@ public:
 
     std::string peerid() const;
     std::string token() const;
-    webrtc::FakeConstraints& constraints();
+    //webrtc::FakeConstraints& constraints();
     webrtc::PeerConnectionFactoryInterface* factory() const;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection() const;
     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream() const;
@@ -77,6 +77,7 @@ protected:
     virtual void OnAddStream(webrtc::MediaStreamInterface* stream); ///< @deprecated
     virtual void OnRemoveStream(webrtc::MediaStreamInterface* stream); ///< @deprecated
     virtual void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override; ///< since 7f0676
+    virtual void OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
     virtual void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override; ///< since 7f0676
     virtual void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream) override; ///< since 7f0676
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
@@ -99,10 +100,11 @@ protected:
     std::string _token;
     Mode _mode;
     webrtc::PeerConnectionInterface::RTCConfiguration _config;
-    webrtc::FakeConstraints _constraints;
+   // webrtc::FakeConstraints _constraints;
+public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
-    std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
+    //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
+    //std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
 };
 
 

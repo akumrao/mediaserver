@@ -9,9 +9,10 @@
 #include "base/filesystem.h"
 #include "base/logger.h"
 #include "webrtc/webrtc.h"
-#include "media/engine/webrtcvideocapturerfactory.h"
+//#include "media/engine/webrtcvideocapturerfactory.h"
 #include "modules/video_capture/video_capture_factory.h"
 
+const char kStreamId[] = "stream_id";
 
 namespace base {
 namespace wrtc {
@@ -61,21 +62,20 @@ void MultiplexMediaCapturer::openFile(const std::string& file, bool loop)
 }
 
 
-VideoPacketSource* MultiplexMediaCapturer::createVideoSource()
-{
-    using std::placeholders::_1;
-    assert(_videoCapture->video());
-    auto oparams = _videoCapture->video()->oparams;
-    auto source = new VideoPacketSource(oparams.width, oparams.height,
-                                        oparams.fps, cricket::FOURCC_I420);
-    
-    _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,source , _1);
-    
-//    source->setPacketSource(&_stream.emitter); // nullified on VideoPacketSource::Stop
-    
-    
-    return source;
-}
+//VideoPacketSource* MultiplexMediaCapturer::createVideoSource()
+//{
+//    using std::placeholders::_1;
+//    assert(_videoCapture->video());
+//    auto oparams = _videoCapture->video()->oparams;
+//    //auto source = new VideoPacketSource();
+//    
+//    _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,source , _1);
+//    
+////    source->setPacketSource(&_stream.emitter); // nullified on VideoPacketSource::Stop
+//    
+//    
+//    return source;
+//}
 
 
 rtc::scoped_refptr<AudioPacketModule> MultiplexMediaCapturer::getAudioModule()
@@ -86,7 +86,7 @@ rtc::scoped_refptr<AudioPacketModule> MultiplexMediaCapturer::getAudioModule()
 
 void MultiplexMediaCapturer::addMediaTracks(
     webrtc::PeerConnectionFactoryInterface* factory,
-    webrtc::MediaStreamInterface* stream)
+     webrtc::PeerConnectionInterface* conn)
 {
     // This capturer is multicast, meaning it can be used as the source
     // for multiple Peer objects.
@@ -96,20 +96,63 @@ void MultiplexMediaCapturer::addMediaTracks(
     // peers may request different optimal output video sizes.
 
     // Create and add the audio stream
-    if (_videoCapture->audio()) {
-        stream->AddTrack(factory->CreateAudioTrack(
-            kAudioLabel, factory->CreateAudioSource(nullptr)));
-    }
+    // if (_videoCapture->audio()) { //arvind
+    //     stream->AddTrack(factory->CreateAudioTrack(
+    //         kAudioLabel, factory->CreateAudioSource(nullptr)));
+    // }
 
     // Create and add the video stream
-    if (_videoCapture->video()) {
-        stream->AddTrack(factory->CreateVideoTrack(
-            kVideoLabel, factory->CreateVideoSource(createVideoSource(), nullptr)));
-    }
+    // if (_videoCapture->video()) {  //arvind
+    //     stream->AddTrack(factory->CreateVideoTrack(
+    //         kVideoLabel, factory->CreateVideoSource(createVideoSource(), nullptr)));
+    // }
 
     // Default WebRTC video stream for testing
     // stream->AddTrack(factory->CreateVideoTrack(
     //     kVideoLabel, factory->CreateVideoSource(openVideoDefaultWebRtcCaptureDevice(), nullptr)));
+    
+    // stream->AddTrack(factory->CreateVideoTrack(
+    //     kVideoLabel, factory->CreateVideoSource(openVideoDefaultWebRtcCaptureDevice(), nullptr)));
+    
+    
+
+
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+      factory->CreateAudioTrack(
+              kAudioLabel, factory->CreateAudioSource(
+                           cricket::AudioOptions())));
+ 
+  //stream->AddTrack(audio_track);
+  // peer_connection_->AddTransceiver(audio_track);
+    conn->AddTrack(audio_track, {kStreamId});
+    
+  
+
+    using std::placeholders::_1;
+    assert(_videoCapture->video());
+    auto oparams = _videoCapture->video()->oparams;
+    //auto source = new VideoPacketSource();
+     VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>();
+    _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+    
+
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
+          factory->CreateVideoTrack(kVideoLabel, VideoCapturer));
+      
+       video_track->set_enabled(true);
+       conn->AddTrack(video_track, {kStreamId});
+
+      //stream->AddTrack(video_track);
+
+//      video_track->set_enabled(true);
+//      
+//
+//      if (local_video_observer_) {
+//            video_track->AddOrUpdateSink(local_video_observer_.get(),
+//                                                   rtc::VideoSinkWants());
+//      }
+//    }
+    
 }
 
 

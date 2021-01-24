@@ -544,8 +544,16 @@ namespace base {
                 }
             }
 
+
+            if (offset + payloadOffset + payloadLength > limit)
+            {
+
+                LError( "WebSocket error: Incomplete frame received"); //, ErrorPayloadTooBig
+                return 0;
+            }
+
             // Update frame length to include payload plus header
-            frame.seek(size_t(offset + payloadOffset + payloadLength));
+            frame.seek(size_t(offset + payloadOffset + payloadLength));// arvind need to fix
             // frame.limit(offset + payloadOffset + payloadLength);
             // int frameLength = (offset + payloadOffset);
             // assert(frame.position() == (offset + payloadOffset));

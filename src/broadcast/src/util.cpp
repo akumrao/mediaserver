@@ -30,25 +30,25 @@ std::vector<std::string> getVideoCaptureDevices()
 }
 
 
-// cricket::VideoCapturer* openWebRtcVideoCaptureDevice(const std::string& deviceName)
-std::unique_ptr<cricket::VideoCapturer> openWebRtcVideoCaptureDevice(const std::string& deviceName)
-{
-    cricket::WebRtcVideoDeviceCapturerFactory factory;
-    // std::unique_ptr<cricket::VideoCapturer> capturer;
-    cricket::VideoCapturer* capturer = nullptr;
-    auto deviceNames = getVideoCaptureDevices();
-    for (const auto& name : deviceNames) {
-        if (name == deviceName) {
-            return factory.Create(cricket::Device(name, 0));
-        }
-    }
-    if (!capturer && !deviceNames.empty()) {
-        return factory.Create(cricket::Device(deviceNames[0], 0));
-    }
+// cricket::VideoCapturer* openWebRtcVideoCaptureDevice(const std::string& deviceName)  //arvind
+// std::unique_ptr<cricket::VideoCapturer> openWebRtcVideoCaptureDevice(const std::string& deviceName)
+// {
+//     cricket::WebRtcVideoDeviceCapturerFactory factory;
+//     // std::unique_ptr<cricket::VideoCapturer> capturer;
+//     cricket::VideoCapturer* capturer = nullptr;
+//     auto deviceNames = getVideoCaptureDevices();
+//     for (const auto& name : deviceNames) {
+//         if (name == deviceName) {
+//             return factory.Create(cricket::Device(name, 0));
+//         }
+//     }
+//     if (!capturer && !deviceNames.empty()) {
+//         return factory.Create(cricket::Device(deviceNames[0], 0));
+//     }
 
-    assert(0 && "no video devices");
-    return nullptr;
-}
+//     assert(0 && "no video devices");
+//     return nullptr;
+// }
 
 
 

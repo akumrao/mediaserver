@@ -6,7 +6,7 @@
 #include "webrtc/multiplexmediacapturer.h"
 #include "webrtc/videopacketsource.h"
 #include "webrtc/signaler.h"
-#include "api/mediastreamtrackproxy.h"
+//#include "api/mediastreamtrackproxy.h"
 
 
 using std::endl;
@@ -86,16 +86,17 @@ namespace base {
 
             // Create the Peer Peer
             auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
-            conn->constraints().SetMandatoryReceiveAudio(false);
-            conn->constraints().SetMandatoryReceiveVideo(false);
-            conn->constraints().SetAllowDtlsSctpDataChannels();
+           // conn->constraints().SetMandatoryReceiveAudio(false);
+           // conn->constraints().SetMandatoryReceiveVideo(false);
+           // conn->constraints().SetAllowDtlsSctpDataChannels();
 
             // Create the media stream and attach decoder
             // output to the peer connection
-            _capturer.addMediaTracks(_context.factory, conn->createMediaStream());
+            conn->createConnection();
+            _capturer.addMediaTracks(_context.factory, conn->_peerConnection);
 
             // Send the Offer SDP
-            conn->createConnection();
+            
             conn->createOffer();
 
             wrtc::PeerManager::add(peerID, conn);
@@ -147,7 +148,7 @@ namespace base {
         }
 
         void Signaler::onAddRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) {
-            assert(0 && "not required");
+            //assert(0 && "not required");
         }
 
         void Signaler::onRemoveRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) {
@@ -183,7 +184,7 @@ namespace base {
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-            client = new SocketioClient(host, port);
+            client = new SocketioClient(host, port, true);
             client->connect();
 
             socket = client->io();

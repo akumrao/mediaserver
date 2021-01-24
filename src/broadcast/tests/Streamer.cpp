@@ -5,6 +5,8 @@
 #include "base/idler.h"
 #include "base/logger.h"
 
+#include "rtc_base/ssl_adapter.h"
+
 #include "webrtc/signaler.h"
 
 using namespace std;
@@ -19,19 +21,18 @@ CMemLeakDetect memLeakDetect;
 #endif
  */
 
-#define SERVER_HOST "arvindubuntu"
+#define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 8080 //443
-#define USE_SSL     0 //1
 #define JOIN_ROOM  "foo"        
 
 #include "webrtc/signaler.h"
 
 std::string sampleDataDir(const std::string& file) {
     std::string dir;
-    fs::addnode(dir, base_SOURCE_DIR);
-    fs::addnode(dir, "ffmpeg");
-    fs::addnode(dir, "samples");
-    fs::addnode(dir, "data");
+   // fs::addnode(dir, base_SOURCE_DIR);
+    fs::addnode(dir, "/");
+    fs::addnode(dir, "var");
+    fs::addnode(dir, "tmp");
     if (!file.empty())
         fs::addnode(dir, file);
     return dir;

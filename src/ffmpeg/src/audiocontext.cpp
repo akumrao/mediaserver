@@ -159,6 +159,9 @@ void initAudioCodecFromContext(const AVCodecContext* ctx, AudioCodec& params)
 {
     params.enabled = true;
     params.encoder = avcodec_get_name(ctx->codec_id);
+    
+    const char * p = av_get_sample_fmt_name(ctx->sample_fmt);
+    
     params.sampleFmt = av_get_sample_fmt_name(ctx->sample_fmt);
     params.channels = ctx->channels;
     params.sampleRate = ctx->sample_rate;

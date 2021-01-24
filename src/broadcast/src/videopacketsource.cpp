@@ -22,9 +22,8 @@ namespace base {
 namespace wrtc {
 
 
-VideoPacketSource::VideoPacketSource(int width, int height, int fps, uint32_t fourcc)
-    : _captureFormat(cricket::VideoFormat(width, height, cricket::VideoFormat::FpsToInterval(fps), fourcc))
-    , _rotation(webrtc::kVideoRotation_0)
+VideoPacketSource::VideoPacketSource()
+    : _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
 //    , _source(nullptr)
@@ -32,7 +31,7 @@ VideoPacketSource::VideoPacketSource(int width, int height, int fps, uint32_t fo
     // Default supported formats. Use SetSupportedFormats to over write.
     std::vector<cricket::VideoFormat> formats;
     formats.push_back(_captureFormat);
-    SetSupportedFormats(formats);
+   // SetSupportedFormats(formats);
 }
 
 
@@ -46,7 +45,7 @@ VideoPacketSource::VideoPacketSource(const cricket::VideoFormat& captureFormat)
     // Default supported formats. Use SetSupportedFormats to over write.
     std::vector<cricket::VideoFormat> formats;
     formats.push_back(_captureFormat);
-    SetSupportedFormats(formats);
+    //SetSupportedFormats(formats);
 
     // formats.push_back(cricket::VideoFormat(1280, 720, _fpsInterval, _codec));
     // formats.push_back(cricket::VideoFormat(640, 480, _fpsInterval, _codec));
@@ -70,7 +69,7 @@ VideoPacketSource::~VideoPacketSource()
 //}
 
 
-cricket::CaptureState VideoPacketSource::Start(const cricket::VideoFormat& format)
+/*cricket::CaptureState VideoPacketSource::Start(const cricket::VideoFormat& format)
 {
     LDebug("VideoPacketSource::Start")
 
@@ -109,12 +108,12 @@ void VideoPacketSource::Stop()
     SetCaptureFormat(nullptr);
     SetCaptureState(cricket::CS_STOPPED);
 }
-
+*/
 
 void VideoPacketSource::onVideoCaptured(IPacket& pac)
 {
-    if(!IsRunning())
-    return;
+    //if(!IsRunning())
+  //  return;
     
     ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
     
@@ -149,26 +148,38 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
      timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
 #endif
 
-    if (!AdaptFrame(packet.width, packet.height,
-        timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
-        rtc::TimeMicros(), //0, 0,
-        &adapted_width, &adapted_height,
-        &crop_width, &crop_height,
-        &crop_x, &crop_y, &translated_camera_time_us)) {
-        LWarn("Adapt frame failed", packet.time)
-        return;
-    }
+    // if (!AdaptFrame(packet.width, packet.height,
+    //     timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+    //     rtc::TimeMicros(), //0, 0,
+    //     &adapted_width, &adapted_height,
+    //     &crop_width, &crop_height,
+    //     &crop_x, &crop_y, &translated_camera_time_us)) {
+    //     LWarn("Adapt frame failed", packet.time)
+    //     return;
+    // }
 
+    int64_t TimestampUs = rtc::TimeMicros();
     rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Copy(
             packet.width, packet.height,
             packet.buffer[0], packet.linesize[0],
             packet.buffer[1], packet.linesize[1],
             packet.buffer[2], packet.linesize[2]);
+    
+    
+    webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+		set_video_frame_buffer(buffer).
+		set_rotation(webrtc::kVideoRotation_0).
+		set_timestamp_us(TimestampUs).
+		build();
 
-    OnFrame(webrtc::VideoFrame(
-        buffer, _rotation,
-        translated_camera_time_us), // timestamp
-        packet.width, packet.height);
+	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
+	OnFrame(Frame);  //arvind
+        
+
+    // OnFrame(webrtc::VideoFrame(
+    //     buffer, _rotation,
+    //     translated_camera_time_us), // timestamp
+    //     packet.width, packet.height);
 
 #if 0 // Old code pre f5297a0
     cricket::CapturedFrame frame;
@@ -185,7 +196,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
 #endif
 }
 
-
+/*
 bool VideoPacketSource::IsRunning()
 {
     return capture_state() == cricket::CS_RUNNING;
@@ -223,7 +234,36 @@ bool VideoPacketSource::IsScreencast() const
 {
     return false;
 }
+*/
 
+
+void VideoPacketSource::AddRef() const {
+ // rtc::AtomicOps::Increment(&ref_count_);  //arvind
+}
+
+rtc::RefCountReleaseStatus VideoPacketSource::Release() const {
+  // const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind
+  // if (count == 0) {
+  //   return rtc::RefCountReleaseStatus::kDroppedLastRef;
+  // }
+  return rtc::RefCountReleaseStatus::kOtherRefsRemained;
+}
+
+webrtc::MediaSourceInterface::SourceState VideoPacketSource::state() const {
+  return kLive;
+}
+
+bool VideoPacketSource::remote() const {
+  return false;
+}
+
+bool VideoPacketSource::is_screencast() const {
+  return false;
+}
+
+absl::optional<bool> VideoPacketSource::needs_denoising() const {
+  return false;
+}
 
 } } // namespace wrtc
 

@@ -1,25 +1,113 @@
 'use strict';
 
 var os = require('os');
+const fs = require('fs');
 var nodeStatic = require('node-static');
-var http = require('http');
+var https = require('https');
 var socketIO = require('socket.io');
-console.log("http://localhost:8080");
-var fileServer = new(nodeStatic.Server)();
-var app = http.createServer(function(req, res) {
-  fileServer.serve(req, res);
-}).listen(8080);
+//const ortc = require('./ortc.js');
+const config = require('./config');
+const express = require('express');
 
-var io = socketIO.listen(app);
-io.sockets.on('connection', function(socket) {
+//const uuidV4 = require('uuid/v4');
+////import { v4 as uuidV4 } from 'uuid';
+const { v4: uuidV4 } = require('uuid');
 
-  // convenience function to log server messages on the client
-  function log() {
-    var array = ['Message from server:'];
-    array.push.apply(array, arguments);
-    socket.emit('log', array);
-    console.log(array);
+
+let webServer;
+let socketServer;
+let expressApp;
+let io;
+
+(async () => {
+  try {
+    await runExpressApp();
+    await runWebServer();
+    await runSocketServer();
+  } catch (err) {
+    console.error(err);
   }
+})();
+
+
+
+console.log("https://localhost:8080/");
+
+let serverSocketid =null;
+
+
+var fileServer = new(nodeStatic.Server)();
+// var app = http.createServer(function(req, res) {
+// 	fileServer.serve(req, res);
+// }).listen(8080);
+
+async function runExpressApp() {
+  expressApp = express();
+  expressApp.use(express.json());
+  expressApp.use(express.static(__dirname));
+
+  expressApp.use((error, req, res, next) => {
+    if (error) {
+      console.log('Express app error,', error.message);
+
+      error.status = error.status || (error.name === 'TypeError' ? 400 : 500);
+
+      res.statusMessage = error.message;
+      res.status(error.status).send(String(error));
+    } else {
+      next();
+    }
+  });
+}
+
+async function runWebServer() {
+
+  console.error('runWebServer');
+
+  const { sslKey, sslCrt } = config;
+  if (!fs.existsSync(sslKey) || !fs.existsSync(sslCrt)) {
+    console.error('SSL files are not found. check your config.js file');
+    process.exit(0);
+  }
+  const tls = {
+    cert: fs.readFileSync(sslCrt),
+    key: fs.readFileSync(sslKey),
+  };
+  webServer = https.createServer(tls, expressApp);
+  webServer.on('error', (err) => {
+    console.error('starting web server failed:', err.message);
+  });
+
+  
+  await new Promise((resolve) => {
+    const { listenIp, listenPort } = config;
+    webServer.listen(listenPort, listenIp, () => {
+      console.log('server is running');
+      console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
+
+    //  listenIps = config.webRtcTransport.listenIps;
+      //const ip = listenIps.announcedIp || listenIps.ip;
+     // console.log('listen ips ' + JSON.stringify(listenIps, null, 4) );
+
+      resolve();
+    });
+  });
+}
+
+async function runSocketServer() {
+
+  console.error('runSocketServer');
+  io = socketIO.listen(webServer);
+
+  io.sockets.on('connection', function(socket) {
+
+	// convenience function to log server messages on the client
+	function log() {
+		var array = ['Message from server:'];
+		 array.push.apply(array, arguments);
+		 socket.emit('log', array);
+		 console.log(array);
+	}
 
   socket.on('message', function(message) {
     log('Client said: ', message);
@@ -67,3 +155,13 @@ io.sockets.on('connection', function(socket) {
   });
 
 });
+
+
+}
+
+
+
+
+
+
+

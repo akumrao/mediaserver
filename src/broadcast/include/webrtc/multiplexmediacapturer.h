@@ -13,7 +13,8 @@
 #include "webrtc/audiopacketmodule.h"
 #include "webrtc/videopacketsource.h"
 
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
+
 
 
 namespace base {
@@ -29,18 +30,20 @@ public:
     void openFile(const std::string& file, bool loop = true);
 
     void addMediaTracks(webrtc::PeerConnectionFactoryInterface* factory,
-                        webrtc::MediaStreamInterface* stream);
+                        webrtc::PeerConnectionInterface* conn);
 
     void start();
     void stop();
 
     rtc::scoped_refptr<AudioPacketModule> getAudioModule();
-    VideoPacketSource* createVideoSource();
+    //VideoPacketSource* createVideoSource();
 
 protected:
 //    PacketStream _stream;
     ff::MediaCapture::Ptr _videoCapture;
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
+    
+    rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
 };
 
 

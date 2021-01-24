@@ -70,7 +70,7 @@ namespace base {
         }
 
         void PeerManager::onAddRemoteStream(Peer* conn, webrtc::MediaStreamInterface* stream) {
-            assert(0 && "virtual");
+          //  assert(0 && "virtual");
         }
 
         void PeerManager::onRemoveRemoteStream(Peer* conn, webrtc::MediaStreamInterface* stream) {

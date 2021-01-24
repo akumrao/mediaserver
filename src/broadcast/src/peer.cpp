@@ -24,7 +24,6 @@ Peer::Peer(PeerManager* manager,
     , _mode(mode)
     //, _context->factory(manager->factory())
     , _peerConnection(nullptr)
-    , _stream(nullptr)
 {
     // webrtc::PeerConnectionInterface::IceServer stun;
     // stun.uri = kGoogleStunServerUri;
@@ -33,6 +32,17 @@ Peer::Peer(PeerManager* manager,
     // _constraints.SetMandatoryReceiveAudio(true);
     // _constraints.SetMandatoryReceiveVideo(true);
     // _constraints.SetAllowDtlsSctpDataChannels();
+    
+    _config.servers.clear();
+    _config.servers.empty();
+    _config.enable_rtp_data_channel = false;
+    _config.enable_dtls_srtp = true;
+    _config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+    _config.rtcp_mux_policy =  webrtc::PeerConnectionInterface::kRtcpMuxPolicyRequire;
+    _config.bundle_policy  =  webrtc::PeerConnectionInterface::kBundlePolicyMaxBundle;
+    _config.type = webrtc::PeerConnectionInterface::kAll;
+    _config.min_port =11501;
+    _config.max_port =12560;
 }
 
 
@@ -47,47 +57,46 @@ Peer::~Peer()
 }
 
 
-rtc::scoped_refptr<webrtc::MediaStreamInterface> Peer::createMediaStream()
-{
-    assert(_mode == Offer);
-    //assert(_context->factory);
-    assert(!_stream);
-    _stream = _context->factory->CreateLocalMediaStream(kStreamLabel);
-    return _stream;
-}
+//rtc::scoped_refptr<webrtc::MediaStreamInterface> Peer::createMediaStream()
+//{
+//   // assert(_mode == Offer);
+//    //assert(_context->factory);
+//    assert(!_stream);
+//    _stream = _context->factory->CreateLocalMediaStream(kStreamLabel);
+//    return _stream;
+//}
 
 
-void Peer::setPortRange(int minPort, int maxPort)
-{
-    assert(!_peerConnection);
+// void Peer::setPortRange(int minPort, int maxPort)
+// {
+//     assert(!_peerConnection);
 
-    if (!_context->networkManager) {
-        throw std::runtime_error("Must initialize custom network manager to set port range");
-    }
+//     if (!_context->networkManager) {
+//         throw std::runtime_error("Must initialize custom network manager to set port range");
+//     }
 
-    if (!_context->socketFactory) {
-        throw std::runtime_error("Must initialize custom socket factory to set port range");
-    }
+//     if (!_context->socketFactory) {
+//         throw std::runtime_error("Must initialize custom socket factory to set port range");
+//     }
 
-    if (!_portAllocator)
-        _portAllocator.reset(new cricket::BasicPortAllocator(
-            _context->networkManager.get(),
-            _context->socketFactory.get()));
-    _portAllocator->SetPortRange(minPort, maxPort);
-}
+//     if (!_portAllocator)
+//         _portAllocator.reset(new cricket::BasicPortAllocator(
+//             _context->networkManager.get(),
+//             _context->socketFactory.get()));
+//     _portAllocator->SetPortRange(minPort, maxPort);
+// }
 
 
 void Peer::createConnection()
 {
     assert(_context->factory);
-    _peerConnection = _context->factory->CreatePeerConnection(_config, &_constraints,
-                                                              std::move(_portAllocator), nullptr, this);
+    _peerConnection = _context->factory->CreatePeerConnection(_config, nullptr, nullptr, this);
 
-    if (_stream) {
-        if (!_peerConnection->AddStream(_stream)) {
-            throw std::runtime_error("Adding stream to Peer failed");
-        }
-    }
+//    if (_stream) {
+//        if (!_peerConnection->AddStream(_stream)) {
+//            throw std::runtime_error("Adding stream to Peer failed");
+//        }
+//    }
 }
 
 
@@ -108,10 +117,16 @@ void Peer::closeConnection()
 
 void Peer::createOffer()
 {
-    assert(_mode == Offer);
-    assert(_peerConnection);
+    //assert(_mode == Offer);
+    //assert(_peerConnection);
 
-    _peerConnection->CreateOffer(this, &_constraints);
+     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
+
+    options.offer_to_receive_audio = true;
+    options.offer_to_receive_video = true;
+
+
+    _peerConnection->CreateOffer(this,options);
 }
 
 
@@ -128,11 +143,16 @@ void Peer::recvSDP(const std::string& type, const std::string& sdp)
     _peerConnection->SetRemoteDescription(
         DummySetSessionDescriptionObserver::Create(), desc);
 
+
+    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
+    options.offer_to_receive_audio = true;
+    options.offer_to_receive_video = true;
+ 
     if (type == "offer") {
-        assert(_mode == Answer);
-        _peerConnection->CreateAnswer(this, &_constraints);
+       // assert(_mode == Answer);
+        _peerConnection->CreateAnswer(this, options);
     } else {
-        assert(_mode == Offer);
+       // assert(_mode == Offer);
     }
 }
 
@@ -194,6 +214,32 @@ void Peer::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
     OnAddStream(stream.get());
 }
 
+ void Peer::OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+
+     LDebug(_peerid, ": OnTrack")
+    //_manager->onAddRemoteTrack(this, transceiver.get());
+     
+//    const char * pMid  = transceiver->mid()->c_str();
+//    int iMid = atoi(pMid);
+//    RTC_LOG(INFO)  << "OnAddTrack " <<  " mid "  << pMid;
+//    if(  transceiver->current_direction() !=  webrtc::RtpTransceiverDirection::kInactive &&    transceiver->direction() !=  webrtc::RtpTransceiverDirection::kInactive  )
+//    {
+//
+//        rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
+//                transceiver->receiver()->track();
+//        RTC_LOG(INFO)  << "OnAddTrack " << track->id() <<  " kind " << track->kind() ;
+//
+//        if (track && remote_video_observer_[0] &&
+//            track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+//            static_cast<webrtc::VideoTrackInterface*>(track.get())
+//                    ->AddOrUpdateSink(remote_video_observer_[0].get(), rtc::VideoSinkWants());
+//            RTC_LOG(LS_INFO) << "Remote video sink set up: " << track;
+//
+//        }
+//
+//    }
+
+ }
 
 void Peer::OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
@@ -210,7 +256,7 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream
 
 void Peer::OnAddStream(webrtc::MediaStreamInterface* stream)
 {
-    assert(_mode == Answer);
+    //assert(_mode == Answer);
 
     LDebug(_peerid, ": On add stream")
     _manager->onAddRemoteStream(this, stream);
@@ -219,7 +265,7 @@ void Peer::OnAddStream(webrtc::MediaStreamInterface* stream)
 
 void Peer::OnRemoveStream(webrtc::MediaStreamInterface* stream)
 {
-    assert(_mode == Answer);
+    //assert(_mode == Answer);
 
     LDebug(_peerid, ": On remove stream")
     _manager->onRemoveRemoteStream(this, stream);
@@ -285,10 +331,10 @@ std::string Peer::token() const
 }
 
 
-webrtc::FakeConstraints& Peer::constraints()
-{
-    return _constraints;
-}
+// webrtc::FakeConstraints& Peer::constraints()
+// {
+//     return _constraints;
+// }
 
 
 webrtc::PeerConnectionFactoryInterface* Peer::factory() const
@@ -303,10 +349,10 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> Peer::peerConnection() const
 }
 
 
-rtc::scoped_refptr<webrtc::MediaStreamInterface> Peer::stream() const
-{
-    return _stream;
-}
+//rtc::scoped_refptr<webrtc::MediaStreamInterface> Peer::stream() const
+//{
+//    return _stream;
+//}
 
 
 //

@@ -10,7 +10,9 @@
 
 #include "ff/packet.h"
 
-#include "media/base/videocapturer.h"
+//#include "media/base/videocapturer.h"
+#include "media/base/adapted_video_track_source.h"
+#include "rtc_base/timestamp_aligner.h"
 
 
 namespace base {
@@ -22,10 +24,10 @@ namespace wrtc {
 /// It's used as the remote video source's `VideoCapturer` so that the remote
 /// video can be used as a `cricket::VideoCapturer` and in that way a remote
 /// video stream can implement the `MediaStreamSourceInterface`.
-class VideoPacketSource : public cricket::VideoCapturer
+class VideoPacketSource : public rtc::AdaptedVideoTrackSource
 {
 public:
-    VideoPacketSource(int width, int height, int fps, uint32_t fourcc);
+    VideoPacketSource();
     VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
 
@@ -39,13 +41,13 @@ public:
     void onVideoCaptured(IPacket& pac);
 
     /// cricket::VideoCapturer implementation.
-    virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) override;
-    virtual void Stop() override;
-    virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs) override;
-    virtual bool GetBestCaptureFormat(const cricket::VideoFormat& desired,
-                                      cricket::VideoFormat* best_format) override;
-    virtual bool IsRunning() override;
-    virtual bool IsScreencast() const override;
+
+ void AddRef() const override;
+    rtc::RefCountReleaseStatus Release() const override;
+    SourceState state() const override;
+    bool remote() const override;
+    bool is_screencast() const override;
+    absl::optional<bool> needs_denoising() const override;
 
 protected:
     cricket::VideoFormat _captureFormat;
