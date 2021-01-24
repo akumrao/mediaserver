@@ -3,7 +3,10 @@
 #include "webrtc/peermanager.h"
 #include "webrtc/peerfactorycontext.h"
 #include "base/logger.h"
-
+#include "p2p/base/transport_info.h"
+#include "pc/media_session.h"
+#include "pc/peer_connection_wrapper.h"
+#include "pc/sdp_utils.h"
 
 using std::endl;
 
@@ -41,8 +44,13 @@ Peer::Peer(PeerManager* manager,
     _config.rtcp_mux_policy =  webrtc::PeerConnectionInterface::kRtcpMuxPolicyRequire;
     _config.bundle_policy  =  webrtc::PeerConnectionInterface::kBundlePolicyMaxBundle;
     _config.type = webrtc::PeerConnectionInterface::kAll;
+    _config.candidate_network_policy = webrtc::PeerConnectionInterface::kCandidateNetworkPolicyLowCost;
     _config.min_port =11501;
     _config.max_port =12560;
+    _config.enable_ice_renomination = true;
+    _config.ice_candidate_pool_size=1;
+    
+    
 }
 
 
@@ -289,6 +297,19 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
 void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
 {
     LDebug(_peerid, ": Set local description")
+            
+    cricket::SessionDescription* desc1 = desc->description();
+    
+ 
+     for (const auto& content : desc1->contents()) {
+        auto* transport_info = desc1->GetTransportInfoByName(content.name);
+        transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
+       // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
+        transport_info->description.transport_options.clear();
+         transport_info->description.transport_options.push_back("renomination");
+        
+      }
+    
     _peerConnection->SetLocalDescription(
         DummySetSessionDescriptionObserver::Create(), desc);
 
