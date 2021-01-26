@@ -10,7 +10,7 @@
 #include "ff/fpscounter.h"
 
 #include "api/video/i420_buffer.h"
-
+#include "rtc_base/atomic_ops.h"
 #include <chrono>
 
 using std::endl;
@@ -238,14 +238,14 @@ bool VideoPacketSource::IsScreencast() const
 
 
 void VideoPacketSource::AddRef() const {
- // rtc::AtomicOps::Increment(&ref_count_);  //arvind
+  rtc::AtomicOps::Increment(&ref_count_);  //arvind
 }
 
 rtc::RefCountReleaseStatus VideoPacketSource::Release() const {
-  // const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind
-  // if (count == 0) {
-  //   return rtc::RefCountReleaseStatus::kDroppedLastRef;
-  // }
+   const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind
+   if (count == 0) {
+     return rtc::RefCountReleaseStatus::kDroppedLastRef;
+   }
   return rtc::RefCountReleaseStatus::kOtherRefsRemained;
 }
 

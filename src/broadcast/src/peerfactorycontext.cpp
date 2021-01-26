@@ -66,7 +66,7 @@ PeerFactoryContext::PeerFactoryContext(
 
     factory = webrtc::CreatePeerConnectionFactory(
               networkThread.get(), workerThread.get(), g_signaling_thread.get(),
-              nullptr, webrtc::CreateBuiltinAudioEncoderFactory(),
+              default_adm, webrtc::CreateBuiltinAudioEncoderFactory(),
               webrtc::CreateBuiltinAudioDecoderFactory(),
 
               webrtc::CreateBuiltinVideoEncoderFactory(),

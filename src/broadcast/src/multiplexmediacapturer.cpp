@@ -116,31 +116,36 @@ void MultiplexMediaCapturer::addMediaTracks(
     
     
 
+  if (_videoCapture->audio())
+  {
 
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-      factory->CreateAudioTrack(
-              kAudioLabel, factory->CreateAudioSource(
-                           cricket::AudioOptions())));
- 
-  //stream->AddTrack(audio_track);
-  // peer_connection_->AddTransceiver(audio_track);
-    conn->AddTrack(audio_track, {kStreamId});
-    
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+        factory->CreateAudioTrack(
+                kAudioLabel, factory->CreateAudioSource(
+                            cricket::AudioOptions())));
+   
+    //stream->AddTrack(audio_track);
+    // peer_connection_->AddTransceiver(audio_track);
+      conn->AddTrack(audio_track, {kStreamId});
+  } 
   
 
-    using std::placeholders::_1;
-    assert(_videoCapture->video());
-    auto oparams = _videoCapture->video()->oparams;
-    //auto source = new VideoPacketSource();
-     VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>();
-    _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
-    
-
-      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-          factory->CreateVideoTrack(kVideoLabel, VideoCapturer));
+  if (_videoCapture->video())
+  {
+      using std::placeholders::_1;
+      assert(_videoCapture->video());
+      auto oparams = _videoCapture->video()->oparams;
+      //auto source = new VideoPacketSource();
+       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>();
+      _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
       
-       video_track->set_enabled(true);
-       conn->AddTrack(video_track, {kStreamId});
+
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
+            factory->CreateVideoTrack(kVideoLabel, VideoCapturer));
+        
+         video_track->set_enabled(true);
+         conn->AddTrack(video_track, {kStreamId});
+    }
 
       //stream->AddTrack(video_track);
 

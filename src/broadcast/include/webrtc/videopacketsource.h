@@ -48,6 +48,9 @@ public:
     bool remote() const override;
     bool is_screencast() const override;
     absl::optional<bool> needs_denoising() const override;
+    
+private:
+    mutable volatile int ref_count_;
 
 protected:
     cricket::VideoFormat _captureFormat;

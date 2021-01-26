@@ -125,7 +125,7 @@ void AudioPacketModule::updateProcessing(bool start)
 {
     if (start) {
         if (!_processThread) {
-           // _processThread.reset(new rtc::Thread());  //arvind
+            _processThread = rtc::Thread::Create();
             _processThread->Start();
         }
         _processThread->Post(RTC_FROM_HERE, this, MSG_START_PROCESS);
@@ -207,7 +207,7 @@ void AudioPacketModule::sendFrameP()
 void AudioPacketModule::receiveFrameP()
 {
     assert(_processThread->IsCurrent());
-    assert(0 && "playout not implemented");
+   // assert(0 && "playout not implemented");
 
     // {
     //   rtc::CritScope cs(&_critCallback);
