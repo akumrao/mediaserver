@@ -129,7 +129,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
     int crop_x;
     int crop_y;
     int64_t timestamp;
-    int64_t translated_camera_time_us;
+   // int64_t translated_camera_time_us;
 
 #if WebRTC_USE_DECODER_PTS
     // Set the packet timestamp.
