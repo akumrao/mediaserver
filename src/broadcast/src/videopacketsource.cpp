@@ -148,17 +148,16 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
      timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
 #endif
 
-    // if (!AdaptFrame(packet.width, packet.height,
-    //     timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
-    //     rtc::TimeMicros(), //0, 0,
-    //     &adapted_width, &adapted_height,
-    //     &crop_width, &crop_height,
-    //     &crop_x, &crop_y, &translated_camera_time_us)) {
-    //     LWarn("Adapt frame failed", packet.time)
-    //     return;
-    // }
+     if (!AdaptFrame(packet.width, packet.height,
+         timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+         &adapted_width, &adapted_height,
+         &crop_width, &crop_height,
+         &crop_x, &crop_y)) {
+         //LWarn("Adapt frame failed", packet.time)
+         return;
+     }
 
-    int64_t TimestampUs = rtc::TimeMicros();
+   // int64_t TimestampUs = rtc::TimeMicros();
     rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Copy(
             packet.width, packet.height,
             packet.buffer[0], packet.linesize[0],
@@ -169,7 +168,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
 		set_video_frame_buffer(buffer).
 		set_rotation(webrtc::kVideoRotation_0).
-		set_timestamp_us(TimestampUs).
+		set_timestamp_us(timestamp).
 		build();
 
 	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
