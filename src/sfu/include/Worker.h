@@ -10,27 +10,21 @@
 #include <string>
 #include <unordered_map>
 
-#include "base/logger.h"
 #include "base/thread.h"
 #include "base/queue.h"
-#include "LoggerTag.h"
 
 using json = nlohmann::json;
 
-
-template <class T = Channel::Request>
-class Worker: public base::SyncQueue<T>
+class Worker : public base::Thread
 {
 public:
-    typedef base::SyncQueue<T> Queue;
-        Worker(int maxSize = 1024)
-           : Queue(maxSize)
-        {
+	 Worker();
+	~Worker();
 
-        }
-
-        ~Worker();
-      
+     
+        base::Queue<Channel::Request*> qEvent;
+        
+        inline void  dispatch();
 private:
 	void Close();
        	void FillJson(json& jsonObject) const;
@@ -38,12 +32,10 @@ private:
 	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
         void OnChannelRequest(Channel::Request* request);
-        void dispatch(T& item);
+        //void dispatch(T& item);
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-        
-       
         void run();
 	void OnChannelClosed() ;
 
@@ -60,6 +52,11 @@ private:
 	
 	// Others.
 	bool closed{ false };
+        
+        uv_idle_t *idler{nullptr};
+        
+        std::mutex _mutex;
+   
 };
 
 #endif
