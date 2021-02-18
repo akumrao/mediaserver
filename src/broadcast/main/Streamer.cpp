@@ -39,11 +39,11 @@ std::string sampleDataDir(const std::string& file) {
 }
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Info));
 
 
     // Setup WebRTC environment
-    rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE); // LS_VERBOSE, LS_INFO, LERROR
+    rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // LS_VERBOSE, LS_INFO, LS_ERROR
     // rtc::LogMessage::LogTimestamps();
     // rtc::LogMessage::LogThreads();
 

@@ -118,7 +118,7 @@ namespace base {
                 type = m["type"].get<std::string>();
             }
 
-            LDebug("Peer message: ", from)
+            LInfo("Peer message: ", from, type )
 
             if (std::string("offer") == type) {
                 //assert(0 && "offer not supported");
@@ -286,8 +286,9 @@ namespace base {
                 // });
 
                 if (room != "") {
-                    socket->emit("create or join", room);
-                            LTrace("Attempted to create or  join room ", room);
+//                    socket->emit("create or join", room);
+//                            LTrace("Attempted to create or  join room ", room);
+                   socket->emit("CreateSFU");
                 }
 
 

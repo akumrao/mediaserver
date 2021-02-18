@@ -3,7 +3,7 @@
 var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
-var localStream;
+//var localStream;
 var pc;
 var remoteStream;
 var turnReady;
@@ -45,13 +45,12 @@ socket.on('full', function(room) {
   console.log('Room ' + room + ' is full');
 });
 
-socket.on('join', function (room){
-  console.log('Another peer made a request to join room ' + room);
+socket.on('join', function (room, id, numClients){
+  console.log('This peer is the initiator of room ' + room + '!' +" client id " + id);
   console.log('This peer is the initiator of room ' + room + '!');
   isChannelReady = true;
 });
-
-socket.on('joined', function(room, id) {
+socket.on('joined', function(room, id, numClients) {
  console.log('joined: ' + room + ' with peerID: ' + id);
  log('joined: ' + room + ' with peerID: ' + id);
   isChannelReady = true;
@@ -83,7 +82,8 @@ socket.on('log', function(array) {
 function sendMessage(message) {
   console.log('Client sending message: ', message);
   log('Client sending message: ', message);
-  socket.emit('message', message);
+  //socket.emit('message', message);
+  socket.emit('sfu-message', message);
 }
 
 // This client receives a message
@@ -126,28 +126,34 @@ socket.on('message', function(message) {
 
 ////////////////////////////////////////////////////
 
-var localVideo = document.querySelector('#localVideo');
+// var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
-navigator.mediaDevices.getUserMedia({
-  audio: true,
-  video: true
-})
-.then(gotStream)
-.catch(function(e) {
-  alert('getUserMedia() error: ' + e.name);
-});
+// navigator.mediaDevices.getUserMedia({
+//   audio: true,
+//   video: true
+// })
+// .then(gotStream)
+// .catch(function(e) {
+//   alert('getUserMedia() error: ' + e.name);
+// });
 
-function gotStream(stream) {
-  console.log('Adding local stream.');
-  localStream = stream;
-  localVideo.srcObject = stream;
-  sendMessage('got user media');
-    isInitiator = true;
-  if (isInitiator) {
-    maybeStart();
-  }
-}
+// function gotStream(stream) {
+//   console.log('Adding local stream.');
+//   localStream = stream;
+//   localVideo.srcObject = stream;
+//   sendMessage('got user media');
+//     isInitiator = true;
+//   if (isInitiator) {
+//     maybeStart();
+//   }
+// }
+
+//arvind else  if no gotStream
+isInitiator = true;
+if (isInitiator) {
+     maybeStart();
+   }
 
 var constraints = {
   video: true
@@ -155,18 +161,18 @@ var constraints = {
 
 console.log('Getting user media with constraints', constraints);
 
-if (location.hostname !== 'localhost') {
-  requestTurn(
-    'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
-  );
-}
+// if (location.hostname !== 'localhost') {
+//   requestTurn(
+//     'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
+//   );
+// }
 
 function maybeStart() {
-  console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
-  if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
+  console.log('>>>>>>> maybeStart() ', isStarted, isChannelReady);
+  if (!isStarted  && isChannelReady) {
     console.log('>>>>>> creating peer connection');
     createPeerConnection();
-    pc.addStream(localStream);
+   // pc.addStream(localStream);
     isStarted = true;
     console.log('isInitiator', isInitiator);
    // if (isInitiator) {
@@ -254,34 +260,34 @@ function onCreateSessionDescriptionError(error) {
   
 }
 
-function requestTurn(turnURL) {
-  var turnExists = false;
-  for (var i in pcConfig.iceServers) {
-    if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
-      turnExists = true;
-      turnReady = true;
-      break;
-    }
-  }
-  if (!turnExists) {
-    console.log('Getting TURN server from ', turnURL);
-    // No TURN server. Get one from computeengineondemand.appspot.com:
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var turnServer = JSON.parse(xhr.responseText);
-        console.log('Got TURN server: ', turnServer);
-        pcConfig.iceServers.push({
-          'urls': 'turn:' + turnServer.username + '@' + turnServer.turn,
-          'credential': turnServer.password
-        });
-        turnReady = true;
-      }
-    };
-    xhr.open('GET', turnURL, true);
-    xhr.send();
-  }
-}
+// function requestTurn(turnURL) {
+//   var turnExists = false;
+//   for (var i in pcConfig.iceServers) {
+//     if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
+//       turnExists = true;
+//       turnReady = true;
+//       break;
+//     }
+//   }
+//   if (!turnExists) {
+//     console.log('Getting TURN server from ', turnURL);
+//     // No TURN server. Get one from computeengineondemand.appspot.com:
+//     var xhr = new XMLHttpRequest();
+//     xhr.onreadystatechange = function() {
+//       if (xhr.readyState === 4 && xhr.status === 200) {
+//         var turnServer = JSON.parse(xhr.responseText);
+//         console.log('Got TURN server: ', turnServer);
+//         pcConfig.iceServers.push({
+//           'urls': 'turn:' + turnServer.username + '@' + turnServer.turn,
+//           'credential': turnServer.password
+//         });
+//         turnReady = true;
+//       }
+//     };
+//     xhr.open('GET', turnURL, true);
+//     xhr.send();
+//   }
+// }
 
 function handleRemoteStreamAdded(event) {
   console.log('Remote stream added.');
@@ -313,5 +319,5 @@ function stop() {
   isStarted = false;
   pc.close();
   pc = null;
-  localStream=null;
+  //localStream=null;
 }

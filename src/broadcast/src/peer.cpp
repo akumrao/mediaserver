@@ -45,10 +45,10 @@ Peer::Peer(PeerManager* manager,
     _config.bundle_policy  =  webrtc::PeerConnectionInterface::kBundlePolicyMaxBundle;
     _config.type = webrtc::PeerConnectionInterface::kAll;
     _config.candidate_network_policy = webrtc::PeerConnectionInterface::kCandidateNetworkPolicyLowCost;
-    _config.min_port =11501;
-    _config.max_port =12560;
-    _config.enable_ice_renomination = true;
-    _config.ice_candidate_pool_size=1;
+   // _config.min_port =11501;
+   // _config.max_port =12560;
+   // _config.enable_ice_renomination = true;
+    //_config.ice_candidate_pool_size=1;
     
     
 }
@@ -128,6 +128,8 @@ void Peer::createOffer()
     //assert(_mode == Offer);
     //assert(_peerConnection);
 
+     LInfo(_peerid, ": Create Offer")
+             
      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 
     options.offer_to_receive_audio = true;
@@ -140,7 +142,7 @@ void Peer::createOffer()
 
 void Peer::recvSDP(const std::string& type, const std::string& sdp)
 {
-    LDebug(_peerid, ": Receive ", type, ": ", sdp)
+    LInfo(_peerid, ": Received answer ", type, ": ", sdp)
 
     webrtc::SdpParseError error;
     webrtc::SessionDescriptionInterface* desc(
@@ -158,9 +160,10 @@ void Peer::recvSDP(const std::string& type, const std::string& sdp)
  
     if (type == "offer") {
        // assert(_mode == Answer);
+         LError(_peerid, ": wrong state Received ", type, ": ", sdp)
         _peerConnection->CreateAnswer(this, options);
     } else {
-       // assert(_mode == Offer);
+      
     }
 }
 
@@ -301,14 +304,14 @@ void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
     cricket::SessionDescription* desc1 = desc->description();
     
  
-     for (const auto& content : desc1->contents()) {
-        auto* transport_info = desc1->GetTransportInfoByName(content.name);
-        transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
-       // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
-        transport_info->description.transport_options.clear();
-         transport_info->description.transport_options.push_back("renomination");
-        
-      }
+//     for (const auto& content : desc1->contents()) {
+//        auto* transport_info = desc1->GetTransportInfoByName(content.name);
+//        transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
+//       // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
+//        transport_info->description.transport_options.clear();
+//         transport_info->description.transport_options.push_back("renomination");
+//        
+//      }
     
     _peerConnection->SetLocalDescription(
         DummySetSessionDescriptionObserver::Create(), desc);
