@@ -30,7 +30,9 @@ MultiplexMediaCapturer::MultiplexMediaCapturer()
     // _stream.attach(std::make_shared<av::RealtimePacketQueue<av::PlanarVideoPacket>>(0), 5);
   //  _stream.emitter += packetSlot(_audioModule.get(), &AudioPacketModule::onAudioCaptured);
     
-    _videoCapture->cbProcessAudio = std::bind(&AudioPacketModule::onAudioCaptured , _audioModule.get(), _1);
+    ff::MediaCapture::function_type var = std::bind(&AudioPacketModule::onAudioCaptured , _audioModule.get(), _1);
+
+    _videoCapture->cbProcessAudio.push_back(var);
 }
 
 
@@ -161,7 +163,10 @@ void MultiplexMediaCapturer::addMediaTracks(
       auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
        VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
-      _videoCapture->cbProcessVideo = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+       
+       ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+
+      _videoCapture->cbProcessVideo.push_back(var);
       
 
         rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
@@ -194,7 +199,7 @@ void MultiplexMediaCapturer::start()
 void MultiplexMediaCapturer::stop()
 {
   // _stream.stop();
-    _videoCapture->stop();
+    //_videoCapture->stop();
 }
 
 

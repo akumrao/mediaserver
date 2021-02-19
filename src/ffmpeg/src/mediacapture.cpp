@@ -131,15 +131,21 @@ namespace base {
 
             //if(!isStable)
             // return;
-
-            if (cbProcessAudio && packet.className() == std::string("PlanarAudioPacket")) {
-                LTrace("Emit: Audio size ", packet.size(), ", ", packet.className())
-                cbProcessAudio(packet);
+            
+            for (auto f : cbProcessAudio)
+            { 
+                if (f && packet.className() == std::string("PlanarAudioPacket")) {
+                    LTrace("Emit: Audio Size  ", packet.size(), ", ", packet.className())
+                    f(packet);
+                }
             }
-
-            if (cbProcessVideo && packet.className() == std::string("PlanarVideoPacket")) {
-                LTrace("Emit: Video Size  ", packet.size(), ", ", packet.className())
-                cbProcessVideo(packet);
+            
+            for (auto f : cbProcessVideo)
+            { 
+                if (f && packet.className() == std::string("PlanarVideoPacket")) {
+                    LTrace("Emit: Video Size  ", packet.size(), ", ", packet.className())
+                    f(packet);
+                }
             }
 
             /// This method ensures compatibility with the given

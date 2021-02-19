@@ -68,8 +68,16 @@ public:
 
         void emit(IPacket& packet);
         
-        std::function<void(IPacket&) > cbProcessAudio;
-        std::function<void(IPacket&) > cbProcessVideo;  
+       // std::function<void(IPacket&) > cbProcessAudio;
+       // std::function<void(IPacket&) > cbProcessVideo;  
+        
+        using function_type = std::function<void(IPacket&) > ;
+
+  
+        // here we will store all binded functions 
+        std::vector<function_type> cbProcessVideo;
+        std::vector<function_type> cbProcessAudio;
+  
         
 protected:
     virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams);
