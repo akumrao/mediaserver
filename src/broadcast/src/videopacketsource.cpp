@@ -22,8 +22,8 @@ namespace base {
 namespace wrtc {
 
 
-VideoPacketSource::VideoPacketSource()
-    : _rotation(webrtc::kVideoRotation_0)
+VideoPacketSource::VideoPacketSource(std::string &playerId):playerId(playerId)
+    , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
 //    , _source(nullptr)
@@ -117,7 +117,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
     
     ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
     
-    LTrace("On video frame: ", packet.width, 'x', packet.height)
+   
 
     assert(packet.width > 0);
     assert(packet.height > 0);
@@ -172,7 +172,8 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
 		build();
 
 	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
-	OnFrame(Frame);  //arvind
+     SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
+     OnFrame(Frame);  //arvind
         
 
     // OnFrame(webrtc::VideoFrame(

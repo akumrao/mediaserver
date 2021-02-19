@@ -21,7 +21,7 @@ CMemLeakDetect memLeakDetect;
 #endif
  */
 
-#define SERVER_HOST "127.0.0.1"
+#define SERVER_HOST "sfu"
 #define SERVER_PORT 8080 //443
 #define JOIN_ROOM  "foo"        
 
@@ -61,12 +61,12 @@ int main(int argc, char** argv) {
 
     // test._capturer.start();
 
-    auto rtcthread = rtc::Thread::Current();
-    Idler rtc([rtcthread]() {
-        rtcthread->ProcessMessages(3);
-       // LTrace(" rtcthread->ProcessMessages")
-        base::sleep(1000);
-    });
+//    auto rtcthread = rtc::Thread::Current();
+//    Idler rtc([rtcthread]() {
+//        rtcthread->ProcessMessages(3);
+//       // LTrace(" rtcthread->ProcessMessages")
+//        base::sleep(1000);
+//    });
 
     LTrace("app.run() run start")
     app.run();

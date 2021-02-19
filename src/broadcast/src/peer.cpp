@@ -56,7 +56,7 @@ Peer::Peer(PeerManager* manager,
 
 Peer::~Peer()
 {
-    LDebug(_peerid, ": Destroying")
+    LInfo(_peerid, ": Destroying")
     // closeConnection();
 
     if (_peerConnection) {
@@ -110,7 +110,7 @@ void Peer::createConnection()
 
 void Peer::closeConnection()
 {
-    LDebug(_peerid, ": Closing")
+    LInfo(_peerid, ": Closing")
 
     if (_peerConnection) {
         _peerConnection->Close();
@@ -183,7 +183,7 @@ void Peer::recvCandidate(const std::string& mid, int mlineindex,
 
 void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state)
 {
-    LDebug(_peerid, ": On signaling state change: ", new_state)
+    LInfo(_peerid, ": On signaling state change: ", new_state)
 
     switch (new_state) {
         case webrtc::PeerConnectionInterface::kStable:
@@ -203,31 +203,32 @@ void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state)
 {
-    LDebug(_peerid, ": On ICE connection change: ", new_state)
+    LInfo(_peerid, ": On ICE connection change: ", new_state)
 }
 
 
 void Peer::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state)
 {
-    LDebug(_peerid, ": On ICE gathering change: ", new_state)
+    LInfo(_peerid, ": On ICE gathering change: ", new_state)
 }
 
 
 void Peer::OnRenegotiationNeeded()
 {
-    LDebug(_peerid, ": On renegotiation needed")
+    LInfo(_peerid, ": On renegotiation needed")
 }
 
 
 void Peer::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
+    LInfo(_peerid, ": OnAddStream")
     // proxy to deprecated OnAddStream method
     OnAddStream(stream.get());
 }
 
  void Peer::OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
 
-     LDebug(_peerid, ": OnTrack")
+     LInfo(_peerid, ": OnTrack")
     //_manager->onAddRemoteTrack(this, transceiver.get());
      
 //    const char * pMid  = transceiver->mid()->c_str();
@@ -251,16 +252,22 @@ void Peer::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 //    }
 
  }
+ 
+void Peer::OnRemoveTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver)
+{
+    LInfo(_peerid, ": OnRemoveTrack")
+}
 
 void Peer::OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
-    // proxy to deprecated OnRemoveStream method
+    LInfo(_peerid, ": OnRemoveStream")
     OnRemoveStream(stream.get());
 }
 
 
 void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream)
 {
+    LInfo(_peerid, ": OnDataChannel")
     assert(0 && "virtual");
 }
 
@@ -269,7 +276,7 @@ void Peer::OnAddStream(webrtc::MediaStreamInterface* stream)
 {
     //assert(_mode == Answer);
 
-    LDebug(_peerid, ": On add stream")
+    LInfo(_peerid, ": On add stream")
     _manager->onAddRemoteStream(this, stream);
 }
 
@@ -278,7 +285,7 @@ void Peer::OnRemoveStream(webrtc::MediaStreamInterface* stream)
 {
     //assert(_mode == Answer);
 
-    LDebug(_peerid, ": On remove stream")
+    LInfo(_peerid, ": On remove stream")
     _manager->onRemoveRemoteStream(this, stream);
 }
 
@@ -299,7 +306,7 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
 
 void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
 {
-    LDebug(_peerid, ": Set local description")
+    LInfo(_peerid, ": Set local description")
             
     cricket::SessionDescription* desc1 = desc->description();
     

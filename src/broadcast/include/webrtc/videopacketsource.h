@@ -27,7 +27,7 @@ namespace wrtc {
 class VideoPacketSource : public rtc::AdaptedVideoTrackSource
 {
 public:
-    VideoPacketSource();
+    VideoPacketSource(std::string &playerId);
     VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
 
@@ -51,6 +51,7 @@ public:
     
 private:
     mutable volatile int ref_count_;
+    std::string playerId;
 
 protected:
     cricket::VideoFormat _captureFormat;

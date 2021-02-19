@@ -140,54 +140,6 @@ async function runSocketServer() {
 		  console.log("unsubscribe " + socket.id);
 
 
-		  // var room_list = {};
-		  // var rooms = socket.adapter.rooms;
-		  //
-		  // for (var room in rooms){
-			//   if (!rooms[room].hasOwnProperty(room)) {
-			// 	  console.log(rooms[room]);
-			// 	  room_list[room] = Object.keys(rooms[room]).length;
-			//   }
-		  // }
-		  // console.log(room_list);
-
-
-		  // var rooms = socket.adapter.rooms;
-		  //
-		  // for(var room in rooms  ) {
-		  //
-			//   if( Object.keys(rooms[room].sockets)[0] == room )
-			// 	  continue;
-		  //
-			//   var clientsInRoom = io.sockets.adapter.rooms[room];
-			//   var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-		  //
-		  //
-		  //
-			//   console.log("Number of participant " + numClients + " for room " + room);
-			//   var message = {
-			// 	  room: room,
-			// 	  type: "subscribe"
-			//   };
-			//   var revClient = [];
-			//   revClient.push(socket.id);
-		  //
-			//   for (const member in clientsInRoom.sockets) {
-		  //
-			// 	  if (member !== message.from) {
-			// 		  message.from = member;
-			// 		  message.desc = revClient;
-			// 		  console.log('unsubscribe: ', message);
-			// 		  io.sockets.connected[serverSocketid].emit('message', message);
-		  //
-			// 	  }
-			//   }
-		  // }
-
-
-
-		  ///////////////////////////////////////////////////////////////////
-
 	  }
 
 
@@ -279,53 +231,7 @@ async function runSocketServer() {
 
 		message.from = socket.id;
 
-		if(message.type ==="subscribe")
-		{
-			console.log("subscribe");
-
-			var clientsInRoom = io.sockets.adapter.rooms[message.room];
-			var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-
-			if(numClients < 1)
-			{
-				console.log("Number of participant " + numClients );
-				return;
-			}
-
-			console.log("Number of participant " + numClients );
-			let objCopy = Object.assign({}, message);
-			//var revMessage = message.clone();
-			let revClient = [];
-			revClient.push(message.from);
-
-
-
-
-			let clients = [];
-
-			console.log("message.from "+ message.from);
-			for( const member in clientsInRoom.sockets ) {
-
-				if( member !==  message.from ) {
-
-					//console.log("member "+ member);
-
-					clients.push(member);
-
-					objCopy.from = member;
-					objCopy.desc = revClient;
-					console.log('app revMessage: ', objCopy);
-					//io.sockets.connected[serverSocketid].emit('message', objCopy);
-
-				}
-			}
-
-
-			message.desc = clients;
-
-			//return;
-		}
-
+		
 		if(socket.user)
 		message.user = socket.user;
 

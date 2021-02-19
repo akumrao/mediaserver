@@ -27,6 +27,8 @@ PeerFactoryContext::PeerFactoryContext(
     rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory,
     rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory)
 {
+    LInfo("PeerFactoryContext")
+            
     // Setup threads
     networkThread = rtc::Thread::CreateWithSocketServer();
     workerThread = rtc::Thread::Create();

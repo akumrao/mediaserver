@@ -81,14 +81,14 @@ namespace base {
         }
 
         void PeerManager::onClosed(Peer* conn) {
-            LDebug("Deleting peer connection: ", conn->peerid())
+            LInfo("Deleting peer connection: ", conn->peerid())
                     //arvind
                     //  if (remove(conn))
                     //        deleteLater<Peer>(conn); // async delete
         }
 
         void PeerManager::onFailure(Peer* conn, const std::string& error) {
-            LDebug("Deleting peer connection: ", conn->peerid())
+            LInfo("Deleting peer connection: ", conn->peerid())
                     //arvind
                      if (remove(conn))
                          delete conn;

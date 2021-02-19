@@ -28,6 +28,8 @@ public:
     ~MultiplexMediaCapturer();
 
     void openFile(const std::string& file, bool loop = true);
+    
+    std::string random_string();
 
     void addMediaTracks(webrtc::PeerConnectionFactoryInterface* factory,
                         webrtc::PeerConnectionInterface* conn);
@@ -44,6 +46,8 @@ protected:
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
+    
+    int PlayerID;
 };
 
 

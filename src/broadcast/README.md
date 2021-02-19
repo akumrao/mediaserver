@@ -1,13 +1,17 @@
 ffmpeg complile 
 
+apt install libsdl2-dev libsdl2-2.0-0 -y;
+apt install libfdk-aac
 git clone git@github.com:FFmpeg/FFmpeg.git  ffmpeg
 git checkout release/3.3
 
-./configure --disable-yasm --enable-shared  --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
+./configure --disable-yasm --enable-shared  --enable-ffplay--enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
 
- ./configure --disable-yasm --enable-shared  --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
+ ./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
 
 make -j8
+
+
 
 
 To debug webrtc
@@ -37,20 +41,22 @@ A script is provided for Ubuntu, which is unfortunately only available after you
 
 https://webrtc.github.io/webrtc-org/native-code/development/
 
+export PATH=/export/webrtc/depot_tools:$PATH
+
 - mkdir webrtc-checkout
 - cd webrtc-checkout
 - fetch --nohooks webrtc
 - gclient sync
 
-
+ Note: Remove ffmpeg internal build from webrtc with rtc_use_h264=false
 
 - $ cd src
 - $ git checkout -b m84 refs/remotes/branch-heads/4147
 - $ gclient sync
 - In OSX 10.14.16 this works:
-- $ gn gen out/m84 --args='is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true mac_deployment_target="10.11" use_custom_libcxx=false'
+- $ gn gen out/m84 --args='is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=true mac_deployment_target="10.11" use_custom_libcxx=false'
 - In Linux Debian Stretch with GCC 6.3 this works:
-- $ gn gen out/m84 --args='is_debug=true is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
+- $ gn gen out/m84 --args='is_debug=true is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
 
 
 - Then build it:

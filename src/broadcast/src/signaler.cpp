@@ -25,6 +25,9 @@ namespace base {
 
         void Signaler::startStreaming(const std::string& file, bool looping) {
             // Open the video file
+            
+             SInfo << "Open File " <<  file;
+                     
             _capturer.openFile(file, looping);
             // _capturer.start();
         }
@@ -156,25 +159,25 @@ namespace base {
         }
 
         void Signaler::onStable(wrtc::Peer* conn) {
-            LTrace("Start FFMPEG Capture")
+            LInfo("Start FFMPEG Capture")
             _capturer.start();
         }
 
         void Signaler::onClosed(wrtc::Peer* conn) {
-            LTrace("stop FFMPEG Capture")
+            LInfo("stop FFMPEG Capture")
             _capturer.stop();
             wrtc::PeerManager::onClosed(conn);
         }
 
         void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
-            LTrace("onFailure stop FFMPEG Capture")
+            LInfo("onFailure stop FFMPEG Capture")
             _capturer.stop();
             wrtc::PeerManager::onFailure(conn, error);
         }
 
         void Signaler::postMessage(const json& m) {
 
-            LTrace("postMessage", cnfg::stringify(m));
+            LInfo("postMessage", cnfg::stringify(m));
             socket->emit("message", m);
         }
 

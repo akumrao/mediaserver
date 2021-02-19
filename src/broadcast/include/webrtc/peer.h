@@ -78,6 +78,7 @@ protected:
     virtual void OnRemoveStream(webrtc::MediaStreamInterface* stream); ///< @deprecated
     virtual void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override; ///< since 7f0676
     virtual void OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+    virtual void OnRemoveTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver)  override;
     virtual void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override; ///< since 7f0676
     virtual void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream) override; ///< since 7f0676
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
