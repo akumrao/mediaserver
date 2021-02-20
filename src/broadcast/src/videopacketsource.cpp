@@ -172,7 +172,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
 		build();
 
 	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
-     SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
+     //SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
      OnFrame(Frame);  //arvind
         
 

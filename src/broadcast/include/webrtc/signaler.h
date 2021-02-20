@@ -37,7 +37,7 @@ namespace base {
             //void syncMessage(const ipc::Action& action);
 
             void onPeerConnected(std::string& peerID);
-            void onPeerMessage(json const& m);
+            void onPeerMessage(std::string &name , json const& m);
             void onPeerDiconnected(std::string& peerID);
 
 
@@ -50,15 +50,15 @@ namespace base {
 #else
             SocketioClient *client;
             Socket *socket;
-            std::string peerID;
-            std::string remotePeerID;
+            //std::string peerID;
+           // std::string remotePeerID;
 #endif
             wrtc::MultiplexMediaCapturer _capturer;
             wrtc::PeerFactoryContext _context;
 
             //socket* socket{nullptr};
 
-            std::string room;
+           // std::string room;
             bool isChannelReady{false};
             bool isInitiator{false};
             bool isStarted{false};

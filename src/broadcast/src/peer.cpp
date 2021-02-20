@@ -8,7 +8,9 @@
 #include "pc/peer_connection_wrapper.h"
 #include "pc/sdp_utils.h"
 
+
 using std::endl;
+
 
 
 namespace base {
@@ -361,6 +363,28 @@ std::string Peer::token() const
     return _token;
 }
 
+
+ void Peer::mute( const json& m)
+ {
+     bool val = m.get<bool>();
+     
+     SInfo << _peerid <<  ": On mute: " <<  val ;
+     
+    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =  _peerConnection->GetSenders();
+     
+       for (const auto& sender : senders) {
+        rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = sender->track();
+        if( track->kind() =="audio")
+        {
+
+            track->set_enabled(!val); 
+    
+        }
+       
+    }
+     
+ }
+ 
 
 // webrtc::FakeConstraints& Peer::constraints()
 // {

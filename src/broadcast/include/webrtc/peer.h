@@ -6,10 +6,8 @@
 #include "webrtc/peerfactorycontext.h"
 
 #include "api/jsep.h"
-//#include "api/peerconnectioninterface.h"
-//#include "api/test/fakeconstraints.h"
-//#include "p2p/client/basicportallocator.h"
-
+#include <json/json.hpp>
+using json = nlohmann::json;
 
 namespace base {
 namespace wrtc {
@@ -67,6 +65,9 @@ public:
 
     std::string peerid() const;
     std::string token() const;
+    
+    void mute( const json& message);
+     
     //webrtc::FakeConstraints& constraints();
     webrtc::PeerConnectionFactoryInterface* factory() const;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection() const;

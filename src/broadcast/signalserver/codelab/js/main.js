@@ -8,10 +8,10 @@ var pc;
 var remoteStream;
 var turnReady;
 
-var room = 'foo'; /*think as a group  peerName@room */
+var roomId = 'foo'; /*think as a group  peerName@room */
 //var  remotePeerID;
 var  peerID;
-var  remotePeerName;
+//var  remotePeerName;
 var  peerName;
 
 
@@ -60,7 +60,7 @@ socket.on('joined', function(room, id, numClients) {
     // doCall();
     // disable  send message 
      sendMessage ({
-      from: peerID,
+      room: roomId,
       //to: remotePeerID,
       type: 'offer',
       desc:'sessionDescription'
@@ -162,9 +162,9 @@ function maybeStart() {
    // if (isInitiator) {
      // doCall();
    // }
-      if (room !== '') {
-        socket.emit('create or join', room);
-        console.log('Attempted to create or  join room', room);
+      if (roomId !== '') {
+        socket.emit('create or join', roomId);
+        console.log('Attempted to create or  join room', roomId);
       }
 
 
@@ -173,7 +173,7 @@ function maybeStart() {
 
 window.onbeforeunload = function() {
     sendMessage({
-      from: peerID,
+      room: roomId,
       //to: remotePeerID,
       type: 'bye'
     });
@@ -211,7 +211,7 @@ function handleIceCandidate(event) {
   console.log('icecandidate event: ', event);
   if (event.candidate) {
     sendMessage({
-      from: peerID,
+      room: roomId,
       //to: remotePeerID,
       type: 'candidate',
       candidate: event.candidate
@@ -243,7 +243,7 @@ function setLocalAndSendMessage(sessionDescription) {
   console.log('setLocalAndSendMessage sending message', sessionDescription);
 
    sendMessage ({
-      from: peerID,
+      room: roomId,
       //to: remotePeerID,
       type: sessionDescription.type,
       desc:sessionDescription
@@ -299,7 +299,7 @@ function hangup() {
   console.log('Hanging up.');
   stop();
   sendMessage({
-      from: peerID,
+      room: roomId,
       //to: remotePeerID,
       type: 'bye'
     });
@@ -339,40 +339,75 @@ pc.ontrack = ({transceiver, streams: [stream]}) => {
   transceiver.receiver.track.onunmute = () => {
      console.log("transceiver.receiver.track.onunmute " + track.id);
     remoteVideo.srcObject = stream;
+
+     var atracks =  streams.getAudioTracks();
+
+      for (var tsn in atracks) 
+      {
+             var trc = atracks[tsn];
+              trc.enable = false;
+
+             var x = 1;
+      }
+            
+
+
   };
 };
 
 
-   pc.addEventListener('iceconnectionstatechange', () =>
-    {
-        switch (pc.iceConnectionState)
-        {
-            case 'checking':
-                console.log( 'subscribing...');
-                break;
-            case 'connected':
-            case 'completed':
+ pc.addEventListener('iceconnectionstatechange', () =>
+  {
+      switch (pc.iceConnectionState)
+      {
+          case 'checking':
+              console.log( 'subscribing...');
+              break;
+          case 'connected':
+          case 'completed':
 
 
-                console.log( 'subscribed...');
+              console.log( 'subscribed...');
 
-                break;
-            case 'failed':
-               // pc2.close();
+              break;
+          case 'failed':
+             // pc2.close();
 
-                console.log( 'failed...');
-                break;
-            case 'disconnected':
-               // pc2.close();
-                console.log( 'Peerconnection disconnected...');
-                break;
-            case 'closed':
-                //pc2.close();
-                console.log( 'failed...');
-                break;
-        }
+              console.log( 'failed...');
+              break;
+          case 'disconnected':
+             // pc2.close();
+              console.log( 'Peerconnection disconnected...');
+              break;
+          case 'closed':
+              //pc2.close();
+              console.log( 'failed...');
+              break;
+      }
+  });
+
+
+
+function onMuteClick() {
+  // Get the checkbox
+  var checkBox = document.getElementById("checkmute");
+  // Get the output text
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    //text.style.display = "block";
+  } else {
+    //text.style.display = "none";
+  }
+
+
+  sendMessage ({
+      room: roomId,
+      //to: remotePeerID,
+      type: 'mute',
+      desc: checkBox.checked
     });
 
+}
 
    // pc.ontrack = ({transceiver, streams: [stream]})
 

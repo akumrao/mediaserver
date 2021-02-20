@@ -93,12 +93,6 @@ namespace SdpParse {
             if (m.find("to") != m.end()) {
                 to = m["to"].get<std::string>();
             }
-//            else
-//            {
-//                SError << " On Peer message is missing participant id ";
-//               // return;
-//            }
-            
 
             if (m.find("from") != m.end()) {
                 from = m["from"].get<std::string>();
