@@ -337,18 +337,18 @@ pc.ontrack = ({transceiver, streams: [stream]}) => {
   transceiver.receiver.track.onmute = () => console.log("transceiver.receiver.track.onmute " + track.id);
   transceiver.receiver.track.onended = () => console.log("transceiver.receiver.track.onended " + track.id);
   transceiver.receiver.track.onunmute = () => {
-     console.log("transceiver.receiver.track.onunmute " + track.id);
-    remoteVideo.srcObject = stream;
+  console.log("transceiver.receiver.track.onunmute " + track.id);
+  remoteVideo.srcObject = stream;
 
-     var atracks =  streams.getAudioTracks();
+     // var atracks =  streams.getAudioTracks();
 
-      for (var tsn in atracks) 
-      {
-             var trc = atracks[tsn];
-              trc.enable = false;
+     //  for (var tsn in atracks) 
+     //  {
+     //         var trc = atracks[tsn];
+     //          trc.enable = false;
 
-             var x = 1;
-      }
+     //         var x = 1;
+     //  }
             
 
 
