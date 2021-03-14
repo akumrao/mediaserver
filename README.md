@@ -49,7 +49,7 @@ g++ --version
 clang --version
 clang++ --version
 
-optional
+optional only for Clang wihout stdlib required
 apt-get install libc++abi-dev
 apt-get install libc++-dev
 apt-get install libsctp-dev
