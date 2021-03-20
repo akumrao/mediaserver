@@ -372,14 +372,14 @@ std::string Peer::token() const
      
     std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =  _peerConnection->GetSenders();
      
-       for (const auto& sender : senders) {
-        rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = sender->track();
-        if( track->kind() =="audio")
-        {
+    for (const auto& sender : senders) {
+     rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = sender->track();
+     if( track->kind() =="audio")
+     {
 
-            track->set_enabled(!val); 
-    
-        }
+         track->set_enabled(!val); 
+
+     }
        
     }
      

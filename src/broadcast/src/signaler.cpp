@@ -117,7 +117,7 @@ namespace base {
             std::string to;
             std::string user;
 	 
-                if (m.find("to") != m.end()) {
+            if (m.find("to") != m.end()) {
                 to = m["to"].get<std::string>();
             }
 
@@ -277,7 +277,6 @@ namespace base {
                 }));
 
 
-
                 // Leaving rooms and disconnecting from peers.
                 socket->on("disconnectClient", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                      LTrace(cnfg::stringify(data));
@@ -291,10 +290,7 @@ namespace base {
    
                 }));
 
-
-
-
-                   socket->emit("CreateSFU");
+                socket->emit("CreateSFU");
 
 
             }));
