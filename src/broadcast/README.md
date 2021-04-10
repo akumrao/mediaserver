@@ -7,10 +7,12 @@ git checkout release/3.3
 
 ./configure --disable-yasm --enable-shared  --enable-ffplay--enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
 
+do it 
  ./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
 
 make -j8
 
+make install
 
 
 
