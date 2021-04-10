@@ -11,11 +11,46 @@
 
 using std::endl;
 
-
-
 namespace base {
 namespace wrtc {
 
+ 
+
+cricket::Candidate CreateLocalUdpCandidate(
+	const rtc::SocketAddress& address) {
+	cricket::Candidate candidate;
+	candidate.set_component(cricket::ICE_CANDIDATE_COMPONENT_DEFAULT);
+	candidate.set_protocol(cricket::UDP_PROTOCOL_NAME);
+	candidate.set_address(address);
+	candidate.set_type(cricket::LOCAL_PORT_TYPE);
+	return candidate;
+}
+
+cricket::Candidate CreateLocalTcpCandidate(
+	const rtc::SocketAddress& address) {
+	cricket::Candidate candidate;
+	candidate.set_component(cricket::ICE_CANDIDATE_COMPONENT_DEFAULT);
+	candidate.set_protocol(cricket::TCP_PROTOCOL_NAME);
+	candidate.set_address(address);
+	candidate.set_type(cricket::LOCAL_PORT_TYPE);
+	candidate.set_tcptype(cricket::TCPTYPE_PASSIVE_STR);
+	return candidate;
+}
+
+
+
+bool AddCandidateToFirstTransport(cricket::Candidate* candidate,
+	webrtc::SessionDescriptionInterface* sdesc) {
+	auto* desc = sdesc->description();
+	//RTC_DCHECK(desc->contents().size() > 0);
+	const auto& first_content = desc->contents()[0];
+	candidate->set_transport_name(first_content.name);
+	std::unique_ptr<webrtc::IceCandidateInterface> jsep_candidate =
+		webrtc::CreateIceCandidate(first_content.name, 0, *candidate);
+	return sdesc->AddCandidate(jsep_candidate.get());
+}
+
+    
 
 Peer::Peer(PeerManager* manager,
            PeerFactoryContext* context,
@@ -212,6 +247,12 @@ void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionS
 void Peer::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state)
 {
     LInfo(_peerid, ": On ICE gathering change: ", new_state)
+    
+    if( new_state == webrtc::PeerConnectionInterface::kIceGatheringComplete)
+    {
+        createOffer();
+        hasIceLiteOffer=true;
+    }
 }
 
 
@@ -301,8 +342,12 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
         return;
     }
 
-    _manager->sendCandidate(this, candidate->sdp_mid(),
-                            candidate->sdp_mline_index(), sdp);
+     LInfo(_peerid, sdp);
+
+   // _manager->sendCandidate(this, candidate->sdp_mid(),
+    //                        candidate->sdp_mline_index(), sdp);
+
+ 
 }
 
 
@@ -313,27 +358,41 @@ void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
     cricket::SessionDescription* desc1 = desc->description();
     
  
-//     for (const auto& content : desc1->contents()) {
-//        auto* transport_info = desc1->GetTransportInfoByName(content.name);
-//        transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
-//       // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
-//        transport_info->description.transport_options.clear();
-//         transport_info->description.transport_options.push_back("renomination");
-//        
-//      }
+    for (const auto& content : desc1->contents()) {
+       auto* transport_info = desc1->GetTransportInfoByName(content.name);
+       transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
+      // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
+       transport_info->description.transport_options.clear();
+        transport_info->description.transport_options.push_back("renomination");
+       
+     }
+    
+    /*
+    const rtc::SocketAddress kCallerAddress1("192.168.0.17", 1111);
+    cricket::Candidate candidate1 = CreateLocalUdpCandidate(kCallerAddress1);
+    AddCandidateToFirstTransport(&candidate1, SDP);
+    const rtc::SocketAddress kCallerAddress2("192.168.0.17", 1001);
+    cricket::Candidate candidate2 = CreateLocalTcpCandidate(kCallerAddress2);
+    AddCandidateToFirstTransport(&candidate2, SDP);
+    */
     
     _peerConnection->SetLocalDescription(
         DummySetSessionDescriptionObserver::Create(), desc);
 
     // Send an SDP offer to the peer
-    std::string sdp;
-    if (!desc->ToString(&sdp)) {
-        LError(_peerid, ": Failed to serialize local sdp")
-        assert(0);
-        return;
+
+    if(hasIceLiteOffer)
+    {   
+         std::string sdp;
+        if (!desc->ToString(&sdp)) {
+            LError(_peerid, ": Failed to serialize local sdp")
+            assert(0);
+            return;
+        }
+        _manager->sendSDP(this, desc->type(), sdp);
     }
 
-    _manager->sendSDP(this, desc->type(), sdp);
+    
 }
 
 

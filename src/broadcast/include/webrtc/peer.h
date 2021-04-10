@@ -105,6 +105,8 @@ protected:
    // webrtc::FakeConstraints _constraints;
 public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
+
+    bool hasIceLiteOffer{false};
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
     //std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
 };
