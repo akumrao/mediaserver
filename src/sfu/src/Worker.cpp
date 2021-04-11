@@ -10,24 +10,22 @@
 
 Worker::Worker() //: channel(channel)
 {
-    
-    
-    // Set us as Channel's listener.
-   // if(this->channel)
-    //this->channel->SetListener(this);
 
-    // Set the signals handler.
-//	this->signalsHandler = new SignalsHandler(this);
-//
-//	// Add signals to handle.
-//	this->signalsHandler->AddSignal(SIGINT, "INT");
-//	this->signalsHandler->AddSignal(SIGTERM, "TERM");
+	// Set us as Channel's listener.
+       // if(this->channel)
+	//this->channel->SetListener(this);
 
-    // Tell the Node process that we are running. // arvind
-    //Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
+	// Set the signals handler.
+	this->signalsHandler = new SignalsHandler(this);
 
-       this->idler = new uv_idle_t;
-       this->idler->data = this;
+	// Add signals to handle.
+	this->signalsHandler->AddSignal(SIGINT, "INT");
+	this->signalsHandler->AddSignal(SIGTERM, "TERM");
+
+	// Tell the Node process that we are running. // arvind
+	//Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
+
+
 }
 
 Worker::~Worker()
@@ -48,7 +46,7 @@ void Worker::Close()
 	this->closed = true;
 
 	// Delete the SignalsHandler.
-	//delete this->signalsHandler;
+	delete this->signalsHandler;
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
@@ -273,92 +271,42 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	Close();
 }
 
-/*
-
-template <class T>
-inline void  Worker<T>::dispatch(T& item)
+ void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
-    OnChannelRequest(&item);
-    
+	
+
+	if (this->closed)
+		return;
+
+	switch (signum)
+	{
+		case SIGINT:
+		{
+			if (this->closed)
+				return;
+
+			MS_DEBUG_DEV("INT signal received, closing myself");
+
+			Close();
+
+			break;
+		}
+
+		case SIGTERM:
+		{
+			if (this->closed)
+				return;
+
+			MS_DEBUG_DEV("TERM signal received, closing myself");
+
+			Close();
+
+			break;
+		}
+
+		default:
+		{
+			MS_WARN_DEV("received a non handled signal [signum:] ", signum);
+		}
+	}
 }
-*/
-
-static void wait_for_a_while(uv_idle_t* handle) {
-   // counter++;
-    Worker *obj =  (Worker *)handle->data;
-            
-    static_cast<Worker*>(obj)->dispatch();
-    //if (counter >= 10e6)
-      //  uv_idle_stop(handle);
-}
-
-
-
-inline void  Worker::dispatch()
-{
-    
-    std::lock_guard<std::mutex> guard(_mutex);   
-    if (!qEvent.empty()) {
-        Channel::Request *req = qEvent.front();
-        STrace << "id:" << req->id;
-        OnChannelRequest(req);
-        delete req;
-        qEvent.pop();
-    }
-}
-
- void  Worker::run()
-{
-    base::Application app;
-    
-   // Queue::run();
- 
-    uv_idle_init(app.uvGetLoop(), idler);
-    uv_idle_start(idler, wait_for_a_while);
-    
-    app.run();
-}
-
-
-
-
-// void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
-//{
-//	
-//
-//	if (this->closed)
-//		return;
-//
-//	switch (signum)
-//	{
-//		case SIGINT:
-//		{
-//			if (this->closed)
-//				return;
-//
-//			MS_DEBUG_DEV("INT signal received, closing myself");
-//
-//			Close();
-//
-//			break;
-//		}
-//
-//		case SIGTERM:
-//		{
-//			if (this->closed)
-//				return;
-//
-//			MS_DEBUG_DEV("TERM signal received, closing myself");
-//
-//			Close();
-//
-//			break;
-//		}
-//
-//		default:
-//		{
-//			MS_WARN_DEV("received a non handled signal [signum:] ", signum);
-//		}
-//	}
-//}
-
