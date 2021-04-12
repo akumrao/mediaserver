@@ -1,6 +1,6 @@
 ffmpeg complile 
-apt-get install libssl-dev
-apt install libsdl2-dev libsdl2-2.0-0 -y;
+apt-get install libssl-dev -y
+apt install libsdl2-dev libsdl2-2.0-0 -y
 apt install libfdk-aac-dev -y
 git clone git@github.com:FFmpeg/FFmpeg.git  ffmpeg
 git checkout release/3.3

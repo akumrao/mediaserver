@@ -65,9 +65,9 @@ Peer::Peer(PeerManager* manager,
     //, _context->factory(manager->factory())
     , _peerConnection(nullptr)
 {
-    // webrtc::PeerConnectionInterface::IceServer stun;
-    // stun.uri = kGoogleStunServerUri;
-    // _config.servers.push_back(stun);
+      webrtc::PeerConnectionInterface::IceServer stun;
+      stun.uri = kGoogleStunServerUri;
+     _config.servers.push_back(stun);
 
     // _constraints.SetMandatoryReceiveAudio(true);
     // _constraints.SetMandatoryReceiveVideo(true);
