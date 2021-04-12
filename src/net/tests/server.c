@@ -6,7 +6,7 @@
 #include <sys/socket.h> 
 #include <sys/types.h> 
 #define MAX 80 
-#define PORT 1337 
+#define PORT 11505
 #define SA struct sockaddr 
   
 // Function designed for chat between client and server. 
@@ -57,7 +57,8 @@ int main()
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    //servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     servaddr.sin_port = htons(PORT); 
   
     // Binding newly created socket to given IP and verification 
