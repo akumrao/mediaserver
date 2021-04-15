@@ -66,15 +66,19 @@ Peer::Peer(PeerManager* manager,
     , _peerConnection(nullptr)
 {
       webrtc::PeerConnectionInterface::IceServer stun;
-      stun.uri = kGoogleStunServerUri;
-     _config.servers.push_back(stun);
+     // stun.uri = kGoogleStunServerUri;
+     //_config.servers.push_back(stun);
+
+    stun.uri = "stun:stun.l.google.com:19302";
+    _config.servers.push_back(stun);
+  //  config_.sdp_semantics = sdp_semantics;
 
     // _constraints.SetMandatoryReceiveAudio(true);
     // _constraints.SetMandatoryReceiveVideo(true);
     // _constraints.SetAllowDtlsSctpDataChannels();
     
-    _config.servers.clear();
-    _config.servers.empty();
+    //_config.servers.clear();
+    //_config.servers.empty();
     _config.enable_rtp_data_channel = false;
     _config.enable_dtls_srtp = true;
     _config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
@@ -248,11 +252,11 @@ void Peer::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringSta
 {
     LInfo(_peerid, ": On ICE gathering change: ", new_state)
     
-    if( new_state == webrtc::PeerConnectionInterface::kIceGatheringComplete)
-    {
-        createOffer();
-        hasIceLiteOffer=true;
-    }
+    // if( new_state == webrtc::PeerConnectionInterface::kIceGatheringComplete)
+    // {
+    //     createOffer();
+    //     hasIceLiteOffer=true;
+    // }
 }
 
 
@@ -344,8 +348,8 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
 
      LInfo(_peerid, sdp);
 
-   // _manager->sendCandidate(this, candidate->sdp_mid(),
-    //                        candidate->sdp_mline_index(), sdp);
+    _manager->sendCandidate(this, candidate->sdp_mid(),
+                           candidate->sdp_mline_index(), sdp);
 
  
 }
@@ -358,14 +362,14 @@ void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
     cricket::SessionDescription* desc1 = desc->description();
     
  
-    for (const auto& content : desc1->contents()) {
+    /*for (const auto& content : desc1->contents()) {
        auto* transport_info = desc1->GetTransportInfoByName(content.name);
        transport_info->description.ice_mode = cricket::IceMode::ICEMODE_LITE;
       // transport_info->description.connection_role =  cricket::CONNECTIONROLE_ACTIVE;
        transport_info->description.transport_options.clear();
         transport_info->description.transport_options.push_back("renomination");
        
-     }
+     }*/
     
     /*
     const rtc::SocketAddress kCallerAddress1("192.168.0.17", 1111);
@@ -381,7 +385,7 @@ void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
 
     // Send an SDP offer to the peer
 
-    if(hasIceLiteOffer)
+    //if(hasIceLiteOffer)
     {   
          std::string sdp;
         if (!desc->ToString(&sdp)) {
