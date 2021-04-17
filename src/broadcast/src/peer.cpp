@@ -339,15 +339,33 @@ void Peer::OnRemoveStream(webrtc::MediaStreamInterface* stream)
 
 void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
 {
-    std::string sdp;
+ 
+
+
+
+ /*  std::string mid = candidate->sdp_mid() ;
+   
+   int line = candidate->sdp_mline_index();
+  // Only for use internally.
+   cricket::Candidate& can =  (cricket::Candidate& ) candidate->candidate();
+  
+   
+   rtc::SocketAddress& add =  ( rtc::SocketAddress& ) can.address();
+   
+   bool x  =add.IsPrivateIP();
+   if(x)
+   add.SetIP("44.226.10.202");
+   
+  */
+   
+   std::string sdp;
     if (!candidate->ToString(&sdp)) {
         LError(_peerid, ": Failed to serialize candidate")
         assert(0);
         return;
     }
-
-     LInfo(_peerid, sdp);
-
+      
+    LInfo(_peerid, sdp);
     _manager->sendCandidate(this, candidate->sdp_mid(),
                            candidate->sdp_mline_index(), sdp);
 
