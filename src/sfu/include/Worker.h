@@ -10,53 +10,39 @@
 #include <string>
 #include <unordered_map>
 
-#include "base/thread.h"
-#include "base/queue.h"
-
 using json = nlohmann::json;
 
-class Worker : public base::Thread
+class Worker :  public base::SignalsHandler::Listener
 {
 public:
 	 Worker();
 	~Worker();
 
-     
-        base::Queue<Channel::Request*> qEvent;
-        
-        inline void  dispatch();
 private:
 	void Close();
-       	void FillJson(json& jsonObject) const;
+	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
-        void OnChannelRequest(Channel::Request* request);
-        //void dispatch(T& item);
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-        void run();
+	void OnChannelRequest(Channel::Request* request) ;
 	void OnChannelClosed() ;
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
-	//void OnSignal(SignalsHandler* signalsHandler, int signum) override;
+	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
         std::unordered_map<std::string, RTC::Router*> mapRouters;
 
 private:
 	// Passed by argument.
 	//Channel::UnixStreamSocket* channel{ nullptr };
 	// Allocated by this.
-	//SignalsHandler* signalsHandler{ nullptr };
+	SignalsHandler* signalsHandler{ nullptr };
 	
 	// Others.
 	bool closed{ false };
-        
-        uv_idle_t *idler{nullptr};
-        
-        std::mutex _mutex;
-   
 };
 
 #endif
