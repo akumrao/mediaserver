@@ -22,7 +22,7 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 8080 //443
+#define SERVER_PORT 1111 //443
 #define JOIN_ROOM  "foo"        
 
 #include "webrtc/signaler.h"
