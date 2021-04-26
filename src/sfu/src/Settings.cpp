@@ -53,8 +53,8 @@ void Settings::SetConfiguration(json &cnfg)
             
             Level ld = getLevelFromString(loglevel.c_str());
             
-            //Logger::instance().add(new ConsoleChannel("mediaserver", ld));
-            Logger::instance().add(new FileChannel("mediaserver","/var/log/sfuserver", ld));
+            Logger::instance().add(new ConsoleChannel("mediaserver", ld));
+            //Logger::instance().add(new FileChannel("mediaserver","/var/log/sfuserver", ld));
             Logger::instance().setWriter(new AsyncLogWriter);
             
         }

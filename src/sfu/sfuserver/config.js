@@ -20,8 +20,8 @@
     ],
     "listenIps": [
       {
-        "ip": "10.2.5.31",
-        "announcedIp": "44.226.10.202"
+        "ip": "0.0.0.0",
+        "announcedIp": "192.168.0.19"
       }
     ],
     "routerCapabilities": {
