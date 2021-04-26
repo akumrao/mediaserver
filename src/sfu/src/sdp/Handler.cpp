@@ -148,58 +148,61 @@ namespace SdpParse
   
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
-
-        json encodings = json::array();
-
-        if (offerMediaObject.find("rids") != offerMediaObject.end())
+        if(kind != "application" )
         {
-            int size = offerMediaObject["rids"].size();
+            
+            json encodings = json::array();
 
-            encodings.push_back({
-                {"rid", "q"},
-                {"scaleResolutionDownBy", 4.0}
-            });
-
-            encodings.push_back({
-                {"rid", "h"},
-                {"scaleResolutionDownBy", 2.0}
-            });
-
-            if (size > 2)
-                encodings.push_back({
-                    {"rid", "f"}
-                });
-        }
-
-
-        if (!encodings.size())
-        {
-
-            sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
-        }// Set RTP encodings by parsing the SDP offer and complete them with given
-            // one if just a single encoding has been given.
-        else if (encodings.size() == 1)
-        {
-            auto newEncodings = Sdp::Utils::getRtpEncodings(offerMediaObject);
-            //  Object.assign(newEncodings[0], encodings[0]);  // TBD // this is for FID most probabily we need to check
-            sendingRtpParameters["encodings"] = newEncodings;
-        }// Otherwise if more than 1 encoding are given use them verbatim.
-        else
-        {
-            sendingRtpParameters["encodings"] = encodings;
-        }
-
-
-        // If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
-        auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
-
-        std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
-
-        if (sendingRtpParameters["encodings"].size() > 1 && (mimeType == "video/vp8" || mimeType == "video/h264"))
-        {
-            for (auto& encoding : sendingRtpParameters["encodings"])
+            if (offerMediaObject.find("rids") != offerMediaObject.end())
             {
-                encoding["scalabilityMode"] = "S1T3";
+                int size = offerMediaObject["rids"].size();
+
+                encodings.push_back({
+                    {"rid", "q"},
+                    {"scaleResolutionDownBy", 4.0}
+                });
+
+                encodings.push_back({
+                    {"rid", "h"},
+                    {"scaleResolutionDownBy", 2.0}
+                });
+
+                if (size > 2)
+                    encodings.push_back({
+                        {"rid", "f"}
+                    });
+            }
+
+
+            if (!encodings.size())
+            {
+
+                sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
+            }// Set RTP encodings by parsing the SDP offer and complete them with given
+                // one if just a single encoding has been given.
+            else if (encodings.size() == 1)
+            {
+                auto newEncodings = Sdp::Utils::getRtpEncodings(offerMediaObject);
+                //  Object.assign(newEncodings[0], encodings[0]);  // TBD // this is for FID most probabily we need to check
+                sendingRtpParameters["encodings"] = newEncodings;
+            }// Otherwise if more than 1 encoding are given use them verbatim.
+            else
+            {
+                sendingRtpParameters["encodings"] = encodings;
+            }
+
+
+            // If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
+            auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
+
+            std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
+
+            if (sendingRtpParameters["encodings"].size() > 1 && (mimeType == "video/vp8" || mimeType == "video/h264"))
+            {
+                for (auto& encoding : sendingRtpParameters["encodings"])
+                {
+                    encoding["scalabilityMode"] = "S1T3";
+                }
             }
         }
 
@@ -249,7 +252,7 @@ namespace SdpParse
             std::string kind = offerMediaObject["type"].get<std::string>();
 
             std::string trackid = Sdp::Utils::extractTrackID(offerMediaObject); // trackid is producerid
-            if( trackid.empty() )
+            if( trackid.empty() &&  kind != "application" )
             {
                 if (sizeofMid == i + 1)
                 {
@@ -275,7 +278,7 @@ namespace SdpParse
 
             //////////////////////////////////////
             std::string producerId = mapProdMid[mid];
-            std::string direction = offerMediaObject["direction"].get<std::string>();
+/*            std::string direction = offerMediaObject["direction"].get<std::string>();
             if (direction == "inactive" )
             {
                 if ((mapProducer.find(producerId) != mapProducer.end()))
@@ -330,6 +333,7 @@ namespace SdpParse
                 }
                 continue;
             }
+ */
             //////////////////////////////////////////
 
             if ((mapProducer.find(producerId) == mapProducer.end()))

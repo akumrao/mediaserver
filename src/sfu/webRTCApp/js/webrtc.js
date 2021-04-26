@@ -240,6 +240,17 @@ function initPC()
 
 
 
+    pc2.ondatachannel = function(event) {
+    var channel = event.channel;
+    channel.onopen = function(event) {
+    channel.send('Hi back!');
+    }
+    channel.onmessage = function(event) {
+    console.log(event.data);
+    }
+    }
+
+
        
     pc2.ontrack = ({transceiver, streams: [stream]}) => {
 
@@ -525,6 +536,21 @@ function initPC()
             rtcpMuxPolicy      : 'require',
             sdpSemantics       : 'unified-plan'
         });
+
+
+
+    var channelSnd = pc1.createDataChannel("chat");
+    
+    channelSnd.onopen = function(event)
+    {
+        channelSnd.send('Hi you!');
+    }
+    
+    channelSnd.onmessage = function(event)
+    {
+        console.log(event.data);
+    }
+
 
     // Handle RTCPeerConnection connection status.
     pc1.addEventListener('iceconnectionstatechange', () =>

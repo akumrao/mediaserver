@@ -99,13 +99,13 @@ namespace SdpParse {
         maxMid = std::stoi(mid);
 
         
-       // LInfo("got sdpObject: ", sdpObject.dump(4));
+         LInfo("got sdpObject: ", sdpObject.dump(4));
 
         auto nativeRtpCapabilities = Sdp::Utils::extractRtpCapabilities(sdpObject);
 
 
 
-        //LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
+        LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(nativeRtpCapabilities);
@@ -123,7 +123,7 @@ namespace SdpParse {
         // Generate our receiving RTP capabilities for receiving media.
         this->recvRtpCapabilities = ortc::getRecvRtpCapabilities(this->extendedRtpCapabilities);
 
-       // LDebug("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
+        LInfo("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(this->recvRtpCapabilities);
@@ -131,7 +131,7 @@ namespace SdpParse {
         // Generate our SCTP capabilities.
         this->sctpCapabilities = GetNativeSctpCapabilities();
 
-        //LDebug("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
+        LInfo("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateSctpCapabilities(this->sctpCapabilities);
