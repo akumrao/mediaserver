@@ -138,17 +138,29 @@ namespace SdpParse
 
 
         sendingRtpParameters = peer->sendingRtpParametersByKind[kind];
-
-        //SInfo << "offerMediaObject " << offerMediaObject.dump(4);
-
-        sendingRtpParameters["mid"] = mid;
+             sendingRtpParameters["mid"] = mid;
 
         //sendingRtpParameters["rtcp"]["cname"] = Sdp::Utils::getCname(offerMediaObject);
         sendingRtpParameters["rtcp"]["cname"] = peer->participantName;
   
         // sendingRtpParameters["encodings"] = Sdp::Utils::getRtpEncodings(offerMediaObject);
 
-        if(kind != "application" )
+        
+         auto sctpParameters = json::object(); 
+                
+        if(kind == "application" )
+        {
+               
+            SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
+            SInfo << "offerMediaObject " << offerMediaObject.dump(4);
+            
+           
+            sctpParameters["maxMessageSize"] = offerMediaObject["maxMessageSize"];
+            sctpParameters["protocol"] = offerMediaObject["protocol"];
+            sctpParameters["sctpPort"] = offerMediaObject["sctpPort"];
+
+        }
+        else
         {
             
             json encodings = json::array();
@@ -216,7 +228,7 @@ namespace SdpParse
                 offerMediaObject,
                 reuseMid,
                 sendingRtpParameters,
-                peer->sendingRemoteRtpParametersByKind[kind],
+                peer->sendingRemoteRtpParametersByKind[kind], sctpParameters,
                 codecOptions);
 
     }

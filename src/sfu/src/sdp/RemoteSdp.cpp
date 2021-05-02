@@ -136,7 +136,7 @@ namespace SdpParse
 	  json& offerMediaObject,
 	  const std::string& reuseMid,
 	  json& offerRtpParameters,
-	  json& answerRtpParameters,
+	  json& answerRtpParameters,const json& sctpParameters,
 	  const json* codecOptions)
 	{
 		
@@ -145,7 +145,7 @@ namespace SdpParse
 		  this->iceParameters,
 		  this->iceCandidates,
 		  this->dtlsParameters,
-		  this->sctpParameters,
+		  sctpParameters,
 		  offerMediaObject,
 		  offerRtpParameters,
 		  answerRtpParameters,

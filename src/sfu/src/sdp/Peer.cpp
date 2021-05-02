@@ -41,14 +41,14 @@ namespace SdpParse {
     /**
      * SCTP capabilities of the Peer for receiving media.
      */
-    const json& Peer::GetSctpCapabilities() const {
-
-
-        if (!this->loaded)
-            MS_ABORT("not loaded");
-
-        return this->sctpCapabilities;
-    }
+//    const json& Peer::GetSctpCapabilities() const {
+//
+//
+//        if (!this->loaded)
+//            MS_ABORT("not loaded");
+//
+//        return this->sctpCapabilities;
+//    }
 
     
     Peer::Peer(Signaler *signaler, std::string &roomId):signaler(signaler),roomId(roomId)
@@ -99,13 +99,13 @@ namespace SdpParse {
         maxMid = std::stoi(mid);
 
         
-         LInfo("got sdpObject: ", sdpObject.dump(4));
+         //LInfo("got sdpObject: ", sdpObject.dump(4));
 
         auto nativeRtpCapabilities = Sdp::Utils::extractRtpCapabilities(sdpObject);
 
 
 
-        LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
+       // LDebug("got native RTP capabilities: ", nativeRtpCapabilities.dump(4));
 
         // This may throw.
         ortc::validateRtpCapabilities(nativeRtpCapabilities);
@@ -123,18 +123,18 @@ namespace SdpParse {
         // Generate our receiving RTP capabilities for receiving media.
         this->recvRtpCapabilities = ortc::getRecvRtpCapabilities(this->extendedRtpCapabilities);
 
-        LInfo("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
+        //LInfo("got receiving RTP capabilities: ", this->recvRtpCapabilities.dump(4));
 
         // This may throw.
-        ortc::validateRtpCapabilities(this->recvRtpCapabilities);
+      //  ortc::validateRtpCapabilities(this->recvRtpCapabilities);
 
         // Generate our SCTP capabilities.
-        this->sctpCapabilities = GetNativeSctpCapabilities();
+       // this->sctpCapabilities = GetNativeSctpCapabilities();
 
-        LInfo("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
+       // LInfo("got receiving SCTP capabilities: ", this->sctpCapabilities.dump(4));
 
         // This may throw.
-        ortc::validateSctpCapabilities(this->sctpCapabilities);
+      //  ortc::validateSctpCapabilities(this->sctpCapabilities);
 
        // LDebug("succeeded");
 
@@ -173,11 +173,11 @@ namespace SdpParse {
         return this->canProduceByKind[kind];
     }
 
-    json Peer::GetNativeSctpCapabilities() {
-        auto caps = json::object();
-        caps["numStreams"] = SctpNumStreams;
-        return caps;
-    }
+//    json Peer::GetNativeSctpCapabilities() {
+//        auto caps = json::object();
+//        caps["numStreams"] = SctpNumStreams;
+//        return caps;
+//    }
     
       
     void Peer::on_producer_offer( const json &sdp)

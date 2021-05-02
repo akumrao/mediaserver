@@ -33,7 +33,7 @@ namespace SdpParse
 			  nlohmann::json& offerMediaObject,
 			  const std::string& reuseMid,
 			  nlohmann::json& offerRtpParameters,
-			  nlohmann::json& answerRtpParameters,
+			  nlohmann::json& answerRtpParameters,const nlohmann::json& sctpParameters,
 			  const nlohmann::json* codecOptions);
 			void Receive(
 			  const std::string& mid,
