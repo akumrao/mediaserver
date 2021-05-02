@@ -347,8 +347,40 @@ namespace SdpParse
             }
  */
             //////////////////////////////////////////
+            
+             if( kind == "application" )
+            {
+                  json sendingRtpParameters;
+                Producer *p = new Producer();
 
-            if ((mapProducer.find(producerId) == mapProducer.end()))
+                //   Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
+
+                GetAnswer(kind, sendingRtpParameters, *midIt, "", offerMediaObject);
+
+                json param = json::array();
+                param.push_back("transport.produceData");
+                param.push_back(peer->participantID);
+                json &trans = Settings::configuration.transport_produceData;
+                trans["internal"]["dataProducerId"] = uuid4::uuid();
+                
+                raiseRequest(param, trans, [&trans, &kind,&mid, &sizeofMid,&cbAns, i,this](const json & ack_resp)
+                {
+                    SInfo << " ack transport.produceData" << ack_resp.dump(4);
+                    //const json &ackdata = ack_resp["data"];
+                    
+                    if (sizeofMid == i + 1)
+                    {
+                        auto answer = remoteSdp->GetSdp();
+                         SInfo << answer ;
+                         cbAns(answer);
+                    }
+
+                    
+                });
+
+
+            }
+            else if ((mapProducer.find(producerId) == mapProducer.end()))
             {
 
                 json sendingRtpParameters;

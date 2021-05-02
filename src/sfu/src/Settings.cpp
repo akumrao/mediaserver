@@ -135,6 +135,12 @@ void Settings::SetConfiguration(json &cnfg)
         if (cnfg.find("transport_close") != cnfg.end()) {
            Settings::configuration.transport_close = cnfg["transport_close"];
         }
+        if (cnfg.find("transport_produceData") != cnfg.end()) {
+           Settings::configuration.transport_produceData = cnfg["transport_produceData"];
+        }
+        if (cnfg.find("transport_consumeData") != cnfg.end()) {
+           Settings::configuration.transport_consumeData = cnfg["transport_consumeData"];
+        }
 
 	/* Post configuration. */
 

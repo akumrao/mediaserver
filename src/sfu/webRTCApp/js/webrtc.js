@@ -907,7 +907,7 @@ function addProducerVideoAudio() {
 
                     var offer1 = await pc1.createOffer();
 
-                    console.log("after close offer %o ", offer1);
+                    console.log("after close offer %o ", offer1.sdp);
 
                     await pc1.setLocalDescription(offer1);
 
@@ -1249,7 +1249,7 @@ async function publish(isWebcam)
 
         var offer = await pc1.createOffer();
 
-        console.log( "PC1 offer made: %o", offer);
+        console.log( "PC1 offer made: %o", offer.sdp);
 
          await pc1.setLocalDescription(offer);
 
