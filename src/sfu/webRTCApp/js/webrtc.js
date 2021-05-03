@@ -600,7 +600,7 @@ function sendMessage(message) {
 async  function processOffer( remotePeerID,  sdp)
 {
 
-    console.log( " Pc2 offers %o", sdp);
+    console.log( " Pc2 offers %o", sdp.sdp);
 
     await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
 
@@ -1166,45 +1166,45 @@ async function publish(isWebcam)
   const tcpValue = istcp.get('forceTcp') ? true : false;
 
 
-   let stream;
+   // let stream;
 
-   stream =  await getUserMedia1(isWebcam);
-   let  videotrack;
-   let audiotrack;
+   // stream =  await getUserMedia1(isWebcam);
+   // let  videotrack;
+   // let audiotrack;
 
   
 
-   if (document.getElementById("chk_video").checked)
-   videotrack = stream.getVideoTracks()[0];
+   // if (document.getElementById("chk_video").checked)
+   // videotrack = stream.getVideoTracks()[0];
 
-   if ( document.getElementById("chk_audio").checked )
-    audiotrack = stream.getAudioTracks()[0];
-
-
+   // if ( document.getElementById("chk_audio").checked )
+   //  audiotrack = stream.getAudioTracks()[0];
 
 
-        //var encodings;
-        var _stream = new MediaStream();
 
-        if (pc1.addTransceiver){
 
-        }
-        else
-        {
-             console.log(" pc.addTransceiver is not supported in this broswer, do pc.addTrack")
-            /// else do pc.addTrack
-        }
+   //      //var encodings;
+   //      var _stream = new MediaStream();
 
-        if(audiotrack) {
-            var transceiver1 = pc1.addTransceiver(
-                audiotrack,
-                {
-                    direction: 'sendonly',
-                    streams: [_stream]
-                });
+   //      if (pc1.addTransceiver){
 
-            //transceiver1.sender.setStreams(_stream);
-        }
+   //      }
+   //      else
+   //      {
+   //           console.log(" pc.addTransceiver is not supported in this broswer, do pc.addTrack")
+   //          /// else do pc.addTrack
+   //      }
+
+   //      if(audiotrack) {
+   //          var transceiver1 = pc1.addTransceiver(
+   //              audiotrack,
+   //              {
+   //                  direction: 'sendonly',
+   //                  streams: [_stream]
+   //              });
+
+   //          //transceiver1.sender.setStreams(_stream);
+   //      }
          
          //firefox
         // var parameters = transceiver.sender.getParameters();
@@ -1223,27 +1223,27 @@ async function publish(isWebcam)
 
 
           // Mormal without simulcast
-         if(videotrack ) {
-             let checkBox = document.getElementById("chk_simulcast");
-             if ( checkBox && checkBox.checked && isWebcam ) {
+         // if(videotrack ) {
+         //     let checkBox = document.getElementById("chk_simulcast");
+         //     if ( checkBox && checkBox.checked && isWebcam ) {
 
-                 var transceiver = pc1.addTransceiver(videotrack, {
-                     direction: 'sendonly',
-                     streams: [_stream],
-                     sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
-                 });
-                // transceiver.sender.setStreams(_stream);
+         //         var transceiver = pc1.addTransceiver(videotrack, {
+         //             direction: 'sendonly',
+         //             streams: [_stream],
+         //             sendEncodings:CAM_VIDEO_SIMULCAST_ENCODINGS
+         //         });
+         //        // transceiver.sender.setStreams(_stream);
 
-             } else {
-                 var transceiver = pc1.addTransceiver(
-                     videotrack,
-                     {
-                         direction: 'sendonly',
-                         streams: [_stream]
-                     });
-                 //transceiver.sender.setStreams(_stream);
-             }
-         }
+         //     } else {
+         //         var transceiver = pc1.addTransceiver(
+         //             videotrack,
+         //             {
+         //                 direction: 'sendonly',
+         //                 streams: [_stream]
+         //             });
+         //         //transceiver.sender.setStreams(_stream);
+         //     }
+         // }
 
          
 

@@ -91,7 +91,7 @@ namespace SdpParse {
         
         
     private:
-        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters,std::string mid, std::string reuseMid,  nlohmann::json &offerMediaObject );
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters,std::string mid, std::string reuseMid,  nlohmann::json &offerMediaObject, const nlohmann::json& sctpParameters );
         
         std::string cnameForProducers; 
         

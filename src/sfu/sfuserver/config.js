@@ -4,7 +4,7 @@
     "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
     "rtcMinPort": 11501,
     "rtcMaxPort": 12560,
-    "logLevel": "info",
+    "logLevel": "trace",
     "logTags": [
       "info",
       "ice",
@@ -16,7 +16,8 @@
       "bwe",
       "score",
       "simulcast",
-      "svc"
+      "svc",
+      "sctp"
     ],
     "listenIps": [
       {

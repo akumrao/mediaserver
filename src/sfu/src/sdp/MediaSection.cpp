@@ -560,7 +560,7 @@ namespace SdpParse
 			else if (kind == "application")
 			{
 				this->mediaObject["payloads"]       = "webrtc-datachannel";
-				this->mediaObject["sctpPort"]       = sctpParameters["port"];
+				this->mediaObject["sctpPort"]       = sctpParameters["sctpPort"];
 				this->mediaObject["maxMessageSize"] = sctpParameters["maxMessageSize"];
 			}
 		}
