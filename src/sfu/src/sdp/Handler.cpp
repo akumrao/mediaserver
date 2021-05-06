@@ -286,7 +286,11 @@ namespace SdpParse
 
             //////////////////////////////////////
             std::string producerId = mapProdMid[mid];
-/*            std::string direction = offerMediaObject["direction"].get<std::string>();
+           
+            std::string direction;
+            if ((offerMediaObject.find(direction) != offerMediaObject.end()))
+                 direction = offerMediaObject["direction"].get<std::string>();
+            
             if (direction == "inactive" )
             {
                 if ((mapProducer.find(producerId) != mapProducer.end()))
@@ -341,7 +345,7 @@ namespace SdpParse
                 }
                 continue;
             }
- */
+
             //////////////////////////////////////////
             
             json sendingRtpParameters;
@@ -399,6 +403,8 @@ namespace SdpParse
                         { "id", trans["internal"]["dataProducerId"]},
                         {"kind", kind},
                         {"cname", cnameForProducers},
+                        {"type", "application"},
+                        {"mid", std::to_string(mid)},
                         {"sctpParameters",  sctpParameters },
                     };
 

@@ -134,6 +134,9 @@ var cons_stat = document.getElementById("cons_stat");
 var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
+
+var channelSnd ;
+
 //var localStream;
 //var track;
 
@@ -243,10 +246,13 @@ function initPC()
     pc2.ondatachannel = function(event) {
     var channel = event.channel;
     channel.onopen = function(event) {
-    channel.send('Hi back!');
+    //channel.send('Hi back!');
     }
     channel.onmessage = function(event) {
     console.log(event.data);
+    
+    wirtechanneldata(event.data);
+
     }
     }
 
@@ -528,6 +534,7 @@ function initPC()
     /////////////////////////////////////////////////////////////////////////////////
 
 
+
     pc1 = new RTCPeerConnection(
         {
             iceServers         : [],
@@ -539,16 +546,18 @@ function initPC()
 
 
 
-    var channelSnd = pc1.createDataChannel("chat");
+    channelSnd = pc1.createDataChannel("chat");
     
     channelSnd.onopen = function(event)
     {
-        channelSnd.send('Hi you!');
+        //channelSnd.send('Hi you!');
     }
     
     channelSnd.onmessage = function(event)
     {
         console.log(event.data);
+
+        wirtechanneldata(event.data);
     }
 
 
@@ -1517,3 +1526,21 @@ function displayMessage(data) {
 
 
     //////////////////////////////chat end ////////////////////////////////////
+
+
+function btn_senddata()
+{
+    var sendme = document.getElementById("dataInput").value ;
+    channelSnd.send(sendme);
+}
+
+
+
+
+
+function wirtechanneldata(x) {
+  var node = document.createElement("LI");
+  var textnode = document.createTextNode(x);
+  node.appendChild(textnode);
+  document.getElementById("dataList").appendChild(node);
+}

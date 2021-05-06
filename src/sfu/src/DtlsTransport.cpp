@@ -1100,7 +1100,7 @@ namespace RTC
 		if (read <= 0)
 			return;
 
-		SDebug << read << " bytes of DTLS data ready to sent to the peer" ;
+		//SDebug << read << " bytes of DTLS data ready to sent to the peer" ;
 
 		// Notify the listener.
 		this->listener->OnDtlsTransportSendData(

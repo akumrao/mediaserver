@@ -55,17 +55,17 @@ inline static int onRecvSctpData(
 		uint32_t ppid     = ntohl(rcv.rcv_ppid);
 		uint16_t ssn      = rcv.rcv_ssn;
 
-		MS_DEBUG_TAG(
-		  sctp,
-		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
-		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
-		  len,
-		  rcv.rcv_sid,
-		  rcv.rcv_ssn,
-		  rcv.rcv_tsn,
-		  ntohl(rcv.rcv_ppid),
-		  rcv.rcv_context,
-		  flags);
+//		MS_DEBUG_TAG(
+//		  sctp,
+//		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
+//		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
+//		  len,
+//		  rcv.rcv_sid,
+//		  rcv.rcv_ssn,
+//		  rcv.rcv_tsn,
+//		  ntohl(rcv.rcv_ppid),
+//		  rcv.rcv_context,
+//		  flags);
 
 		sctpAssociation->OnUsrSctpReceiveSctpData(
 		  streamId, ssn, ppid, flags, static_cast<uint8_t*>(data), len);
@@ -286,9 +286,9 @@ namespace RTC
 	{
 		
 
-#if MS_LOG_DEV_LEVEL == 3
+//#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
-#endif
+//#endif
 
 		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
 	}
@@ -520,6 +520,9 @@ namespace RTC
 	void SctpAssociation::OnUsrSctpReceiveSctpData(
 	  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len)
 	{
+                SInfo << "streamId: " << streamId << " ssn: "  << ssn << " ppid: " << ppid << " data: " << data;
+                    
+                    
 		// Ignore WebRTC DataChannel Control DATA chunks.
 		if (ppid == 50)
 		{
@@ -562,7 +565,7 @@ namespace RTC
 		// If end of message and there is no buffered data, notify it directly.
 		if (eor && this->messageBufferLen == 0)
 		{
-			MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
+			///MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
 			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
 		}

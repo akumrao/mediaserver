@@ -175,7 +175,7 @@ namespace RTC
 				// 	return;
 				// }
 
-                                SDebug <<  "processing STUN Binding Request [Priority: ] " << static_cast<uint32_t>(packet->GetPriority()) <<  " UseCandidate: ]" <<   (packet->HasUseCandidate() ? "true" : "false") ;
+//                                SDebug <<  "processing STUN Binding Request [Priority: ] " << static_cast<uint32_t>(packet->GetPriority()) <<  " UseCandidate: ]" <<   (packet->HasUseCandidate() ? "true" : "false") ;
 //				MS_DEBUG_DEV(
 //				  "processing STUN Binding Request [Priority: PRIu32 ", UseCandidate:%s]",
 //				  static_cast<uint32_t>(packet->GetPriority()),

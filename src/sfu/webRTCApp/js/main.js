@@ -282,6 +282,14 @@ window.onload = function(){
 
   
 
+  document.getElementById("btn_datasend").onclick = function(){
+
+    console.log("btn_datasend click");
+
+   btn_senddata();
+  };
+
+
   
   // document.getElementById("btn_subscribe_stats").onclick = function(){
 
