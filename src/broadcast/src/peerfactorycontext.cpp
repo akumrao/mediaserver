@@ -11,6 +11,11 @@
 //#include "p2p/base/basicpacketsocketfactory.h"
 //#include "p2p/client/basicportallocator.h"
 //#include "pc/peerconnection.h"
+#include "api/audio_codecs/audio_format.h"
+#include "api/audio_codecs/audio_decoder_factory_template.h"
+#include "api/audio_codecs/audio_encoder_factory_template.h"
+#include "api/audio_codecs/opus/audio_decoder_opus.h"
+#include "api/audio_codecs/opus/audio_encoder_opus.h"
 
 
 using std::endl;
@@ -21,11 +26,7 @@ namespace wrtc {
 
 
 PeerFactoryContext::PeerFactoryContext(
-    webrtc::AudioDeviceModule* default_adm,
-    webrtc::VideoEncoderFactory* video_encoder_factory,
-    webrtc::VideoDecoderFactory* video_decoder_factory,
-    rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory,
-    rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory)
+    webrtc::AudioDeviceModule* default_adm)
 {
     LInfo("PeerFactoryContext")
             
@@ -41,10 +42,10 @@ PeerFactoryContext::PeerFactoryContext(
 
 
     // Init required builtin factories if not provided
-    if (!audio_encoder_factory)
-        audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
-    if (!audio_decoder_factory)
-        audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
+    // if (!audio_encoder_factory)
+    //     audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
+    // if (!audio_decoder_factory)
+    //     audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
 
    // Create the factory
     // factory = webrtc::CreatePeerConnectionFactory(
@@ -68,8 +69,10 @@ PeerFactoryContext::PeerFactoryContext(
 
     factory = webrtc::CreatePeerConnectionFactory(
               networkThread.get(), workerThread.get(), g_signaling_thread.get(),
-              default_adm, webrtc::CreateBuiltinAudioEncoderFactory(),
-              webrtc::CreateBuiltinAudioDecoderFactory(),
+              default_adm, 
+
+              webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
+              webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
 
               webrtc::CreateBuiltinVideoEncoderFactory(),
 

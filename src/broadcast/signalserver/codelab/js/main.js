@@ -239,6 +239,9 @@ function doAnswer() {
 }
 
 function setLocalAndSendMessage(sessionDescription) {
+
+  sessionDescription.sdp = sessionDescription.sdp.replace("useinbandfec=1", "useinbandfec=1;stereo=1;maxaveragebitrate=510000");
+  
   pc.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
 

@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 
     Application app;
 
-    std::string sourceFile(sampleDataDir("test.mp4"));
+    std::string sourceFile(sampleDataDir("test.mp3"));
 
     base::wrtc::Signaler sig;
     sig.startStreaming(sourceFile, true);

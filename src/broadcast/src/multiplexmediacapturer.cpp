@@ -145,10 +145,17 @@ void MultiplexMediaCapturer::addMediaTracks(
   if (_videoCapture->audio())
   {
 
+
+    
+      cricket::AudioOptions AudioSourceOptions;
+      AudioSourceOptions.echo_cancellation = false;
+      AudioSourceOptions.auto_gain_control = false;
+      AudioSourceOptions.noise_suppression = false;
+
+
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
         factory->CreateAudioTrack(
-                audioLable, factory->CreateAudioSource(
-                            cricket::AudioOptions())));
+                audioLable, factory->CreateAudioSource( AudioSourceOptions)));
    
     //stream->AddTrack(audio_track);
     // peer_connection_->AddTransceiver(audio_track);

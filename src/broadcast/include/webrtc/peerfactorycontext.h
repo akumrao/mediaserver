@@ -31,11 +31,8 @@ class PeerFactoryContext
 {
 public:
     PeerFactoryContext(
-        webrtc::AudioDeviceModule* default_adm = nullptr,
-        webrtc::VideoEncoderFactory* video_encoder_factory = nullptr,
-        webrtc::VideoDecoderFactory* video_decoder_factory = nullptr,
-        rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory = nullptr,
-        rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory = nullptr);
+        webrtc::AudioDeviceModule* default_adm = nullptr
+     );
 
 private:
     void initCustomNetworkManager();
