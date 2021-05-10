@@ -51,10 +51,10 @@ void MultiplexMediaCapturer::openFile(const std::string& file, bool loop)
     // Set the output settings
     if (_videoCapture->audio()) {
         _videoCapture->audio()->oparams.sampleFmt = "s16";
-        _videoCapture->audio()->oparams.sampleRate = 44000;
+        _videoCapture->audio()->oparams.sampleRate = 48000;
         _videoCapture->audio()->oparams.channels = 2;
         _videoCapture->audio()->recreateResampler();
-        // _videoCapture->audio()->resampler->maxNumSamples = 440;
+        // _videoCapture->audio()->resampler->maxNumSamples = 480;
         // _videoCapture->audio()->resampler->variableOutput = false;
     }
 
