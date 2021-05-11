@@ -11,12 +11,7 @@
 #include "ff/ff.h"
 #include "ff/audiobuffer.h"
 #include "ff/packet.h"
-//#include "base/packetsignal.h"
 
-//#include "rtc_base/basictypes.h"
-//#include "rtc_base/criticalsection.h"
-//#include "rtc_base/messagehandler.h"
-//#include "rtc_base/scoped_ref_ptr.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
@@ -26,8 +21,11 @@
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/audio_device_buffer.h"
 
+#define DIAGNOSTICK 0
+ #if DIAGNOSTICK
+    #include "rtc_base/system/file_wrapper.h"
+ #endif   
 
-#include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/platform_thread.h"
 
 namespace base {
@@ -36,8 +34,8 @@ namespace base {
         class AudioPacketModule : public webrtc::AudioDeviceModule
  {
         public:
-            typedef uint16_t Sample;
-            std::vector<Sample> _sendSamples;
+            //typedef uint16_t Sample;
+            //std::vector<Sample> _sendSamples;
 
             static rtc::scoped_refptr<AudioPacketModule> Create();
             void onAudioCaptured(IPacket& packet);
@@ -258,9 +256,7 @@ namespace base {
 
             bool bFormatChecked = false;
 
-            std::vector<uint8_t> RecordingBuffer;
-
-
+            std::vector<int8_t> RecordingBuffer;
 
             ///// arvind file debug
 
@@ -268,8 +264,10 @@ namespace base {
             size_t _recordingFramesIn10MS;
             int8_t* _recordingBuffer; // In bytes.
 
+  #if DIAGNOSTICK
             webrtc::FileWrapper _inputFile;
-            
+            webrtc::FileWrapper _outputFile;
+   #endif           
             std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
             
             static void RecThreadFunc(void* pThis);
@@ -277,7 +275,8 @@ namespace base {
             
             bool RecThreadProcess();
             int64_t _lastCallRecordMillis{0};
-              
+            
+
 
         };
 

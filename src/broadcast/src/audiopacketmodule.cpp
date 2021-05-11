@@ -1,3 +1,27 @@
+/********************************************************
+ 
+ play pcm
+ffplay -autoexit -f u16be -ar 44100 -ac 1 in.raw
+
+
+ffmpeg -f s16le -ar 48000 -ac 2 -i  /var/tmp/test.mp3 file.wav
+
+
+
+ffmpeg -i /var/tmp/test.mp3 -ar 48000 -ac 2 -f s16le out.pcm
+
+
+
+
+
+-acodec pcm_s16be: Output pcm format, signed 16 encoding, endian is big end (small end is le);
+-ar 16000: The sampling rate is 16000
+-ac 1: the number of channels is 1
+
+
+ 
+ 
+ ***********************************************************/
 
 #include "webrtc/audiopacketmodule.h"
 
@@ -38,11 +62,29 @@ namespace base {
         static const uint8_t kNumberOfChannels = 2;
         static const int kSamplesPerSecond = 48000;
         static const size_t kNumberSamples = 480;
-        static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
+        //static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
+        static const size_t kBytesPerSample = 2 * kNumberOfChannels;
         static const size_t kBufferBytes = kNumberSamples * kBytesPerSample;
 
-        AudioPacketModule::AudioPacketModule() : _sendSamples(kBufferBytes) {
-            int x = 1;
+        AudioPacketModule::AudioPacketModule()  {
+            
+            /// PLAYOUT
+
+#if DIAGNOSTICK
+            std::string _outputFilename = "/var/tmp/out.pcm";
+
+            if (!_outputFilename.empty()) {
+                _outputFile = webrtc::FileWrapper::OpenWriteOnly(_outputFilename.c_str());
+                if (!_outputFile.is_open()) {
+                    // RTC_LOG(LS_ERROR) << "Failed to open playout file: " << _outputFilename;
+                    //_playing = false;
+                    // delete[] _playoutBuffer;
+                    // _playoutBuffer = NULL;
+
+                }
+            }
+#endif            
+            
         }
 
         AudioPacketModule::~AudioPacketModule() {
@@ -56,6 +98,10 @@ namespace base {
             //
             //    _lastProcessTimeMS = rtc::TimeMillis();
             LInfo(__FUNCTION__);
+            
+//            _sendFifo.close();
+ //           _sendFifo.alloc("s16", kNumberOfChannels);
+            
             return true;
         }
 
@@ -75,67 +121,25 @@ namespace base {
 
             // assert(_processThread->IsCurrent());
             rtc::CritScope cs(&_critCallback);
-            if (!_recording) {
+            if (!_recording || !DeviceBuffer) {
                 return;
             }
 
             // TODO: Implement planar formats
             auto data = packet.data();
             int ns = packet.numSamples;
+            
+            
+#if DIAGNOSTICK
+             if (_outputFile.is_open()) {
+                _outputFile.Write(&data[0], ns*4);
+             }
+#endif
+              RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
+
+          //  int sx = RecordingBuffer.size();
 
 
-            int BytesPer10Ms = (SampleRate * NumChannels * static_cast<int> (sizeof (uint16_t))) / 100;
-
-            int cm = BytesPer10Ms / (sizeof (uint16_t) * NumChannels);
-
-            cm = 0;
-
-
-
-
-            RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns]);
-
-            int sx = RecordingBuffer.size();
-
-            //RecordingBuffer.push_back(reinterpret_cast<const uint8*>(data, ns));
-
-            // Feed in 10ms chunks
-            /*while (RecordingBuffer.size() >= BytesPer10Ms)
-            {
-                    {
-                             rtc::CritScope cs(&_critCallback);
-                            if (DeviceBuffer)
-                            {
-                                    DeviceBuffer->SetRecordedBuffer(&RecordingBuffer[0], cm);
-                                    DeviceBuffer->DeliverRecordedData();
-                                    //UE_LOG(LogAudioCapturer, VeryVerbose, TEXT("passed %d bytes"), BytesPer10Ms);
-                            }
-                    }
-
-                    //RecordingBuffer.RemoveAt(0, BytesPer10Ms, false);
-                    RecordingBuffer.erase(RecordingBuffer.begin() , RecordingBuffer.begin() + BytesPer10Ms);
-                     sx = RecordingBuffer.size();
-            }*/
-
-
-            /*
-            const size_t kRecordingBufferSize = kSamplesPerSecond / 100 * kNumberOfChannels * 2;
-
-
-            if (_inputFile.is_open()) {
-                if (_inputFile.Read(_recordingBuffer, kRecordingBufferSize) > 0) {
-                    DeviceBuffer->SetRecordedBuffer(_recordingBuffer,
-                            _recordingFramesIn10MS);
-                } else {
-                    _inputFile.Rewind();
-                }
-                //  _lastCallRecordMillis = currentTime;
-                //_critSect.Leave();
-                DeviceBuffer->DeliverRecordedData();
-
-
-                // _sendFifo.write((void**)&data, packet.numSamples);
-            }*/
         }
 
         int32_t AudioPacketModule::ActiveAudioLayer(AudioLayer* audioLayer) const {
@@ -206,6 +210,7 @@ namespace base {
                 rtc::CritScope cs(&_critCallback);
                 //DeviceBuffer.Reset();
                 DeviceBuffer.reset(nullptr);
+//                _sendFifo.close();
             }
 
             LInfo("AudioPacketModule::Terminate");
@@ -354,7 +359,7 @@ namespace base {
             if (!_recordingBuffer) {
                 _recordingBuffer = new int8_t[_recordingBufferSizeIn10MS];
             }
-
+ #if DIAGNOSTICK
             std::string _inputFilename = "/var/tmp/test.pcm";
             if (!_inputFilename.empty()) {
                 _inputFile = webrtc::FileWrapper::OpenReadOnly(_inputFilename.c_str());
@@ -367,7 +372,7 @@ namespace base {
                     return -1;
                 }
             }
-
+ #endif  
             _recording = true;
             _ptrThreadRec.reset(new rtc::PlatformThread( RecThreadFunc, this, "webrtc_audio_module_capture_thread",  rtc::kRealtimePriority));
 
@@ -470,19 +475,20 @@ namespace base {
         
         
         bool AudioPacketModule::RecThreadProcess() {
-            if (!_recording) {
+            if (!_recording || !DeviceBuffer) {
                 return false;
             }
-
+             
             int64_t currentTime = rtc::TimeMillis();
-             const size_t kRecordingBufferSize = kSamplesPerSecond / 100 * kNumberOfChannels * 2;
             
-            {
+          {
                 rtc::CritScope cs(&_critCallback);
                 if (_lastCallRecordMillis == 0 || currentTime - _lastCallRecordMillis >= 10) {
                     
+                    
+#if DIAGNOSTICK
                     if (_inputFile.is_open()) {
-                        if (_inputFile.Read(_recordingBuffer, kRecordingBufferSize) > 0) {
+                        if (_inputFile.Read(_recordingBuffer, kBufferBytes) > 0) {
                             DeviceBuffer->SetRecordedBuffer(_recordingBuffer,
                                     _recordingFramesIn10MS);
                         } else {
@@ -491,11 +497,23 @@ namespace base {
                           _lastCallRecordMillis = currentTime;
                         //_critSect.Leave();
                         DeviceBuffer->DeliverRecordedData();
-
-                        // _sendFifo.write((void**)&data, packet.numSamples);
                    }
-                          
-               
+#endif
+                    
+                    int sx = RecordingBuffer.size();
+                    
+                    if (RecordingBuffer.size() >= kBufferBytes )
+                    {
+
+                        DeviceBuffer->SetRecordedBuffer(&RecordingBuffer[0], _recordingFramesIn10MS);
+                         _lastCallRecordMillis = currentTime;
+                        DeviceBuffer->DeliverRecordedData();
+                                        //UE_LOG(LogAudioCapturer, VeryVerbose, TEXT("passed %d bytes"), BytesPer10Ms);
+
+                        RecordingBuffer.erase(RecordingBuffer.begin() , RecordingBuffer.begin() + kBufferBytes);
+                        sx = RecordingBuffer.size();
+                    }
+                   
                 }
 
             }

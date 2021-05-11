@@ -174,10 +174,10 @@ bool VideoContext::recreateConverter()
     LDebug("Recreating video conversion context")
     if (conv)
         delete conv;
-   // conv = new VideoConverter(); //arvind
-    conv->iparams = iparams;
-    conv->oparams = oparams;
-    conv->create();
+//    conv = new VideoConverter(); //arvind
+ //   conv->iparams = iparams;
+  //  conv->oparams = oparams;
+  //  conv->create();
     return true;
 }
 

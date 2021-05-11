@@ -182,17 +182,17 @@ int AudioResampler::resample(uint8_t** inSamples, int inNumSamples)
     outBufferSize = av_samples_get_buffer_size(nullptr, oparams.channels,
                                                outNumSamples, outSampleFmt, 0);
 
-    // STrace << "Resampled audio frame:"
-    //        << "\n\tIn Nb Samples: " << inNumSamples
-    //        << "\n\tIn Channels: " << iparams.channels
-    //        << "\n\tIn Sample Rate: " << iparams.sampleRate
-    //        << "\n\tIn Sample Fmt: " << iparams.sampleFmt
-    //        << "\n\tOut Nb Samples: " << outNumSamples
-    //        << "\n\tOut Max Nb Samples: " << maxNumSamples
-    //        << "\n\tOut Buffer Size: " << outBufferSize
-    //        << "\n\tOut Channels: " << oparams.channels
-    //        << "\n\tOut Sample Rate: " << oparams.sampleRate
-    //        << "\n\tOut Lample Fmt: " << oparams.sampleFmt << std::endl;
+     STrace << "Resampled audio frame:"
+            << "\n\tIn Nb Samples: " << inNumSamples
+            << "\n\tIn Channels: " << iparams.channels
+            << "\n\tIn Sample Rate: " << iparams.sampleRate
+            << "\n\tIn Sample Fmt: " << iparams.sampleFmt
+            << "\n\tOut Nb Samples: " << outNumSamples
+            << "\n\tOut Max Nb Samples: " << maxNumSamples
+            << "\n\tOut Buffer Size: " << outBufferSize
+            << "\n\tOut Channels: " << oparams.channels
+            << "\n\tOut Sample Rate: " << oparams.sampleRate
+            << "\n\tOut Lample Fmt: " << oparams.sampleFmt << std::endl;
 
     // assert(outNumSamples > 0);
     // assert(outBufferSize > 0);

@@ -157,8 +157,10 @@ namespace base {
 
         void MediaCapture::run() {
             LTrace("Running")
-
-            while (_looping && !_stopping) {
+            if(_stopping)
+                return;
+                      
+            do {
                 try {
                     int res;
                     AVPacket ipacket;
@@ -266,7 +268,7 @@ namespace base {
                     _stopping = true;
                     // Closing.emit(); //arvind
                 }
-            }
+            }while(_looping && !_stopping) ;
         }
 
         void MediaCapture::getEncoderFormat(Format& format) {
