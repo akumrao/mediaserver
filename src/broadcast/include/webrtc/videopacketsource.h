@@ -38,7 +38,7 @@ public:
 
     /// Callback that fired when an `av::PlanarVideoPacket`
     /// is ready for processing.
-    void onVideoCaptured(IPacket& pac);
+    int onVideoCaptured(IPacket& pac);
 
     /// cricket::VideoCapturer implementation.
 

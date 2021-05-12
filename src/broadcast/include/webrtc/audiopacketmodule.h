@@ -38,7 +38,7 @@ namespace base {
             //std::vector<Sample> _sendSamples;
 
             static rtc::scoped_refptr<AudioPacketModule> Create();
-            void onAudioCaptured(IPacket& packet);
+            int onAudioCaptured(IPacket& packet);
 
 
             /*

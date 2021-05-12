@@ -110,7 +110,7 @@ void VideoPacketSource::Stop()
 }
 */
 
-void VideoPacketSource::onVideoCaptured(IPacket& pac)
+int VideoPacketSource::onVideoCaptured(IPacket& pac)
 {
     //if(!IsRunning())
   //  return;
@@ -154,7 +154,7 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
          &crop_width, &crop_height,
          &crop_x, &crop_y)) {
          //LWarn("Adapt frame failed", packet.time)
-         return;
+         return 0;
      }
 
    // int64_t TimestampUs = rtc::TimeMicros();
@@ -194,6 +194,8 @@ void VideoPacketSource::onVideoCaptured(IPacket& pac)
 
     SignalFrameCaptured(this, &frame);
 #endif
+    
+    return 1;
 }
 
 /*

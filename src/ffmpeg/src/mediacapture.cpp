@@ -136,7 +136,7 @@ namespace base {
             { 
                 if (f && packet.className() == std::string("PlanarAudioPacket")) {
                     LTrace("Emit: Audio Size  ", packet.size(), ", ", packet.className())
-                    f(packet);
+                  audioBuffSize = f(packet);
                 }
             }
             
@@ -144,7 +144,7 @@ namespace base {
             { 
                 if (f && packet.className() == std::string("PlanarVideoPacket")) {
                     LTrace("Emit: Video Size  ", packet.size(), ", ", packet.className())
-                    f(packet);
+                    int y = f(packet);
                 }
             }
 
@@ -240,6 +240,9 @@ namespace base {
                                         << "time=" << _audio->time << ", "
                                         << "pts=" << _audio->pts << endl;
                             }
+                            
+                            if(audioBuffSize > 10*1920)
+                                std::this_thread::sleep_for(std::chrono::milliseconds(25));
                         }
 
                         av_packet_unref(&ipacket);

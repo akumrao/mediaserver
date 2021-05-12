@@ -71,12 +71,14 @@ public:
        // std::function<void(IPacket&) > cbProcessAudio;
        // std::function<void(IPacket&) > cbProcessVideo;  
         
-        using function_type = std::function<void(IPacket&) > ;
+        using function_type = std::function<int(IPacket&) > ;
 
   
         // here we will store all binded functions 
         std::vector<function_type> cbProcessVideo;
         std::vector<function_type> cbProcessAudio;
+        
+        int audioBuffSize;
   
         
 protected:

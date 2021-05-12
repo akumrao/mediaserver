@@ -114,31 +114,33 @@ namespace base {
             return capture_module;
         }
 
-        void AudioPacketModule::onAudioCaptured(IPacket& pack) {
+        int  AudioPacketModule::onAudioCaptured(IPacket& pack) {
             ff::AudioPacket& packet = (ff::AudioPacket&)pack;
 
             LTrace("Audio frame captured")
 
             // assert(_processThread->IsCurrent());
             rtc::CritScope cs(&_critCallback);
-            if (!_recording || !DeviceBuffer) {
-                return;
+            {
+                if (!_recording || !DeviceBuffer) {
+                    return 0;
+                }
+
+                // TODO: Implement planar formats
+                auto data = packet.data();
+                int ns = packet.numSamples;
+
+
+    #if DIAGNOSTICK
+                 if (_outputFile.is_open()) {
+                    _outputFile.Write(&data[0], ns*4);
+                 }
+    #endif
+                  RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
             }
 
-            // TODO: Implement planar formats
-            auto data = packet.data();
-            int ns = packet.numSamples;
-            
-            
-#if DIAGNOSTICK
-             if (_outputFile.is_open()) {
-                _outputFile.Write(&data[0], ns*4);
-             }
-#endif
-              RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
-
-          //  int sx = RecordingBuffer.size();
-
+           return RecordingBuffer.size();
+              
 
         }
 
@@ -351,8 +353,6 @@ namespace base {
                 return -1;
             }
 
-
-
             
             _recordingBufferSizeIn10MS =
                     _recordingFramesIn10MS * kNumberOfChannels * 2;
@@ -375,10 +375,7 @@ namespace base {
  #endif  
             _recording = true;
             _ptrThreadRec.reset(new rtc::PlatformThread( RecThreadFunc, this, "webrtc_audio_module_capture_thread",  rtc::kRealtimePriority));
-
             _ptrThreadRec->Start();
-
-             
 
 
             return 0;
@@ -501,6 +498,10 @@ namespace base {
 #endif
                     
                     int sx = RecordingBuffer.size();
+                    
+                    SInfo << "record size:"  << sx;
+                    if(sx < kBufferBytes  )
+                        SInfo << "record size:"  << sx;
                     
                     if (RecordingBuffer.size() >= kBufferBytes )
                     {
