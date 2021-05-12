@@ -85,7 +85,7 @@ std::string extname(const std::string& path, bool includeDot)
     if (dirp != std::string::npos && dotp < dirp)
         return "";
 
-    return path.substr((dotp + includeDot) ? 0 : 1);
+    return path.substr(dotp + (includeDot ? 0 : 1));
 }
 
 
@@ -171,6 +171,18 @@ void readdir(const std::string& path, std::vector<std::string>& res)
         res.push_back(dent.name);
     }
 }
+
+void readdir_filter(const std::string& path, std::vector<std::string>& res, const std::string& filter)
+{
+    internal::FSapi(scandir, path.c_str(), 0)
+
+    uv_dirent_t dent;
+    while (UV_EOF != uv_fs_scandir_next(&wrap.req, &dent)) {
+        if(extname(dent.name)   ==  filter )
+        res.push_back(dent.name);
+    }
+}
+
 
 
 void mkdir(const std::string& path, int mode)
