@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     base::wrtc::Signaler sig;
     //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
-    sig.startStreaming("/var/tmp/songs", "", false);
+    sig.startStreaming("/var/tmp/songs", "", "mp3", true, false);
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 

@@ -58,7 +58,7 @@ using std::endl;
 namespace base {
     namespace wrtc {
 
-
+        #define MAX_AUDIO_BUFFER 50*1920*2
         static const uint8_t kNumberOfChannels = 2;
         static const int kSamplesPerSecond = 48000;
         static const size_t kNumberSamples = 480;
@@ -114,16 +114,17 @@ namespace base {
             return capture_module;
         }
 
-        int  AudioPacketModule::onAudioCaptured(IPacket& pack) {
+        void  AudioPacketModule::onAudioCaptured(IPacket& pack) {
             ff::AudioPacket& packet = (ff::AudioPacket&)pack;
 
             LTrace("Audio frame captured")
 
             // assert(_processThread->IsCurrent());
-            rtc::CritScope cs(&_critCallback);
+            
             {
+                rtc::CritScope cs(&_critCallback);
                 if (!_recording || !DeviceBuffer) {
-                    return 0;
+                    return ;
                 }
 
                 // TODO: Implement planar formats
@@ -138,9 +139,17 @@ namespace base {
     #endif
                   RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
             }
+            
+            int x = RecordingBuffer.size();
+            
+            while (RecordingBuffer.size() > (MAX_AUDIO_BUFFER)) //
+            {
+               //  LInfo("SleepMs 5ms")
+                webrtc::SleepMs(5);
+                
+            }
 
-           return RecordingBuffer.size();
-              
+           return ;
 
         }
 
@@ -498,11 +507,11 @@ namespace base {
 //                   }
 //#endif
                     
-                    int sx = RecordingBuffer.size();
+                    //int sx = RecordingBuffer.size();
                     
-                    STrace << "record size:"  << sx;
-                    if(sx < kBufferBytes  )
-                        SInfo << "record size:"  << sx;
+                    //SInfo << "record size:"  << sx;
+                   // if(sx < kBufferBytes  )
+                    //    SInfo << "record size:"  << sx;
                     
                     if (RecordingBuffer.size() >= kBufferBytes )
                     {
@@ -513,7 +522,7 @@ namespace base {
                                         //UE_LOG(LogAudioCapturer, VeryVerbose, TEXT("passed %d bytes"), BytesPer10Ms);
 
                         RecordingBuffer.erase(RecordingBuffer.begin() , RecordingBuffer.begin() + kBufferBytes);
-                        sx = RecordingBuffer.size();
+                       // sx = RecordingBuffer.size();
                     }
                    
                 }

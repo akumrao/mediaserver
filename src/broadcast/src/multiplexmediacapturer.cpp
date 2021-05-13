@@ -41,16 +41,16 @@ MultiplexMediaCapturer::~MultiplexMediaCapturer()
 }
 
 
-void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string& file, bool loop)
+void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string& file,  const std::string& type , bool audioOnly , bool loop)
 {
     // Open the capture file
     _videoCapture->setLoopInput(loop);
     _videoCapture->setLimitFramerate(true);
 
     if(!dir.empty())         
-        _videoCapture->openDir(dir);
+        _videoCapture->openDir(dir,type, audioOnly);
     else if( !file.empty() )
-       _videoCapture->openFile(dir + "/"+ file);
+       _videoCapture->openFile(dir + "/"+ file , type, audioOnly);
 
 
 

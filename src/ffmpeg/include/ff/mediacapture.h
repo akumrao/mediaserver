@@ -29,8 +29,8 @@ public:
     MediaCapture();
     virtual ~MediaCapture();
 
-    virtual void openFile(const std::string& file);
-    virtual void openDir(const std::string& dir);
+    virtual void openFile(const std::string& file, const std::string& type , bool audioOnly);
+    virtual void openDir(const std::string& dir,  const std::string& type , bool audioOnly);
     
     std::vector<std::string> files;
     std::string dir;
@@ -78,18 +78,16 @@ public:
        // std::function<void(IPacket&) > cbProcessAudio;
        // std::function<void(IPacket&) > cbProcessVideo;  
         
-        using function_type = std::function<int(IPacket&) > ;
+        using function_type = std::function<void(IPacket&) > ;
 
   
         // here we will store all binded functions 
         std::vector<function_type> cbProcessVideo;
         std::vector<function_type> cbProcessAudio;
         
-        int audioBuffSize;
-  
         
 protected:
-    virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams);
+    virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams, bool audioonly);
 
      
 

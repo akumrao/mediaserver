@@ -19,7 +19,6 @@ extern "C" {
 
 using std::endl;
 
-
 namespace base {
     namespace ff {
 
@@ -62,21 +61,22 @@ namespace base {
             LTrace("Closing: OK")
         }
 
-        void MediaCapture::openFile(const std::string& file) {
+        void MediaCapture::openFile(const std::string& file, const std::string& type , bool audioOnly) {
             LTrace("Opening file: ", file)
-            openStream(file, nullptr, nullptr);
+            openStream(file, nullptr, nullptr, audioOnly );
         }
         
-        void MediaCapture::openDir(const std::string& dr) {
+        void MediaCapture::openDir(const std::string& dr, const std::string& type , bool audioOnly) {
             LTrace("Opening openDir: ", dr)
-            base::fs::readdir_filter(dr, files, "mp3");
+            base::fs::readdir_filter(dr, files, type);
             dir = dr;
-            openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
+            
+            openStream( dir + "/" +files[fileNo++], nullptr, nullptr, audioOnly);
            
         }
         
 
-        void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams) {
+        void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams, bool audioOnly) {
             LTrace("Opening stream: ", filename)
 
             if (_formatCtx)
@@ -95,10 +95,13 @@ namespace base {
                 auto stream = _formatCtx->streams[i];
                 auto codec = stream->codec;
                 if (!_video && codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-                    _video = new VideoDecoder(stream);
-                    // _video->emitter.attach(packetSlot(this, &MediaCapture::emit));
-                    _video->create();
-                    _video->open();
+                    if(!audioOnly)
+                    {
+                        _video = new VideoDecoder(stream);
+                        // _video->emitter.attach(packetSlot(this, &MediaCapture::emit));
+                        _video->create();
+                        _video->open();
+                    }
                 } else if (!_audio && codec->codec_type == AVMEDIA_TYPE_AUDIO) {
                     _audio = new AudioDecoder(stream);
                     //            _audio->emitter.attach(packetSlot(this, &MediaCapture::emit));
@@ -146,7 +149,7 @@ namespace base {
             { 
                 if (f && packet.className() == std::string("PlanarAudioPacket")) {
                     LTrace("Emit: Audio Size  ", packet.size(), ", ", packet.className())
-                  audioBuffSize = f(packet);
+                   f(packet);
                 }
             }
             
@@ -154,7 +157,7 @@ namespace base {
             { 
                 if (f && packet.className() == std::string("PlanarVideoPacket")) {
                     LTrace("Emit: Video Size  ", packet.size(), ", ", packet.className())
-                    int y = f(packet);
+                    f(packet);
                 }
             }
 
@@ -256,8 +259,6 @@ namespace base {
                                         << "pts=" << _audio->pts << endl;
                             }
                             
-                            if(audioBuffSize > 50*1920)
-                                std::this_thread::sleep_for(std::chrono::milliseconds(25));
                         }
 
                         av_packet_unref(&ipacket);
@@ -286,7 +287,7 @@ namespace base {
               close();
 
 
-              openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
+              openStream( dir + "/" +files[fileNo++], nullptr, nullptr, true);  // audo is hard coded to true. I will fix it later
                if(fileNo == files.size() )
                    fileNo = 0;
 
