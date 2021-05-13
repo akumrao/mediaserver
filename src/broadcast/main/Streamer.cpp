@@ -27,16 +27,16 @@ CMemLeakDetect memLeakDetect;
 
 #include "webrtc/signaler.h"
 
-std::string sampleDataDir(const std::string& file) {
-    std::string dir;
-   // fs::addnode(dir, base_SOURCE_DIR);
-    fs::addnode(dir, "/");
-    fs::addnode(dir, "var");
-    fs::addnode(dir, "tmp");
-    if (!file.empty())
-        fs::addnode(dir, file);
-    return dir;
-}
+//std::string sampleDataDir(const std::string& file) {
+//    std::string dir;
+//   // fs::addnode(dir, base_SOURCE_DIR);
+//    fs::addnode(dir, "/");
+//    fs::addnode(dir, "var");
+//    fs::addnode(dir, "tmp");
+//    if (!file.empty())
+//        fs::addnode(dir, file);
+//    return dir;
+//}
 
 int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("info", Level::Info));
@@ -52,10 +52,11 @@ int main(int argc, char** argv) {
 
     Application app;
 
-    std::string sourceFile(sampleDataDir("test.mp3"));
+    //std::string sourceFile(sampleDataDir("test.mp3"));
 
     base::wrtc::Signaler sig;
-    sig.startStreaming(sourceFile, true);
+    //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
+    sig.startStreaming("/var/tmp/songs", "", false);
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 

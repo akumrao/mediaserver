@@ -40,7 +40,7 @@ AudioContext::~AudioContext()
 
 void AudioContext::open()
 {
-    SDebug << "Open: "
+    SInfo<< "Open: "
            << "\n\tInput: " << iparams.toString()
            << "\n\tOutput: " << oparams.toString() << endl;
 
@@ -69,14 +69,14 @@ void AudioContext::close()
     }
     if (ctx) {
         avcodec_close(ctx);
-        avcodec_free_context(&ctx);
+      //  avcodec_free_context(&ctx);
           
         ctx = nullptr;
     }
-    if (stream) {
-        // The stream pointer is managed by the AVFormatContext
-        stream = nullptr;
-    }
+//    if (stream) {
+//        // The stream pointer is managed by the AVFormatContext
+//        stream = nullptr;
+//    }
     if (resampler) {
         delete resampler;
         resampler = nullptr;

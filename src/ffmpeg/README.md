@@ -13,7 +13,7 @@ make -j8
 
 
 play pcm
-ffplay -autoexit -f u16be -ar 44100 -ac 1 in.raw
+ffplay -autoexit -f s16le -ar 48000 -ac 2 /var/tmp/out.pcm
 
 
 ffmpeg -f s16le -ar 48000 -ac 2 -i  /var/tmp/test.mp3 file.wav

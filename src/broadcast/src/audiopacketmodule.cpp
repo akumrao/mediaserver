@@ -1,7 +1,7 @@
 /********************************************************
  
  play pcm
-ffplay -autoexit -f u16be -ar 44100 -ac 1 in.raw
+ffplay -autoexit -f s16le -ar 48000 -ac 2 /var/tmp/out.pcm
 
 
 ffmpeg -f s16le -ar 48000 -ac 2 -i  /var/tmp/test.mp3 file.wav
@@ -449,7 +449,6 @@ namespace base {
         int32_t AudioPacketModule::SetStereoRecording(bool enable) {
 
             LInfo(__FUNCTION__);
-            LInfo(__FUNCTION__);
             CHECKinitialized_();
             return 0;
         }
@@ -464,6 +463,7 @@ namespace base {
         
         
         void AudioPacketModule::RecThreadFunc(void* pThis) {
+            LInfo(__FUNCTION__);
             AudioPacketModule* device = static_cast<AudioPacketModule*> (pThis);
             while (device->RecThreadProcess()) {
             }
@@ -475,31 +475,32 @@ namespace base {
             if (!_recording || !DeviceBuffer) {
                 return false;
             }
+            // LInfo(__FUNCTION__);
              
             int64_t currentTime = rtc::TimeMillis();
             
-          {
+            {
                 rtc::CritScope cs(&_critCallback);
                 if (_lastCallRecordMillis == 0 || currentTime - _lastCallRecordMillis >= 10) {
                     
                     
-#if DIAGNOSTICK
-                    if (_inputFile.is_open()) {
-                        if (_inputFile.Read(_recordingBuffer, kBufferBytes) > 0) {
-                            DeviceBuffer->SetRecordedBuffer(_recordingBuffer,
-                                    _recordingFramesIn10MS);
-                        } else {
-                            _inputFile.Rewind();
-                        }
-                          _lastCallRecordMillis = currentTime;
-                        //_critSect.Leave();
-                        DeviceBuffer->DeliverRecordedData();
-                   }
-#endif
+//#if DIAGNOSTICK
+//                    if (_inputFile.is_open()) {
+//                        if (_inputFile.Read(_recordingBuffer, kBufferBytes) > 0) {
+//                            DeviceBuffer->SetRecordedBuffer(_recordingBuffer,
+//                                    _recordingFramesIn10MS);
+//                        } else {
+//                            _inputFile.Rewind();
+//                        }
+//                          _lastCallRecordMillis = currentTime;
+//                        //_critSect.Leave();
+//                        DeviceBuffer->DeliverRecordedData();
+//                   }
+//#endif
                     
                     int sx = RecordingBuffer.size();
                     
-                    SInfo << "record size:"  << sx;
+                    STrace << "record size:"  << sx;
                     if(sx < kBufferBytes  )
                         SInfo << "record size:"  << sx;
                     

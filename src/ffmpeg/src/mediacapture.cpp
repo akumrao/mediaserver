@@ -3,6 +3,7 @@
 #include <assert.h>
 #ifdef HAVE_FFMPEG
 
+#include "base/filesystem.h"
 #include "ff/devicemanager.h"
 #include "base/logger.h"
 #include "base/platform.h"
@@ -34,6 +35,7 @@ namespace base {
         }
 
         MediaCapture::~MediaCapture() {
+            stop();
             close();
             uninitializeFFmpeg();
         }
@@ -41,7 +43,6 @@ namespace base {
         void MediaCapture::close() {
             LTrace("Closing")
 
-            stop();
 
             if (_video) {
                 delete _video;
@@ -65,6 +66,15 @@ namespace base {
             LTrace("Opening file: ", file)
             openStream(file, nullptr, nullptr);
         }
+        
+        void MediaCapture::openDir(const std::string& dr) {
+            LTrace("Opening openDir: ", dr)
+            base::fs::readdir_filter(dr, files, "mp3");
+            dir = dr;
+            openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
+           
+        }
+        
 
         void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams) {
             LTrace("Opening stream: ", filename)
@@ -102,13 +112,13 @@ namespace base {
         }
 
         void MediaCapture::start() {
-            LTrace("MediaCapture Starting")
+            LInfo("MediaCapture Starting")
 
             std::lock_guard<std::mutex> guard(_mutex);
-            assert(_video || _audio);
+           // assert(_video || _audio);
 
-            if ((_video || _audio) && !running()) {
-                LTrace("Initializing thread")
+            if (!running()) {
+               LInfo("Initializing thread")
                 _stopping = false;
                 Thread::start();
             }
@@ -156,12 +166,17 @@ namespace base {
         }
 
         void MediaCapture::run() {
-            LTrace("Running")
+           
             if(_stopping)
                 return;
                       
+            LInfo("Running")
+              
             do {
+              
+                
                 try {
+                     
                     int res;
                     AVPacket ipacket;
                     av_init_packet(&ipacket);
@@ -241,7 +256,7 @@ namespace base {
                                         << "pts=" << _audio->pts << endl;
                             }
                             
-                            if(audioBuffSize > 10*1920)
+                            if(audioBuffSize > 50*1920)
                                 std::this_thread::sleep_for(std::chrono::milliseconds(25));
                         }
 
@@ -266,12 +281,36 @@ namespace base {
                     LError("Unknown Error")
                 }
 
-                if (_stopping || !_looping) {
-                    LTrace("Exiting")
-                    _stopping = true;
-                    // Closing.emit(); //arvind
+                LInfo( "looping back");
+
+              close();
+
+
+              openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
+               if(fileNo == files.size() )
+                   fileNo = 0;
+
+              if(!_looping && !files.size())
+                  break;
+              
+              if (this->audio()) {
+                    this->audio()->oparams.sampleFmt = "s16";
+                    this->audio()->oparams.sampleRate = 48000;
+                    this->audio()->oparams.channels = 2;
+                    this->audio()->recreateResampler();
+                    // _videoCapture->audio()->resampler->maxNumSamples = 480;
+                    // _videoCapture->audio()->resampler->variableOutput = false;
                 }
-            }while(_looping && !_stopping) ;
+
+                // Convert to yuv420p for WebRTC compatability
+                if (this->video()) {
+                    this->video()->oparams.pixelFmt = "yuv420p"; // nv12
+                    // _videoCapture->video()->oparams.width = capture_format.width;
+                    // _videoCapture->video()->oparams.height = capture_format.height;
+                }
+
+            }while(!_stopping) ;
+
         }
 
         void MediaCapture::getEncoderFormat(Format& format) {

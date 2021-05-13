@@ -73,7 +73,7 @@ void VideoContext::close()
 
     if (ctx) {
         avcodec_close(ctx);
-        avcodec_free_context(&ctx);
+      //  avcodec_free_context(&ctx);
         ctx = nullptr;
     }
 

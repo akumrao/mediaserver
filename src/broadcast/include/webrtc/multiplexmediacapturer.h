@@ -27,7 +27,7 @@ public:
     MultiplexMediaCapturer();
     ~MultiplexMediaCapturer();
 
-    void openFile(const std::string& file, bool loop = true);
+    void openFile(const std::string& dir, const std::string& file, bool loop=true);
     
     std::string random_string();
 
