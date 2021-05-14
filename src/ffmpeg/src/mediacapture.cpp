@@ -61,22 +61,29 @@ namespace base {
             LTrace("Closing: OK")
         }
 
-        void MediaCapture::openFile(const std::string& file, const std::string& type , bool audioOnly) {
+        void MediaCapture::openFile(const std::string& file, const std::string& type ) {
             LTrace("Opening file: ", file)
-            openStream(file, nullptr, nullptr, audioOnly );
+            
+            if(type =="mp3")
+              audioOnly = true;
+            
+            openStream(file, nullptr, nullptr );
         }
         
-        void MediaCapture::openDir(const std::string& dr, const std::string& type , bool audioOnly) {
+        void MediaCapture::openDir(const std::string& dr, const std::string& type) {
             LTrace("Opening openDir: ", dr)
             base::fs::readdir_filter(dr, files, type);
             dir = dr;
             
-            openStream( dir + "/" +files[fileNo++], nullptr, nullptr, audioOnly);
+            if(type =="mp3")
+                audioOnly = true;
+            
+            openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
            
         }
         
 
-        void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams, bool audioOnly) {
+        void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams) {
             LTrace("Opening stream: ", filename)
 
             if (_formatCtx)
@@ -287,7 +294,7 @@ namespace base {
               close();
 
 
-              openStream( dir + "/" +files[fileNo++], nullptr, nullptr, true);  // audo is hard coded to true. I will fix it later
+              openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
                if(fileNo == files.size() )
                    fileNo = 0;
 

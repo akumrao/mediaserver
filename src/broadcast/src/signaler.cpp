@@ -23,12 +23,12 @@ namespace base {
         Signaler::~Signaler() {
         }
 
-        void Signaler::startStreaming(const std::string& dir, const std::string& file,  const std::string& type , bool audioOnly ,  bool looping) {
+        void Signaler::startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping) {
             // Open the video file
             
              SInfo << "Open  " << dir <<  "/" <<  file;
                      
-            _capturer.openFile(dir,file, type, audioOnly, looping);
+            _capturer.openFile(dir,file, type, looping);
            //  _capturer.start();  // enable for rapid testing
         }
 

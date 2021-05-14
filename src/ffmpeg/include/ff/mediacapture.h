@@ -29,8 +29,8 @@ public:
     MediaCapture();
     virtual ~MediaCapture();
 
-    virtual void openFile(const std::string& file, const std::string& type , bool audioOnly);
-    virtual void openDir(const std::string& dir,  const std::string& type , bool audioOnly);
+    virtual void openFile(const std::string& file, const std::string& type );
+    virtual void openDir(const std::string& dir,  const std::string& type );
     
     std::vector<std::string> files;
     std::string dir;
@@ -87,7 +87,7 @@ public:
         
         
 protected:
-    virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams, bool audioonly);
+    virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams);
 
      
 
@@ -103,6 +103,8 @@ protected:
     bool _looping;
     bool _realtime;
     bool _ratelimit;
+    
+    bool audioOnly{false};
 };
 
 
