@@ -55,10 +55,13 @@ int main(int argc, char** argv) {
     //std::string sourceFile(sampleDataDir("test.mp3"));
 
     base::wrtc::Signaler sig;
-    //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
-   // sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+
+    sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
     
-    sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
+    //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
+    
+    //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
+    
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 

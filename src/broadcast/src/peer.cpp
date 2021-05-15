@@ -455,7 +455,7 @@ std::string Peer::token() const
      
     for (const auto& sender : senders) {
      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = sender->track();
-     if( track->kind() =="audio")
+     if( track && track->kind() =="audio")
      {
 
          track->set_enabled(!val); 
