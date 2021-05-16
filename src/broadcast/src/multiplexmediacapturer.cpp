@@ -144,24 +144,28 @@ void MultiplexMediaCapturer::addMediaTracks(
     
    std::string rnd=   random_string();
 
-  std::string audioLable = kAudioLabel + rnd;
-  std::string videoLable = kVideoLabel + rnd;
-  std::string streamId =  kStreamId + rnd;
+//  std::string audioLable = kAudioLabel + rnd;
+//  std::string videoLable = kVideoLabel + rnd;
+//  std::string streamId =  kStreamId + rnd;
 
+  std::string audioLable = kAudioLabel;
+  std::string videoLable = kVideoLabel;
+  std::string streamId =  kStreamId;
+  
   if (_videoCapture->audio())
   {
-
 
     
       cricket::AudioOptions AudioSourceOptions;
       AudioSourceOptions.echo_cancellation = false;
-      AudioSourceOptions.auto_gain_control = false;
+      AudioSourceOptions.auto_gain_control = true;
       AudioSourceOptions.noise_suppression = false;
-
-
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        factory->CreateAudioTrack(
-                audioLable, factory->CreateAudioSource( AudioSourceOptions)));
+      AudioSourceOptions.audio_jitter_buffer_enable_rtx_handling = true;
+      AudioSourceOptions.audio_jitter_buffer_max_packets =true;
+      //AudioSourceOptions.audio_network_adaptor =true;
+      
+      if(!audio_track)
+      audio_track =   factory->CreateAudioTrack(    audioLable, factory->CreateAudioSource( AudioSourceOptions));
    
     //stream->AddTrack(audio_track);
     // peer_connection_->AddTransceiver(audio_track);
@@ -177,13 +181,14 @@ void MultiplexMediaCapturer::addMediaTracks(
       //auto source = new VideoPacketSource();
        VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
        
-       ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+      ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
 
       _videoCapture->cbProcessVideo.push_back(var);
       
 
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-            factory->CreateVideoTrack(videoLable, VideoCapturer));
+      
+      if(!video_track)
+        video_track =     factory->CreateVideoTrack(videoLable, VideoCapturer);
         
          video_track->set_enabled(true);
          conn->AddTrack(video_track, {streamId});
