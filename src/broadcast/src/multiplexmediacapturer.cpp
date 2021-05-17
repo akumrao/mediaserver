@@ -158,10 +158,10 @@ void MultiplexMediaCapturer::addMediaTracks(
     
       cricket::AudioOptions AudioSourceOptions;
       AudioSourceOptions.echo_cancellation = false;
-      AudioSourceOptions.auto_gain_control = true;
+      AudioSourceOptions.auto_gain_control = false;
       AudioSourceOptions.noise_suppression = false;
-      AudioSourceOptions.audio_jitter_buffer_enable_rtx_handling = true;
-      AudioSourceOptions.audio_jitter_buffer_max_packets =true;
+     // AudioSourceOptions.audio_jitter_buffer_enable_rtx_handling = true;
+     // AudioSourceOptions.audio_jitter_buffer_max_packets =true;
       //AudioSourceOptions.audio_network_adaptor =true;
       
       if(!audio_track)
