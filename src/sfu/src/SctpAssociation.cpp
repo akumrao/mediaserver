@@ -286,9 +286,9 @@ namespace RTC
 	{
 		
 
-//#if MS_LOG_DEV_LEVEL == 3
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
-//#endif
+#endif
 
 		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
 	}

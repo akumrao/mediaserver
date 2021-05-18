@@ -242,6 +242,19 @@ namespace SdpParse
             //SInfo <<  " Deleted " << ack_resp;
         });
     }
+    void Producers::close_producer_sctp(const std::string &producerid) {
+        json param = json::array();
+        param.push_back("dataProducer.close");
+        param.push_back(peer->participantID);
+        json &trans = Settings::configuration.producer_getStats;
+        trans["internal"]["dataProducerId"] = producerid; //uuid4::uuid();
+        trans["method"] = "dataProducer.close";
+         SInfo <<  " close_sctp_producer dataProducerId " << producerid; 
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+            //SInfo <<  " Deleted " << ack_resp;
+        });
+    }
 
     void Producers::runit(std::function<void (const std::string &) > cbAns) {
 
@@ -560,12 +573,17 @@ namespace SdpParse
             std::string producerid = it->first;
             Producer * producer = it->second;
             
+             std::string kind = producer->producer["kind"].get<std::string>();
+            
             for (auto proCon = producer->mapProCon.begin(); proCon != producer->mapProCon.end(); ) {
        
                 std::string consumerID = proCon->second;
                 Consumers *consumers = proCon->first;
                 SInfo << "delete  ProducerID " <<  producerid << "  ConsumerID "   << consumerID;
-                consumers->close_consumer(producerid, consumerID);
+                if( kind == "application" )
+                    consumers->close_consumer_sctp(producerid, consumerID);
+                else
+                    consumers->close_consumer(producerid, consumerID);
                 setConsumer.insert(consumers);
                 proCon = producer->mapProCon.erase(proCon); // note it will = next(it) after erase
                 SInfo  <<  "Delete consumer id " << consumerID;
@@ -578,7 +596,11 @@ namespace SdpParse
             remoteSdp->CloseMediaSection(mid);
             mapProdMid.erase(std::stoi(mid));
             //mapProdMid.erase(mid);
-            close_producer(producerid);
+
+            if( kind == "application" )
+                close_producer_sctp(producerid);
+            else
+                close_producer(producerid); 
             
              
             delete producer; // track id is produer id
@@ -761,6 +783,39 @@ namespace SdpParse
 
         });
     }
+    
+    
+        void Consumers::close_consumer_sctp(const std::string& producerid, const std::string& conumserid) {
+        json param = json::array();
+        param.push_back("dataConsumer.close");
+        param.push_back(peer->participantID);
+        json &trans = Settings::configuration.consumer_getStats;
+        trans["method"] = "dataConsumer.close";
+        trans["internal"]["dataProducerId"] = producerid;
+        trans["internal"]["dataConsumerId"] = conumserid;
+        SInfo <<  " close_sctp_consumer id " << conumserid;
+        
+        
+         std::string mid = mapConsumer[conumserid ]->consumer["mid"].get<std::string>();
+
+         remoteSdp->CloseMediaSection(mid);
+            
+         mapConMid.erase(std::stoi(mid));
+         
+         signaler->mapNotification.erase(conumserid);
+
+         SInfo << "Close Mid: " << mid << " Conumer id: " << conumserid << "sctp Producer ID: " << producerid << " Participant id " << peer->participantID;
+         delete mapConsumer[conumserid];
+
+
+        raiseRequest(param, trans, [&](const json & ack_resp)
+        {
+           SInfo <<  " close_consumer_sctp ack " << ack_resp.dump(4);
+        
+
+        });
+    }
+
 
     void Consumers::runit(std::vector < Peer *> vecProdPeer) {
 
