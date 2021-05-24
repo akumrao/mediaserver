@@ -1047,10 +1047,7 @@ namespace RTC
 				// Insert into the maps.
 				this->mapDataConsumers[dataConsumerId] = dataConsumer;
 
-				MS_DEBUG_DEV(
-				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
-				  dataConsumerId.c_str(),
-				  dataProducerId.c_str());
+				SInfo <<  "DataConsumer created dataConsumerId:" <<  dataConsumerId <<  " dataProducerId:" << dataProducerId;
 
 				json data = json::object();
 

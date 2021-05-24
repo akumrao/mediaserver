@@ -57,7 +57,7 @@ inline static int onRecvSctpData(
 
 //		MS_DEBUG_TAG(
 //		  sctp,
-//		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
+//		  "data chunk received [length:%zu, streamId:%d, SSN:%d, TSN:%" PRIu32
 //		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
 //		  len,
 //		  rcv.rcv_sid,
@@ -345,7 +345,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
+			  "error sending SCTP message [sid:%d, ppid:%" PRIu32 ", message size:%zu]: %s",
 			  parameters.streamId,
 			  ppid,
 			  len,
@@ -444,7 +444,7 @@ namespace RTC
 
 		if (ret == 0)
 		{
-			MS_DEBUG_TAG(sctp, "SCTP_RESET_STREAMS sent [streamId:%" PRIu16 "]", streamId);
+			MS_DEBUG_TAG(sctp, "SCTP_RESET_STREAMS sent [streamId:%d]", streamId);
 		}
 		else
 		{
@@ -467,7 +467,7 @@ namespace RTC
 
 		if (additionalOs == 0)
 		{
-			MS_WARN_TAG(sctp, "cannot add more outgoing streams [OS:%" PRIu16 "]", this->os);
+			MS_WARN_TAG(sctp, "cannot add more outgoing streams [OS:%d]", this->os);
 
 			return;
 		}
@@ -495,7 +495,7 @@ namespace RTC
 		sas.sas_instrms  = 0;
 		sas.sas_outstrms = additionalOs;
 
-		MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOs);
+		MS_DEBUG_TAG(sctp, "adding %d outgoing streams", additionalOs);
 
 		int ret = usrsctp_setsockopt(
 		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
@@ -521,6 +521,11 @@ namespace RTC
 	  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len)
 	{
                 SInfo << "streamId: " << streamId << " ssn: "  << ssn << " ppid: " << ppid << " data: " << data;
+                
+                if(streamId < 1)
+                {
+                    int x = 1;
+                }
                     
                     
 		// Ignore WebRTC DataChannel Control DATA chunks.
@@ -536,7 +541,7 @@ namespace RTC
 			MS_WARN_TAG(
 			  sctp,
 			  "message chunk received with different SSN while buffer not empty, buffer discarded [ssn:%" PRIu16
-			  ", last ssn received:%" PRIu16 "]",
+			  ", last ssn received:%d]",
 			  ssn,
 			  this->lastSsnReceived);
 
@@ -605,10 +610,8 @@ namespace RTC
 		{
 			case SCTP_ADAPTATION_INDICATION:
 			{
-				MS_DEBUG_TAG(
-				  sctp,
-				  "SCTP adaptation indication [%x]",
-				  notification->sn_adaptation_event.sai_adaptation_ind);
+
+				SInfo <<  "SCTP adaptation indication " <<   notification->sn_adaptation_event.sai_adaptation_ind ;
 
 				break;
 			}
@@ -619,11 +622,7 @@ namespace RTC
 				{
 					case SCTP_COMM_UP:
 					{
-						MS_DEBUG_TAG(
-						  sctp,
-						  "SCTP association connected, streams [out:%" PRIu16 ", in:%" PRIu16 "]",
-						  notification->sn_assoc_change.sac_outbound_streams,
-						  notification->sn_assoc_change.sac_inbound_streams);
+						  SInfo << "SCTP association connected, streams  out:"  << 	  notification->sn_assoc_change.sac_outbound_streams << " in:" <<  notification->sn_assoc_change.sac_inbound_streams;
 
 						// Update our OS.
 						this->os = notification->sn_assoc_change.sac_outbound_streams;
@@ -676,7 +675,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  sctp,
-						  "SCTP remote association restarted, streams [out:%" PRIu16 ", int:%" PRIu16 "]",
+						  "SCTP remote association restarted, streams [out:%d, int:%d]",
 						  notification->sn_assoc_change.sac_outbound_streams,
 						  notification->sn_assoc_change.sac_inbound_streams);
 
@@ -803,7 +802,7 @@ namespace RTC
 
 				MS_WARN_TAG(
 				  sctp,
-				  "SCTP message sent failure [streamId:%" PRIu16 ", ppid:%" PRIu32
+				  "SCTP message sent failure [streamId:%d, ppid:%" PRIu32
 				  ", sent:%s, error:0x%08x, info:%s]",
 				  notification->sn_send_failed_event.ssfe_info.snd_sid,
 				  ntohl(notification->sn_send_failed_event.ssfe_info.snd_ppid),
@@ -852,7 +851,7 @@ namespace RTC
 
 					MS_DEBUG_TAG(
 					  sctp,
-					  "SCTP stream reset event [flags:%x, i|o:%s|%s, num streams:%" PRIu16 ", stream ids:%s]",
+					  "SCTP stream reset event [flags:%x, i|o:%s|%s, num streams:%d, stream ids:%s]",
 					  notification->sn_strreset_event.strreset_flags,
 					  incoming ? "true" : "false",
 					  outgoing ? "true" : "false",
@@ -881,7 +880,7 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(
 					  sctp,
-					  "SCTP stream changed, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  "SCTP stream changed, streams [out:%d, in:%d, flags:%x]",
 					  notification->sn_strchange_event.strchange_outstrms,
 					  notification->sn_strchange_event.strchange_instrms,
 					  notification->sn_strchange_event.strchange_flags);
@@ -890,7 +889,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  sctp,
-					  "SCTP stream change denied, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  "SCTP stream change denied, streams [out:%d, in:%d, flags:%x]",
 					  notification->sn_strchange_event.strchange_outstrms,
 					  notification->sn_strchange_event.strchange_instrms,
 					  notification->sn_strchange_event.strchange_flags);
@@ -901,7 +900,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  sctp,
-					  "SCTP stream change failed, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  "SCTP stream change failed, streams [out:%d, in:%d, flags:%x]",
 					  notification->sn_strchange_event.strchange_outstrms,
 					  notification->sn_strchange_event.strchange_instrms,
 					  notification->sn_strchange_event.strchange_flags);
@@ -918,7 +917,7 @@ namespace RTC
 			default:
 			{
 				MS_WARN_TAG(
-				  sctp, "unhandled SCTP event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
+				  sctp, "unhandled SCTP event received [type:%d]", notification->sn_header.sn_type);
 			}
 		}
 	}
