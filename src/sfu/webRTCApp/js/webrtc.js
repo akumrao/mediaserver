@@ -1,5 +1,7 @@
 'use strict';
 
+  var dataChannelLabel = "chat";
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -136,7 +138,7 @@ var isInitiator = false;
 var isStarted = false;
 
 var channelSnd ;
-
+var channelRec ;
 //var localStream;
 //var track;
 
@@ -243,20 +245,47 @@ function initPC()
 
 
 
-    pc2.ondatachannel = function(event) {
-    var channel = event.channel;
-    channel.onopen = function(event) {
-    //channel.send('Hi back!');
-    }
-    channel.onmessage = function(event) {
-    console.log(event.data);
+    // pc2.ondatachannel = function(event) {
+    // var channel = event.channel;
+    // channel.onopen = function(event) {
+    // //channel.send('Hi back!');
+    // }
+    // channel.onmessage = function(event) {
+    // console.log(event.data);
     
-    wirtechanneldata(event.data);
+    // wirtechanneldata(event.data);
 
-    }
-    }
+    // }
+    // }
 
 
+
+    channelRec = pc2.createDataChannel(dataChannelLabel);
+    setupDataChannel(channelRec);
+    
+    // channelRec.onopen = function(event)
+    // {
+    //     //channelSnd.send('Hi you!');
+    // }
+    
+    // channelRec.onmessage = function(event)
+    // {
+    //     console.log(event.data);
+
+    //     wirtechanneldata(event.data);
+    // }
+
+
+
+    pc2.ondatachannel = function (event) {
+          if (event.channel.label == dataChannelLabel) {
+            dataChannel = event.channel;
+            console.log("DataChannel received");
+            setupDataChannel(event.channel);
+          } else {
+            console.log("Unknown CataChannel label: " + event.channel.label);
+          }
+        }
        
     pc2.ontrack = ({transceiver, streams: [stream]}) => {
 
@@ -504,27 +533,29 @@ function initPC()
         switch (pc2.iceConnectionState)
         {
             case 'checking':
-                console.log( 'subscribing...');
+                console.log( 'PC2 subscribing...');
                 break;
             case 'connected':
+
+              console.log( 'PC2 subscribed & connected');
+               break;
+
             case 'completed':
 
-
-                console.log( 'subscribed...');
-
+                console.log( 'PC2 subscribed & completed');
                 break;
             case 'failed':
                // pc2.close();
 
-                console.log( 'failed...');
+                console.log( 'PC2 failed...');
                 break;
             case 'disconnected':
                // pc2.close();
-                console.log( 'Peerconnection disconnected...');
+                console.log( 'PC2 disconnected...');
                 break;
             case 'closed':
                 //pc2.close();
-                console.log( 'failed...');
+                console.log( 'PC2 closed...');
                 break;
         }
     });
@@ -545,20 +576,31 @@ function initPC()
         });
 
 
-
-    channelSnd = pc1.createDataChannel("chat");
-    
-    channelSnd.onopen = function(event)
-    {
-        //channelSnd.send('Hi you!');
+     pc1.ondatachannel = function (event) {
+          if (event.channel.label == dataChannelLabel) {
+            dataChannel = event.channel;
+            console.log("DataChannel received");
+            setupDataChannel(event.channel);
+          } else {
+            console.log("Unknown CataChannel label: " + event.channel.label);
+          }
     }
-    
-    channelSnd.onmessage = function(event)
-    {
-        console.log(event.data);
 
-        wirtechanneldata(event.data);
-    }
+
+    channelSnd = pc1.createDataChannel(dataChannelLabel);
+    setupDataChannel(channelSnd);
+    
+    // channelSnd.onopen = function(event)
+    // {
+    //     //channelSnd.send('Hi you!');
+    // }
+    
+    // channelSnd.onmessage = function(event)
+    // {
+    //     console.log(event.data);
+
+    //     wirtechanneldata(event.data);
+    // }
 
 
     // Handle RTCPeerConnection connection status.
@@ -567,24 +609,29 @@ function initPC()
         switch (pc1.iceConnectionState)
         {
             case 'checking':
-                console.log( 'publishing...');
+                console.log( 'PC1 publishing...');
                 break;
             case 'connected':
+
+              console.log( 'PC1 published & connected');
+               break;
+
             case 'completed':
 
-                console.log( 'published...');
+                console.log( 'PC1 published & completed');
                 break;
+
             case 'failed':
                // pc1.close();
-                console.log( 'failed...');
+                console.log( 'PC1 failed...');
                 break;
             case 'disconnected':
                // pc1.close();
-                console.log( 'failed...');
+                console.log( 'PC1 disconnected...');
                 break;
             case 'closed':
                // pc1.close();
-                 console.log( 'failed...');
+                 console.log( 'PC1 closed...');
                 break;
         }
     });
@@ -1258,8 +1305,8 @@ async function publish(isWebcam)
 
         var offer = await pc1.createOffer();
 
-        console.log( "PC1 offer made: %o", offer.sdp);
-
+        console.log( 'PC1 offer made:%o', offer.sdp ); 
+  
          await pc1.setLocalDescription(offer);
 
         // We can now get the transceiver.mid.
@@ -1544,3 +1591,41 @@ function wirtechanneldata(x) {
   node.appendChild(textnode);
   document.getElementById("dataList").appendChild(node);
 }
+
+
+
+
+
+/**
+* Add the various callback handlers to the DataChannel.
+* Shared between both clients.
+*/
+var setupDataChannel = function (dataChannel) {
+dataChannel.onopen = function (e) {
+  console.log("DataChannel open and ready to be used");
+
+  // $("#send_datachannel_msg").click(function () {
+  //   var msg = $("#datachannel_msg").val();
+  //   console.log("Sending message: " + msg);
+  //   dataChannel.send(msg);
+  // });
+};
+
+dataChannel.onclose = function () {
+  console.log("DataChannel closed");
+};
+
+dataChannel.onerror = function (e) {
+  console.log("DataChannel error: " + e.message);
+  console.log(e);
+};
+
+dataChannel.onmessage = function (e) {
+  console.log("Received message: " + e.data);
+  // if (sourceBuffer != null) {
+  //   sourceBuffer.appendBuffer(e.data);
+  // } else {
+  //   console.log("Got data but sourceBuffer is null");
+  // }
+};
+};
