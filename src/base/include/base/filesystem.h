@@ -55,6 +55,7 @@ Base_API std::int64_t filesize(const std::string& path);
 
 /// Returns a list of all files and folders in the directory.
 Base_API void readdir(const std::string& path, std::vector<std::string>& res);
+Base_API void readdir_filter(const std::string& path, std::vector<std::string>& res, const std::string& filter);
 
 /// Creates a directory.
 Base_API void mkdir(const std::string& path, int mode = 0755);
