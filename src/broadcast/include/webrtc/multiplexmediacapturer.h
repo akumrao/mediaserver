@@ -27,7 +27,7 @@ public:
     MultiplexMediaCapturer();
     ~MultiplexMediaCapturer();
 
-    void openFile(const std::string& file, bool loop = true);
+    void openFile(const std::string& dir, const std::string& file,  const std::string& type , bool loop=true);
     
     std::string random_string();
 
@@ -46,6 +46,11 @@ protected:
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
+    
+    
+      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
+      
     
     int PlayerID;
 };

@@ -22,24 +22,24 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 1111 //443
+#define SERVER_PORT 8080 //443
 #define JOIN_ROOM  "foo"        
 
 #include "webrtc/signaler.h"
 
-std::string sampleDataDir(const std::string& file) {
-    std::string dir;
-   // fs::addnode(dir, base_SOURCE_DIR);
-    fs::addnode(dir, "/");
-    fs::addnode(dir, "var");
-    fs::addnode(dir, "tmp");
-    if (!file.empty())
-        fs::addnode(dir, file);
-    return dir;
-}
+//std::string sampleDataDir(const std::string& file) {
+//    std::string dir;
+//   // fs::addnode(dir, base_SOURCE_DIR);
+//    fs::addnode(dir, "/");
+//    fs::addnode(dir, "var");
+//    fs::addnode(dir, "tmp");
+//    if (!file.empty())
+//        fs::addnode(dir, file);
+//    return dir;
+//}
 
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+    Logger::instance().add(new ConsoleChannel("info", Level::Info));
 
 
     // Setup WebRTC environment
@@ -52,10 +52,16 @@ int main(int argc, char** argv) {
 
     Application app;
 
-    std::string sourceFile(sampleDataDir("test.mp4"));
+    //std::string sourceFile(sampleDataDir("test.mp3"));
 
     base::wrtc::Signaler sig;
-    sig.startStreaming(sourceFile, true);
+
+    sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+    
+    //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
+    
+    //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
+    
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 

@@ -23,13 +23,13 @@ namespace base {
         Signaler::~Signaler() {
         }
 
-        void Signaler::startStreaming(const std::string& file, bool looping) {
+        void Signaler::startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping) {
             // Open the video file
             
-             SInfo << "Open File " <<  file;
+             SInfo << "Open  " << dir <<  "/" <<  file;
                      
-            _capturer.openFile(file, looping);
-            // _capturer.start();
+            _capturer.openFile(dir,file, type, looping);
+           //  _capturer.start();  // enable for rapid testing
         }
 
         void Signaler::sendSDP(wrtc::Peer* conn, const std::string& type,

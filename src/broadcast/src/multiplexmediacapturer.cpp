@@ -41,20 +41,26 @@ MultiplexMediaCapturer::~MultiplexMediaCapturer()
 }
 
 
-void MultiplexMediaCapturer::openFile(const std::string& file, bool loop)
+void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string& file,  const std::string& type , bool loop)
 {
     // Open the capture file
     _videoCapture->setLoopInput(loop);
     _videoCapture->setLimitFramerate(true);
-    _videoCapture->openFile(file);
+
+    if(!dir.empty())         
+        _videoCapture->openDir(dir,type);
+    else if( !file.empty() )
+       _videoCapture->openFile(dir + "/"+ file , type);
+
+
 
     // Set the output settings
     if (_videoCapture->audio()) {
         _videoCapture->audio()->oparams.sampleFmt = "s16";
-        _videoCapture->audio()->oparams.sampleRate = 44000;
+        _videoCapture->audio()->oparams.sampleRate = 48000;
         _videoCapture->audio()->oparams.channels = 2;
         _videoCapture->audio()->recreateResampler();
-        // _videoCapture->audio()->resampler->maxNumSamples = 440;
+        // _videoCapture->audio()->resampler->maxNumSamples = 480;
         // _videoCapture->audio()->resampler->variableOutput = false;
     }
 
@@ -138,17 +144,28 @@ void MultiplexMediaCapturer::addMediaTracks(
     
    std::string rnd=   random_string();
 
-  std::string audioLable = kAudioLabel + rnd;
-  std::string videoLable = kVideoLabel + rnd;
-  std::string streamId =  kStreamId + rnd;
+//  std::string audioLable = kAudioLabel + rnd;
+//  std::string videoLable = kVideoLabel + rnd;
+//  std::string streamId =  kStreamId + rnd;
 
+  std::string audioLable = kAudioLabel;
+  std::string videoLable = kVideoLabel;
+  std::string streamId =  kStreamId;
+  
   if (_videoCapture->audio())
   {
 
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        factory->CreateAudioTrack(
-                audioLable, factory->CreateAudioSource(
-                            cricket::AudioOptions())));
+    
+      cricket::AudioOptions AudioSourceOptions;
+      AudioSourceOptions.echo_cancellation = false;
+      AudioSourceOptions.auto_gain_control = false;
+      AudioSourceOptions.noise_suppression = false;
+     // AudioSourceOptions.audio_jitter_buffer_enable_rtx_handling = true;
+     // AudioSourceOptions.audio_jitter_buffer_max_packets =true;
+      //AudioSourceOptions.audio_network_adaptor =true;
+      
+      if(!audio_track)
+      audio_track =   factory->CreateAudioTrack(    audioLable, factory->CreateAudioSource( AudioSourceOptions));
    
     //stream->AddTrack(audio_track);
     // peer_connection_->AddTransceiver(audio_track);
@@ -164,13 +181,14 @@ void MultiplexMediaCapturer::addMediaTracks(
       //auto source = new VideoPacketSource();
        VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
        
-       ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+      ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
 
       _videoCapture->cbProcessVideo.push_back(var);
       
 
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-            factory->CreateVideoTrack(videoLable, VideoCapturer));
+      
+      if(!video_track)
+        video_track =     factory->CreateVideoTrack(videoLable, VideoCapturer);
         
          video_track->set_enabled(true);
          conn->AddTrack(video_track, {streamId});
