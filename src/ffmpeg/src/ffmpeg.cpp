@@ -66,7 +66,7 @@ static void logCallback(void *ptr, int level, const char *fmt, va_list vl)
     default:
     case AV_LOG_VERBOSE:
     case AV_LOG_DEBUG:
-        // LTrace("FFmpeg: ", util::trimRight<std::string>(logbuf))
+         LError("FFmpeg: ", util::trimRight<std::string>(logbuf))
         break;
     }
 }
@@ -130,7 +130,15 @@ std::string averror(const int error)
     return error_buffer;
 }
 
+/*
+ 
+Since you asked for libav* formats, I'm guessing you're after a code example.
 
+To get a list of all the codecs use the av_codec_next api to iterate through the list of available codecs.
+
+
+ 
+ */
 void printInputFormats(std::ostream& ost, const char* delim)
 {
     initializeFFmpeg(); // init here so reference is not held
@@ -154,7 +162,10 @@ void printOutputFormats(std::ostream& ost, const char* delim)
     uninitializeFFmpeg();
 }
 
-
+/*
+ 
+ To get a list of the formats, use av_format_next in the same way:
+ */
 void printEncoders(std::ostream& ost, const char* delim)
 {
     initializeFFmpeg(); // init here so reference is not held

@@ -3,6 +3,7 @@
 #include <assert.h>
 #ifdef HAVE_FFMPEG
 
+#include "base/filesystem.h"
 #include "ff/devicemanager.h"
 #include "base/logger.h"
 #include "base/platform.h"
@@ -17,7 +18,6 @@ extern "C" {
 
 
 using std::endl;
-
 
 namespace base {
     namespace ff {
@@ -34,6 +34,7 @@ namespace base {
         }
 
         MediaCapture::~MediaCapture() {
+            stop();
             close();
             uninitializeFFmpeg();
         }
@@ -41,7 +42,6 @@ namespace base {
         void MediaCapture::close() {
             LTrace("Closing")
 
-            stop();
 
             if (_video) {
                 delete _video;
@@ -61,10 +61,27 @@ namespace base {
             LTrace("Closing: OK")
         }
 
-        void MediaCapture::openFile(const std::string& file) {
+        void MediaCapture::openFile(const std::string& file, const std::string& type ) {
             LTrace("Opening file: ", file)
-            openStream(file, nullptr, nullptr);
+            
+            if(type =="mp3")
+              audioOnly = true;
+            
+            openStream(file, nullptr, nullptr );
         }
+        
+        void MediaCapture::openDir(const std::string& dr, const std::string& type) {
+            LTrace("Opening openDir: ", dr)
+            base::fs::readdir_filter(dr, files, type);
+            dir = dr;
+            
+            if(type =="mp3")
+                audioOnly = true;
+            
+            openStream( dir + "/" +files[fileNo++], nullptr, nullptr);
+           
+        }
+        
 
         void MediaCapture::openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams) {
             LTrace("Opening stream: ", filename)
@@ -85,10 +102,13 @@ namespace base {
                 auto stream = _formatCtx->streams[i];
                 auto codec = stream->codec;
                 if (!_video && codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-                    _video = new VideoDecoder(stream);
-                    // _video->emitter.attach(packetSlot(this, &MediaCapture::emit));
-                    _video->create();
-                    _video->open();
+                    if(!audioOnly)
+                    {
+                        _video = new VideoDecoder(stream);
+                        // _video->emitter.attach(packetSlot(this, &MediaCapture::emit));
+                        _video->create();
+                        _video->open();
+                    }
                 } else if (!_audio && codec->codec_type == AVMEDIA_TYPE_AUDIO) {
                     _audio = new AudioDecoder(stream);
                     //            _audio->emitter.attach(packetSlot(this, &MediaCapture::emit));
@@ -102,13 +122,13 @@ namespace base {
         }
 
         void MediaCapture::start() {
-            LTrace("MediaCapture Starting")
+            LInfo("MediaCapture Starting")
 
             std::lock_guard<std::mutex> guard(_mutex);
-            assert(_video || _audio);
+           // assert(_video || _audio);
 
-            if ((_video || _audio) && !running()) {
-                LTrace("Initializing thread")
+            if (!running()) {
+               LInfo("Initializing thread")
                 _stopping = false;
                 Thread::start();
             }
@@ -136,7 +156,7 @@ namespace base {
             { 
                 if (f && packet.className() == std::string("PlanarAudioPacket")) {
                     LTrace("Emit: Audio Size  ", packet.size(), ", ", packet.className())
-                    f(packet);
+                   f(packet);
                 }
             }
             
@@ -156,10 +176,17 @@ namespace base {
         }
 
         void MediaCapture::run() {
-            LTrace("Running")
-
-            while (_looping && !_stopping) {
+           
+            if(_stopping)
+                return;
+                      
+            LInfo("Running")
+              
+            do {
+              
+                
                 try {
+                     
                     int res;
                     AVPacket ipacket;
                     av_init_packet(&ipacket);
@@ -238,6 +265,7 @@ namespace base {
                                         << "time=" << _audio->time << ", "
                                         << "pts=" << _audio->pts << endl;
                             }
+                            
                         }
 
                         av_packet_unref(&ipacket);
@@ -261,12 +289,36 @@ namespace base {
                     LError("Unknown Error")
                 }
 
-                if (_stopping || !_looping) {
-                    LTrace("Exiting")
-                    _stopping = true;
-                    // Closing.emit(); //arvind
+                LInfo( "looping back");
+
+              close();
+
+
+              openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
+               if(fileNo == files.size() )
+                   fileNo = 0;
+
+              if(!_looping && !files.size())
+                  break;
+              
+              if (this->audio()) {
+                    this->audio()->oparams.sampleFmt = "s16";
+                    this->audio()->oparams.sampleRate = 48000;
+                    this->audio()->oparams.channels = 2;
+                    this->audio()->recreateResampler();
+                    // _videoCapture->audio()->resampler->maxNumSamples = 480;
+                    // _videoCapture->audio()->resampler->variableOutput = false;
                 }
-            }
+
+                // Convert to yuv420p for WebRTC compatability
+                if (this->video()) {
+                    this->video()->oparams.pixelFmt = "yuv420p"; // nv12
+                    // _videoCapture->video()->oparams.width = capture_format.width;
+                    // _videoCapture->video()->oparams.height = capture_format.height;
+                }
+
+            }while(!_stopping) ;
+
         }
 
         void MediaCapture::getEncoderFormat(Format& format) {

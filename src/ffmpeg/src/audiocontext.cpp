@@ -40,7 +40,7 @@ AudioContext::~AudioContext()
 
 void AudioContext::open()
 {
-    SDebug << "Open: "
+    SInfo<< "Open: "
            << "\n\tInput: " << iparams.toString()
            << "\n\tOutput: " << oparams.toString() << endl;
 
@@ -69,12 +69,14 @@ void AudioContext::close()
     }
     if (ctx) {
         avcodec_close(ctx);
+      //  avcodec_free_context(&ctx);
+          
         ctx = nullptr;
     }
-    if (stream) {
-        // The stream pointer is managed by the AVFormatContext
-        stream = nullptr;
-    }
+//    if (stream) {
+//        // The stream pointer is managed by the AVFormatContext
+//        stream = nullptr;
+//    }
     if (resampler) {
         delete resampler;
         resampler = nullptr;
@@ -120,23 +122,23 @@ bool AudioContext::recreateResampler()
     // For decoders `iparams` is the picture format from the decoder and
     // `oparams` is the picture format passed into the application.
 
-    // // Check if resampler is required
-    // if (iparams.channels == oparams.channels &&
-    //     iparams.sampleRate == oparams.sampleRate &&
-    //     iparams.sampleFmt == oparams.sampleFmt) {
-    //     return false;
-    // }
+     // Check if resampler is required
+       if (iparams.channels == oparams.channels &&
+            iparams.sampleRate == oparams.sampleRate &&
+            iparams.sampleFmt == oparams.sampleFmt) {
+            return false;
+        }
     //
     // // Check if the resampler context needs to be recreated
-    // if (resampler && (
-    //     resampler->iparams.channels == iparams.channels &&
-    //     resampler->iparams.sampleRate == iparams.sampleRate &&
-    //     resampler->iparams.sampleFmt == iparams.sampleFmt) && (
-    //     resampler->oparams.channels == oparams.channels &&
-    //     resampler->oparams.sampleRate == oparams.sampleRate &&
-    //     resampler->oparams.sampleFmt == oparams.sampleFmt)) {
-    //     return false;
-    // }
+     if (resampler && (
+         resampler->iparams.channels == iparams.channels &&
+         resampler->iparams.sampleRate == iparams.sampleRate &&
+         resampler->iparams.sampleFmt == iparams.sampleFmt) && (
+         resampler->oparams.channels == oparams.channels &&
+         resampler->oparams.sampleRate == oparams.sampleRate &&
+         resampler->oparams.sampleFmt == oparams.sampleFmt)) {
+         return false;
+     }
 
     // Recreate the resampler context
     LDebug("Recreating audio resampler context")

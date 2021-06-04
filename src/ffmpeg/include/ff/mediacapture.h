@@ -29,7 +29,14 @@ public:
     MediaCapture();
     virtual ~MediaCapture();
 
-    virtual void openFile(const std::string& file);
+    virtual void openFile(const std::string& file, const std::string& type );
+    virtual void openDir(const std::string& dir,  const std::string& type );
+    
+    std::vector<std::string> files;
+    std::string dir;
+    
+     int fileNo{0};
+    
     // #ifdef HAVE_FFMPEG_AVDEVICE
     // virtual void openCamera(const std::string& device, int width = -1, int height = -1, double framerate = -1);
     // virtual void openMicrophone(const std::string& device, int channels = -1, int sampleRate = -1);
@@ -77,7 +84,7 @@ public:
         // here we will store all binded functions 
         std::vector<function_type> cbProcessVideo;
         std::vector<function_type> cbProcessAudio;
-  
+        
         
 protected:
     virtual void openStream(const std::string& filename, AVInputFormat* inputFormat, AVDictionary** formatParams);
@@ -96,6 +103,8 @@ protected:
     bool _looping;
     bool _realtime;
     bool _ratelimit;
+    
+    bool audioOnly{false};
 };
 
 
