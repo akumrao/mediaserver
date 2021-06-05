@@ -175,6 +175,8 @@ namespace RTC
 	void DataConsumer::SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
+                
+                SInfo << "SctpAssociation SendSctpMessage  dataConsumerId:" << this->id;
 
 		if (!IsActive())
 			return;

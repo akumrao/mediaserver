@@ -90,10 +90,12 @@ namespace RTC
 		uint8_t* messageBuffer{ nullptr };
 		// Others.
 		SctpState state{ SctpState::NEW };
-		struct socket* socket{ nullptr };
+		//struct socket* socket{ nullptr };
 		uint16_t desiredOs{ 0 };
 		size_t messageBufferLen{ 0 };
 		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.
+        public:
+                struct socket* socket{ nullptr };
 	};
 
 	/* Inline static methods. */

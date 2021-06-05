@@ -397,7 +397,7 @@ namespace SdpParse
             }
             
             
-             if( kind == "application" )
+            if( kind == "application" )
             {
                 
 

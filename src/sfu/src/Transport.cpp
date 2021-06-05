@@ -973,7 +973,7 @@ namespace RTC
 				// This may throw. If so, delete the DataProducer and throw.
 				try
 				{
-					this->sctpListener.AddDataProducer(dataProducer);
+					this->sctpListener.AddDataProducer(sctpAssociation, dataProducer);
 				}
 				catch (const std::exception& error)
 				{
@@ -1047,7 +1047,7 @@ namespace RTC
 				// Insert into the maps.
 				this->mapDataConsumers[dataConsumerId] = dataConsumer;
 
-				SInfo <<  "DataConsumer created dataConsumerId:" <<  dataConsumerId <<  " dataProducerId:" << dataProducerId;
+				SInfo <<  "DataConsumer created dataConsumerId:" <<  dataConsumerId <<  " dataProducerId:" << dataProducerId << " sctpAssociation:" << sctpAssociation;
 
 				json data = json::object();
 
@@ -1422,7 +1422,9 @@ namespace RTC
 	}
 
 	void Transport::ReceiveSctpData(const uint8_t* data, size_t len)
-	{
+	{   
+                SInfo << "ReceiveSctpData sctpAssociation:" << sctpAssociation;
+            
 		MS_TRACE();
 
 		if (!this->sctpAssociation)
@@ -2421,6 +2423,8 @@ namespace RTC
 	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
+                
+                SInfo << " OnDataProducerSctpMessageReceived dataProducer" <<  dataProducer->id  << " sctpAssociation "  << sctpAssociation;
 
 		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
 	}
@@ -2429,13 +2433,15 @@ namespace RTC
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
-
+                 SInfo << " OnDataProducerSctpMessageReceived dataConsumer" <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
+                 
 		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
+                 SInfo << " OnDataConsumerDataProducerClosed dataConsumer" <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
 
 		// Remove it from the maps.
 		this->mapDataConsumers.erase(dataConsumer->id);
@@ -2526,6 +2532,7 @@ namespace RTC
 	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+                SInfo << "OnSctpAssociationSendData sctpAssociation " << sctpAssociation;
 
 		// Ignore if destroying.
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
@@ -2545,9 +2552,10 @@ namespace RTC
 	  const uint8_t* msg,
 	  size_t len)
 	{
+                SInfo << "OnSctpAssociationMessageReceived " ;
 		MS_TRACE();
 
-		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
+		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(sctpAssociation);
 
 		if (!dataProducer)
 		{

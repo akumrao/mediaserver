@@ -76,6 +76,260 @@ inline static int onRecvSctpData(
 	return 1;
 }
 
+
+
+#define DATA_CHANNEL_CLOSED     0
+#define DATA_CHANNEL_CONNECTING 1
+#define DATA_CHANNEL_OPEN       2
+#define DATA_CHANNEL_CLOSING    3
+
+
+//#define DATA_CHANNEL_OPEN_REQUEST  0
+//#define DATA_CHANNEL_OPEN_RESPONSE 1
+//#define DATA_CHANNEL_ACK           2
+
+#define DC_TYPE_OPEN 0x03
+#define DC_TYPE_ACK 0x02
+//
+#define DATA_CHANNEL_PPID_CONTROL   50
+#define DATA_CHANNEL_PPID_DOMSTRING 51
+#define DATA_CHANNEL_PPID_BINARY    52
+
+#define DATA_CHANNEL_RELIABLE                0
+#define DATA_CHANNEL_RELIABLE_STREAM         1
+#define DATA_CHANNEL_UNRELIABLE              2
+#define DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT 3
+#define DATA_CHANNEL_PARTIAL_RELIABLE_TIMED  4
+//
+#define DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED 0x0001
+
+#ifndef _WIN32
+#define SCTP_PACKED __attribute__((packed))
+#else
+#pragma pack (push, 1)
+#define SCTP_PACKED
+#endif
+
+#if defined(_WIN32) && !defined(__MINGW32__)
+#pragma warning( push )
+#pragma warning( disable : 4200 )
+#endif /* defined(_WIN32) && !defined(__MINGW32__) */
+struct rtcweb_datachannel_open_request {
+	uint8_t msg_type; /* DATA_CHANNEL_OPEN_REQUEST */
+	uint8_t channel_type;
+	uint16_t flags;
+	uint16_t reliability_params;
+	int16_t priority;
+	char label[];
+} SCTP_PACKED;
+#if defined(_WIN32) && !defined(__MINGW32__)
+#pragma warning( pop )
+#endif /* defined(_WIN32) && !defined(__MINGW32__) */
+
+struct rtcweb_datachannel_open_response {
+	uint8_t  msg_type; /* DATA_CHANNEL_OPEN_RESPONSE */
+	uint8_t  error;
+	uint16_t flags;
+	uint16_t reverse_stream;
+} SCTP_PACKED;
+
+struct rtcweb_datachannel_ack {
+	uint8_t  msg_type; /* DATA_CHANNEL_ACK */
+} SCTP_PACKED;
+
+#ifdef _WIN32
+#pragma pack(pop)
+#endif
+
+
+struct channel {
+  uint8_t msg_type;
+  uint8_t chan_type;
+  uint16_t priority;
+  uint32_t reliability;
+  uint16_t label_len;
+  uint16_t protocol_len;
+  char *label;
+  char *protocol;
+};
+
+
+#undef SCTP_PACKED
+
+
+static std::map< RTC::SctpAssociation*, struct channel > stpMap;
+
+
+
+
+static void print_status( RTC::SctpAssociation *pc, struct channel *channel )
+{
+	struct sctp_status status;
+	socklen_t len;
+	uint32_t i;
+        
+        struct socket* sock= pc->socket;
+        
+	len = (socklen_t)sizeof(struct sctp_status);
+	if (usrsctp_getsockopt(sock, IPPROTO_SCTP, SCTP_STATUS, &status, &len) < 0) {
+		perror("getsockopt");
+		return;
+	}
+	LInfo("Association state: ");
+	switch (status.sstat_state) {
+	case SCTP_CLOSED:
+		LInfo("CLOSED");
+		break;
+	case SCTP_BOUND:
+		LInfo("BOUND");
+		break;
+	case SCTP_LISTEN:
+		LInfo("LISTEN");
+		break;
+	case SCTP_COOKIE_WAIT:
+		LInfo("COOKIE_WAIT");
+		break;
+	case SCTP_COOKIE_ECHOED:
+		LInfo("COOKIE_ECHOED");
+		break;
+	case SCTP_ESTABLISHED:
+		LInfo("ESTABLISHED");
+		break;
+	case SCTP_SHUTDOWN_PENDING:
+		LInfo("SHUTDOWN_PENDING");
+		break;
+	case SCTP_SHUTDOWN_SENT:
+		LInfo("SHUTDOWN_SENT");
+		break;
+	case SCTP_SHUTDOWN_RECEIVED:
+		LInfo("SHUTDOWN_RECEIVED");
+		break;
+	case SCTP_SHUTDOWN_ACK_SENT:
+		LInfo("SHUTDOWN_ACK_SENT");
+		break;
+	default:
+		LInfo("UNKNOWN");
+		break;
+	}
+	//LInfo("Number of streams (i/o) = (%u/%u)",
+	//       status.sstat_instrms, status.sstat_outstrms);
+	//for (i = 0; i < NUMBER_OF_CHANNELS; i++) 
+	{
+		//channel = &(pc->channels[i]);
+		
+
+		
+	}
+}
+
+
+
+
+static void
+handle_open_request_message(RTC::SctpAssociation *pc,
+                             uint8_t* raw_msg,
+                            size_t length,
+                            uint16_t i_stream)
+{
+	struct channel *channel =  &stpMap[pc];
+	
+
+        channel->chan_type = raw_msg[1];
+        channel->priority = (raw_msg[2] << 8) + raw_msg[3];
+        channel->reliability = (raw_msg[4] << 24) + (raw_msg[5] << 16) + (raw_msg[6] << 8) + raw_msg[7];
+        channel->label_len = (raw_msg[8] << 8) + raw_msg[9];
+        channel->protocol_len = (raw_msg[10] << 8) + raw_msg[11];
+
+        std::string label(reinterpret_cast<char *>(raw_msg + 12), channel->label_len);
+        std::string protocol(reinterpret_cast<char *>(raw_msg + 12 + channel->label_len), channel->protocol_len);
+
+        SInfo << "Creating channel with stream id:" <<  i_stream << " channel type: " <<   channel->chan_type << " label:"  <<  label <<  " protocol: " << protocol;
+  
+              
+        bool unordered;
+	
+	switch ( channel->chan_type) {
+	case DATA_CHANNEL_RELIABLE:
+		//pr_policy = SCTP_PR_SCTP_NONE;
+		break;
+	/* XXX Doesn't make sense */
+	case DATA_CHANNEL_RELIABLE_STREAM:
+		//pr_policy = SCTP_PR_SCTP_NONE;
+		break;
+	/* XXX Doesn't make sense */
+	case DATA_CHANNEL_UNRELIABLE:
+		//pr_policy = SCTP_PR_SCTP_TTL;
+		break;
+	case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT:
+		//pr_policy = SCTP_PR_SCTP_RTX;
+		break;
+	case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED:
+		//pr_policy = SCTP_PR_SCTP_TTL;
+		break;
+	default:
+		//pr_policy = SCTP_PR_SCTP_NONE;
+		/* XXX error handling */
+		break;
+	}
+	//uint32_t pr_value = ntohs(channel->reliability);
+	if (ntohs(channel->priority) & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED) {
+		unordered = 1;
+	} else {
+		unordered = 0;
+	}
+ 
+        
+//        pc->listener->OnSctpAssociationOpen(pc, i_stream,  label, protocol,  !unordered);
+        
+	
+        print_status(  pc, channel );
+}
+
+
+
+static void
+handle_open_response_message(RTC::SctpAssociation *pc,
+                             struct rtcweb_datachannel_open_response *rsp,
+                             size_t length, uint16_t i_stream)
+{
+	uint16_t o_stream;
+
+
+	o_stream = ntohs(rsp->reverse_stream);
+        
+        struct channel *channel =  &stpMap[pc];
+        
+//	channel = find_channel_by_o_stream(pc, o_stream);
+//	if (channel == NULL) {
+//		/* XXX: improve error handling */
+//		printf("handle_open_response_message: Can't find channel for outgoing steam %d.", o_stream);
+//		return;
+//	}
+//	if (channel->state != DATA_CHANNEL_CONNECTING) {
+//		/* XXX: improve error handling */
+//		printf("handle_open_response_message: Channel with id %u for outgoing steam %u is in state %u.", channel->id, o_stream, channel->state);
+//		return;
+//	}
+//	if (find_channel_by_i_stream(pc, i_stream)) {
+//		/* XXX: improve error handling */
+//		printf("handle_open_response_message: Channel collision for channel with id %u and streams (in/out) = (%u/%u).", channel->id, i_stream, o_stream);
+//		return;
+//	}
+	//channel->i_stream = i_stream;
+	//channel->state = DATA_CHANNEL_OPEN;
+	//pc->i_stream_channel[i_stream] = channel;
+//	if (send_open_ack_message(pc->sock, o_stream)) {
+//		channel->flags = 0;
+//	} else {
+//		channel->flags |= DATA_CHANNEL_FLAGS_SEND_ACK;
+//	}
+         print_status(  pc, channel );
+	return;
+}
+
+
+
+
 namespace RTC
 {
 	/* Static. */
@@ -189,6 +443,9 @@ namespace RTC
 
 		if (ret < 0)
 			base::uv::throwError("usrsctp_bind() failed:", errno);
+                
+                
+                SInfo << "SctpAssociation with socket "  << this->socket  << " this " << this ;
 
 		DepUsrSCTP::IncreaseSctpAssociations();
 	}
@@ -297,6 +554,7 @@ namespace RTC
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
                 
+            SInfo << " SendSctpMessage dataConsumer" <<  dataConsumer;
 
 		// This must be controlled by the DataConsumer.
 		assertm(
@@ -351,6 +609,8 @@ namespace RTC
 			  len,
 			  std::strerror(errno));
 		}
+                
+                  SInfo << "usrsctp_sendv with this "  << this <<  " socket " << this->socket  << " msg " << msg ;
 	}
 
 	void SctpAssociation::HandleDataConsumer(RTC::DataConsumer* dataConsumer)
@@ -513,21 +773,86 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
 #endif
-
+              //  SInfo << "OnUsrSctpSendSctpData "  <<  this <<  " msg "  <<  data;
 		this->listener->OnSctpAssociationSendData(this, data, len);
 	}
 
 	void SctpAssociation::OnUsrSctpReceiveSctpData(
-	  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len)
+	  uint16_t i_stream, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len)
 	{
-                SInfo << "streamId: " << streamId << " ssn: "  << ssn << " ppid: " << ppid << " data: " << data;
-                
-                if(streamId < 1)
-                {
-                    int x = 1;
+              
+         ///////////////////////////////
+        struct rtcweb_datachannel_open_request *req;
+	struct rtcweb_datachannel_open_response *rsp;
+	struct rtcweb_datachannel_ack *ack, *msg;   
+        //int length=0;
+        switch (ppid) 
+        {
+            case DATA_CHANNEL_PPID_CONTROL:
+                if (len < sizeof (struct rtcweb_datachannel_ack)) {
+                    return;
                 }
-                    
-                    
+                msg = (struct rtcweb_datachannel_ack *) data;
+                switch (msg->msg_type) {
+                    case DC_TYPE_OPEN:
+                        if (len < sizeof (struct rtcweb_datachannel_open_request)) {
+                            /* XXX: error handling? */
+                            return;
+                        }
+                        SInfo << " channel open request streamid " <<  i_stream << " this " << this;
+                        
+                       // req = (struct rtcweb_datachannel_open_request *) data;
+                        handle_open_request_message(this, ( uint8_t*)data, len, i_stream);
+                        break;
+                   /* case 1:
+                        if (len < sizeof (struct rtcweb_datachannel_open_response)) {
+                            /* XXX: error handling? */
+                            return;
+                        }
+                         SInfo << " channel open response streamid " <<  i_stream ;
+                        rsp = (struct rtcweb_datachannel_open_response *) data;
+                        handle_open_response_message(this, rsp, len, i_stream);
+                        break;
+		   */
+                    case DC_TYPE_ACK:
+                        if (len < sizeof (struct rtcweb_datachannel_ack)) {
+                            /* XXX: error handling? */
+                            return;
+                        }
+                        
+                         SInfo << " channel ack streamid " <<  i_stream ;
+                         
+                        ack = (struct rtcweb_datachannel_ack *) data;
+                       // handle_open_ack_message(this, ack, len, i_stream);
+                        break;
+                    default:
+                        //handle_unknown_message(buffer, length, i_stream);
+                        SError <<  "Unknown state ";
+                        break;
+                }
+                break;
+            case DATA_CHANNEL_PPID_DOMSTRING:
+            case DATA_CHANNEL_PPID_BINARY:
+              //  handle_data_message(pc, buffer, length, i_stream);
+                break;
+            default:
+              //  LInfo("Message of length %zu, PPID %u on stream %u received.\n",
+                   //     length, ppid, i_stream);
+                break;
+        };
+
+
+   
+            
+            
+            
+            
+            
+            //////////////////////////////////////////
+            
+            
+            
+                
 		// Ignore WebRTC DataChannel Control DATA chunks.
 		if (ppid == 50)
 		{
@@ -535,7 +860,7 @@ namespace RTC
 
 			return;
 		}
-
+                SInfo << "streamId: " << i_stream << " this "  << this  <<  " ssn: "  << ssn << " ppid: " << ppid << " data: " << data;
 		if (this->messageBufferLen != 0 && ssn != this->lastSsnReceived)
 		{
 			MS_WARN_TAG(
@@ -572,7 +897,7 @@ namespace RTC
 		{
 			///MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
-			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
+			this->listener->OnSctpAssociationMessageReceived(this, i_stream, ppid, data, len);
 		}
 		// If end of message and there is buffered data, append data and notify buffer.
 		else if (eor && this->messageBufferLen != 0)
@@ -583,7 +908,7 @@ namespace RTC
 			MS_DEBUG_DEV("notifying listener [eor:1, buffer len:%zu]", this->messageBufferLen);
 
 			this->listener->OnSctpAssociationMessageReceived(
-			  this, streamId, ppid, this->messageBuffer, this->messageBufferLen);
+			  this, i_stream, ppid, this->messageBuffer, this->messageBufferLen);
 
 			this->messageBufferLen = 0;
 		}
@@ -633,6 +958,7 @@ namespace RTC
 
 						if (this->state != SctpState::CONNECTED)
 						{
+                                                        SInfo << "OnSctpAssociationConnected "  ;
 							this->state = SctpState::CONNECTED;
 							this->listener->OnSctpAssociationConnected(this);
 						}

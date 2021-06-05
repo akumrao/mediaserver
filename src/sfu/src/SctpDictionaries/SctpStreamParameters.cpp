@@ -13,6 +13,8 @@ namespace RTC
 	SctpStreamParameters::SctpStreamParameters(json& data)
 	{
 		MS_TRACE();
+                
+                STrace << "SctpStreamParameters() " <<  this->streamId;
 
 		if (!data.is_object())
 			base::uv::throwError("data is not an object");
@@ -84,6 +86,8 @@ namespace RTC
 	void SctpStreamParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
+                
+                SInfo << "SctpStreamParameters::FillJson " <<  this->streamId;
 
 		// Add streamId.
 		jsonObject["streamId"] = this->streamId;
