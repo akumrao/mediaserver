@@ -1,5 +1,7 @@
 ffmpeg complile 
 apt-get install libssl-dev -y
+
+
 apt install libsdl2-dev libsdl2-2.0-0 -y
 apt install libfdk-aac-dev -y
 git clone git@github.com:FFmpeg/FFmpeg.git  ffmpeg
@@ -9,6 +11,25 @@ git checkout release/3.3
 
 do it 
  ./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
+
+
+
+./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac  --enable-libmp3lame   --enable-nonfree --enable-libx264
+
+
+apt-get install -y libx264-dev
+
+wget https://downloads.sourceforge.net/lame/lame-3.100.tar.gz && \
+tar xvf lame-3.100.tar.gz && cd lame-3.100 && \
+PATH="$HOME/bin:$PATH" \
+./configure \
+       --enable-static \
+       --disable-shared \
+       --enable-nasm  && \
+PATH="$HOME/bin:$PATH" make && \
+make install
+
+
 
 make -j8
 
