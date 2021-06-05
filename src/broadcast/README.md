@@ -23,10 +23,8 @@ wget https://downloads.sourceforge.net/lame/lame-3.100.tar.gz && \
 tar xvf lame-3.100.tar.gz && cd lame-3.100 && \
 PATH="$HOME/bin:$PATH" \
 ./configure \
-       --enable-static \
-       --disable-shared \
-       --enable-nasm  && \
-PATH="$HOME/bin:$PATH" make && \
+       --enable-shared \
+
 make install
 
 
