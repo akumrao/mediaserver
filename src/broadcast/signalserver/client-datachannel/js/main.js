@@ -198,9 +198,9 @@ function createPeerConnection() {
         mediaSource.addEventListener('sourceopen', function () {
           sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
           var bufferMode = sourceBuffer.mode
-          // if (bufferMode == "segments") {
-          //   sourceBuffer.mode = "sequence"
-          // }
+          if (bufferMode == "segments") {
+            sourceBuffer.mode = "sequence"
+          }
 
           sourceBuffer.addEventListener('updateend', function () {
 
@@ -444,6 +444,7 @@ function onMuteClick() {
 
 
 var setupDataChannel = function (dataChannel) {
+  dataChannel.binaryType = "arraybuffer";
   dataChannel.onopen = function (e) {
     console.log("DataChannel open and ready to be used");
 
