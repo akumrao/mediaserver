@@ -7,7 +7,7 @@
 #include "pc/media_session.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/sdp_utils.h"
-
+#include <thread>
 
 using std::endl;
 
@@ -16,6 +16,31 @@ namespace wrtc {
 
  
 
+     
+
+void ReadMp4::run() 
+{
+
+
+    std::ifstream bunnyFile;
+    bunnyFile.open("/var/tmp/frag_bunny.mp4", std::ios_base::in | std::ios_base::binary);
+
+    char buf[100 * 1024];
+
+    while (bunnyFile.good() && !stopped() ) {
+      bunnyFile.read(buf, 100 * 1024);
+      int nRead = bunnyFile.gcount();
+      if (nRead > 0) {
+       // dc->sendDataMsg("ravind");
+        pc->sendDataBinary((const uint8_t *)buf, nRead);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+
+      std::cout << "Sent message of size " << std::to_string(nRead) << std::endl;
+    }
+}
+ 
+    
 cricket::Candidate CreateLocalUdpCandidate(
 	const rtc::SocketAddress& address) {
 	cricket::Candidate candidate;
@@ -64,7 +89,9 @@ Peer::Peer(PeerManager* manager,
     , _mode(mode)
     //, _context->factory(manager->factory())
     , _peerConnection(nullptr)
+    , readmp4(this)
 {
+    SInfo << "Peer()";
       webrtc::PeerConnectionInterface::IceServer stun;
      // stun.uri = kGoogleStunServerUri;
      //_config.servers.push_back(stun);
@@ -97,12 +124,11 @@ Peer::Peer(PeerManager* manager,
 
 Peer::~Peer()
 {
+    closeConnection();
+     SInfo << "~Peer()";
     LInfo(_peerid, ": Destroying")
-    // closeConnection();
 
-    if (_peerConnection) {
-        _peerConnection->Close();
-    }
+    
 }
 
 
@@ -151,6 +177,9 @@ void Peer::createConnection()
 
 void Peer::closeConnection()
 {
+    
+    CloseDataChannel();
+     
     LInfo(_peerid, ": Closing")
 
     if (_peerConnection) {
@@ -173,13 +202,100 @@ void Peer::createOffer()
              
      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 
-    options.offer_to_receive_audio = true;
-    options.offer_to_receive_video = true;
+    options.offer_to_receive_audio = false;
+    options.offer_to_receive_video = false;
 
+    
+    struct webrtc::DataChannelInit init;
+    init.ordered = true;
+    init.reliable = true;
+    data_channel_ = _peerConnection->CreateDataChannel("testchannel", &init);
+    if (data_channel_.get()) {
+    data_channel_->RegisterObserver(this);
+    }
+    
+    
 
     _peerConnection->CreateOffer(this,options);
+    
+    
 }
 
+
+void Peer::OnDataChannel(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
+  channel->RegisterObserver(this);
+  
+  data_channel_ = channel; 
+  
+}
+
+void Peer::OnStateChange() {
+  if (data_channel_) {
+    webrtc::DataChannelInterface::DataState state = data_channel_->state();
+    if (state == webrtc::DataChannelInterface::kOpen) {
+     // if (OnLocalDataChannelReady)
+   //     OnLocalDataChannelReady();
+      //RTC_LOG(LS_INFO) << "Data channel is open";
+        
+        SInfo << "Data channel is open";
+       // sendDataMsg("arvind");
+       // std::thread send_thread = std::thread(send_loop, this);
+       // send_thread.detach();
+        
+        readmp4.start();
+    }
+  }
+}
+
+//  A data buffer was successfully received.
+void Peer::OnMessage(const webrtc::DataBuffer& buffer) {
+  size_t size = buffer.data.size();
+  char* msg = new char[size + 1];
+  memcpy(msg, buffer.data.data(), size);
+  msg[size] = 0;
+ // if (OnDataFromDataChannelReady)
+   // OnDataFromDataChannelReady(msg);
+  
+  SInfo << "datachannel msg:"  << msg;
+  delete[] msg;
+}
+
+void Peer::CloseDataChannel() {
+    readmp4.stop();
+    readmp4.join();
+    
+  if (data_channel_.get()) {
+    data_channel_->UnregisterObserver();
+    data_channel_->Close();
+  }
+  data_channel_ = nullptr;
+}
+
+bool Peer::sendDataMsg(const std::string& data) {
+  if (!data_channel_.get()) {
+    SInfo << "Data channel is not established";
+    return false;
+  }
+  webrtc::DataBuffer buffer(data);
+  data_channel_->Send(buffer);
+  return true;
+}
+
+bool Peer::sendDataBinary(const uint8_t *data, int len) {
+  if (!data_channel_.get()) {
+    SInfo << "Data channel is not established";
+    return false;
+  }
+  
+  
+  webrtc::DataBuffer buffer(rtc::CopyOnWriteBuffer(data, len), true);
+
+  
+  data_channel_->Send(buffer);
+  return true;
+
+  }
 
 void Peer::recvSDP(const std::string& type, const std::string& sdp)
 {
@@ -196,8 +312,8 @@ void Peer::recvSDP(const std::string& type, const std::string& sdp)
 
 
     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-    options.offer_to_receive_audio = true;
-    options.offer_to_receive_video = true;
+    options.offer_to_receive_audio = false;
+    options.offer_to_receive_video = false;
  
     if (type == "offer") {
        // assert(_mode == Answer);
@@ -312,11 +428,11 @@ void Peer::OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> strea
 }
 
 
-void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream)
-{
-    LInfo(_peerid, ": OnDataChannel")
-    assert(0 && "virtual");
-}
+//void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream)
+//{
+//    LInfo(_peerid, ": OnDataChannel")
+//    assert(0 && "virtual");
+//}
 
 
 void Peer::OnAddStream(webrtc::MediaStreamInterface* stream)

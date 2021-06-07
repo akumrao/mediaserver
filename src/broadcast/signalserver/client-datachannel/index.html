@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Realtime communication with WebRTC</title>
+
+  <link rel="stylesheet" href="/css/main.css" />
+
+</head>
+
+<body>
+
+  <h1>Realtime communication with WebRTC</h1>
+
+   <script>
+
+        // Intercept Symple log messages
+    log = function () {
+        var args = Array.prototype.slice.call(arguments);
+        $('#webrtc-logs').append(JSON.stringify(args)).append('\n');
+        console.log.apply(console, arguments);
+    }
+    </script>
+
+<div class="videos">
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <strong>Live Streaming!</strong> WebRTC video feed for webrtcstreamer</code> sample.
+      </div>
+
+      <div class="row">
+        <div class="col">
+        <!--  <video id="localVideo" autoplay muted playsinline></video> -->
+         <video id="remoteVideo" muted playsinline controls></video>
+        </div>
+      </div>
+      <div class="row">Mute: <input type="checkbox" id="checkmute" onclick="onMuteClick()"> </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header">
+              Logs
+            </div>
+            <div class="card-block">
+              <pre id="webrtc-logs"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+  <!-- This file is automatically added/served when running "node index.js". -->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>
