@@ -7,15 +7,16 @@
 
 #include "api/jsep.h"
 #include <json/json.hpp>
+#include "webrtc/fmp4.h"
 using json = nlohmann::json;
 
-#include "base/thread.h"
+//#include "base/thread.h"
 
 namespace base {
 namespace wrtc {
 
 class PeerManager;
-class Peer;
+/*class Peer;
  class ReadMp4: public Thread
  {
      Peer *pc;
@@ -33,6 +34,7 @@ class Peer;
 
 
  };
+ */
 class Peer : public webrtc::PeerConnectionObserver,
              public webrtc::CreateSessionDescriptionObserver, public webrtc::DataChannelObserver
 {
@@ -43,7 +45,7 @@ public:
         Answer ///< Operating as answerer
     };
 
-    base::wrtc::ReadMp4 readmp4;
+    ReadMp4 readmp4;
     
     Peer(PeerManager* manager,
          PeerFactoryContext* context,

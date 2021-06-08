@@ -1,41 +1,41 @@
-#
-# http://www.gnu.org/software/make/manual/make.html
-#
-CC:=gcc
-INCLUDES:=$(shell pkg-config --cflags libavformat libavcodec libswresample libswscale libavutil )
-CFLAGS:=-Wall -ggdb
-LDFLAGS:=$(shell pkg-config --libs libavformat libavcodec libswresample libswscale libavutil ) -lm
-EXE:=tutorial01.out tutorial02.out tutorial03.out tutorial04.out\
-	tutorial05.out tutorial06.out tutorial07.out
+### CUSTOMIZE BELOW HERE #######################################################
 
-#
-# This is here to prevent Make from deleting secondary files.
-#
-.SECONDARY:
-	
+CC	= gcc
+CXX     = g++
+TARGET=fmp4 # define the name of the executable
+SOURCES=$(wildcard *.cpp )
 
-#
-# $< is the first dependency in the dependency list
-# $@ is the target name
-#
-all: 
-	gcc -g -o fmp4 fragmentedMp4.c -lavformat -lavcodec -lswscale -lavutil -lswresample -lz -lm -ldl
+CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized 
 
-dirs:
-	mkdir -p obj
-	mkdir -p bin
+CPPFLAGS   := -I../../json/include/ -I../../ffmpeg/include -I../../signal/include -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ 
+              
+LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
-tags: *.c
-	ctags *.c
 
-bin/%.out: obj/%.o
-	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+LDLIBS    := -lpthread -lm -ldl  -lssl -lcrypto -lavformat -lavcodec -lavutil -lswresample -lswscale -lavdevice -lavutil 
 
-obj/%.o : %.c
-	$(CC) $(CFLAGS) $< $(INCLUDES) -c -o $@
+#SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
+
+
+################################################################################
+### DO NOT EDIT THE FOLLOWING LINES ############################################
+
+
+# define list of objects
+OBJSC=$(SOURCES:.cpp=.o)
+OBJS=$(OBJSC:.cpp=.o)
+
+# the target is obtained linking all .o files
+all: $(SOURCES) $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) $(SLIBS) -o $(TARGET)
+
+purge: clean
+	rm -f $(TARGET)
 
 clean:
-	rm -f obj/*
-	rm -f bin/*
-	rm -f tags
+	rm -f  $(OBJS)
 
+################################################################################
+################################################################################

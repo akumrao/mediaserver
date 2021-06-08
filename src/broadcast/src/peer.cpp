@@ -7,7 +7,7 @@
 #include "pc/media_session.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/sdp_utils.h"
-#include <thread>
+
 
 using std::endl;
 
@@ -17,29 +17,29 @@ namespace wrtc {
  
 
      
-
+/*
 void ReadMp4::run() 
 {
 
 
     std::ifstream bunnyFile;
-    bunnyFile.open("/var/tmp/frag_bunny.mp4", std::ios_base::in | std::ios_base::binary);
+    bunnyFile.open("/tmp/test.mp4", std::ios_base::in | std::ios_base::binary);
 
-    char buf[100 * 1024];
+    char buf[ 1024];
 
     while (bunnyFile.good() && !stopped() ) {
-      bunnyFile.read(buf, 100 * 1024);
+      bunnyFile.read(buf,  1024);
       int nRead = bunnyFile.gcount();
       if (nRead > 0) {
        // dc->sendDataMsg("ravind");
         pc->sendDataBinary((const uint8_t *)buf, nRead);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
 
       std::cout << "Sent message of size " << std::to_string(nRead) << std::endl;
     }
 }
- 
+ */
     
 cricket::Candidate CreateLocalUdpCandidate(
 	const rtc::SocketAddress& address) {

@@ -186,11 +186,9 @@ window.onbeforeunload = function() {
 
 function createPeerConnection() {
 
-
-
    
       var video = document.querySelector('#remoteVideo');
-      var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+      var mimeCodec = 'video/mp4; codecs="mp4a.40.2,avc1.42e01e"';
 
       if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
         var mediaSource = new MediaSource;
