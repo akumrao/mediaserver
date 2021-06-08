@@ -198,16 +198,16 @@ function createPeerConnection() {
         mediaSource.addEventListener('sourceopen', function () {
           sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
           var bufferMode = sourceBuffer.mode
-          if (bufferMode == "segments") {
-            sourceBuffer.mode = "sequence"
-          }
+          // if (bufferMode == "segments") {
+          //   sourceBuffer.mode = "sequence"
+          // }
 
           sourceBuffer.addEventListener('updateend', function () {
 
-            if (mediaSource.duration !== Number.POSITIVE_INFINITY && video.currentTime === 0 && mediaSource.duration > 0) {
-                        video.currentTime = mediaSource.duration - 1;
-                        mediaSource.duration = Number.POSITIVE_INFINITY;
-              }
+            // if (mediaSource.duration !== Number.POSITIVE_INFINITY && video.currentTime === 0 && mediaSource.duration > 0) {
+            //             video.currentTime = mediaSource.duration - 1;
+            //             mediaSource.duration = Number.POSITIVE_INFINITY;
+            //   }
 
 
             video.play();
