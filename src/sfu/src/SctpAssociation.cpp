@@ -806,7 +806,7 @@ namespace RTC
                         break;
                    /* case 1:
                         if (len < sizeof (struct rtcweb_datachannel_open_response)) {
-                            /* XXX: error handling? */
+                           
                             return;
                         }
                          SInfo << " channel open response streamid " <<  i_stream ;
