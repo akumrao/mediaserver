@@ -3,7 +3,7 @@
 CC	= gcc
 CXX     = g++
 TARGET=fmp4 # define the name of the executable
-SOURCES=$(wildcard *.cpp )
+SOURCES=$(wildcard *.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized 
 

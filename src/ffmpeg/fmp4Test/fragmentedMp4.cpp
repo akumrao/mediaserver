@@ -1,16 +1,17 @@
 // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 #include "ff/ff.h"
+#include "ff/codec.h"
 #include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
-
-
+#include "base/time.h"
+#include "base/logger.h"
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-
+#include <thread>
 #include <string>
 #include <vector>
-#define IOBUFSIZE 4096
+#define IOBUFSIZE 40960
 
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag) {
     AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
@@ -139,6 +140,8 @@ int main(int argc, char **argv) {
 
     ofmt = ofmt_ctx->oformat;
 
+    int64_t frameInterval;
+    
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
         AVStream *out_stream;
         AVStream *in_stream = ifmt_ctx->streams[i];
@@ -150,6 +153,14 @@ int main(int argc, char **argv) {
             stream_mapping[i] = -1;
             continue;
         }
+        
+        if (in_codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+             frameInterval =  base::ff::fpsToInterval(int( in_stream->avg_frame_rate.num/in_stream->avg_frame_rate.den ));
+            
+        }
+         
+         
 
         stream_mapping[i] = stream_index++;
 
@@ -191,10 +202,32 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+     int64_t ptsOffset = 0;
+     int64_t dtsOffset = 0;
+     int64_t tmpptsOffset = 0;
+     int64_t tmpdtsOffset = 0;
+
+    int64_t lastTimestamp = base::time::hrtime();
+     
     while (1) {
         AVStream *in_stream, *out_stream;
-
+        
+     
         ret = av_read_frame(ifmt_ctx, &pkt);
+        
+         if (ret == AVERROR_EOF) {
+            if(0) {
+                auto stream = ifmt_ctx->streams[pkt.stream_index];
+                avio_seek(ifmt_ctx->pb, 0, SEEK_SET);
+                avformat_seek_file(ifmt_ctx, pkt.stream_index, 0, 0, stream->duration, 0);
+                
+                 ptsOffset += tmpptsOffset+1024;
+                 dtsOffset += tmpdtsOffset+1024;
+        
+                continue;
+            }
+        }
+        
         if (ret < 0)
             break;
 
@@ -203,6 +236,17 @@ int main(int argc, char **argv) {
                 stream_mapping[pkt.stream_index] < 0) {
             av_packet_unref(&pkt);
             continue;
+        }
+        
+         AVCodecParameters *in_codecpar = in_stream->codecpar;
+
+        if (in_codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+                auto nsdelay = frameInterval - (base::time::hrtime() - lastTimestamp);
+               // LDebug("Sleep delay: ", nsdelay, ", ", (time::hrtime() - lastTimestamp), ", ", frameInterval)
+                std::this_thread::sleep_for(std::chrono::nanoseconds(nsdelay));
+                // base::sleep( nsdelay/1000);
+                lastTimestamp = base::time::hrtime();
         }
 
         pkt.stream_index = stream_mapping[pkt.stream_index];
@@ -213,9 +257,18 @@ int main(int argc, char **argv) {
         pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, static_cast<AVRounding> (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
         pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, static_cast<AVRounding> (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
         pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
+        tmpptsOffset = pkt.pts;
+        tmpdtsOffset = pkt.dts;
+     
         pkt.pos = -1;
         log_packet(ofmt_ctx, &pkt, "out");
-
+        
+        pkt.pts += ptsOffset;
+        pkt.dts += dtsOffset;
+        
+        
+      
+        
         ret = av_write_frame(ofmt_ctx, &pkt);
         if (ret < 0) {
             fprintf(stderr, "Error muxing packet\n");

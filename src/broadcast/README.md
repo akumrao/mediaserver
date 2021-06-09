@@ -79,9 +79,15 @@ export PATH=/export/webrtc/depot_tools:$PATH
 - In Linux Debian Stretch with GCC 6.3 this works:
 - $ gn gen out/m84 --args='is_debug=true symbol_level=2 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
 
-
 - Then build it:
 - $ ninja -C out/m84
+
+
+for release
+
+gn gen out/m84_release --args='is_debug=false symbol_level=0 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
+
+ninja -C out/m84_release
 
 
 -Then build mediaserver/src/webrtc:

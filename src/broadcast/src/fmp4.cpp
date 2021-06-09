@@ -17,7 +17,7 @@
 #include <libavformat/avformat.h>
 
 // maximum 262144
-#define IOBUFSIZE 40960
+#define IOBUFSIZE 40960*6
 //40960*6
 
 namespace base {
@@ -48,7 +48,7 @@ int mediaMuxCallback(void *opaque, uint8_t *buf, int bufSize) {
     
   //  obj->outputData.insert(obj->outputData.end(), buf, buf + bufSize);
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     return bufSize;
 }
 
@@ -87,7 +87,7 @@ void ReadMp4::run()
     
     
    // fileName = "/var/tmp/videos/test.mp4";
-    fileName = "/var/tmp/videos/kunal720.mp4";
+    fileName = "/var/tmp/kunal720.mp4";
     //fmp4(fileName.c_str(), "fragTmp.mp4");
     fmp4(fileName.c_str());
 }    

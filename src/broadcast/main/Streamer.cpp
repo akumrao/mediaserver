@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     base::wrtc::Signaler sig;
 
-    sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+   // sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
     
     //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
