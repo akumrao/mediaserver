@@ -188,7 +188,7 @@ function createPeerConnection() {
 
    
       var video = document.querySelector('#remoteVideo');
-      var mimeCodec = 'video/mp4; codecs="mp4a.40.2,avc1.42e01e"';
+      var mimeCodec = 'video/mp4; codecs="avc1.64002a,mp4a.40.2"';
 
       if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
         var mediaSource = new MediaSource;

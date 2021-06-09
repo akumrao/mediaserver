@@ -64,6 +64,12 @@ int main(int argc, char** argv) {
     
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
+    
+      av_register_all();
+    // init network
+      avformat_network_init();
+
+      avcodec_register_all();
 
     // test._capturer.start();
 

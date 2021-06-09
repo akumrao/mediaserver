@@ -16,8 +16,9 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 
-
-#define IOBUFSIZE 4096
+// maximum 262144
+#define IOBUFSIZE 40960
+//40960*6
 
 namespace base {
 namespace wrtc {
@@ -41,11 +42,13 @@ static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, cons
 
 int mediaMuxCallback(void *opaque, uint8_t *buf, int bufSize) {
     //outputData.insert(outputData.end(), buf, buf + bufSize);
-  ReadMp4 *obj =  (ReadMp4 *) opaque;
+   ReadMp4 *obj =  (ReadMp4 *) opaque;
     
-    obj->pc->sendDataBinary((const uint8_t *)buf, bufSize);
+   obj->pc->sendDataBinary((const uint8_t *)buf, bufSize);
     
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //  obj->outputData.insert(obj->outputData.end(), buf, buf + bufSize);
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     return bufSize;
 }
 
@@ -53,6 +56,12 @@ int mediaMuxCallback(void *opaque, uint8_t *buf, int bufSize) {
 ReadMp4::ReadMp4( Peer *pc):pc(pc) 
 {
 
+}
+
+
+ReadMp4::~ReadMp4( )
+{
+    SInfo << "~ReadMp4( )";
 }
 
 void ReadMp4::run() 
@@ -77,8 +86,9 @@ void ReadMp4::run()
 //    }
     
     
-    fileName = "/tmp/test.mp4";
-    
+   // fileName = "/var/tmp/videos/test.mp4";
+    fileName = "/var/tmp/videos/kunal720.mp4";
+    //fmp4(fileName.c_str(), "fragTmp.mp4");
     fmp4(fileName.c_str());
 }    
    
@@ -87,11 +97,7 @@ void ReadMp4::run()
 
 int ReadMp4::fmp4( const char *in_filename, const char *out_filename, bool fragmented_mp4_options) {
 
-    av_register_all();
-    // init network
-    avformat_network_init();
-
-    avcodec_register_all();
+ 
 
     const AVOutputFormat *ofmt = NULL;
     AVFormatContext *ifmt_ctx = NULL, *ofmt_ctx = NULL;
@@ -126,12 +132,15 @@ int ReadMp4::fmp4( const char *in_filename, const char *out_filename, bool fragm
 
 
     ////////////////////////////////////////////////////////////////////////for buffer 
-
-//    std::fstream file(argv[2], std::ios::out | std::ios::binary);
-//    if (!file.is_open()) {
-//        std::cout << "Couldn't open file " << argv[1] << std::endl;
-//        return 2;
-//    }
+    std::fstream file;
+    if(out_filename)
+    {
+        file.open(out_filename, std::ios::out | std::ios::binary);
+        if (!file.is_open()) {
+            std::cout << "Couldn't open file " << out_filename << std::endl;
+            return 2;
+        }
+    }
 
 
     AVIOContext *ioCtxt;
@@ -259,27 +268,46 @@ int ReadMp4::fmp4( const char *in_filename, const char *out_filename, bool fragm
             break;
         }
         av_packet_unref(&pkt);
+        
+        while( outputData.size() > 1024)
+        {
+           pc->sendDataBinary( &outputData[0], 1024);
+           outputData.erase(outputData.begin() , outputData.begin() + 1024);
+           std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        // obj->outputData.insert(obj->outputData.end(), buf, buf + bufSize);
+            
     }
 
     //  av_write_trailer(ofmt_ctx);
 
     ret = av_write_frame(ofmt_ctx, nullptr); //Flush if something has been left
+    
+     if( outputData.size() )
+     {
+           pc->sendDataBinary( &outputData[0], outputData.size());
+           outputData.erase(outputData.begin() , outputData.begin() + outputData.size());
+           std::this_thread::sleep_for(std::chrono::milliseconds(10));
+     }
 
-    //Write media data in container to file
-    // file.open("my_mp4.mp4", std::ios::out | std::ios::binary);
-//    if (!file.is_open()) {
-//        std::cout << "Couldn't open output file " << std::endl;
-//        return 12;
-//    }
-//
-//    file.write((char*) outputData.data(), outputData.size());
-//    if (file.fail()) {
-//        std::cout << "Couldn't write to file" << std::endl;
-//        return 13;
-//    }
-//
-//
-//    file.close();
+     if(out_filename)
+    {
+       // Write media data in container to file
+         file.open("my_mp4.mp4", std::ios::out | std::ios::binary);
+        if (!file.is_open()) {
+            std::cout << "Couldn't open output file " << std::endl;
+            return 12;
+        }
+
+        file.write((char*) outputData.data(), outputData.size());
+        if (file.fail()) {
+            std::cout << "Couldn't write to file" << std::endl;
+            return 13;
+        }
+
+
+        file.close();
+     }
 
 
 

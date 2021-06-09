@@ -31,14 +31,19 @@ class Peer;
      Peer *pc;
      ReadMp4( Peer *pc);
      
+     ~ReadMp4( );
+     
      int fmp4( const char *in_filename, const char *out_filename =nullptr, bool fragmented_mp4_options=true);
           
    //virtual void start() override
    // virtual void stop() override;
      void run() override;
- private:
      
      std::vector<uint8_t> outputData;
+     bool looping{true};
+ private:
+     
+   
      
      std::string fileName;
 
