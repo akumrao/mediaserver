@@ -1,7 +1,12 @@
 fMP4
 
 
-fMP4's are structured in boxes as described in the ISOBMFF spec.
+**fMP4's are structured in boxes as described in the ISOBMFF spec.**
+
+https://www.w3.org/TR/mse-byte-stream-format-isobmff/
+
+https://github.com/gpac/mp4box.js
+
 
 For a basic fMP4 to be valid it needs to have the following boxes:
 
@@ -14,7 +19,45 @@ Every fMP4 stream needs to start with an ftyp and moov box which is then followe
 It is important to understand that when you append your first segment to Media Source Extensions that this segment will need to start with an ftyp and moov followed by a moof and mdat. A segment containing a ftyp and moov box is often referred to as an Initialization Segment(init) segment, and segments containing moof and mdat boxes, referring to media itself as Media Segments.
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+MP4Box: fragmentation, segmentation, splitting and interleaving
 
+Please refer to this page for more up to date information: https://github.com/gpac/gpac/wiki/Fragmentation,-segmentation,-splitting-and-interleaving
+ 
+
+NOTE: The latest documentation describing MP4Box Support for DASH is given here.
+
+With our work on Dynamic Adaptive Streaming over HTTP (DASH), in the current version of GPAC (revision 2642 on SVN), we now have many options for interleaving, fragmenting and segmenting … which may be confusing. It is time to clarify their usage in MP4Box. Some related aspects using MPEG-2 TS instead of MP4 can be seen in this previous post.
+
+The options are:
+-inter time_in_ms (with possibly -tight) or -flat (no interleaving)
+-frag time_in_ms
+-dash dur_in_ms
+-split time_sec (or -split-size)
+
+Interleaving (-inter) is when (groups of ) samples of different tracks are stored alternatively in the file: e.g. N milliseconds of video samples, followed by N milliseconds of audio samples, followed by N milliseconds of video samples … Typically, interleaved samples are grouped within an interleaving window. Interleaving reduces disk accesses, playback buffer requirements and enables progressive download and playback.
+
+Fragmentation (-frag) is an optional process applicable to the MP4 file format. By default, MP4 files generated with MP4Box are not fragmented. This process consists in using Movie Fragments (moof). Movie Fragments is a tool introduced in the ISO spec to improve recording of long-running sequences and that is now used for HTTP streaming. Even if it is possible, according to the ISO spec, to do interleaving on fragments, MP4Box currently does not support it, because we don’t see important use cases for it. For instance, all audio samples within a fragment are contiguously stored and similarly for the video samples. The only way to ‘interleave’ tracks is to have small fragments. There may be some overhead for big files, we welcome comments on this.
+
+Segmentation (-dash) is the process of creating segments, parts of an original file meant for individual/separate HTTP download (not necessarily for individual playback). A segment can be a part of a big file or a separate file. It is not specific to the MP4 file format (in particular it may apply to MPEG-2 TS) but a segment may imply specific ISO signaling (styp and sidx boxes, for instance). A segment is what is refered to by the XML file used to drive the HTTP Streaming and segment boundaries can be convenient places for bitstream switching. Segmentation often implies fragmentation but not necessarily.
+
+Last, MP4Box can split (-split) a file and create individual playable files from an original one. It does not use segmentation in the above sense, it removes fragmentation and can use interleaving.
+
+Some examples of MP4Box usages:
+– Rewrites a file with an interleaving window of 1 sec.
+MP4Box -inter 1000 file.mp4
+
+– Rewrites a file with 10 sec. fragments
+MP4Box -frag 10000 file.mp4
+
+– Rewrites a file (and creates the associated XML) with 10 sec. fragments and 30 sec. segments
+MP4Box -frag 10000 -dash 30000 file.mp4
+
+– Segmentation of a file into 30 sec. segment files with 10 sec. fragments (and creation of the associated XML file.mpd)
+MP4Box -frag 10000 -dash 30000 -segment-name segment_file file.mp4
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
