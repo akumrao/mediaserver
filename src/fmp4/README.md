@@ -7,6 +7,7 @@ https://www.w3.org/TR/mse-byte-stream-format-isobmff/
 
 https://github.com/gpac/mp4box.js
 
+https://www.programmersought.com/article/37756013328/
 
 For a basic fMP4 to be valid it needs to have the following boxes:
 
