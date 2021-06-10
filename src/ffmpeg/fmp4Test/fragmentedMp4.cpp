@@ -240,14 +240,14 @@ int main(int argc, char **argv) {
         
          AVCodecParameters *in_codecpar = in_stream->codecpar;
 
-        if (in_codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
-        {
-                auto nsdelay = frameInterval - (base::time::hrtime() - lastTimestamp);
-               // LDebug("Sleep delay: ", nsdelay, ", ", (time::hrtime() - lastTimestamp), ", ", frameInterval)
-                std::this_thread::sleep_for(std::chrono::nanoseconds(nsdelay));
-                // base::sleep( nsdelay/1000);
-                lastTimestamp = base::time::hrtime();
-        }
+//        if (in_codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+//        {
+//                auto nsdelay = frameInterval - (base::time::hrtime() - lastTimestamp);
+//               // LDebug("Sleep delay: ", nsdelay, ", ", (time::hrtime() - lastTimestamp), ", ", frameInterval)
+//                std::this_thread::sleep_for(std::chrono::nanoseconds(nsdelay));
+//                // base::sleep( nsdelay/1000);
+//                lastTimestamp = base::time::hrtime();
+//        }
 
         pkt.stream_index = stream_mapping[pkt.stream_index];
         out_stream = ofmt_ctx->streams[pkt.stream_index];

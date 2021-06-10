@@ -17,7 +17,7 @@
 #include <libavformat/avformat.h>
 
 // maximum 262144
-#define IOBUFSIZE 40960*6
+#define IOBUFSIZE 40960
 //40960*6
 
 namespace base {
@@ -47,9 +47,15 @@ int mediaMuxCallback(void *opaque, uint8_t *buf, int bufSize) {
    obj->pc->sendDataBinary((const uint8_t *)buf, bufSize);
     
   //  obj->outputData.insert(obj->outputData.end(), buf, buf + bufSize);
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    return bufSize;
+   //static size_t kMaxQueuedSendDataBytes = 16 * 1024 * 1024;
+
+//   if(obj->pc->data_channel_->buffered_amount()  <  1024 )
+//       std::this_thread::sleep_for(std::chrono::milliseconds(5));
+//   
+//   else( obj->pc->data_channel_->buffered_amount()  >  8 * 1024 * 1024 )
+//       
+   
+   return bufSize;
 }
 
 
@@ -67,29 +73,40 @@ ReadMp4::~ReadMp4( )
 void ReadMp4::run() 
 {
 
-//
-//    std::ifstream bunnyFile;
-//    bunnyFile.open("/tmp/test.mp4", std::ios_base::in | std::ios_base::binary);
-//
-//    char buf[ 1024];
-//
-//    while (bunnyFile.good() && !stopped() ) {
-//      bunnyFile.read(buf,  1024);
-//      int nRead = bunnyFile.gcount();
-//      if (nRead > 0) {
-//       // dc->sendDataMsg("ravind");
-//        pc->sendDataBinary((const uint8_t *)buf, nRead);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//      }
-//
-//      std::cout << "Sent message of size " << std::to_string(nRead) << std::endl;
-//    }
+
+    std::ifstream bunnyFile;
+    bunnyFile.open("/var/tmp/test.mp4", std::ios_base::in | std::ios_base::binary);
+
+    char buf[ 6*40960];
+
+    while (bunnyFile.good() && !stopped() ) {
+      bunnyFile.read(buf,  6*40960);
+      int nRead = bunnyFile.gcount();
+      if (nRead > 0) {
+       // dc->sendDataMsg("ravind");
+
+        pc->sendDataBinary((const uint8_t *)buf, nRead);
+
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        } while( pc->data_channel_->buffered_amount()  >  12 * 1024 * 1024 );
+        
+        // while( pc->data_channel_->buffered_amount()  >  12 * 1024 * 1024 )
+         // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        
+      }
+
+      SInfo << "Sent message of size " << nRead ;
+    }
     
+    
+    SInfo << "fmp4 thread exit"; 
     
    // fileName = "/var/tmp/videos/test.mp4";
     fileName = "/var/tmp/kunal720.mp4";
     //fmp4(fileName.c_str(), "fragTmp.mp4");
-    fmp4(fileName.c_str());
+    //fmp4(fileName.c_str());
 }    
    
 
