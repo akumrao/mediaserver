@@ -1,4 +1,4 @@
-# Very high performing mediaserver. It is the only mediaserver with support both webrtc and ortc.
+# Very high performing mediaserver. It is the only mediaserver which support both webrtc and ortc.
 
 Live media streaming
 
@@ -11,7 +11,7 @@ Ortc Streaming    ( states of producer and consumer are saved at client)
 Probator, bandwidth estimator and Sound Energy level observer 
 
 
-# Other Components Mediaserver
+# Other Components of Mediaserver
 
 OS abstraction with libuv and std c14. 
 
@@ -92,3 +92,9 @@ make
 cd /workspace/mediaserver/src/sfu/sfuserver
 make
 ./sfu
+
+for broadcasting mp3 songs or mp4 movie
+cd /workspace/mediaserver/src/broadcast/main
+make
+./runStreamer
+before compilation, get webrtc and ffmpeg as mentioned at mediaserver/src/broadcast/Readme.md
