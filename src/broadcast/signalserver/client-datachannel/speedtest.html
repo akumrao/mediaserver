@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Fmp4 Buffered communication with WebRTC Data Channel.</title>
+
+  <link rel="stylesheet" href="/css/main.css" />
+
+</head>
+
+<body>
+
+  <h1>Buffered communication with WebRTC Data Channel. Fragmented and segmented mp4 Boxed with AAC/Mp3 and H264 </h1>
+
+   <script>
+
+        // Intercept Symple log messages
+    log = function () {
+        var args = Array.prototype.slice.call(arguments);
+        $('#webrtc-logs').append(JSON.stringify(args)).append('\n');
+        console.log.apply(console, arguments);
+    }
+    </script>
+
+<div class="videos">
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <strong>Fmp4 Bufferd Streaming!</strong> Youtube like communication with WebRTC</code> sample.
+      </div>
+
+      <div class="row">
+        <div class="col">
+         <label id="stat">speed(Mbytes/sec)</label>
+        <label id="lbltipAddedComment"></label>
+         <!-- <video id="remoteVideo"  playsinline controls></video> -->
+        </div>
+      </div>
+      <div class="row">Mute: <input type="checkbox" id="checkmute" onclick="onMuteClick()"> </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header">
+              Logs
+            </div>
+            <div class="card-block">
+              <pre id="webrtc-logs"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+  <!-- This file is automatically added/served when running "node index.js". -->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="adapter.js"></script>
+  <script src="js/speedtest.js"></script>
+
+</body>
+
+</html>
