@@ -43,9 +43,9 @@ apt-get install gcc-7
 
 apt-get install g++-7
 
-apt install clang++-8
+apt install clang++-10
 
-apt install clang-8
+apt install clang-10
 
 cd /usr/bin
 
@@ -53,9 +53,9 @@ ln -s gcc-7 gcc
 
 ln -s g++-7  g++
 
-ln -s clang-8  clang
+ln -s clang-1o  clang
 
-ln -s clang++-8   clang++
+ln -s clang++-10   clang++
 
 gcc --version
 
@@ -73,20 +73,21 @@ gcc --version
 
 g++ --version
 
-clang --version
 
-clang++ --version
+sudo apt update
 
-optional only for Clang wihout stdlib required
+sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
 
-apt-get install libc++abi-dev
-apt-get install libc++-dev
-apt-get install libsctp-dev
-apt-get install libstdc++5
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+
+apt-get install nodejs
+
 
 
 To compile 
+
 cd /workspace/mediaserver/src/sfu
+
 make 
 
 cd /workspace/mediaserver/src/sfu/sfuserver
@@ -94,7 +95,11 @@ make
 ./sfu
 
 for broadcasting mp3 songs or mp4 movie
+
 cd /workspace/mediaserver/src/broadcast/main
+
 make
+
 ./runStreamer
+
 before compilation, get webrtc and ffmpeg as mentioned at mediaserver/src/broadcast/Readme.md
