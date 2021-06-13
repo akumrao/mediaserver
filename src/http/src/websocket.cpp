@@ -54,14 +54,18 @@ namespace base {
             return true;
         }
 
-        void WebSocketConnection::send(const char* data, size_t len, int flags) {
+        void WebSocketConnection::send(const char* data, size_t len, bool binary) {
            // LTrace("Send: ", len, ": ", std::string(data, len))
             assert(framer.handshakeComplete());
 
             // Set default text flag if none specified
-            if (!flags)
+            
+            int flags;
+            if (!binary)
                 flags = SendFlags::Text;
-
+            else
+                 flags = SendFlags::Binary;
+                
             // Frame and send the data
             Buffer buffer;
             buffer.reserve(len + WebSocketFramer::MAX_HEADER_LENGTH);

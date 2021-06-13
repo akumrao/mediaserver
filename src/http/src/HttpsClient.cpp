@@ -119,12 +119,12 @@ namespace base {
              SslConnection::send(data, len);
          }
          
-        void HttpsClient::send(const char* data, size_t len) {
+        void HttpsClient::send(const char* data, size_t len, bool binary) {
             connect();
             
             if(wsAdapter)
             {
-                wsAdapter->send(data,len );
+                wsAdapter->send(data,len, binary );
                 return;
             }
 

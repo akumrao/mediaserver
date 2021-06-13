@@ -75,7 +75,7 @@ namespace base {
 		// Returns the cast read stream pointer or nullptr.
 	
             
-            virtual void send(const char* data, size_t len){}
+            virtual void send(const char* data, size_t len, bool binary=false){}
             virtual void send(){}
             virtual void send(Request& req){}
             virtual void send(const std::string &str){}

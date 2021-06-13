@@ -38,7 +38,7 @@ namespace base {
             ~HttpConnection() override;
 
         public:
-            void send(const char* data, size_t len) override;
+            void send(const char* data, size_t len, bool binary=false) override;
             void  Close() override;
 
             /* Pure virtual methods inherited from ::HttpConnection. */
