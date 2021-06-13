@@ -12,7 +12,7 @@
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D4033"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
@@ -203,7 +203,8 @@
                 //ws = new WebSocket("ws://localhost:1111/ws/");
                 ws.binaryType = "arraybuffer";
                 ws.onmessage = function (event) {
-                    putPacket(event.data);
+                    //putPacket(event.data);
+                    source_buffer.appendBuffer(event.data);
                 };
             }
 

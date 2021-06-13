@@ -20,12 +20,10 @@
 //#include "http/HttpsClient.h"
 
 
-#define MAX_CHUNK_SIZE 1024
+#define MAX_CHUNK_SIZE 2048
 // maximum send buffer 262144  =1024 *256
 #define highWaterMark  8 * 1048576
 //maximum buffer = 16 *1048576 where  1024*1024 =1048576
-
-
 
 
 #define IOBUFSIZE 40960
