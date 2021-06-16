@@ -14,7 +14,7 @@
 #include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
-
+#include "tools.h"
 
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
@@ -440,6 +440,29 @@ namespace base {
             FILE *fp_in, *fp_out;
             AVFormatContext *fmt_ctx = NULL;
             AVCodecParserContext *parser = NULL;
+            
+            
+             u_int8_t*         fReceiveBuffer;
+            long unsigned     nbuf;       ///< Size of bytebuffer
+
+            char*             fStreamId;
+           // FrameFilter&      framefilter;
+            SetupFrame        setupframe;  ///< This frame is used to send subsession information
+            BasicFrame        basicframe;  ///< Data is being copied into this frame
+            int               subsession_index;
+            
+            subsession_index = 0;
+            basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
+            basicframe.codec_id             =AV_CODEC_ID_H264;
+            basicframe.subsession_index     =subsession_index;
+            // prepare setup frame
+            setupframe.sub_type             =SetupFrameType::stream_init;
+            setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
+            setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
+            setupframe.subsession_index     =subsession_index;
+            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            // send setup frame
+            fragmp4_muxer.run(&setupframe);
 
             if ((codec = avcodec_find_decoder(AV_CODEC_ID_H264)) == NULL) {
                 fprintf(stderr, "avcodec_find_decoder failed.\n");
@@ -484,14 +507,10 @@ namespace base {
             }
 
             
-             u_int8_t*         fReceiveBuffer;
-            long unsigned     nbuf;       ///< Size of bytebuffer
-
-            char*             fStreamId;
-           // FrameFilter&      framefilter;
-            SetupFrame        setupframe;  ///< This frame is used to send subsession information
-            BasicFrame        basicframe;  ///< Data is being copied into this frame
-            int               subsession_index;
+        
+            
+            
+            
 
             while (feof(fp_in) == 0) {
                 char inbuf[1024] = {0};
@@ -519,7 +538,21 @@ namespace base {
                         
                         basicframe.copyFromAVPacket(pkt);
                         
-                        info.run(&basicframe);
+                       // unsigned target_size=frameSize+numTruncatedBytes;
+                        // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                        // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
+                       // basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+                        basicframe.fillPars();
+                        // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+
+                        basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
+
+                        
+                        fragmp4_muxer.run(&basicframe);
+                        
+                        basicframe.payload.resize(basicframe.payload.capacity());
+                        
+                        //info.run(&basicframe);
                         int x = 0;
                        // decode(cdc_ctx, frame, pkt, fp_out);
                     }

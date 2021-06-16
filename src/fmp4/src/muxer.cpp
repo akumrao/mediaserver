@@ -28,7 +28,7 @@ MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
     this->pps_ok = false;
     */
 
-//    this->setupframes.resize(2);
+    this->setupframes.resize(2);
     this->timebase = av_make_q(1,1000); // we're using milliseconds
     // this->timebase = av_make_q(1,20); // we're using milliseconds
     this->avpkt = new AVPacket();
@@ -105,22 +105,20 @@ void MuxFrameFilter::initMux() {
     
     // use the saved setup frames (if any) to set up the streams
     // Frame *frame; // alias
-//    for (auto it = setupframes.begin(); it != setupframes.end(); it++) {
-//        SetupFrame &setupframe = *it;
-//        if (setupframe.subsession_index < 0) { // not been initialized
-//        }
-        //else 
-        
-        { // got setupframe
-            AVCodecID codec_id =  AV_CODEC_ID_H264 ;// arvind imp  // setupframe.codec_id;
+    for (auto it = setupframes.begin(); it != setupframes.end(); it++) {
+        SetupFrame &setupframe = *it;
+        if (setupframe.subsession_index < 0) { // not been initialized
+        }
+        else { // got setupframe
+            AVCodecID codec_id = setupframe.codec_id;
                 
             if (codec_id != AV_CODEC_ID_NONE) {
                 AVCodecContext *av_codec_context;
                 AVStream       *av_stream;
                 
                 av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
-               // av_codec_context->width = N720.width; // dummy values .. otherwise mkv muxer refuses to co-operate //arvind imp
-               // av_codec_context->height = N720.height; //arvind imp
+                av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
+                av_codec_context->height = 576;
                 av_codec_context->bit_rate = 1024*1024;
                 av_codec_context->time_base = timebase; // 1/1000
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
@@ -140,10 +138,7 @@ void MuxFrameFilter::initMux() {
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
                 av_stream->time_base = timebase; // 1/1000
-              
-                
-                // av_stream->id = setupframe.subsession_index; //arvind imp
-                
+                av_stream->id = setupframe.subsession_index;
                 /*
                 // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
                 AVRational fps = AVRational();
@@ -173,15 +168,15 @@ void MuxFrameFilter::initMux() {
                 //av_stream->codec->extradata_size = extradata_frame.payload.size();
 
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
-              //  codec_contexes[setupframe.subsession_index] = av_codec_context; //arvind imp
-               // streams[setupframe.subsession_index] = av_stream; //arvind imp
+                codec_contexes[setupframe.subsession_index] = av_codec_context;
+                streams[setupframe.subsession_index] = av_stream;
                 initialized = true; // so, at least one substream init'd
                 // std::cout << "initMux: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
                 // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
                 // std::cout << "initMux: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
             }
         } // got setupframe
-    //}
+    }
 
     if (!initialized) {
         return;
@@ -299,27 +294,24 @@ void MuxFrameFilter::go(Frame* frame) {
 
     //std::cout << "MuxFrameFilter: go: frame " << *frame << std::endl;
     
-   // internal_frame.n_slot = frame->n_slot;
+    internal_frame.n_slot = frame->n_slot;
 
     // make a copy of the setup frames ..
-    if (frame->getFrameClass() == FrameClass::setup) 
-    { // SETUPFRAME
-        
-        SError << "MuxFrameFilter :  go : got setup frame " ;
-//        SetupFrame *setupframe = static_cast<SetupFrame*>(frame);        
-//        if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
-//            if (setupframe->subsession_index>1) {
-//                logger.log(LogLevel::fatal) << "MuxFrameFilter : too many subsessions! " << std::endl;
-//            }
-//            else {
-//                #ifdef MUXSTATE
-//                std::cout << "MuxFrameFilter:  go: state: got setup frame " << *setupframe << std::endl;
-//                #endif
-//                logger.log(LogLevel::debug) << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
-//                setupframes[setupframe->subsession_index].copyFrom(setupframe);
-//            }
+    if (frame->getFrameClass() == FrameClass::setup) { // SETUPFRAME
+        SetupFrame *setupframe = static_cast<SetupFrame*>(frame);        
+        if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
+            if (setupframe->subsession_index>1) {
+                SError << "MuxFrameFilter : too many subsessions! ";
+            }
+            else {
+                #ifdef MUXSTATE
+                std::cout << "MuxFrameFilter:  go: state: got setup frame " << *setupframe << std::endl;
+                #endif
+                 SError << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
+                setupframes[setupframe->subsession_index].copyFrom(setupframe);
+            }
             return;
-        //} // INIT
+        } // INIT
     } // SETUPFRAME
     
     else if (frame->getFrameClass() == FrameClass::basic) { // BASICFRAME
@@ -367,10 +359,10 @@ void MuxFrameFilter::go(Frame* frame) {
             }
         }
 
-        if (!ready)
-        {
-            if (  has_extradata)
-            { 
+        if (!ready) {
+            if ( (setupframes[0].subsession_index > -1) 
+                    or (setupframes[1].subsession_index > -1)  
+                    and has_extradata) { 
                 // TODO: should fix subsession index handling to something more sane
                 // Now the subsession index is forced to 0 in live.cpp
                 // we have got at least one setupframe and after that, payload

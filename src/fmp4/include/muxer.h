@@ -12,7 +12,7 @@
 class MuxFrameFilter:  public FrameFilter {      
     
 public:                                                              //
-    MuxFrameFilter(const char* name, FrameFilter *next  );  
+    MuxFrameFilter(const char* name, FrameFilter *next = NULL);      //
     virtual ~MuxFrameFilter();                                       //
     
 protected:
@@ -54,17 +54,17 @@ protected: //mutex stuff
     std::condition_variable condition; ///< Condition variable for the mutex
 
 protected: //frames
-   // std::vector<SetupFrame>     setupframes;        ///< deep copies of the arrived setup frames
+    std::vector<SetupFrame>     setupframes;        ///< deep copies of the arrived setup frames
     
 public:
     BasicFrame                  internal_basicframe; ///< 
     MuxFrame                    internal_frame;      ///< outgoing muxed frame
     BasicFrame                  extradata_frame;     ///< capture decoder extradata here
-  
+    virtual void run(Frame* frame);
 protected:
     virtual void defineMux() = 0; ///< Define container format (format_name) & muxing parameters (av_dict).  Define in child classes.
     virtual void go(Frame* frame);
-    virtual void run(Frame* frame);
+    
     void initMux();           ///< Open file, reserve codec_contexes, streams, write preamble, set initialized=true if success
     void closeMux();          ///< Close file, dealloc codec_contexes, streams
     void deActivate_();
