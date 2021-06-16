@@ -24,9 +24,15 @@ int main(int argc, char** argv) {
     
    Application app;
    
-     fmp4::ReadMp4 readmp4;
+    av_register_all();
+    // init network
+    avformat_network_init();
+    avcodec_register_all();
+
+      
+    fmp4::ReadMp4 readmp4;
     
-    readmp4.websocketConnect();
+    //readmp4.websocketConnect();
 
     //readmp4.start();
 

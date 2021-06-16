@@ -11,53 +11,57 @@
  * Created on June 8, 2021, 10:48 PM
  */
 
-#ifndef FMP4_H
-#define FMP4_H
+#ifndef FFParse_H
+#define FFParse_H
 
 #include "base/thread.h"
 #include <string>
 #include <vector>
-#include "ffparse.h"
+#include "muxer.h"
 
-#include "net/netInterface.h"
-#include "http/HttpsClient.h"
 
 namespace base {
 namespace fmp4 {
     
 
- class ReadMp4: public Thread
+ class FFParse: public Thread
  {
      
      
  public:
-     ReadMp4( );
+  
+
+     FFParse( );
      
-     ~ReadMp4( );
-     
-     void websocketConnect();
+     ~FFParse( );
      
      int fmp4( const char *in_filename, const char *out_filename =nullptr, bool fragmented_mp4_options=true);
           
    //virtual void start() override
    // virtual void stop() override;
-   
      void run() override;
      
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-     FFParse  ffparser;
+     
+    void parseH264(const char *input_file);
+     void decode(AVCodecContext *cdc_ctx, AVFrame *frame, AVPacket *pkt, FILE *fp_out);
+       
  private:
      
-    net::ClientConnecton *conn{nullptr};
-     
-     std::string fileName;
+   
+    DummyFrameFilter fragmp4_filter;
+    FragMP4MuxFrameFilter fragmp4_muxer;
+    InfoFrameFilter info;
+    
+    
+    std::string fileName;
 
  };
  
 }
 }
 
-#endif /* FMP4_H */
+#endif /* FFParse_H */
 

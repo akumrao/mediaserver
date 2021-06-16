@@ -39,11 +39,18 @@ namespace base {
     namespace fmp4 {
 
         ReadMp4::ReadMp4() {
+            
+            
+            ffparser.start();
+            
 
         }
 
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
+            ffparser.stop();
+            ffparser.join();
+            
         }
 
         void ReadMp4::websocketConnect() {

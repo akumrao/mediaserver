@@ -163,3 +163,24 @@ MP4Box -dash 10000 -frag 1000 -rap -segment-name myDash
 Generating an onDemand profile DASH file (single segment) is just as simple:
 
 MP4Box -dash 10000 -frag 1000 -rap -single-segment test.mp4
+
+
+MP4Box ( gpac) is c source code very compklex to understand. Please use Bento4 C++ easy to understand 
+-------------------------------------------------------------------------------------------------------------------------------
+
+
+
+ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4
+
+ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+separate_moof+frag_custom /tmp/output2.mp4
+
+
+ffmpeg -i kunal720.264  -i kunal720_track2.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4
+
+ffmpeg -i kunal720.264  -i kunal720_track2.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+separate_moof+frag_custom /tmp/output2.mp4
+
+source code of ffmpgeg
+ffmpege encode pcm to aac
+https://ffmpeg.org/doxygen/trunk/encode__audio_8c_source.html
+
+https://ffmpeg.org/doxygen/trunk/muxing_8c-example.html
