@@ -184,3 +184,72 @@ ffmpege encode pcm to aac
 https://ffmpeg.org/doxygen/trunk/encode__audio_8c_source.html
 
 https://ffmpeg.org/doxygen/trunk/muxing_8c-example.html
+
+
+
+
+
+
+
+
+  H.264 comes in a variety of stream formats. One variation is called "Annex B".
+
+(AUD)(SPS)(PPS)(I-Slice)(PPS)(P-Slice)(PPS)(P-Slice) ... (AUD)(SPS)(PPS)(I-Slice).
+  
+ ALL the NAL Unit start with 001
+
+ 
+0x67=  11 00111 =  type7   Sequence parameter set ( I-frame)  0x67 = (103)
+0x68=  11 01000 =  type8   Piture parameter set ( I-frame) (104)
+  same case for p frame( SPS and PPS are same for all Mp4 store SPS and PPS separately for streaming we need sps ad pps  very frequently                     
+0x65 = 11 00101 = type 5   Coded slice of an IDR picture (I-frame)
+0x41 = 10 00001 = type 1   Coded slice of a non-IDR picture (P-frame)
+
+0x27 = 01 00111 = type 7    Sequence parameter set (B-frame)
+0x28 = 01 01000 = type 8    Picture parameter set (B-frame)   
+0x25 = 01 00101 = type 5    Coded slice of an IDR picture (B-frame) //The first picture in a coded video sequence is always an IDR picture. An IDR frame is a special type of I-frame in H. 264. An IDR frame specifies that no frame after the IDR frame can reference any frame before it.
+0x21 = 01 00001 = type 1    Coded slice of a non-IDR picture (B-frame)
+ 
+* |0|1|2|3|4|5|6|7|
++-+-+-+-+-+-+-+-+
+  |F|NRI|  Type   |   F 0 forbidden_zero_bit. This bit must be 0 in the H.264 specification.
+  NRI(nal_ref_idc) for  00((none) I(11) P(10) B01
+  * 
+  * Access Unit Delimiter (AUD). An AUD is an optional NALU that can be use to delimit frames in an elementary stream. It is not required (unless otherwise stated by the container/protocol, like TS), and is often not included in order to save space, but it can be useful to finds the start of a frame without having to fully parse each NALU.
+  
+  IDR Picture is first MB, reset MB could be grouped into slices. Also check Partioning of NALU with A B C
+
+  I-slice is a portion of a picture composed of macroblocks, all of which are based upon macroblocks within the same picture.
+  Thus, H.264 introduces a new concept called slices — segments of a picture bigger than macroblocks but smaller than a frame.
+  Just as there are I-slices, there are P- and B-slices. P- and B-slices are portions of a picture composed of macroblocks that are not dependent on macroblocks in the same picture. 
+  
+  H264 encoder sends an IDR (Instantaneous Decoder Refresh) coded picture (a group of I slices ) to clear the contents of the reference picture buffer. When we send an IDR coded picture, the decoder marks all pictures in the reference buffer as ‘unused for reference’. All subsequently transmitted slices are decoded without reference to any frame decoded prior to the IDR picture. However, the reference buffer is not cleared with an I frame i.e, any frame after an I frame can use the reference buffer before the I frame. The first picture in a coded video sequence is always an IDR picture.
+
+An IDR frame( Kye frame having sps and pps) is a special type of I-frame in H.264. An IDR frame specifies that no frame after the IDR frame can reference any frame before it. This makes seeking the H.264 file easier and more responsive to the player.
+
+The IDR frames are introduced to avoid any distortions in the video when you want to skip/forward to some place in the video or start watching in the middle of the video.
+
+
+
+ 00 00 00 01 is the NALU header, the beginning of the sequence identifier,
+ 0x27 to binary is 100111, 00111 to decimal is 7, then 7 corresponds to NALU type=sps,
+ 0x28 is 101000 in binary, 8 in decimal, 8 corresponds to NALU type=pps,
+ 0x25 converted to binary is 100101, 00101 converted to decimal is 5, corresponding to 5 NALU type=IDR frame
+ (Using FFMPEG, sps and pps are saved in the extradata.data of AVCodecContext. When decoding and extracting sps and pps, you can use extradata.data[ 4 ]&0x1f to judge the NALU type (the result is 7 is sps, 8 is pps, calculation method Is converted to binary first, 0x27&0x1f=11111&00111=00111=7, pps calculation is similar)),
+ NALU type=1 is splice. There are three coding modes for splice. I_slice, P_slice, B_slice, and I-frames are divided and stored in splice when coding. 
+
+
+The full name of GOP is the Group of picture image group, that is, the distance between two I frames. The larger the GOP value, the P between I frame rates The greater the number of frames and B frames, the finer the image quality. If the GOP is 120, if the resolution is 720P, and the frame rate is 60, then the time for two I frames is 120/60=2s.
+
+
+nal_unit_type
+![Alt text](/images/30-Table2.1-1.png?raw=true "nal_unit_type")
+
+![Alt text](/images/h264.png?raw=true "H264")
+
+![Alt text](/images/pic_management.png?raw=true "H264")
+
+![Alt text](/images/data_partitioning.png?raw=true "H264")
+
+
+

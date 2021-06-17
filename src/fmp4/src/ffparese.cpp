@@ -506,11 +506,6 @@ namespace base {
                 return;
             }
 
-            
-        
-            
-            
-            
 
             while (feof(fp_in) == 0) {
                 char inbuf[1024] = {0};
@@ -541,7 +536,7 @@ namespace base {
                        // unsigned target_size=frameSize+numTruncatedBytes;
                         // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
                         // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                       // basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+                        basicframe.mstimestamp= getCurrentMsTimestamp();
                         basicframe.fillPars();
                         // std::cout << "afterGettingFrame: " << basicframe << std::endl;
 
@@ -550,9 +545,11 @@ namespace base {
                         
                         fragmp4_muxer.run(&basicframe);
                         
+                        info.run(&basicframe);
+                        
                         basicframe.payload.resize(basicframe.payload.capacity());
                         
-                        //info.run(&basicframe);
+                        //
                         int x = 0;
                        // decode(cdc_ctx, frame, pkt, fp_out);
                     }
@@ -566,14 +563,7 @@ namespace base {
             avcodec_close(cdc_ctx);
             avcodec_free_context(&cdc_ctx);
 
-
         }
-
-
-
-
-
-
 
 
     }

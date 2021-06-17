@@ -3,7 +3,43 @@
 #include "tools.h"
 #include "base/logger.h"
 
+ /*
 
+  H.264 comes in a variety of stream formats. One variation is called "Annex B".
+
+(AUD)(SPS)(PPS)(I-Slice)(PPS)(P-Slice)(PPS)(P-Slice) ... (AUD)(SPS)(PPS)(I-Slice).
+  
+ ALL the NAL Unit start with 001
+
+ 
+0x67=  11 00111 =  type7   Sequence parameter set ( I-frame)  0x67 = (103)
+0x68=  11 01000 =  type8   Piture parameter set ( I-frame) (104)
+  same case for p frame( SPS and PPS are same for all Mp4 store SPS and PPS separately for streaming we need sps ad pps  very frequently                     
+0x65 = 11 00101 = type 5   Coded slice of an IDR picture (I-frame)
+0x41 = 10 00001 = type 1   Coded slice of a non-IDR picture (P-frame)
+
+0x27 = 01 00111 = type 7    Sequence parameter set (B-frame)
+0x28 = 01 01000 = type 8    Picture parameter set (B-frame)   
+0x25 = 01 00101 = type 5    Coded slice of an IDR picture (B-frame) //The first picture in a coded video sequence is always an IDR picture. An IDR frame is a special type of I-frame in H. 264. An IDR frame specifies that no frame after the IDR frame can reference any frame before it.
+0x21 = 01 00001 = type 1    Coded slice of a non-IDR picture (B-frame)
+ 
+* |0|1|2|3|4|5|6|7|
++-+-+-+-+-+-+-+-+
+  |F|NRI|  Type   |   F 0 forbidden_zero_bit. This bit must be 0 in the H.264 specification.
+  NRI(nal_ref_idc)  for  00((none) I(11) P(10) B01
+  * 
+  * Access Unit Delimiter (AUD). An AUD is an optional NALU that can be use to delimit frames in an elementary stream. It is not required (unless otherwise stated by the container/protocol, like TS), and is often not included in order to save space, but it can be useful to finds the start of a frame without having to fully parse each NALU.
+  
+  I-slice is a portion of a picture composed of macroblocks, all of which are based upon macroblocks within the same picture.
+  Thus, H.264 introduces a new concept called slices — segments of a picture bigger than macroblocks but smaller than a frame.
+  Just as there are I-slices, there are P- and B-slices. P- and B-slices are portions of a picture composed of macroblocks that are not dependent on macroblocks in the same picture. 
+  
+  H264 encoder sends an IDR (Instantaneous Decoder Refresh) coded picture (a group of I slices ) to clear the contents of the reference picture buffer. When we send an IDR coded picture, the decoder marks all pictures in the reference buffer as ‘unused for reference’. All subsequently transmitted slices are decoded without reference to any frame decoded prior to the IDR picture. However, the reference buffer is not cleared with an I frame i.e, any frame after an I frame can use the reference buffer before the I frame. The first picture in a coded video sequence is always an IDR picture.
+
+An IDR frame( Kye frame having sps and pps) is a special type of I-frame in H.264. An IDR frame specifies that no frame after the IDR frame can reference any frame before it. This makes seeking the H.264 file easier and more responsive to the player.
+
+The IDR frames are introduced to avoid any distortions in the video when you want to skip/forward to some place in the video or start watching in the middle of the video.
+  */ 
 
 using namespace base;
 
@@ -12,11 +48,11 @@ using namespace base;
 // #define MUXPARSE  //enable if you need to see what the byte parser is doing
 // #define MUXSTATE //enable if you need to check the state of the muxer
 
-MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) : 
-    FrameFilter(name, next), active(false), initialized(false), mstimestamp0(0), zerotimeset(false), ready(false), av_format_ctx(NULL), avio_ctx(NULL), 
-    avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"), has_extradata(false), extradata_count(0) {
+MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
+FrameFilter(name, next), active(false), initialized(false), mstimestamp0(0), zerotimeset(false), ready(false), av_format_ctx(NULL), avio_ctx(NULL),
+avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"), has_extradata(false), extradata_count(0) {
     // two substreams per stream
-    this->codec_contexes.resize(2,NULL);
+    this->codec_contexes.resize(2, NULL);
     this->streams.resize(2, NULL);
 
     /* some sekoilu..
@@ -26,17 +62,17 @@ MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
     this->avbuffer = av_buffer_allocz(1024*500);
     this->sps_ok = false;
     this->pps_ok = false;
-    */
+     */
 
     this->setupframes.resize(2);
-    this->timebase = av_make_q(1,1000); // we're using milliseconds
+    this->timebase = av_make_q(1, 1000); // we're using milliseconds
     // this->timebase = av_make_q(1,20); // we're using milliseconds
     this->avpkt = new AVPacket();
-    av_init_packet(this->avpkt); 
-    
+    av_init_packet(this->avpkt);
+
     this->prevpts = 0;
 
-    this->avio_ctx_buffer = (uint8_t*)av_malloc(this->avio_ctx_buffer_size);
+    this->avio_ctx_buffer = (uint8_t*) av_malloc(this->avio_ctx_buffer_size);
     this->avio_ctx = NULL;
     // this->avio_ctx = avio_alloc_context(this->avio_ctx_buffer, this->avio_ctx_buffer_size, 1, this, this->read_packet, this->write_packet, this->seek); // no read, nor seek
 
@@ -51,9 +87,8 @@ MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
 
     // av_dict_set(&av_dict, "frag_size", "500", 500); // nopes
     av_dict_set(&av_dict, "frag_size", "512", 0);
-    */
+     */
 }
-
 
 MuxFrameFilter::~MuxFrameFilter() {
     deActivate();
@@ -63,7 +98,6 @@ MuxFrameFilter::~MuxFrameFilter() {
     av_dict_free(&av_dict);
 }
 
-
 void MuxFrameFilter::initMux() {
     int i;
     AVCodecID codec_id;
@@ -71,12 +105,12 @@ void MuxFrameFilter::initMux() {
     missing = 0;
 
     this->defineMux(); // fills av_dict & format_name
-    
+
     // create output context, open files
     i = avformat_alloc_output_context2(&av_format_context, NULL, format_name.c_str(), NULL);
-    
+
     if (!av_format_context) {
-         SError << "MuxFrameFilter : initMux : FATAL : could not create output context!  Have you registered codecs and muxers? " ;
+        SError << "MuxFrameFilter : initMux : FATAL : could not create output context!  Have you registered codecs and muxers? ";
         avformat_free_context(av_format_context);
         exit(2);
     }
@@ -96,30 +130,29 @@ void MuxFrameFilter::initMux() {
     av_format_context->flags |= AVFMT_FLAG_NONBLOCK;
     av_format_context->flags |= AVFMT_FLAG_NOFILLIN;
     av_format_context->flags |= AVFMT_FLAG_NOPARSE;
-    */
+     */
 
     // *** normal file IO *** (for comparison / debugging)
     // i = avio_open(&av_format_context->pb, "paska", AVIO_FLAG_WRITE);
     // std::cout << "avformat_init_output" << std::endl;
     avformat_init_output(av_format_context, &av_dict);
-    
+
     // use the saved setup frames (if any) to set up the streams
     // Frame *frame; // alias
     for (auto it = setupframes.begin(); it != setupframes.end(); it++) {
         SetupFrame &setupframe = *it;
         if (setupframe.subsession_index < 0) { // not been initialized
-        }
-        else { // got setupframe
+        } else { // got setupframe
             AVCodecID codec_id = setupframe.codec_id;
-                
+
             if (codec_id != AV_CODEC_ID_NONE) {
                 AVCodecContext *av_codec_context;
-                AVStream       *av_stream;
-                
+                AVStream *av_stream;
+
                 av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
                 av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
                 av_codec_context->height = 576;
-                av_codec_context->bit_rate = 1024*1024;
+                av_codec_context->bit_rate = 1024 * 1024;
                 av_codec_context->time_base = timebase; // 1/1000
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
                 ///*
@@ -130,7 +163,7 @@ void MuxFrameFilter::initMux() {
                 /*
                 std::cout << "initMux: extradata_size: " << av_codec_context->extradata_size 
                     << std::endl;
-                */
+                 */
 
                 // std::cout << "avformat_new_stream" << std::endl;
                 av_stream = avformat_new_stream(av_format_context, av_codec_context->codec); // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
@@ -147,11 +180,11 @@ void MuxFrameFilter::initMux() {
                 fps.num = 1000;
                 fps.den = 1;
                 av_stream->avg_frame_rate = fps;
-                */
+                 */
                 // av_stream->codec->time_base = av_stream->time_base;
                 // NOTE: member "codec" is deprecated, should use "codecpar"
                 i = avcodec_parameters_from_context(av_stream->codecpar, av_codec_context);
-                
+
                 /*
                 std::cout << "initMux: extradata_size 2: " << 
                     av_stream->codec->extradata_size 
@@ -161,7 +194,7 @@ void MuxFrameFilter::initMux() {
                     av_stream->codecpar->extradata_size 
                     << std::endl;
                 // yes, that's correct
-                */
+                 */
 
 
                 //av_stream->codec->extradata = extradata_frame.payload.data();
@@ -185,10 +218,10 @@ void MuxFrameFilter::initMux() {
     ///*
     // codec_contexes, streams, av_format_context reserved !
     // std::cout << "MuxFrameFilter: writing header" << std::endl;
-    
+
     i = avformat_write_header(av_format_context, &av_dict);
     if (i < 0) {
-        SError << "MuxFrameFilter : initMux : Error occurred while muxing" ;
+        SError << "MuxFrameFilter : initMux : Error occurred while muxing";
         perror("libValkka: MuxFrameFilter: initMux");
         exit(2);
         // av_err2str(i)
@@ -197,7 +230,7 @@ void MuxFrameFilter::initMux() {
     }
 
     //*/
-    
+
     /*
     // test re-write // works OK at this point (before writing any actual frames)
     AVRational fps = AVRational();
@@ -205,15 +238,14 @@ void MuxFrameFilter::initMux() {
     fps.den = 1;
     streams[0]->avg_frame_rate = fps;
     i=avformat_write_header(av_format_context, NULL); // re-write
-    */
-    
+     */
+
     // so far so good ..
     if (zerotime > 0) { // user wants to set time reference explicitly and not from first arrived packet ..
         mstimestamp0 = zerotime;
         zerotimeset = true;
-    }
-    else {
-        zerotimeset  =false;
+    } else {
+        zerotimeset = false;
     }
 
     //
@@ -222,14 +254,14 @@ void MuxFrameFilter::initMux() {
     // this mf persists in 16000 ticks per second.  mf
 }
 
-int MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size)  {
+int MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size) {
     // std::cout << "dummy" << std::endl;
     return 0; // re-define in child classes
 }
 
 void MuxFrameFilter::closeMux() {
     int i;
-    
+
     if (initialized) {
         // std::cout << "MuxFrameFilter: closeMux: freeing ctx" << std::endl;
         // avio_closep(&avio_ctx);        
@@ -263,59 +295,56 @@ void MuxFrameFilter::closeMux() {
     ccf = 0;
 }
 
-
 void MuxFrameFilter::deActivate_() {
     if (initialized) {
         av_write_trailer(av_format_context);
         closeMux();
     }
-    active=false;
+    active = false;
 }
-
 
 void MuxFrameFilter::run(Frame* frame) {
     this->go(frame);
     // chaining of run is done at write_packet
 }
 
-
 void MuxFrameFilter::go(Frame* frame) {
     std::unique_lock<std::mutex> lk(this->mutex);
 
-    static int ncount= 0;
-    
-    std::cout << "Got frame " << ncount++    << std::endl;
-    
-    
-    #ifdef MUXSTATE
-    std::cout << "MuxFrameFilter: go: state: ready, active, initd: " << int(ready) << " " << int(active) 
-        << " " << int(initialized) << std::endl;
-    #endif
+    static int ncount = 0;
+
+    std::cout << "Got frame " << ncount++ << std::endl;
+
+
+#ifdef MUXSTATE
+    std::cout << "MuxFrameFilter: go: state: ready, active, initd: " << int(ready) << " " << int(active)
+            << " " << int(initialized) << std::endl;
+#endif
 
     //std::cout << "MuxFrameFilter: go: frame " << *frame << std::endl;
-    
+
     internal_frame.n_slot = frame->n_slot;
 
     // make a copy of the setup frames ..
     if (frame->getFrameClass() == FrameClass::setup) { // SETUPFRAME
-        SetupFrame *setupframe = static_cast<SetupFrame*>(frame);        
+        SetupFrame *setupframe = static_cast<SetupFrame*> (frame);
         if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
-            if (setupframe->subsession_index>1) {
+            if (setupframe->subsession_index > 1) {
                 SError << "MuxFrameFilter : too many subsessions! ";
-            }
-            else {
-                #ifdef MUXSTATE
+            } else {
+#ifdef MUXSTATE
                 std::cout << "MuxFrameFilter:  go: state: got setup frame " << *setupframe << std::endl;
-                #endif
-                 SError << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
+#endif
+                SError << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
                 setupframes[setupframe->subsession_index].copyFrom(setupframe);
             }
             return;
         } // INIT
-    } // SETUPFRAME
-    
-    else if (frame->getFrameClass() == FrameClass::basic) { // BASICFRAME
-        BasicFrame *basicframe = static_cast<BasicFrame*>(frame);
+    }// SETUPFRAME
+
+    else if (frame->getFrameClass() == FrameClass::basic) 
+    { // BASICFRAME
+        BasicFrame *basicframe = static_cast<BasicFrame*> (frame);
 
         if (!has_extradata) {
             // https://stackoverflow.com/questions/54119705/fragmented-mp4-problem-playing-in-browser
@@ -324,64 +353,61 @@ void MuxFrameFilter::go(Frame* frame) {
                 // this kind of stuff should be in the frame class itself..
                 // should arrive in sps, pps order
                 if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
-                    (basicframe->h264_pars.slice_type == H264SliceType::pps))
-                {
-                    #ifdef MUXSTATE
+                        (basicframe->h264_pars.slice_type == H264SliceType::pps)) {
+#ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
-                    #endif
+#endif
                     SInfo << "MuxFrameFilter : appending extradata";
                     extradata_frame.payload.insert(
-                        extradata_frame.payload.end(),
-                        basicframe->payload.begin(),
-                        basicframe->payload.end()
-                    );
+                            extradata_frame.payload.end(),
+                            basicframe->payload.begin(),
+                            basicframe->payload.end()
+                            );
                 }
 
                 if (basicframe->h264_pars.slice_type == H264SliceType::sps and
-                    extradata_count == 0)
-                    {
-                        extradata_count = 1;
-                    }
+                        extradata_count == 0) {
+                    extradata_count = 1;
+                }
 
                 if (basicframe->h264_pars.slice_type == H264SliceType::pps and
-                    extradata_count == 1)
-                    {
-                        extradata_count = 2;
-                    }
+                        extradata_count == 1) {
+                    extradata_count = 2;
+                }
 
                 if (extradata_count >= 2) {
                     has_extradata = true;
-                    #ifdef MUXSTATE
+#ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: extradata ok" << std::endl;
-                    #endif
+#endif
                     extradata_frame.copyMetaFrom(basicframe); // timestamps etc.
                 }
             }
         }
 
         if (!ready) {
-            if ( (setupframes[0].subsession_index > -1) 
-                    or (setupframes[1].subsession_index > -1)  
-                    and has_extradata) { 
+            if ((setupframes[0].subsession_index > -1)
+                    or (setupframes[1].subsession_index > -1)
+                    and has_extradata) {
                 // TODO: should fix subsession index handling to something more sane
                 // Now the subsession index is forced to 0 in live.cpp
                 // we have got at least one setupframe and after that, payload
-                #ifdef MUXSTATE
+#ifdef MUXSTATE
                 std::cout << "MuxFrameFilter: go: state: setting ready=true" << std::endl;
-                #endif
-                ready=true;
+#endif
+                ready = true;
             }
         }
-        
-        if (ready and active and !initialized) { // got setup frames, writing has been requested, but file has not been opened yet
-           #ifdef MUXSTATE
+
+        if (ready and active and !initialized) 
+        { // got setup frames, writing has been requested, but file has not been opened yet
+#ifdef MUXSTATE
             std::cout << "MuxFrameFilter: go: state: calling initMux & setting initialized=true" << std::endl;
-            #endif
+#endif
             initMux(); // modifies member initialized
             if (!initialized) { // can't init this file.. de-activate
                 deActivate_();
-            }
-            else {
+            } else {
                 // set zero time
                 // mstimestamp0 = extradata_frame.mstimestamp;
                 mstimestamp0 = basicframe->mstimestamp;
@@ -393,27 +419,26 @@ void MuxFrameFilter::go(Frame* frame) {
             }
         }
 
-        if (initialized) { // everything's ok! just write..
+        if (initialized) 
+        { // everything's ok! just write..
             ///*
-            if (basicframe->codec_id == AV_CODEC_ID_H264) {
+            if (basicframe->codec_id == AV_CODEC_ID_H264) 
+            {
                 // this kind of stuff should be in the frame class itself..
                 // should arrive in sps, pps order
                 if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
-                    (basicframe->h264_pars.slice_type == H264SliceType::pps))
-                {
+                        (basicframe->h264_pars.slice_type == H264SliceType::pps)) {
                     return; // don't feed with sps & pps again
-                }
-                else if (!( (basicframe->h264_pars.slice_type == H264SliceType::i) or
-                    (basicframe->h264_pars.slice_type == H264SliceType::pb) ) ) {
-                        // std::cout << ">>>" << int(basicframe->h264_pars.slice_type) << std::endl;
-                        return;
-                    }
-                else if (basicframe->h264_pars.slice_type == H264SliceType::i) {
+                } else if (!((basicframe->h264_pars.slice_type == H264SliceType::i) or
+                        (basicframe->h264_pars.slice_type == H264SliceType::pb))) {
+                    // std::cout << ">>>" << int(basicframe->h264_pars.slice_type) << std::endl;
+                    return;
+                } else if (basicframe->h264_pars.slice_type == H264SliceType::i) {
                     /*
                     extradata_frame.mstimestamp = basicframe->mstimestamp;
                     std::cout << "refeeding sps + pps" << std::endl; // sps & pps have sequence information as well.. hmm.
                     writeFrame(&extradata_frame);
-                    */
+                     */
                 }
             }
             //*/
@@ -422,12 +447,11 @@ void MuxFrameFilter::go(Frame* frame) {
             writeFrame(basicframe);
         }
 
-    } // BASICFRAME
+    }// BASICFRAME
     else {
-       SError << "MuxFrameFilter : go: needs BasicFrame" ;
+        SError << "MuxFrameFilter : go: needs BasicFrame";
     }
 }
-
 
 void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     /*
@@ -443,22 +467,24 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     - ..so, the stream must be pruned of all extra "crap".  Through only i, p & b frames into the muxer
 
     You're welcome.
-    */
+     */
 
-   #ifdef MUXSTATE
-    std::cout << "MuxFrameFilter: writeFrame: state: ready, active, initd: " << int(ready) << " " << int(active) 
-        << " " << int(initialized) << std::endl;
-    #endif
+#ifdef MUXSTATE
+    std::cout << "MuxFrameFilter: writeFrame: state: ready, active, initd: " << int(ready) << " " << int(active)
+            << " " << int(initialized) << std::endl;
+#endif
 
     if (!initialized) {
         return;
     }
 
-    long int dt = (basicframe->mstimestamp-mstimestamp0);
-    if (dt < 0) { dt = 0; }
+    long int dt = (basicframe->mstimestamp - mstimestamp0);
+    if (dt < 0) {
+        dt = 0;
+    }
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
-    SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt ;
-    SInfo << "MuxFrameFilter : writing frame " << *basicframe ;
+    SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
+    SInfo << "MuxFrameFilter : writing frame " << *basicframe;
     // internal_basicframe2.fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
     // internal_basicframe.fillAVPacket(avpkt);
     basicframe->fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
@@ -467,7 +493,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     std::cout << "DEBUG: frame: " << *basicframe << std::endl;
     std::cout << "DEBUG: subses index: " << basicframe->subsession_index << std::endl;
     std::cout << "DEBUG: streams: " << streams.size() << std::endl;
-    */
+     */
     AVStream *av_stream = streams[basicframe->subsession_index];
     AVCodecContext *av_codec_context = codec_contexes[basicframe->subsession_index];
 
@@ -478,25 +504,24 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
 
     // avpkt->buf = NULL;
     if (dt >= 0) {
-        avpkt->pts=(int64_t)(dt);
+        avpkt->pts = (int64_t) (dt);
         /*
         avpkt->pts = 
             (streams[basicframe->subsession_index]->time_base.den * dt)/
             (streams[basicframe->subsession_index]->time_base.num * 1000);
             // complicated & stupid
-        */
+         */
         // std::cout << "PTS " << dt << std::endl;
         // NOTICE: this is critical.  the mp4 muxer goes sour if you dont feed
         // it increasing timestamps.  went almost nuts for this.
         if (avpkt->pts <= prevpts) {
-                avpkt->pts = prevpts+1;
-            }
+            avpkt->pts = prevpts + 1;
+        }
         prevpts = avpkt->pts;
         // std::cout << "avpkt->pts: " << avpkt->pts << std::endl;
-    }
-    else {
+    } else {
         std::cout << "fragmp4mux: NEGATIVE TIMESTAMP" << std::endl;
-        avpkt->pts=AV_NOPTS_VALUE;
+        avpkt->pts = AV_NOPTS_VALUE;
     }
 
     if (basicframe->h264_pars.slice_type == H264SliceType::i) {
@@ -509,24 +534,23 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     if (basicframe->h264_pars.slice_type == H264SliceType::sps) {
         avpkt->flags = AV_PKT_FLAG_KEY;
     }
-    */
+     */
     /*
     if (basicframe->isSeekable()) {
         avpkt->flags = AV_PKT_FLAG_KEY;
     }
-    */
+     */
 
     // std::cout << "avpkt->pts: " << avpkt->pts << std::endl;
     // std::cout << "MuxFrameFilter : avpkt size " << avpkt->size << std::endl;
     int res = av_interleaved_write_frame(av_format_context, avpkt); // => this calls write_packet
     // std::cout << "MuxFrameFilter : av_write_frame returned " << res << std::endl;
     if (res < 0) {
-       SError << "MuxFrameFilter: av_write_frame returned < 0 : muxer reset" ;
+        SError << "MuxFrameFilter: av_write_frame returned < 0 : muxer reset";
         av_write_trailer(av_format_context); // if we don't call this we'll get massive memleaks!  
         closeMux();
         // std::cout << "MuxFrameFilter: initialized now " << int(initialized) << std::endl;
-    }
-    else {
+    } else {
         // used to crasssshh here, but not anymore, after we have defined dummy read & seek functions!
         // int res = av_write_frame(av_format_context, avpkt);
         //std::cout << "res =" << res << std::endl;
@@ -534,49 +558,42 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
         /*
         av_buffer_unref(&(avpkt->buf));
         av_packet_unref(avpkt);
-        */
+         */
     }
 }
 
-
-
 void MuxFrameFilter::activate(long int zerotime) {
-  std::unique_lock<std::mutex> lk(this->mutex);
-  if (active) {
-    deActivate_();
-  }
-  
-  this->zerotime  =zerotime;
-  this->active    =true;
-}  
+    std::unique_lock<std::mutex> lk(this->mutex);
+    if (active) {
+        deActivate_();
+    }
 
+    this->zerotime = zerotime;
+    this->active = true;
+}
 
 void MuxFrameFilter::deActivate() {
-  std::unique_lock<std::mutex> lk(this->mutex);
-  
-  // std::cout << "FileFrameFilter: deActivate:" << std::endl;
-  deActivate_();
-  // std::cout << "FileFrameFilter: deActivate: bye" << std::endl;
-}
-  
+    std::unique_lock<std::mutex> lk(this->mutex);
 
-
-FragMP4MuxFrameFilter::FragMP4MuxFrameFilter(const char* name, FrameFilter *next) : 
-    MuxFrameFilter(name, next), got_ftyp(false), got_moov(false) {
-    internal_frame.meta_type = MuxMetaType::fragmp4; 
-    internal_frame.meta_blob.resize(sizeof(FragMP4Meta));
-
-    ftyp_frame.meta_type = MuxMetaType::fragmp4; 
-    ftyp_frame.meta_blob.resize(sizeof(FragMP4Meta));
-
-    moov_frame.meta_type = MuxMetaType::fragmp4; 
-    moov_frame.meta_blob.resize(sizeof(FragMP4Meta));
+    // std::cout << "FileFrameFilter: deActivate:" << std::endl;
+    deActivate_();
+    // std::cout << "FileFrameFilter: deActivate: bye" << std::endl;
 }
 
-    
+FragMP4MuxFrameFilter::FragMP4MuxFrameFilter(const char* name, FrameFilter *next) :
+MuxFrameFilter(name, next), got_ftyp(false), got_moov(false) {
+    internal_frame.meta_type = MuxMetaType::fragmp4;
+    internal_frame.meta_blob.resize(sizeof (FragMP4Meta));
+
+    ftyp_frame.meta_type = MuxMetaType::fragmp4;
+    ftyp_frame.meta_blob.resize(sizeof (FragMP4Meta));
+
+    moov_frame.meta_type = MuxMetaType::fragmp4;
+    moov_frame.meta_blob.resize(sizeof (FragMP4Meta));
+}
+
 FragMP4MuxFrameFilter::~FragMP4MuxFrameFilter() {
 }
-
 
 void FragMP4MuxFrameFilter::sendMeta() {
     std::unique_lock<std::mutex> lk(this->mutex);
@@ -587,15 +604,14 @@ void FragMP4MuxFrameFilter::sendMeta() {
         std::cout << "FragMP4MuxFrameFilter: sending metadata!" << std::endl;
         next->run(&ftyp_frame);
         next->run(&moov_frame);
-    }
-    else {
+    } else {
         std::cout << "FragMP4MuxFrameFilter: No metadata!" << std::endl;
     }
 }
 
 void FragMP4MuxFrameFilter::defineMux() {
-    this->avio_ctx = avio_alloc_context(this->avio_ctx_buffer, this->avio_ctx_buffer_size, 1, 
-        this, this->read_packet, this->write_packet, this->seek); // no read, nor seek
+    this->avio_ctx = avio_alloc_context(this->avio_ctx_buffer, this->avio_ctx_buffer_size, 1,
+            this, this->read_packet, this->write_packet, this->seek); // no read, nor seek
     // .. must be done here, so that read/write_packet points to the correct static function
     format_name = std::string("mp4");
 
@@ -613,7 +629,6 @@ void FragMP4MuxFrameFilter::defineMux() {
 
 }
 
-
 int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size_) {
     // what's coming here?  A complete muxed "frame" or a bytebuffer with several frames.  
     // The frames may continue in the next bytebuffer.
@@ -621,11 +636,11 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     // instead of several frames in the same bytebuffer
     //
     // buf_size_ : amount of data libavformat gives us
-    FragMP4MuxFrameFilter* me = static_cast<FragMP4MuxFrameFilter*>(opaque);
+    FragMP4MuxFrameFilter* me = static_cast<FragMP4MuxFrameFilter*> (opaque);
     MuxFrame& internal_frame = me->internal_frame;
     uint32_t &missing = me->missing;
     uint32_t &ccf = me->ccf;
-    
+
     /*
      
     ffmpeg buffers:
@@ -643,8 +658,8 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     |------------------------|
                   ............
                     missing
-    */
-    
+     */
+
     uint32_t cc = 0; // index of box start byte at the current byte buffer // ccf is current index in the non-complete mp4 box
     uint32_t len = 0; // number of bytes: either a complete box or what is missing from the box
     // ..consume this many bytes from the current byte buffer and add them to the frame buffer
@@ -652,96 +667,93 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     int i;
     uint32_t boxlen;
     char boxname[4];
-    
-    #ifdef MUXPARSE
+
+#ifdef MUXPARSE
     std::cout << "\n====>buf_size: " << buf_size << std::endl;
     std::cout << "dump: ";
-    for(i=0; i <= 8; i++) {
+    for (i = 0; i <= 8; i++) {
         std::cout << int(buf[i]) << " ";
     }
     std::cout << std::endl;
-    #endif
+#endif
 
     while (cc < buf_size) { // consume bytes given by libavformat while they last
         if (missing > 0) {
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "taking up missing bytes " << missing << std::endl;
-            #endif
+#endif
             len = missing;
-        }
-        else { // start of a new mp4 box
-            #ifdef MUXPARSE
+        } else { // start of a new mp4 box
+#ifdef MUXPARSE
             std::cout << std::endl << "start: [";
-            for(i=0; i <= 9; i++) {
-                std::cout << int(buf[cc+i]) << " ";
+            for (i = 0; i <= 9; i++) {
+                std::cout << int(buf[cc + i]) << " ";
             }
             std::cout << "]" << " " << ccf << std::endl;
-            #endif
-            len = deserialize_uint32_big_endian(buf+cc); // resolve the packet length from the mp4 headers
+#endif
+            len = deserialize_uint32_big_endian(buf + cc); // resolve the packet length from the mp4 headers
 
             // if (len > 14000) { // enable to test muxer reinit
             if (len > 99999999) { // absurd value .. this bytestream parser has gone sour.
                 std::cout << "MuxFrameFilter: overflow: len: " << len << std::endl;
                 // exit(2);
                 return -1;
-            }
-            else if (len < 1) {
-               SError << "MuxFrameFilter: packet of length zero!" ;
+            } else if (len < 1) {
+                SError << "MuxFrameFilter: packet of length zero!";
                 cc += 4;
                 continue;
             }
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << " ==> len: " << len << std::endl;
-            #endif
-            
+#endif
+
             internal_frame.reserve(len); // does nothing if already has this capacity
             internal_frame.resize(len);
         }
-        
-        #ifdef MUXPARSE
+
+#ifdef MUXPARSE
         std::cout << "cc + len: " << cc + len << std::endl;
-        #endif
-        
+#endif
+
         if ((cc + len) > buf_size) { // required number of bytes is larger than the buffer
             memcpy(internal_frame.payload.data() + ccf, buf + cc, buf_size - cc); // copy the rest of the buffer
             ccf += buf_size - cc;
             missing = len - (buf_size - cc); // next time this is called, ingest more bytes
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "missing bytes: " << missing << std::endl;
-            #endif
+#endif
             cc += buf_size;
-        }
-        else { // all required bytes are in the buffer
+        } else { // all required bytes are in the buffer
             memcpy(internal_frame.payload.data() + ccf, buf + cc, len);
             missing = 0;
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: OUT: len: " << internal_frame.payload.size() << " dump:" << internal_frame.dumpPayload() << std::endl;
-            #endif
+#endif
             ccf = 0;
             cc += len;
-            
+
             getLenName(internal_frame.payload.data(), boxlen, boxname);
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: got box " << std::string(boxname) << std::endl;
-            #endif
+#endif
             // std::cout << "FragMP4MuxFrameFilter: got box " << std::string(boxname) << std::endl;
             // set the frame type that also defines the metadata
             // internal_frame.meta_type = MuxMetaType::fragmp4; // at ctor
             FragMP4Meta* metap;
             // internal_frame.meta_blob.resize(sizeof(FragMP4Meta)); // at ctor
-            metap = (FragMP4Meta*)(internal_frame.meta_blob.data());
+            metap = (FragMP4Meta*) (internal_frame.meta_blob.data());
             // set values in-place:
             ///*
             if (strcmp(boxname, "moof") == 0) {
                 metap->is_first = moofHasFirstSampleFlag(internal_frame.payload.data());
                 //#ifdef MUXPARSE
                 std::cout << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) << std::endl;
-               // #endif
+                // #endif
             }
             //*/
             memcpy(&metap->name[0], boxname, 4);
-            
-             std::cout << "boxname " << boxname  << std::endl;
+
+            std::cout << "boxname " << boxname << std::endl;
 
             // TODO: get timestamp from the MP4 structure
             // at the moment, internal_frame does not have any timestamp
@@ -749,42 +761,41 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->mstimestamp = 0; // n/a for the moment
             metap->size = boxlen; // internal_frame.payload.size();
             metap->slot = internal_frame.n_slot;
-            
+
             if (strcmp(boxname, "ftyp") == 0) {
                 me->ftyp_frame.copyFrom(&internal_frame);
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
-            }
-            else if (strcmp(boxname, "moov") == 0) {
+            } else if (strcmp(boxname, "moov") == 0) {
                 me->moov_frame.copyFrom(&internal_frame);
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;
                 // std::cout << "FragMP4MuxFrameFilter: metadata cached" << std::endl;
             }
 
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: sending frame downstream " << std::endl;
-            #endif
+#endif
             if (me->next) {
                 // std::cout << ">size " << internal_frame.payload.size() << std::endl;
                 me->next->run(&internal_frame);
             }
-            #ifdef MUXPARSE
+#ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: frame sent " << std::endl;
-            #endif
+#endif
         }
         // cc += len; // move on to next box
-        #ifdef MUXPARSE
+#ifdef MUXPARSE
         std::cout << "FragMP4MuxFrameFilter: cc = " << cc << " / " << buf_size << std::endl;
-        #endif
+#endif
     }
     return 0;
 }
 
-  
 void getLenName(uint8_t* data, uint32_t& len, char* name) {
     uint32_t cc = 0;
-    len = deserialize_uint32_big_endian(data + cc); cc += 4;
+    len = deserialize_uint32_big_endian(data + cc);
+    cc += 4;
     memcpy(name, data + cc, 4); // name consists of 4 bytes
 }
 
@@ -809,22 +820,23 @@ uint32_t getSubBoxIndex(uint8_t* data, const char name[4]) {
     return 0;
 }
 
-
 bool moofHasFirstSampleFlag(uint8_t* data) {
     /*
     [moof [traf [trun]]]
-    */
+     */
     uint32_t cc = 0;
     uint8_t* current_box;
     current_box = data;
     // std::cout << "looking for traf" << std::endl;
-    cc = getSubBoxIndex(current_box, "traf"); current_box = current_box + cc;
+    cc = getSubBoxIndex(current_box, "traf");
+    current_box = current_box + cc;
     // std::cout << "looking for trun" << std::endl;
-    cc = getSubBoxIndex(current_box, "trun"); current_box = current_box + cc;
+    cc = getSubBoxIndex(current_box, "trun");
+    current_box = current_box + cc;
     // we're at trun now
     //ISO/IEC 14496-12:2012(E) .. pages 5 and 57
     //bytes: (size 4), (name 4), (version 1 + tr_flags 3)
-    return (current_box[10+1] & 4) == 4;
+    return (current_box[10 + 1] & 4) == 4;
 }
 
 
@@ -909,7 +921,7 @@ bool moofHasFirstSampleFlag(uint8_t* data) {
 <Box: mdat of 29267 bytes> False
 <Box: moof of 100 bytes> False
 <Box: mdat of 10533 bytes> False
-*/
+ */
 
 
 
