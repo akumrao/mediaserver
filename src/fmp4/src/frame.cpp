@@ -140,6 +140,7 @@ void BasicFrame::fillPars() {
 void BasicFrame::fillH264Pars() {
   if (payload.size()>(nalstamp.size()+1)) { 
     h264_pars.slice_type = ( payload[nalstamp.size()] & 31 );
+    h264_pars.frameType =  (( payload[nalstamp.size()] & 96) >> 5);
   }
 }
 

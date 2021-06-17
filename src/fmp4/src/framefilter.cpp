@@ -22,14 +22,48 @@ void FrameFilter::run(Frame *frame)
 DummyFrameFilter::DummyFrameFilter(const char *name, bool verbose, FrameFilter *next) : FrameFilter(name, next), verbose(verbose)
 {
     // std::cout << ">>>>>>" << verbose << std::endl;
+    const char *input_file = "/tmp/test.mp4"; 
+    if ((fp_out = fopen(input_file, "wb")) == NULL) {
+        fprintf(stderr, "fopen %s failed.\n", input_file);
+        // goto ret7;
+        return;
+    }
+    
+}
+DummyFrameFilter::~DummyFrameFilter()
+{
+    fclose(fp_out);
 }
 
-void DummyFrameFilter::go(Frame *frame)
-{
-    if (verbose)
-    {
+void DummyFrameFilter::go(Frame *frame) {
+    if (verbose) {
         // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
         std::cout << "DummyFrameFilter : " << this->name << " : got frame : " << *(frame) << std::endl;
+
+
+
+        if (frame->getFrameClass() != FrameClass::mux) {
+            std::cout << "FragMP4ShmemFrameFilter: go: ERROR: MuxFrame required" << std::endl;
+            return;
+        }
+        MuxFrame *muxframe = static_cast<MuxFrame*> (frame);
+        if (muxframe->meta_type != MuxMetaType::fragmp4) {
+            std::cout << "FragMP4ShmemFrameFilter::go: needs MuxMetaType::fragmp4"
+                    << std::endl;
+            return;
+        }
+
+    
+        FragMP4Meta* meta = (FragMP4Meta*) (muxframe->meta_blob.data());
+       // *meta = *meta_;
+        int x =  muxframe->payload.size();
+       
+       // meta->size = std::min(x, 10); // correct meta->size if there was more than allowed n_bytes
+       // memcpy(payload, f->payload.data(), meta->size);
+
+
+        fwrite(muxframe->payload.data(), meta->size, 1, fp_out);
+
     }
 }
 

@@ -63,17 +63,28 @@ namespace H264SliceType {
   static const unsigned none  =0;
   static const unsigned sps   =7;
   static const unsigned pps   =8;
-  static const unsigned i     =5;
-  static const unsigned pb    =1;
+  static const unsigned idr     =5;   // IDR picture. Do not confuse with IDR KEY Frame
+  static const unsigned nonidr  =1;
+  static const unsigned aud  =9;   // aud delimeter
+};
+
+namespace H264SframeType {
+  static const unsigned none  =0;
+  static const unsigned i   =3;
+  static const unsigned p   =2;
+  static const unsigned b   =1;   // IDR picture. Do not confuse with IDR KEY Frame
+  
 };
 
 
 struct H264Pars { ///< H264 parameters
   H264Pars() : slice_type(H264SliceType::none) {};
   short unsigned slice_type;
+  short unsigned frameType;
+    
 };
 inline std::ostream &operator<<(std::ostream &os, H264Pars const &m) {
- return os << "H264: slice_type="<<m.slice_type;
+ return os << "H264: frame_type=" << m.frameType  <<" slice_type="<< m.slice_type;
 }
 
 

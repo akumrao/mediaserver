@@ -52,9 +52,12 @@ public:
 
 protected:
     bool verbose;
+    ~DummyFrameFilter();
 
 protected:
     void go(Frame *frame);
+    
+    FILE* fp_out;
 
 }; 
 

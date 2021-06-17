@@ -46,7 +46,11 @@ namespace fmp4 {
      
      
     void parseH264(const char *input_file);
-     void decode(AVCodecContext *cdc_ctx, AVFrame *frame, AVPacket *pkt, FILE *fp_out);
+  
+    ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
+      
+
+        
        
  private:
      

@@ -28,7 +28,7 @@
   |F|NRI|  Type   |   F 0 forbidden_zero_bit. This bit must be 0 in the H.264 specification.
   NRI(nal_ref_idc)  for  00((none) I(11) P(10) B01
   * 
-  * Access Unit Delimiter (AUD). An AUD is an optional NALU that can be use to delimit frames in an elementary stream. It is not required (unless otherwise stated by the container/protocol, like TS), and is often not included in order to save space, but it can be useful to finds the start of a frame without having to fully parse each NALU.
+  * Access Unit Delimiter (AUD) type 9. An AUD is an optional NALU that can be use to delimit frames in an elementary stream. It is not required (unless otherwise stated by the container/protocol, like TS), and is often not included in order to save space, but it can be useful to finds the start of a frame without having to fully parse each NALU.
   
   I-slice is a portion of a picture composed of macroblocks, all of which are based upon macroblocks within the same picture.
   Thus, H.264 introduces a new concept called slices — segments of a picture bigger than macroblocks but smaller than a frame.
@@ -345,7 +345,6 @@ void MuxFrameFilter::go(Frame* frame) {
     else if (frame->getFrameClass() == FrameClass::basic) 
     { // BASICFRAME
         BasicFrame *basicframe = static_cast<BasicFrame*> (frame);
-
         if (!has_extradata) {
             // https://stackoverflow.com/questions/54119705/fragmented-mp4-problem-playing-in-browser
             // http://aviadr1.blogspot.com/2010/05/h264-extradata-partially-explained-for.html
@@ -429,11 +428,11 @@ void MuxFrameFilter::go(Frame* frame) {
                 if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
                         (basicframe->h264_pars.slice_type == H264SliceType::pps)) {
                     return; // don't feed with sps & pps again
-                } else if (!((basicframe->h264_pars.slice_type == H264SliceType::i) or
-                        (basicframe->h264_pars.slice_type == H264SliceType::pb))) {
+                } else if (!((basicframe->h264_pars.slice_type == H264SliceType::idr) or
+                        (basicframe->h264_pars.slice_type == H264SliceType::nonidr))) {
                     // std::cout << ">>>" << int(basicframe->h264_pars.slice_type) << std::endl;
                     return;
-                } else if (basicframe->h264_pars.slice_type == H264SliceType::i) {
+                } else if (basicframe->h264_pars.slice_type == H264SliceType::idr) {
                     /*
                     extradata_frame.mstimestamp = basicframe->mstimestamp;
                     std::cout << "refeeding sps + pps" << std::endl; // sps & pps have sequence information as well.. hmm.
@@ -484,7 +483,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     }
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
     SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
-    SInfo << "MuxFrameFilter : writing frame " << *basicframe;
+    //SInfo << "MuxFrameFilter : writing frame " << *basicframe;
     // internal_basicframe2.fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
     // internal_basicframe.fillAVPacket(avpkt);
     basicframe->fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
@@ -524,7 +523,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
         avpkt->pts = AV_NOPTS_VALUE;
     }
 
-    if (basicframe->h264_pars.slice_type == H264SliceType::i) {
+    if (basicframe->h264_pars.slice_type == H264SliceType::idr) {  //arvind
         avpkt->flags = AV_PKT_FLAG_KEY;
     }
 

@@ -404,33 +404,31 @@ namespace base {
             return 0;
         }
 
-        void FFParse::decode(AVCodecContext *cdc_ctx, AVFrame *frame, AVPacket *pkt, FILE *fp_out) {
-            int ret = 0;
-            int y;
+ 
 
-            if ((ret = avcodec_send_packet(cdc_ctx, pkt)) < 0) {
-                fprintf(stderr, "avcodec_send_packet failed.\n");
-                //exit(1);
-                return;
+        ssize_t FFParse::get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size) {
+            ssize_t pos = 3;
+            while ((size - pos) > 3) {
+                if (buf[pos] == 0 && buf[pos + 1] == 0 && buf[pos + 2] == 1)
+                {
+                    *poutbuf = buf;
+                    *poutbuf_size  = pos;
+                    return pos;
+                }
+                if (buf[pos] == 0 && buf[pos + 1] == 0 && buf[pos + 2] == 0 && buf[pos + 3] == 1)
+                {
+                    *poutbuf = buf;
+                    *poutbuf_size  = pos;
+                    return pos;
+                }
+                pos++;
             }
-
-            while ((ret = avcodec_receive_frame(cdc_ctx, frame)) >= 0) {
-                printf("Write 1 frame.\n");
-
-                for (y = 0; y < frame->height; y++)
-                    fwrite(&frame->data[0][y * frame->linesize[0]], 1, frame->width, fp_out);
-                for (y = 0; y < frame->height / 2; y++)
-                    fwrite(&frame->data[1][y * frame->linesize[1]], 1, frame->width / 2, fp_out);
-                for (y = 0; y < frame->height / 2; y++)
-                    fwrite(&frame->data[2][y * frame->linesize[2]], 1, frame->width / 2, fp_out);
-            }
-
-            if ((ret != AVERROR(EAGAIN)) && (ret != AVERROR_EOF)) {
-                fprintf(stderr, "avcodec_receive_packet failed.\n");
-                return;
-            }
+            
+             *poutbuf_size  = 0;
+            return size;
         }
 
+     
         void FFParse::parseH264(const char *input_file) {
             int ret = 0;
             AVCodec *codec = NULL;
@@ -499,6 +497,15 @@ namespace base {
                 // goto ret7;
                 return;
             }
+            
+             if (fseek(fp_in, 0, SEEK_END))
+               return;
+            ssize_t fileSize = (ssize_t)ftell(fp_in);
+            if (fileSize < 0)
+                return;
+            if (fseek(fp_in, 0, SEEK_SET))
+                return;
+    
 
             if ((parser = av_parser_init(codec->id)) == NULL) {
                 fprintf(stderr, "av_parser_init failed.\n");
@@ -506,57 +513,112 @@ namespace base {
                 return;
             }
 
+            av_init_packet(pkt);
 
+            const int in_buffer_size=fileSize;
+            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *cur_ptr;
+            int cur_size;
+            
+            long int startTime=  getCurrentMsTimestamp();
+            long int deltatime =   1000000/25;  //25 frames persecs
+
+            long int framecount = 0;
+            
+            
             while (feof(fp_in) == 0) {
-                char inbuf[1024] = {0};
-                const uint8_t *data = (const uint8_t *) inbuf;
-                int data_size = 0;
 
-                data_size = fread(inbuf, 1, 1024, fp_in);
+                cur_size = fread(in_buffer, 1, in_buffer_size, fp_in);
+                if (cur_size == 0)
+                    break;
+                cur_ptr = in_buffer;
 
-                while (data_size > 0) {
+                while (cur_size > 0) {
                     /*Only input video data*/
-                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
-                            data, data_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0)
-                    {
-                        fprintf(stderr, "av_parser_parse2 failed.\n");
-                        //goto ret8;
-                        return;
+//                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
+//                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+//                        fprintf(stderr, "av_parser_parse2 failed.\n");
+//                        //goto ret8;
+//                        return;
+//                    }
+                    
+                     ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+                     if (ret < 4) {
+                        cur_ptr += 1;
+                        cur_size -= 1;
+                        continue;
                     }
+                     
 
                     // avcodec_decode_video2
 
-                    data += ret;
-                    data_size -= ret;
+                    cur_ptr += ret;
+                    cur_size -= ret;
 
-                    if (pkt->size > 0) {
-                        
-                        basicframe.copyFromAVPacket(pkt);
-                        
-                       // unsigned target_size=frameSize+numTruncatedBytes;
-                        // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
-                        // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                        basicframe.mstimestamp= getCurrentMsTimestamp();
-                        basicframe.fillPars();
-                        // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+                    if (pkt->size == 0)
+                        continue;
 
-                        basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
+                    //Some Info from AVCodecParserContext
+//                    printf("[Packet]Size:%6d\t", pkt->size);
+//                    switch (parser->pict_type) {
+//                        case AV_PICTURE_TYPE_I: printf("Type:I\t");
+//                            break;
+//                        case AV_PICTURE_TYPE_P: printf("Type:P\t");
+//                            break;
+//                        case AV_PICTURE_TYPE_B: printf("Type:B\t");
+//                            break;
+//                        default: printf("Type:Other\t");
+//                            break;
+//                    };
+//                    printf("Number:%4d\n", parser->output_picture_number);
 
-                        
-                        fragmp4_muxer.run(&basicframe);
-                        
-                        info.run(&basicframe);
-                        
-                        basicframe.payload.resize(basicframe.payload.capacity());
-                        
-                        //
-                        int x = 0;
-                       // decode(cdc_ctx, frame, pkt, fp_out);
+//                    ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, &packet);
+//                    if (ret < 0) {
+//                        printf("Decode Error.\n");
+//                        return ret;
+//                    }
+//                    if (got_picture) {
+//                    }
+
+                    //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
+                   // BasicFrame        basicframe;
+                    basicframe.copyFromAVPacket(pkt);
+                    basicframe.codec_id = codec->id;
+                    
+
+                    // unsigned target_size=frameSize+numTruncatedBytes;
+                    // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                    // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
+                    basicframe.mstimestamp = startTime + deltatime*framecount;
+                    basicframe.fillPars();
+                    
+                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
+                    {
+                          continue;
                     }
-                }
+                    framecount++;
+                    
+                    if(framecount == 100 )
+                        break;
+                    // std::cout << "afterGettingFrame: " << basicframe << std::endl;
 
+                    //basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
+
+                   // info.run(&basicframe);
+                    fragmp4_muxer.run(&basicframe);
+
+                    
+
+                    basicframe.payload.resize(basicframe.payload.capacity());
+
+                    //
+                    int x = 0;
+                    // decode(cdc_ctx, frame, pkt, fp_out);
+                }
             }
 
+        
+            free(in_buffer);
             fclose(fp_in);
             av_frame_free(&frame);
             av_packet_free(&pkt);
