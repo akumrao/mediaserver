@@ -49,10 +49,10 @@ class DummyFrameFilter : public FrameFilter {
 
 public:                                                                                
     DummyFrameFilter(const char *name, bool verbose = true, FrameFilter *next = NULL); 
-
+     ~DummyFrameFilter();
 protected:
     bool verbose;
-    ~DummyFrameFilter();
+   
 
 protected:
     void go(Frame *frame);

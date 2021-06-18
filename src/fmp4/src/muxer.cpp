@@ -335,16 +335,16 @@ void MuxFrameFilter::go(Frame* frame) {
 #ifdef MUXSTATE
                 std::cout << "MuxFrameFilter:  go: state: got setup frame " << *setupframe << std::endl;
 #endif
-                SError << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
+                SInfo << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
                 setupframes[setupframe->subsession_index].copyFrom(setupframe);
             }
             return;
         } // INIT
     }// SETUPFRAME
 
-    else if (frame->getFrameClass() == FrameClass::basic) 
-    { // BASICFRAME
+    else if (frame->getFrameClass() == FrameClass::basic) { // BASICFRAME
         BasicFrame *basicframe = static_cast<BasicFrame*> (frame);
+
         if (!has_extradata) {
             // https://stackoverflow.com/questions/54119705/fragmented-mp4-problem-playing-in-browser
             // http://aviadr1.blogspot.com/2010/05/h264-extradata-partially-explained-for.html
@@ -385,9 +385,7 @@ void MuxFrameFilter::go(Frame* frame) {
         }
 
         if (!ready) {
-            if ((setupframes[0].subsession_index > -1)
-                    or (setupframes[1].subsession_index > -1)
-                    and has_extradata) {
+            if (((setupframes[0].subsession_index > -1) or (setupframes[1].subsession_index > -1)) and has_extradata) {
                 // TODO: should fix subsession index handling to something more sane
                 // Now the subsession index is forced to 0 in live.cpp
                 // we have got at least one setupframe and after that, payload
@@ -398,8 +396,7 @@ void MuxFrameFilter::go(Frame* frame) {
             }
         }
 
-        if (ready and active and !initialized) 
-        { // got setup frames, writing has been requested, but file has not been opened yet
+        if (ready and active and !initialized) { // got setup frames, writing has been requested, but file has not been opened yet
 #ifdef MUXSTATE
             std::cout << "MuxFrameFilter: go: state: calling initMux & setting initialized=true" << std::endl;
 #endif
@@ -418,11 +415,9 @@ void MuxFrameFilter::go(Frame* frame) {
             }
         }
 
-        if (initialized) 
-        { // everything's ok! just write..
+        if (initialized) { // everything's ok! just write..
             ///*
-            if (basicframe->codec_id == AV_CODEC_ID_H264) 
-            {
+            if (basicframe->codec_id == AV_CODEC_ID_H264) {
                 // this kind of stuff should be in the frame class itself..
                 // should arrive in sps, pps order
                 if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
@@ -483,7 +478,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     }
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
     SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
-    //SInfo << "MuxFrameFilter : writing frame " << *basicframe;
+    SInfo << "MuxFrameFilter : writing frame " << *basicframe;
     // internal_basicframe2.fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
     // internal_basicframe.fillAVPacket(avpkt);
     basicframe->fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload

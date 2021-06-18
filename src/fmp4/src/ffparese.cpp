@@ -67,7 +67,7 @@ namespace base {
             return bufSize;
         }
 
-        FFParse::FFParse() :  fragmp4_filter("fragmp4"), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", &fragmp4_muxer) {
+        FFParse::FFParse() :  fragmp4_filter("fragmp4"), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
 
             fragmp4_muxer.activate();
 
@@ -460,6 +460,8 @@ namespace base {
             setupframe.subsession_index     =subsession_index;
             setupframe.mstimestamp          = getCurrentMsTimestamp();
             // send setup frame
+            
+            info.run(&setupframe);
             fragmp4_muxer.run(&setupframe);
 
             if ((codec = avcodec_find_decoder(AV_CODEC_ID_H264)) == NULL) {
@@ -513,14 +515,14 @@ namespace base {
                 return;
             }
 
-            av_init_packet(pkt);
+           // av_init_packet(pkt);
 
             const int in_buffer_size=fileSize;
             unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
             unsigned char *cur_ptr;
             int cur_size;
             
-            long int startTime=  getCurrentMsTimestamp();
+            long int startTime=    setupframe.mstimestamp;
             long int deltatime =   1000000/25;  //25 frames persecs
 
             long int framecount = 0;
@@ -589,29 +591,32 @@ namespace base {
                     // unsigned target_size=frameSize+numTruncatedBytes;
                     // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
                     // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                    basicframe.mstimestamp = startTime + deltatime*framecount;
+                    basicframe.mstimestamp = startTime + 10.4*framecount;
                     basicframe.fillPars();
                     
-                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
-                    {
-                          continue;
-                    }
+//                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
+//                    {
+//                          continue;
+//                    }
+                     
                     framecount++;
                     
-                    if(framecount == 100 )
-                        break;
+//                    if(framecount == 200 )
+//                        break;
                     // std::cout << "afterGettingFrame: " << basicframe << std::endl;
 
-                    //basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
-
-                   // info.run(&basicframe);
+                  //  basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
+                    
+                    info.run(&basicframe);
+                   
                     fragmp4_muxer.run(&basicframe);
-
+                     
                     
 
                     basicframe.payload.resize(basicframe.payload.capacity());
-
-                    //
+                    
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+//
                     int x = 0;
                     // decode(cdc_ctx, frame, pkt, fp_out);
                 }
