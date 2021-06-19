@@ -19,6 +19,8 @@
 #include <vector>
 #include "muxer.h"
 
+#include "net/netInterface.h"
+#include "http/HttpsClient.h"
 
 namespace base {
 namespace fmp4 {
@@ -30,8 +32,8 @@ namespace fmp4 {
      
  public:
   
-
-     FFParse( );
+    
+     FFParse( base::net::ClientConnecton *conn);
      
      ~FFParse( );
      
@@ -50,7 +52,7 @@ namespace fmp4 {
     ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
       
 
-        
+     net::ClientConnecton *conn;    
        
  private:
      

@@ -14,10 +14,12 @@
 #ifndef FMP4_H
 #define FMP4_H
 
+#include "ffparse.h"
+
 #include "base/thread.h"
 #include <string>
 #include <vector>
-#include "ffparse.h"
+
 
 #include "net/netInterface.h"
 #include "http/HttpsClient.h"
@@ -47,7 +49,7 @@ namespace fmp4 {
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-     FFParse  ffparser;
+     FFParse  *ffparser;
  private:
      
     net::ClientConnecton *conn{nullptr};

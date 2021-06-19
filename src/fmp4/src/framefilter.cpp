@@ -2,6 +2,8 @@
 #include "framefilter.h"
 #include "tools.h"
 
+using namespace base;
+
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
 FrameFilter::FrameFilter(const char *name, FrameFilter *next) : name(name), next(next){};
@@ -19,7 +21,7 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name, bool verbose, FrameFilter *next) : FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name,  base::net::ClientConnecton *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
 {
     // std::cout << ">>>>>>" << verbose << std::endl;
     const char *input_file = "/tmp/test.mp4"; 
@@ -56,13 +58,14 @@ void DummyFrameFilter::go(Frame *frame) {
     
         FragMP4Meta* meta = (FragMP4Meta*) (muxframe->meta_blob.data());
        // *meta = *meta_;
-        int x =  muxframe->payload.size();
        
-       // meta->size = std::min(x, 10); // correct meta->size if there was more than allowed n_bytes
-       // memcpy(payload, f->payload.data(), meta->size);
-
-
-        fwrite(muxframe->payload.data(), meta->size, 1, fp_out);
+        int ret = fwrite(muxframe->payload.data(), meta->size, 1, fp_out);
+        tolalMp4Size +=ret;
+        
+        if(conn)
+        conn->send((const char*)muxframe->payload.data(), meta->size, true );
+        
+        SInfo << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
     }
 }

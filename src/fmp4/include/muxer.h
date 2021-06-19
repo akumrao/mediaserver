@@ -70,23 +70,23 @@ protected:
     void deActivate_();
     void writeFrame(BasicFrame* frame);
   
-public: // API calls                                                                           // <pyapi>
-    // setFileName(const char* fname); ///< Sets the output filename                           // <pyapi>
-    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) // <pyapi>
-    void deActivate();                                           ///< Stop streaming           // <pyapi>
+public: // API calls                                                                           
+    // setFileName(const char* fname); ///< Sets the output filename                           
+    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
+    void deActivate();                                           ///< Stop streaming           
     
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size); // define separately in child classes
     static int read_packet(void *opaque, uint8_t *buf, int buf_size) {return 0;} // dummy function
     static int64_t seek(void *opaque, int64_t offset, int whence) {return 0;} // dummy function
-};                                                                                             // <pyapi>
+};                                                                                             
 
 
-class FragMP4MuxFrameFilter : public MuxFrameFilter {                       // <pyapi>
+class FragMP4MuxFrameFilter : public MuxFrameFilter {                       
     
-public:                                                                     // <pyapi>
-    FragMP4MuxFrameFilter(const char* name, FrameFilter *next = NULL);      // <pyapi>
-    virtual ~FragMP4MuxFrameFilter();                                       // <pyapi>
+public:                                                                     
+    FragMP4MuxFrameFilter(const char* name, FrameFilter *next = NULL);      
+    virtual ~FragMP4MuxFrameFilter();                                       
 
 public:
     bool                        got_ftyp, got_moov;
@@ -95,14 +95,14 @@ public:
 protected:
     virtual void defineMux();
 
-public: // API calls    // <pyapi>
-    void sendMeta();    // <pyapi>
+public: // API calls    
+    void sendMeta();    
 
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size_);
     static int read_packet(void *opaque, uint8_t *buf, int buf_size) {return 0;} // {std::cout << "muxer: dummy read packet" << std::endl; return 0;} // dummy function
     static int64_t seek(void *opaque, int64_t offset, int whence) {return 0;}// {std::cout << "muxer: dummy seek" << std::endl; return 0;} // dummy function
-};                                                                           // <pyapi>
+};                                                                           
 
 
 // helper functions for minimal MP4 parsing

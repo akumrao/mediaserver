@@ -3,6 +3,9 @@
 
 
 #include "frame.h"
+
+#include "net/netInterface.h"
+#include "http/HttpsClient.h"
 //#include "framefifo.h"
 
 /** The mother class of all frame filters!  
@@ -48,8 +51,10 @@ public: // API
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name, bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name,  base::net::ClientConnecton *conn, bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
+
+     base::net::ClientConnecton *conn; 
 protected:
     bool verbose;
    
@@ -58,7 +63,7 @@ protected:
     void go(Frame *frame);
     
     FILE* fp_out;
-
+    long  tolalMp4Size;
 }; 
 
 /** Dump the beginning of Frame's payload into stdout

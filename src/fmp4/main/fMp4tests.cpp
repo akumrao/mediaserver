@@ -32,9 +32,8 @@ int main(int argc, char** argv) {
       
     fmp4::ReadMp4 readmp4;
     
-    //readmp4.websocketConnect();
+    readmp4.websocketConnect();
 
-    //readmp4.start();
 
     app.run();
     

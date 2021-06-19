@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
             continue;
         }
         
-         AVCodecParameters *in_codecpar = in_stream->codecpar;
+        AVCodecParameters *in_codecpar = in_stream->codecpar;
 
 //        if (in_codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 //        {

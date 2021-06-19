@@ -41,16 +41,17 @@ namespace base {
         ReadMp4::ReadMp4() {
             
             
-            ffparser.start();
+         // ffparser = new FFParse(nulltpr)
+          //ffparser->start(); 
             
 
         }
 
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
-            ffparser.stop();
-            ffparser.join();
-            
+            ffparser->stop();
+            ffparser->join();
+            delete ffparser;
         }
 
         void ReadMp4::websocketConnect() {
@@ -90,7 +91,9 @@ namespace base {
 
                 //char x[2];
                 //  memset( x, -1,2 );
-                this->start();
+                //this->start();
+                ffparser = new FFParse(conn);
+                ffparser->start();    
                 // conn->send(x, 2, true);
             };
 
