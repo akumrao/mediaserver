@@ -48,7 +48,9 @@ namespace fmp4 {
      
      
     void parseH264(const char *input_file);
-  
+    void parsePCM16(const char *input_file);
+    void reset();
+    
     ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
       
 
@@ -56,7 +58,7 @@ namespace fmp4 {
        
  private:
      
-   
+    std::atomic< bool > resetParser { false };
     DummyFrameFilter fragmp4_filter;
     FragMP4MuxFrameFilter fragmp4_muxer;
     InfoFrameFilter info;

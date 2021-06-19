@@ -12,7 +12,7 @@
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs = "avc1.4D4033"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
@@ -203,8 +203,35 @@
                 //ws = new WebSocket("ws://localhost:1111/ws/");
                 ws.binaryType = "arraybuffer";
                 ws.onmessage = function (event) {
-                    //putPacket(event.data);
-                    source_buffer.appendBuffer(event.data);
+
+
+                    if(event.data instanceof ArrayBuffer) {
+                        // binary frame
+                       // const view = new DataView(event.data);
+                       // console.log(view.getInt32(0));
+                       putPacket(event.data);
+                       //source_buffer.appendBuffer(event.data);
+
+                    } else {
+                        // text frame
+                        console.log(event.data);
+                    }
+
+                    
+                };
+                ws.onopen = function() 
+                {
+                    console.log('WebSocket Client Connected');
+                    ws.send("reset");
+                };
+
+                dataChannel.onclose = function () {
+                    console.log("DataChannel closed");
+                };
+
+                dataChannel.onerror = function (e) {
+                    console.log("DataChannel error: " + e.message);
+                    console.log(e);
                 };
             }
 

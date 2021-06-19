@@ -41,8 +41,8 @@ namespace base {
         ReadMp4::ReadMp4() {
             
             
-         // ffparser = new FFParse(nulltpr)
-          //ffparser->start(); 
+         //ffparser = new FFParse(nullptr);
+         //ffparser->start(); 
             
 
         }
@@ -77,20 +77,19 @@ namespace base {
             };
 
             conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-                STrace << "client->fnPayload " << std::string(data, sz);
+                std::string got = std::string(data, sz);
+                STrace << "client->fnPayload " << got;
+                
                 //  m_ping_timeout_timer.Reset();
                 //  m_packet_mgr.put_payload(std::string(data,sz));
+                if( got == "reset")
+                    ffparser->reset();    
             };
 
 
             conn->fnConnect = [&](HttpBase * con) {
                 STrace << "onconnect ";
-                ;
-                //  m_ping_timeout_timer.Reset();
-                //  m_packet_mgr.put_payload(std::string(data,sz));
-
-                //char x[2];
-                //  memset( x, -1,2 );
+                
                 //this->start();
                 ffparser = new FFParse(conn);
                 ffparser->start();    

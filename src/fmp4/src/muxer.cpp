@@ -139,13 +139,19 @@ void MuxFrameFilter::initMux() {
 
     // use the saved setup frames (if any) to set up the streams
     // Frame *frame; // alias
-    for (auto it = setupframes.begin(); it != setupframes.end(); it++) {
+    for (auto it = setupframes.begin(); it != setupframes.end(); it++) 
+    {
         SetupFrame &setupframe = *it;
         if (setupframe.subsession_index < 0) { // not been initialized
-        } else { // got setupframe
+            
+            SError<< "wrong stream id";
+        } 
+        else
+        { // got setupframe
             AVCodecID codec_id = setupframe.codec_id;
 
-            if (codec_id != AV_CODEC_ID_NONE) {
+            if (codec_id == AV_CODEC_ID_H264)
+            {
                 AVCodecContext *av_codec_context;
                 AVStream *av_stream;
 
@@ -203,11 +209,78 @@ void MuxFrameFilter::initMux() {
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
                 codec_contexes[setupframe.subsession_index] = av_codec_context;
                 streams[setupframe.subsession_index] = av_stream;
-                initialized = true; // so, at least one substream init'd
+                
                 // std::cout << "initMux: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
                 // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
                 // std::cout << "initMux: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
             }
+            else if (codec_id== AV_CODEC_ID_PCM_S16LE)
+            {
+                AVCodecContext *av_codec_context;
+                AVStream *av_stream;
+
+                av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
+                av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
+                av_codec_context->height = 576;
+                av_codec_context->bit_rate = 1024 * 1024;
+                av_codec_context->time_base = timebase; // 1/1000
+                av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+                ///*
+                av_codec_context->extradata = extradata_frame.payload.data();
+                av_codec_context->extradata_size = extradata_frame.payload.size();
+                //*/
+
+                /*
+                std::cout << "initMux: extradata_size: " << av_codec_context->extradata_size 
+                    << std::endl;
+                 */
+
+                // std::cout << "avformat_new_stream" << std::endl;
+                av_stream = avformat_new_stream(av_format_context, av_codec_context->codec); // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
+
+                // av_stream->time_base = av_codec_context->time_base;
+                // av_stream->codec->codec_tag = 0;
+                av_stream->time_base = timebase; // 1/1000
+                av_stream->id = setupframe.subsession_index;
+                /*
+                // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
+                AVRational fps = AVRational();
+                //fps.num = 20;
+                //fps.den = 1;
+                fps.num = 1000;
+                fps.den = 1;
+                av_stream->avg_frame_rate = fps;
+                 */
+                // av_stream->codec->time_base = av_stream->time_base;
+                // NOTE: member "codec" is deprecated, should use "codecpar"
+                i = avcodec_parameters_from_context(av_stream->codecpar, av_codec_context);
+
+                /*
+                std::cout << "initMux: extradata_size 2: " << 
+                    av_stream->codec->extradata_size 
+                    << std::endl;
+
+                std::cout << "initMux: extradata_size 3: " << 
+                    av_stream->codecpar->extradata_size 
+                    << std::endl;
+                // yes, that's correct
+                 */
+
+
+                //av_stream->codec->extradata = extradata_frame.payload.data();
+                //av_stream->codec->extradata_size = extradata_frame.payload.size();
+
+                // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
+                codec_contexes[setupframe.subsession_index] = av_codec_context;
+                streams[setupframe.subsession_index] = av_stream;
+                
+                // std::cout << "initMux: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
+                // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
+                // std::cout << "initMux: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
+            }
+            
+            initialized = true; // so, at least one substream init'd
+        
         } // got setupframe
     }
 

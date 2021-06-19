@@ -141,6 +141,171 @@ namespace base {
 
  
 
+
+     
+        
+        void FFParse::parsePCM16(const char *input_file) {
+            int ret = 0;
+           // AVCodec *codec = NULL;
+          //  AVCodecContext *cdc_ctx = NULL;
+            AVPacket *pkt = NULL;
+            //AVFrame *frame = NULL;
+            FILE *fp_in, *fp_out;
+          
+            SetupFrame        setupframe;  ///< This frame is used to send subsession information
+            BasicFrame        basicframe;  ///< Data is being copied into this frame
+            int               subsession_index;
+            
+            subsession_index = 0;
+            basicframe.media_type           =AVMEDIA_TYPE_AUDIO;
+            basicframe.codec_id             =AV_CODEC_ID_PCM_S16LE;
+            basicframe.subsession_index     =subsession_index;
+            // prepare setup frame
+            setupframe.sub_type             =SetupFrameType::stream_init;
+            setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
+            setupframe.codec_id             =AV_CODEC_ID_PCM_S16LE;   // what frame types are to be expected from this stream
+            setupframe.subsession_index     =subsession_index;
+            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            // send setup frame
+            
+            info.run(&setupframe);
+            fragmp4_muxer.run(&setupframe);
+            
+            
+             if ((pkt = av_packet_alloc()) == NULL) {
+                fprintf(stderr, "av_packet_alloc failed.\n");
+                //goto ret3;
+                return;
+            }
+
+
+            if ((fp_in = fopen(input_file, "rb")) == NULL) {
+                fprintf(stderr, "fopen %s failed.\n", input_file);
+                // goto ret7;
+                return;
+            }
+            
+             if (fseek(fp_in, 0, SEEK_END))
+               return;
+            ssize_t fileSize = (ssize_t)ftell(fp_in);
+            if (fileSize < 0)
+                return;
+            if (fseek(fp_in, 0, SEEK_SET))
+                return;
+    
+            SInfo << "H264 file Size " << fileSize;
+          
+
+           // av_init_packet(pkt);
+
+            const int in_buffer_size=fileSize;
+            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *cur_ptr;
+            int cur_size;
+            
+            long int startTime=    setupframe.mstimestamp;
+            long int deltatime =   1000000/25;  //25 frames persecs
+
+            long int framecount = 0;
+            
+            
+            while (1) {
+
+                if (fseek(fp_in, 0, SEEK_SET))
+                return;
+                
+                cur_size = fread(in_buffer, 1, in_buffer_size, fp_in);
+               
+                
+                SInfo << "Read H264 filee " << cur_size;
+                
+                if (cur_size == 0)
+                    break;
+                cur_ptr = in_buffer;
+
+                while (cur_size > 0) {
+                    /*Only input video data*/
+//                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
+//                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+//                        fprintf(stderr, "av_parser_parse2 failed.\n");
+//                        //goto ret8;
+//                        return;
+//                    }
+                    
+                     ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+                     if (ret < 4) {
+                        cur_ptr += 1;
+                        cur_size -= 1;
+                        continue;
+                    }
+                     
+
+                    // avcodec_decode_video2
+
+                    cur_ptr += ret;
+                    cur_size -= ret;
+
+                    if (pkt->size == 0)
+                        continue;
+
+                    //Some Info from AVCodecParserContext
+
+                    //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
+                   // BasicFrame        basicframe;
+                    basicframe.copyFromAVPacket(pkt);
+                    basicframe.codec_id = AV_CODEC_ID_PCM_S16LE;
+                    
+
+                    // unsigned target_size=frameSize+numTruncatedBytes;
+                    // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                    // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
+                    basicframe.mstimestamp = startTime + 10.4*framecount;
+                    basicframe.fillPars();
+                    
+//                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
+//                    {
+//                          continue;
+//                    }
+                     
+                    framecount++;
+                    
+//                    if(framecount == 200 )
+//                        break;
+                    // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+
+                  //  basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
+                    
+                    info.run(&basicframe);
+                   
+                    fragmp4_muxer.run(&basicframe);
+                     
+
+                    basicframe.payload.resize(basicframe.payload.capacity());
+                    
+                    std::this_thread::sleep_for(std::chrono::microseconds(100000));
+//
+                    int x = 0;
+                    // decode(cdc_ctx, frame, pkt, fp_out);
+                }
+            }
+
+        
+            free(in_buffer);
+            fclose(fp_in);
+//            av_frame_free(&frame);
+            av_packet_free(&pkt);
+ //           avcodec_close(cdc_ctx);
+//            avcodec_free_context(&cdc_ctx);
+
+      
+
+            
+            
+            
+
+        }
+        
+        
         ssize_t FFParse::get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size) {
             ssize_t pos = 3;
             while ((size - pos) > 3) {
@@ -163,7 +328,13 @@ namespace base {
             return size;
         }
 
-     
+        
+        
+        void FFParse::reset() {
+        
+            resetParser = true;
+        }
+        
         void FFParse::parseH264(const char *input_file) {
             int ret = 0;
            // AVCodec *codec = NULL;
@@ -290,10 +461,11 @@ namespace base {
                     basicframe.mstimestamp = startTime + 10.4*framecount;
                     basicframe.fillPars();
                     
-//                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
-//                    {
-//                          continue;
-//                    }
+                    if( resetParser &&  basicframe.h264_pars.frameType ==  H264SframeType::i &&  basicframe.h264_pars.slice_type ==  H264SliceType::idr) //AUD Delimiter
+                    {
+                          fragmp4_muxer.sendMeta();
+                          resetParser =false;
+                    }
                      
                     framecount++;
                     

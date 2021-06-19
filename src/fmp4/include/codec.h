@@ -64,15 +64,15 @@ namespace H264SliceType {
   static const unsigned sps   =7;
   static const unsigned pps   =8;
   static const unsigned idr     =5;   // IDR picture. Do not confuse with IDR KEY Frame
-  static const unsigned nonidr  =1;
+  static const unsigned nonidr  =1;  // non idr slice
   static const unsigned aud  =9;   // aud delimeter
 };
 
 namespace H264SframeType {
   static const unsigned none  =0;
-  static const unsigned i   =3;
+  static const unsigned i   =3; 
   static const unsigned p   =2;
-  static const unsigned b   =1;   // IDR picture. Do not confuse with IDR KEY Frame
+  static const unsigned b   =1;  
   
 };
 
