@@ -22,9 +22,45 @@
 #include "net/netInterface.h"
 #include "http/HttpsClient.h"
 
+
+
+extern "C" {
+ 
+#include <libavutil/avassert.h>    
+#include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
+#include <libswscale/swscale.h>
+#ifdef HAVE_FFMPEG_SWRESAMPLE
+#include <libswresample/swresample.h>
+#else
+#include <libavresample/avresample.h>
+#endif
+}
+
+ 
+
+
 namespace base {
 namespace fmp4 {
-    
+ 
+   // a wrapper around a single output AVStream
+typedef struct OutputStream {
+    AVStream *st;
+    AVCodecContext *enc;
+
+    /* pts of the next frame that will be generated */
+    int64_t next_pts;
+    int samples_count;
+
+    AVFrame *frame;
+    AVFrame *tmp_frame;
+
+    float t, tincr, tincr2;
+
+    struct SwsContext *sws_ctx;
+    struct SwrContext *swr_ctx;
+} OutputStream;
+
 
  class FFParse: public Thread
  {
@@ -48,13 +84,18 @@ namespace fmp4 {
      
      
     void parseH264(const char *input_file);
-    void parsePCM16(const char *input_file);
+    void parseAAC(const char *input_file);
     void reset();
     
+    int startAudio( );
+      
     ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
       
 
      net::ClientConnecton *conn;    
+     
+      BasicFrame        basicaudioframe;  ///< Data is being copied into this frame
+     
        
  private:
      
@@ -65,6 +106,21 @@ namespace fmp4 {
     
     
     std::string fileName;
+    
+    
+    /* Add an output stream. */
+  void add_stream(OutputStream *ost, AVFormatContext *oc,
+                       AVCodec **codec,
+                       enum AVCodecID codec_id);
+
+     AVFrame *alloc_audio_frame(enum AVSampleFormat sample_fmt,
+                                  uint64_t channel_layout,
+                                  int sample_rate, int nb_samples);
+     void open_audio(AVFormatContext *oc, AVCodec *codec, OutputStream *ost, AVDictionary *opt_arg);
+     AVFrame *get_audio_frame(OutputStream *ost);
+     int write_audio_frame(AVFormatContext *oc, OutputStream *ost);
+    void close_stream(AVFormatContext *oc, OutputStream *ost);
+    
 
  };
  
