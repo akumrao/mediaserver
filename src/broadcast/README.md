@@ -202,10 +202,12 @@ ffplay -autoexit -f s16le -ar 48000 -ac 2 /var/tmp/out.pcm
 ffmpeg -f s16le -ar 48000 -ac 2 -i  /var/tmp/test.mp3 file.wav
 
 
-
+for aac for opus rencoding use 48000
 ffmpeg -i /var/tmp/test.mp3 -ar 48000 -ac 2 -f s16le out.pcm
 
 
+for aac and mp3 re encoding use 44100
+ffmpeg -i /var/tmp/test.mp3 -ar 44100 -ac 2 -f s16le out.pcm
 
 
 
@@ -214,3 +216,16 @@ ffmpeg -i /var/tmp/test.mp3 -ar 48000 -ac 2 -f s16le out.pcm
 -ac 1: the number of channels is 1
 
 
+**************************************************************************************
+
+
+ffmpeg -re -i test.mp4 -g 52 -c:a aac -b:a 64k -c:v libx264 -b:v 448k -f mp4 -movflags frag_keyframe+empty_moov output.mp4
+
+
+
+ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4
+
+ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+separate_moof+frag_custom /tmp/output2.mp4
+
+
+ffmpeg -i kunal720.264  -i kunal720_track2.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4

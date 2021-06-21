@@ -4,7 +4,7 @@
 
 
 
-Frame::Frame() : mstimestamp(0), n_slot(0), subsession_index(-1) {
+Frame::Frame() : mstimestamp(0), n_slot(0), stream_index(-1) {
 }
 
   
@@ -13,13 +13,13 @@ Frame::~Frame() {
   
  
 void Frame::print(std::ostream &os) const {
-  os << "<Frame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<">";
+  os << "<Frame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<">";
 }
  
 
 void Frame::copyMetaFrom(Frame *f) {
   this->n_slot          =f->n_slot;
-  this->subsession_index=f->subsession_index;
+  this->stream_index=f->stream_index;
   this->mstimestamp     =f->mstimestamp;
 }
 
@@ -35,7 +35,7 @@ void Frame::dumpPayloadToFile(std::ofstream& fout) {
 
 void Frame::reset() {
     this->n_slot          =0;
-    this->subsession_index=-1;
+    this->stream_index=-1;
     this->mstimestamp     =0;
 }
 
@@ -65,7 +65,7 @@ BasicFrame::~BasicFrame() {
 
 
 void BasicFrame::print(std::ostream &os) const {
-  os << "<BasicFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
+  os << "<BasicFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
   os << "payload size="<<payload.size()<<" / ";
   if (codec_id==AV_CODEC_ID_H264) {os << h264_pars;}
   else if (codec_id==AV_CODEC_ID_PCM_MULAW) {os << "PCMU: ";}
@@ -148,7 +148,7 @@ void BasicFrame::fillH264Pars() {
 void BasicFrame::fillAVPacket(AVPacket *avpkt) {
   avpkt->data         =payload.data(); // +4; that four is just for debugging..
   avpkt->size         =payload.size(); // -4;
-  avpkt->stream_index =subsession_index;
+  avpkt->stream_index =stream_index;
 
   if (codec_id==AV_CODEC_ID_H264 and h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
     avpkt->flags=AV_PKT_FLAG_KEY;
@@ -173,7 +173,7 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
   payload.resize(pkt->size);
   memcpy(payload.data(),pkt->data,pkt->size);
   // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
-  subsession_index=pkt->stream_index;
+  stream_index=pkt->stream_index;
   // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
   mstimestamp=(long int)pkt->pts;
 }
@@ -197,15 +197,15 @@ void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AV
   payload.resize(out_size);
   // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
   memcpy(payload.data(),out,out_size);
-  subsession_index=pkt->stream_index;
+  stream_index=pkt->stream_index;
   mstimestamp=(long int)pkt->pts;
 }
 
 
 std::size_t BasicFrame::calcSize() {
-    // device_id (std::size_t) subsession_index (int) mstimestamp (long int) media_type (AVMediaType) codec_id (AVCodecId) size (std::size_t) payload (char)
+    // device_id (std::size_t) stream_index (int) mstimestamp (long int) media_type (AVMediaType) codec_id (AVCodecId) size (std::size_t) payload (char)
     // TODO: should use typedefs more
-    return sizeof(IdNumber) + sizeof(subsession_index) + sizeof(mstimestamp) + sizeof(media_type) + sizeof(codec_id) + sizeof(std::size_t) + payload.size();
+    return sizeof(IdNumber) + sizeof(stream_index) + sizeof(mstimestamp) + sizeof(media_type) + sizeof(codec_id) + sizeof(std::size_t) + payload.size();
 }
 
 
@@ -219,7 +219,7 @@ std::size_t BasicFrame::calcSize() {
 //    len=payload.size();
 //    
 //    dump_bytes(device_id);
-//    dump_bytes(subsession_index);
+//    dump_bytes(stream_index);
 //    dump_bytes(mstimestamp);
 //    dump_bytes(media_type);
 //    dump_bytes(codec_id);
@@ -248,9 +248,9 @@ std::size_t BasicFrame::calcSize() {
 //        return device_id;
 //    }
 //    
-//    read_bytes(subsession_index);
-//    if (subsession_index < 0) { // corrupt frame
-//        valkkafslogger.log(LogLevel::fatal) << "BasicFrame : read : corrupt frame (subsession_index)" << std::endl;
+//    read_bytes(stream_index);
+//    if (stream_index < 0) { // corrupt frame
+//        valkkafslogger.log(LogLevel::fatal) << "BasicFrame : read : corrupt frame (stream_index)" << std::endl;
 //        return 0;
 //    }
 //    
@@ -291,7 +291,7 @@ MuxFrame::~MuxFrame() {
 
 
 void MuxFrame::print(std::ostream &os) const {
-    os << "<MuxFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";
+    os << "<MuxFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
     os << "fragment size="<<payload.size();
     os << ">";
 }
@@ -341,7 +341,7 @@ SetupFrame::~SetupFrame() {
 //frame_essentials(FrameClass::setup, SetupFrame);
 
 void SetupFrame::print(std::ostream &os) const {
-    os << "<SetupFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
+    os << "<SetupFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
     if (sub_type == SetupFrameType::stream_init) {
         os << "media_type=" << int(media_type) << " codec_id=" << int(codec_id);
     }
@@ -375,7 +375,7 @@ AVMediaFrame::~AVMediaFrame() {
 
 
 void AVMediaFrame::print(std::ostream& os) const {
-  os << "<AVMediaFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";
+  os << "<AVMediaFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
   os << "media_type=" << media_type << std::endl;
   os << ">";
 }
@@ -420,7 +420,7 @@ std::string AVAudioFrame::dumpPayload() {
 
 
 void AVAudioFrame::print(std::ostream& os) const {
-  os << "<AVAudioFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";
+  os << "<AVAudioFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
   os << ">";
 }
 
@@ -450,7 +450,7 @@ MarkerFrame::~MarkerFrame() {
 
 
 void MarkerFrame::print(std::ostream& os) const {
-  os << "<MarkerFrame: timestamp="<<mstimestamp<<" subsession_index="<<subsession_index<<" slot="<<n_slot<<" / ";
+  os << "<MarkerFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
   if (fs_start) {
     os << "FS_START ";
   }

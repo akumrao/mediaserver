@@ -50,7 +50,7 @@ av_always_inline std::string av_err2string(int errnum) {
 
 
 extern "C" {
- 
+ #include <libavcodec/avcodec.h>
 #include <libavutil/avassert.h>    
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
@@ -207,8 +207,11 @@ int main(int argc, char **argv)
     c->sample_rate    = select_sample_rate(codec);
     c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
     c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
-    //c->profile = FF_PROFILE_AAC_LOW;
+    c->profile = FF_PROFILE_AAC_LOW;
     /* open it */
+    
+   //  c->flags |= AV_CODEC_FLAG_GLOBAL_HEADE;
+             
     if (avcodec_open2(c, codec, NULL) < 0) {
         fprintf(stderr, "Could not open codec\n");
         exit(1);

@@ -140,7 +140,7 @@ protected:
 
 public:                   // public metadata
     SlotNumber n_slot;    ///< Slot number identifying the media source
-    int subsession_index; ///< Media subsession index
+    int stream_index; ///< Media subsession index
     long int mstimestamp; ///< Presentation time stamp (PTS) in milliseconds
 };
 

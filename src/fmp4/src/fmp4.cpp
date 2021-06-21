@@ -33,6 +33,10 @@
 #define SERVER_HOST  "127.0.0.1"               
 #define SERVER_PORT 8443 //443
 
+#define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
+#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+
+
 using namespace base::net;
 
 namespace base {
@@ -91,7 +95,7 @@ namespace base {
                 STrace << "onconnect ";
                 
                 //this->start();
-                ffparser = new FFParse(conn);
+                ffparser = new FFParse(conn, AUDIOFILE, VIDEOFILE);
                 ffparser->start();    
                 // conn->send(x, 2, true);
             };

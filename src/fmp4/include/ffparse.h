@@ -75,7 +75,7 @@ typedef struct OutputStream {
  public:
   
     
-     FFParse( base::net::ClientConnecton *conn);
+     FFParse( base::net::ClientConnecton *conn, const char* audioFile, const char*  videofile );
      
      ~FFParse( );
      
@@ -88,20 +88,36 @@ typedef struct OutputStream {
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-     
-    void parseH264(const char *input_file);
-    void parseAAC(const char *input_file);
+    
+     /// Video Begin 
+    bool parseH264Header();
+    
+    void parseH264Content();
+    FILE *fileVideo;
+    BasicFrame        basicvideoframe;  ///< Data is being copied into this frame
+    /// Video End
+      
+    /// Audio Begin 
+    
+    FILE *fileAudio;
+    bool parseAACHeader();
+    void parseAACContent();
+     AVCodecContext *audioContext= NULL;
+    
     void reset();
     
     int startAudio( );
       
     ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
       
-
-     net::ClientConnecton *conn;    
+    
+    net::ClientConnecton *conn;    
      
-      BasicFrame        basicaudioframe;  ///< Data is being copied into this frame
-     
+    BasicFrame        basicaudioframe;  ///< Data is being copied into this frame
+   /// Audio End 
+    
+    long int startTime{0};
+    int               stream_index{0};
        
  private:
      

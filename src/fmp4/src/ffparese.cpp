@@ -18,6 +18,7 @@
 
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 
 #define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256
@@ -38,14 +39,38 @@ namespace base {
         // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
 
-        FFParse::FFParse( base::net::ClientConnecton *conn) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
+        FFParse::FFParse( base::net::ClientConnecton *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
 
             fragmp4_muxer.activate();
+            
+            
+            
+            fileAudio = fopen(audioFile,"rb");
+            if(fileAudio){
+                av_log(NULL,AV_LOG_INFO,"open file success \n");
+            }else{
+                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                return;
+            }
+           
+            
+            fileVideo = fopen(videofile,"rb");
+            if(fileVideo){
+                av_log(NULL,AV_LOG_INFO,"open file success \n");
+            }else{
+                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+            }
+                
+          
+             //FILE *fp_in, *fp_out;
+             
 
         }
 
         FFParse::~FFParse() {
             SInfo << "~FFParse( )";
+            fclose(fileAudio);
+            fclose(fileVideo);
         }
 
         /*
@@ -99,11 +124,19 @@ namespace base {
 
         void FFParse::run() {
 
-
-           // parseH264("/experiment/live/testProgs/test.264");
+            stream_index = 0;
             
+//              if( parseAACHeader())
+//               parseAACContent();
+      
+            
+              if(parseH264Header())
+              {
+                  ++stream_index;                
+                 parseH264Content();
+              }
            // startAudio();
-            parseAAC("/var/tmp/test.pcm");
+            //parseAACHeader("/var/tmp/songs/hindi.pcm");
             
             //fmp4("/experiment/fmp4/test.264", "fragTmp.mp4");
 //            
@@ -145,111 +178,53 @@ namespace base {
 
  
 
-        /* just pick the highest supported samplerate */
-        static int select_sample_rate(const AVCodec *codec)
-        {
-            const int *p;
-            int best_samplerate = 0;
-
-            if (!codec->supported_samplerates)
-                return 44100;
-
-            p = codec->supported_samplerates;
-            while (*p) {
-                if (!best_samplerate || abs(44100 - *p) < abs(44100 - best_samplerate))
-                    best_samplerate = *p;
-                p++;
-            }
-            return best_samplerate;
-        }
-
         
-        void FFParse::parseAAC(const char *input_file) {
-      
-      
+        bool FFParse::parseAACHeader() {
           
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
           
-            int               subsession_index;
-            
-            subsession_index = 0;
             basicaudioframe.media_type           =AVMEDIA_TYPE_AUDIO;
             basicaudioframe.codec_id             =AV_CODEC_ID_AAC;
-            basicaudioframe.subsession_index     =subsession_index;
+            basicaudioframe.stream_index     =stream_index;
             // prepare setup frame
             setupframe.sub_type             =SetupFrameType::stream_init;
             setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
             setupframe.codec_id             =AV_CODEC_ID_AAC;   // what frame types are to be expected from this stream
-            setupframe.subsession_index     =subsession_index;
+            setupframe.stream_index     =stream_index;
             setupframe.mstimestamp          = getCurrentMsTimestamp();
             // send setup frame
             
             info.run(&setupframe);
             fragmp4_muxer.run(&setupframe);
             
-            
-            
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
             const AVCodec *codec;
-            AVCodecContext *c= NULL;
-            AVFrame *frame;
-            AVPacket pkt;
-            int ret, got_output;
+            AVCodecContext *c = nullptr ;
+           
+           
+            int ret;
           //  FILE *fout;
             uint16_t *samples;
     //float t, tincr;
             
             ///////////////////////////////////////////////////////
-             AVFormatContext *oc;
+          ///  AVFormatContext *oc;
             AVDictionary *opt = NULL;
-            av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
-//            AVIOContext *ioCtxt;
-//            uint8_t *ioBuffer;
-//            AVOutputFormat *outputFormat = av_guess_format("mp4", nullptr, nullptr);
-//
-//            /* allocate the output media context */
-//            avformat_alloc_output_context2(&oc, outputFormat, NULL, NULL);
-//            
-//            //fmt = oc->oformat;
-//
-//
-//            if ((ioBuffer = (uint8_t*) av_malloc(IOBUFSIZE)) == nullptr) {
-//                std::cout << "Couldn't allocate I/O buffer" << std::endl;
-//                return;
-//            }
-//            if ((ioCtxt = avio_alloc_context(ioBuffer, IOBUFSIZE, 1, nullptr, nullptr, nullptr, nullptr)) == nullptr) {
-//                std::cout << "Couldn't initialize I/O context" << std::endl;
-//                return;
-//            }
-//
-////            oc->pb = ioCtxt;
-//            
-//            AVStream *st;
-//            st = avformat_new_stream(oc, NULL);
-//            if (!st) {
-//                fprintf(stderr, "Could not allocate stream\n");
-//               return;
-//            }
-//            st->id = oc->nb_streams - 1;
-//         
-           
-            
-            ////////////////////////////////////////////////////////
-            
+          //  av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
             
     
             //codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
             codec = avcodec_find_encoder_by_name("libfdk_aac"); //Specify the use of file encoding type
             if (!codec) {
                 fprintf(stderr, "Codec not found\n");
-               return ;
+               return false ;
             }
 
             c = avcodec_alloc_context3(codec);
             if (!c) {
                 fprintf(stderr, "Could not allocate audio codec context\n");
-                return ;
+                return  false;
             }
 
             /* put sample parameters */
@@ -260,7 +235,7 @@ namespace base {
 
 
             /* select other audio parameters supported by the encoder */
-            c->sample_rate    = select_sample_rate(codec);
+            c->sample_rate    = 44100;//select_sample_rate(codec);
             c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
             c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
             c->profile = FF_PROFILE_AAC_LOW;
@@ -271,17 +246,17 @@ namespace base {
           //  ret = avcodec_parameters_from_context(st->codecpar, c);
             if (ret < 0) {
                 fprintf(stderr, "Could not copy the stream parameters\n");
-               return;
+               return false;
             }
             // av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
             
     /* open it */
             if (avcodec_open2(c, codec, &opt) < 0) {
                 fprintf(stderr, "Could not open codec\n");
-               return ;
+               return false;
             }
              
-            long int startTime=  setupframe.mstimestamp;
+             startTime=  setupframe.mstimestamp;
                 
              int extrasize = c->extradata_size;
              basicaudioframe.payload.resize(extrasize);
@@ -290,25 +265,33 @@ namespace base {
              basicaudioframe.mstimestamp = startTime ;
              fragmp4_muxer.run(&basicaudioframe);
              basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+             audioContext = c;
              
-             ///////////
-
-//            fout = fopen(filename, "wb");
-//            if (!f) {
-//                fprintf(stderr, "Could not open %s\n", filename);
-//                exit(1);
-//            }
-
-            /* frame containing input raw audio */
+             return true;
+        }
+        
+        
+        void FFParse:: parseAACContent()
+        {
+            
+            AVPacket pkt;
+             
+            long framecount =0;
+            
+            int ret, got_output;
+             
+            AVFrame *frame;
+             
+                    /* frame containing input raw audio */
             frame = av_frame_alloc();
             if (!frame) {
                 fprintf(stderr, "Could not allocate audio frame\n");
                 return ;
             }
 
-            frame->nb_samples     = c->frame_size;
-            frame->format         = c->sample_fmt;
-            frame->channel_layout = c->channel_layout;
+            frame->nb_samples     = audioContext->frame_size;
+            frame->format         = audioContext->sample_fmt;
+            frame->channel_layout = audioContext->channel_layout;
 
             /* allocate the data buffers */
             ret = av_frame_get_buffer(frame, 0);
@@ -317,32 +300,21 @@ namespace base {
                return ;
             }
     
-            int size = av_samples_get_buffer_size(NULL, c->channels,c->frame_size,c->sample_fmt, 1);
+            int size = av_samples_get_buffer_size(NULL, audioContext->channels,audioContext->frame_size,audioContext->sample_fmt, 1);
             uint8_t* frame_buf = (uint8_t *)av_malloc(size);
 
-
-           FILE* in_file = fopen(input_file,"rb");
-            if(in_file){
-                av_log(NULL,AV_LOG_INFO,"open file success \n");
-            }else{
-                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
-                return;
-            }
-
-         
-            long framecount =0;
             
 
             while(1)
             {   
-               if (fread(frame_buf, 1, size, in_file) <= 0){
+               if (fread(frame_buf, 1, size, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
                     break;
 
 
-                }else if(feof(in_file)){
+                }else if(feof(fileAudio)){
                     
-                     if (fseek(in_file, 0, SEEK_SET))
+                     if (fseek(fileAudio, 0, SEEK_SET))
                     return;
                     continue;
                     
@@ -366,46 +338,31 @@ namespace base {
 	       //c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 
-                ret = avcodec_encode_audio2(c, &pkt, frame, &got_output);
+                ret = avcodec_encode_audio2(audioContext, &pkt, frame, &got_output);
                 if (ret < 0) {
                     fprintf(stderr, "Error encoding audio frame\n");
                     return ;
                 }
                 if (got_output) 
                 {
-                    //fwrite(pkt.data, 1, pkt.size, fout);
-                    
-                    
-                              //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
-                   // BasicFrame        basicframe;
+                  
                     basicaudioframe.copyFromAVPacket(&pkt);
-                    basicaudioframe.codec_id = codec->id;
-                    
-
-                    // unsigned target_size=frameSize+numTruncatedBytes;
-                    // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
-                    // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                    basicaudioframe.mstimestamp = startTime + 13 * framecount;
-                   // basicframe.fillPars();
-                    
-//                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
-//                    {
-//                          continue;
-//                    }
-                    if( resetParser ) //AUD Delimiter
+                  
+                    basicaudioframe.mstimestamp = startTime + 23 * framecount;
+                   
+                    if( resetParser ) 
                     {
                           fragmp4_muxer.sendMeta();
                           resetParser =false;
                     }
                     framecount++;
-                    // info.run(&basicframe);
                     fragmp4_muxer.run(&basicaudioframe);
 
                     basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
                                        
                     av_packet_unref(&pkt);
                     
-                     std::this_thread::sleep_for(std::chrono::microseconds(10000));
+                     std::this_thread::sleep_for(std::chrono::microseconds(21000));
                     
                 }
             }
@@ -413,11 +370,11 @@ namespace base {
                 
             
            // fclose(fout);
-            fclose(in_file);
-            av_dict_free(&opt);
+            
+           // av_dict_free(&opt);
 
             av_frame_free(&frame);
-            avcodec_free_context(&c);
+            avcodec_free_context(&audioContext);
         }
         
         
@@ -450,35 +407,23 @@ namespace base {
             resetParser = true;
         }
         
-        void FFParse::parseH264(const char *input_file) {
+        bool FFParse::parseH264Header() {
             int ret = 0;
            // AVCodec *codec = NULL;
           //  AVCodecContext *cdc_ctx = NULL;
             AVPacket *pkt = NULL;
-            //AVFrame *frame = NULL;
-            FILE *fp_in, *fp_out;
-           // AVFormatContext *fmt_ctx = NULL;
-        //    AVCodecParserContext *parser = NULL;
-            
-            
-         //    u_int8_t*         fReceiveBuffer;
-          //  long unsigned     nbuf;       ///< Size of bytebuffer
 
-          //  char*             fStreamId;
-           // FrameFilter&      framefilter;
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
-            BasicFrame        basicframe;  ///< Data is being copied into this frame
-            int               subsession_index;
-            
-            subsession_index = 0;
-            basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
-            basicframe.codec_id             =AV_CODEC_ID_H264;
-            basicframe.subsession_index     =subsession_index;
+          
+
+            basicvideoframe.media_type           =AVMEDIA_TYPE_VIDEO;
+            basicvideoframe.codec_id             =AV_CODEC_ID_H264;
+            basicvideoframe.stream_index     =stream_index;
             // prepare setup frame
             setupframe.sub_type             =SetupFrameType::stream_init;
             setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
             setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
-            setupframe.subsession_index     =subsession_index;
+            setupframe.stream_index     =stream_index;
             setupframe.mstimestamp          = getCurrentMsTimestamp();
             // send setup frame
             
@@ -489,23 +434,17 @@ namespace base {
             if ((pkt = av_packet_alloc()) == NULL) {
                 fprintf(stderr, "av_packet_alloc failed.\n");
                 //goto ret3;
-                return;
+                return false;
             }
 
-
-            if ((fp_in = fopen(input_file, "rb")) == NULL) {
-                fprintf(stderr, "fopen %s failed.\n", input_file);
-                // goto ret7;
-                return;
-            }
             
-             if (fseek(fp_in, 0, SEEK_END))
-               return;
-            ssize_t fileSize = (ssize_t)ftell(fp_in);
+             if (fseek(fileVideo, 0, SEEK_END))
+               return false;
+            ssize_t fileSize = (ssize_t)ftell(fileVideo);
             if (fileSize < 0)
-                return;
-            if (fseek(fp_in, 0, SEEK_SET))
-                return;
+                return false;
+            if (fseek(fileVideo, 0, SEEK_SET))
+                return false;
     
             SInfo << "H264 file Size " << fileSize;
           
@@ -517,42 +456,137 @@ namespace base {
             unsigned char *cur_ptr;
             int cur_size;
             
-            long int startTime=    setupframe.mstimestamp;
+            startTime=    setupframe.mstimestamp;
             //long int deltatime =   1000000/25;  //25 frames persecs
 
-            long int framecount = 0;
+           
+            bool foundsps = false;
+            bool foundpps =false;
             
-            
+            cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
+            cur_ptr = in_buffer;
+
+
+            while (cur_size > 0)
+            {
+
+
+                 ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+                 if (ret < 4) {
+                    cur_ptr += 1;
+                    cur_size -= 1;
+                    continue;
+                }
+
+
+                // avcodec_decode_video2
+
+                cur_ptr += ret;
+                cur_size -= ret;
+
+                if (pkt->size == 0)
+                    continue;
+
+                basicvideoframe.copyFromAVPacket(pkt);
+
+
+                basicvideoframe.mstimestamp = startTime ;
+                basicvideoframe.fillPars();
+
+                if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::sps) //AUD Delimiter
+                {
+                      foundsps = true;
+                }
+
+                if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::pps) //AUD Delimiter
+                {
+                      foundsps = true;
+                }
+
+                //info.run(&basicframe);
+
+                fragmp4_muxer.run(&basicvideoframe);
+
+
+                basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+
+                //std::this_thread::sleep_for(std::chrono::microseconds(10000));
+
+                if( foundsps && foundsps )
+                    break;
+            }
+
+
+        
+            free(in_buffer);
+            av_packet_free(&pkt);
+ //           avcodec_close(cdc_ctx);
+//            avcodec_free_context(&cdc_ctx);
+            return foundsps & foundsps;
+
+        }
+        
+        
+        void FFParse::parseH264Content() {
+            AVPacket *pkt = NULL;
+             int ret = 0;
+            if ((pkt = av_packet_alloc()) == NULL) {
+                fprintf(stderr, "av_packet_alloc failed.\n");
+                //goto ret3;
+                return;
+            }
+
+
+            if (fseek(fileVideo, 0, SEEK_END))
+                return;
+            ssize_t fileSize = (ssize_t) ftell(fileVideo);
+            if (fileSize < 0)
+                return;
+            if (fseek(fileVideo, 0, SEEK_SET))
+                return;
+
+            SInfo << "H264 file Size " << fileSize;
+
+
+            // av_init_packet(pkt);
+
+            const int in_buffer_size = fileSize;
+            unsigned char *in_buffer = (unsigned char*) malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *cur_ptr;
+            int cur_size;
+
+            long framecount =0;
+
             while (1) {
 
-                if (fseek(fp_in, 0, SEEK_SET))
-                return;
-                
-                cur_size = fread(in_buffer, 1, in_buffer_size, fp_in);
-               
-                
+                if (fseek(fileVideo, 0, SEEK_SET))
+                    return;
+
+                cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
+
+
                 SInfo << "Read H264 filee " << cur_size;
-                
+
                 if (cur_size == 0)
                     break;
                 cur_ptr = in_buffer;
 
                 while (cur_size > 0) {
                     /*Only input video data*/
-//                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
-//                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
-//                        fprintf(stderr, "av_parser_parse2 failed.\n");
-//                        //goto ret8;
-//                        return;
-//                    }
-                    
-                     ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
-                     if (ret < 4) {
+                    //                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
+                    //                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+                    //                        fprintf(stderr, "av_parser_parse2 failed.\n");
+                    //                        //goto ret8;
+                    //                        return;
+                    //                    }
+
+                    ret = get_nal_size(cur_ptr, cur_size, &pkt->data, &pkt->size);
+                    if (ret < 4) {
                         cur_ptr += 1;
                         cur_size -= 1;
                         continue;
                     }
-                     
+
 
                     // avcodec_decode_video2
 
@@ -565,59 +599,52 @@ namespace base {
                     //Some Info from AVCodecParserContext
 
                     //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
-                   // BasicFrame        basicframe;
-                    basicframe.copyFromAVPacket(pkt);
-                    basicframe.codec_id = AV_CODEC_ID_H264;
-                    
+                    // BasicFrame        basicframe;
+                    basicvideoframe.copyFromAVPacket(pkt);
+                    basicvideoframe.codec_id = AV_CODEC_ID_H264;
+
 
                     // unsigned target_size=frameSize+numTruncatedBytes;
                     // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
                     // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                    basicframe.mstimestamp = startTime + 10.4*framecount;
-                    basicframe.fillPars();
-                    
-                    if( resetParser &&  basicframe.h264_pars.frameType ==  H264SframeType::i &&  basicframe.h264_pars.slice_type ==  H264SliceType::idr) //AUD Delimiter
+                    basicvideoframe.mstimestamp = startTime + 10.4 * framecount;
+                    basicvideoframe.fillPars();
+
+                    if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                     {
-                          fragmp4_muxer.sendMeta();
-                          resetParser =false;
+                        fragmp4_muxer.sendMeta();
+                        resetParser = false;
                     }
-                     
-                    framecount++;
                     
-//                    if(framecount == 200 )
-//                        break;
+                    if (!basicvideoframe.h264_pars.slice_type == H264SliceType::idr && basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr) //AUD Delimiter
+                    {
+                        continue;
+                    }
+                    
+
+                    framecount++;
+
+                    //                    if(framecount == 200 )
+                    //                        break;
                     // std::cout << "afterGettingFrame: " << basicframe << std::endl;
 
-                  //  basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
-                    
-                    info.run(&basicframe);
-                   
-                    fragmp4_muxer.run(&basicframe);
-                     
+                    //  basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
 
-                    basicframe.payload.resize(basicframe.payload.capacity());
-                    
+                    info.run(&basicvideoframe);
+
+                    fragmp4_muxer.run(&basicvideoframe);
+
+
+                    basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+
                     std::this_thread::sleep_for(std::chrono::microseconds(10000));
-//
-                    int x = 0;
-                    // decode(cdc_ctx, frame, pkt, fp_out);
+                    //
+
                 }
             }
 
-        
-            free(in_buffer);
-            fclose(fp_in);
-//            av_frame_free(&frame);
-            av_packet_free(&pkt);
- //           avcodec_close(cdc_ctx);
-//            avcodec_free_context(&cdc_ctx);
 
         }
-        
-        
-        
-        
-        
         
         
         
@@ -952,17 +979,17 @@ namespace base {
             
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
            
-            int               subsession_index;
+            int               stream_index;
             
-            subsession_index = 0;
+            stream_index = 0;
             basicaudioframe.media_type           =AVMEDIA_TYPE_AUDIO;
             basicaudioframe.codec_id             =AV_CODEC_ID_AAC;
-            basicaudioframe.subsession_index     =subsession_index;
+            basicaudioframe.stream_index     =stream_index;
             // prepare setup frame
             setupframe.sub_type             =SetupFrameType::stream_init;
             setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
             setupframe.codec_id             =AV_CODEC_ID_AAC;   // what frame types are to be expected from this stream
-            setupframe.subsession_index     =subsession_index;
+            setupframe.stream_index     =stream_index;
             setupframe.mstimestamp          = getCurrentMsTimestamp();
             // send setup frame
             
@@ -1149,7 +1176,13 @@ namespace base {
 }
 
 
-
+                    /*Only input video data*/
+//                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
+//                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+//                        fprintf(stderr, "av_parser_parse2 failed.\n");
+//                        //goto ret8;
+//                        return;
+//                    }
 
 //                    printf("[Packet]Size:%6d\t", pkt->size);
 //                    switch (parser->pict_type) {

@@ -12,10 +12,10 @@
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-           // var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
-            var codecs = "mp4a.40.2";
+           // var codecs = "mp4a.40.2";
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
             var stream_started = false; // is the source_buffer updateend callback active nor not
@@ -212,7 +212,7 @@
                        // const view = new DataView(event.data);
                        // console.log(view.getInt32(0));
                        putPacket(event.data);
-                       //source_buffer.appendBuffer(event.data);
+                     //source_buffer.appendBuffer(event.data);
 
                     } else {
                         // text frame
