@@ -102,8 +102,8 @@ namespace base {
 
            // parseH264("/experiment/live/testProgs/test.264");
             
-            startAudio();
-            ///parseAAC("/experiment/fmp4/arvind.aac");
+           // startAudio();
+            parseAAC("/var/tmp/test.pcm");
             
             //fmp4("/experiment/fmp4/test.264", "fragTmp.mp4");
 //            
@@ -145,25 +145,37 @@ namespace base {
 
  
 
+        /* just pick the highest supported samplerate */
+        static int select_sample_rate(const AVCodec *codec)
+        {
+            const int *p;
+            int best_samplerate = 0;
 
-     
+            if (!codec->supported_samplerates)
+                return 44100;
+
+            p = codec->supported_samplerates;
+            while (*p) {
+                if (!best_samplerate || abs(44100 - *p) < abs(44100 - best_samplerate))
+                    best_samplerate = *p;
+                p++;
+            }
+            return best_samplerate;
+        }
+
         
         void FFParse::parseAAC(const char *input_file) {
-            int ret = 0;
-           // AVCodec *codec = NULL;
-          //  AVCodecContext *cdc_ctx = NULL;
-            AVPacket *pkt = NULL;
-            //AVFrame *frame = NULL;
-            FILE *fp_in;
+      
+      
           
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
-            BasicFrame        basicframe;  ///< Data is being copied into this frame
+          
             int               subsession_index;
             
             subsession_index = 0;
-            basicframe.media_type           =AVMEDIA_TYPE_AUDIO;
-            basicframe.codec_id             =AV_CODEC_ID_AAC;
-            basicframe.subsession_index     =subsession_index;
+            basicaudioframe.media_type           =AVMEDIA_TYPE_AUDIO;
+            basicaudioframe.codec_id             =AV_CODEC_ID_AAC;
+            basicaudioframe.subsession_index     =subsession_index;
             // prepare setup frame
             setupframe.sub_type             =SetupFrameType::stream_init;
             setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
@@ -179,174 +191,233 @@ namespace base {
             
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
-
-            AVCodec *codec = NULL;
-            AVCodecContext *cdc_ctx = NULL;
-            AVFrame *frame = NULL;
-     
-            AVFormatContext *fmt_ctx = NULL;
-            AVCodecParserContext *parser = NULL;
+            const AVCodec *codec;
+            AVCodecContext *c= NULL;
+            AVFrame *frame;
+            AVPacket pkt;
+            int ret, got_output;
+          //  FILE *fout;
+            uint16_t *samples;
+    //float t, tincr;
+            
+            ///////////////////////////////////////////////////////
+             AVFormatContext *oc;
+            AVDictionary *opt = NULL;
+            av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
+//            AVIOContext *ioCtxt;
+//            uint8_t *ioBuffer;
+//            AVOutputFormat *outputFormat = av_guess_format("mp4", nullptr, nullptr);
+//
+//            /* allocate the output media context */
+//            avformat_alloc_output_context2(&oc, outputFormat, NULL, NULL);
+//            
+//            //fmt = oc->oformat;
+//
+//
+//            if ((ioBuffer = (uint8_t*) av_malloc(IOBUFSIZE)) == nullptr) {
+//                std::cout << "Couldn't allocate I/O buffer" << std::endl;
+//                return;
+//            }
+//            if ((ioCtxt = avio_alloc_context(ioBuffer, IOBUFSIZE, 1, nullptr, nullptr, nullptr, nullptr)) == nullptr) {
+//                std::cout << "Couldn't initialize I/O context" << std::endl;
+//                return;
+//            }
+//
+////            oc->pb = ioCtxt;
+//            
+//            AVStream *st;
+//            st = avformat_new_stream(oc, NULL);
+//            if (!st) {
+//                fprintf(stderr, "Could not allocate stream\n");
+//               return;
+//            }
+//            st->id = oc->nb_streams - 1;
+//         
+           
+            
+            ////////////////////////////////////////////////////////
             
             
-         
-            if ((codec = avcodec_find_decoder(AV_CODEC_ID_AAC)) == NULL) {
-                fprintf(stderr, "avcodec_find_decoder failed.\n");
-                //  goto ret1;
-                return;
-            }
-
-            if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL) {
-                fprintf(stderr, "avcodec_alloc_context3 failed.\n");
-                // goto ret1;
-                return;
-            }
-
-            if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0) {
-                fprintf(stderr, "avcodec_open2 failed.\n");
-                // goto ret2;
-                return;
-            }
-
-            if ((pkt = av_packet_alloc()) == NULL) {
-                fprintf(stderr, "av_packet_alloc failed.\n");
-                //goto ret3;
-                return;
-            }
-
-            if ((frame = av_frame_alloc()) == NULL) {
-                fprintf(stderr, "av_frame_alloc failed.\n");
-                //goto ret4;
-                return;
-            }
-
-            if ((fp_in = fopen(input_file, "rb")) == NULL) {
-                fprintf(stderr, "fopen %s failed.\n", input_file);
-                // goto ret7;
-                return;
-            }
-            
-             if (fseek(fp_in, 0, SEEK_END))
-               return;
-            ssize_t fileSize = (ssize_t)ftell(fp_in);
-            if (fileSize < 0)
-                return;
-            if (fseek(fp_in, 0, SEEK_SET))
-                return;
     
+            //codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+            codec = avcodec_find_encoder_by_name("libfdk_aac"); //Specify the use of file encoding type
+            if (!codec) {
+                fprintf(stderr, "Codec not found\n");
+               return ;
+            }
 
-            if ((parser = av_parser_init(codec->id)) == NULL) {
-                fprintf(stderr, "av_parser_init failed.\n");
-                //goto ret8;
+            c = avcodec_alloc_context3(codec);
+            if (!c) {
+                fprintf(stderr, "Could not allocate audio codec context\n");
+                return ;
+            }
+
+            /* put sample parameters */
+            c->bit_rate = 64000;
+
+            /* check that the encoder supports s16 pcm input */
+            c->sample_fmt = AV_SAMPLE_FMT_S16;
+
+
+            /* select other audio parameters supported by the encoder */
+            c->sample_rate    = select_sample_rate(codec);
+            c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
+            c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
+            c->profile = FF_PROFILE_AAC_LOW;
+            
+            //if (oc->oformat->flags & AVFMT_GLOBALHEADER)
+             c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            
+          //  ret = avcodec_parameters_from_context(st->codecpar, c);
+            if (ret < 0) {
+                fprintf(stderr, "Could not copy the stream parameters\n");
+               return;
+            }
+            // av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
+            
+    /* open it */
+            if (avcodec_open2(c, codec, &opt) < 0) {
+                fprintf(stderr, "Could not open codec\n");
+               return ;
+            }
+             
+            long int startTime=  setupframe.mstimestamp;
+                
+             int extrasize = c->extradata_size;
+             basicaudioframe.payload.resize(extrasize);
+             memcpy( basicaudioframe.payload.data(),  c->extradata, extrasize) ;
+             basicaudioframe.codec_id = codec->id;
+             basicaudioframe.mstimestamp = startTime ;
+             fragmp4_muxer.run(&basicaudioframe);
+             basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+             
+             ///////////
+
+//            fout = fopen(filename, "wb");
+//            if (!f) {
+//                fprintf(stderr, "Could not open %s\n", filename);
+//                exit(1);
+//            }
+
+            /* frame containing input raw audio */
+            frame = av_frame_alloc();
+            if (!frame) {
+                fprintf(stderr, "Could not allocate audio frame\n");
+                return ;
+            }
+
+            frame->nb_samples     = c->frame_size;
+            frame->format         = c->sample_fmt;
+            frame->channel_layout = c->channel_layout;
+
+            /* allocate the data buffers */
+            ret = av_frame_get_buffer(frame, 0);
+            if (ret < 0) {
+                fprintf(stderr, "Could not allocate audio data buffers\n");
+               return ;
+            }
+    
+            int size = av_samples_get_buffer_size(NULL, c->channels,c->frame_size,c->sample_fmt, 1);
+            uint8_t* frame_buf = (uint8_t *)av_malloc(size);
+
+
+           FILE* in_file = fopen(input_file,"rb");
+            if(in_file){
+                av_log(NULL,AV_LOG_INFO,"open file success \n");
+            }else{
+                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
                 return;
             }
 
-            av_init_packet(pkt);
-
-            const int in_buffer_size=fileSize;
-            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_ptr;
-            int cur_size;
+         
+            long framecount =0;
             
-            long int startTime=  setupframe.mstimestamp;
-         //   long int deltatime =   1000000/25;  //25 frames persecs
 
-            long int framecount = 0;
-            
-            
-            while (feof(fp_in) == 0) {
-
-                cur_size = fread(in_buffer, 1, in_buffer_size, fp_in);
-                if (cur_size == 0)
+            while(1)
+            {   
+               if (fread(frame_buf, 1, size, in_file) <= 0){
+                    printf("Failed to read raw data! \n");
                     break;
-                cur_ptr = in_buffer;
 
-                while (cur_size > 0) {
-                    /*Only input video data*/
-                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
-                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
-                        fprintf(stderr, "av_parser_parse2 failed.\n");
-                        //goto ret8;
-                        return;
-                    }
+
+                }else if(feof(in_file)){
                     
-                
+                     if (fseek(in_file, 0, SEEK_SET))
+                    return;
+                    continue;
+                    
+                }
 
-                    cur_ptr += ret;
-                    cur_size -= ret;
+               av_init_packet(&pkt);
+                pkt.data = NULL; // packet data will be allocated by the encoder
+                pkt.size = 0;
 
-                    if (pkt->size == 0)
-                        continue;
 
-                    //Some Info from AVCodecParserContext
-                    printf("[Packet]Size:%6d\t", pkt->size);
-//                    switch (parser->pict_type) {
-//                        case AV_PICTURE_TYPE_I: printf("Type:I\t");
-//                            break;
-//                        case AV_PICTURE_TYPE_P: printf("Type:P\t");
-//                            break;
-//                        case AV_PICTURE_TYPE_B: printf("Type:B\t");
-//                            break;
-//                        default: printf("Type:Other\t");
-//                            break;
-//                    };
-                  //  printf("Packet type %d, Number:%4d\n ", parser->pict_type, parser->output_picture_number);
+               ret = av_frame_make_writable(frame);
+                if (ret < 0)
+                    return ;
 
-//                    ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, &packet);
-//                    if (ret < 0) {
-//                        printf("Decode Error.\n");
-//                        return ret;
-//                    }
-//                    if (got_picture) {
-//                    }
+               frame->data[0] = frame_buf;  //PCM Data
+                //pFrame->pts=i*100;
+               // encode(encodeContext,pFrame,&pkt);
+                //i++;
 
-                    //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
+                //if (c->oformat->flags & AVFMT_GLOBALHEADER)
+	       //c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+
+                ret = avcodec_encode_audio2(c, &pkt, frame, &got_output);
+                if (ret < 0) {
+                    fprintf(stderr, "Error encoding audio frame\n");
+                    return ;
+                }
+                if (got_output) 
+                {
+                    //fwrite(pkt.data, 1, pkt.size, fout);
+                    
+                    
+                              //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                    // BasicFrame        basicframe;
-                    basicframe.copyFromAVPacket(pkt);
-                    basicframe.codec_id = codec->id;
+                    basicaudioframe.copyFromAVPacket(&pkt);
+                    basicaudioframe.codec_id = codec->id;
                     
 
                     // unsigned target_size=frameSize+numTruncatedBytes;
                     // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
                     // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-                    basicframe.mstimestamp = startTime + 10.4 * framecount;
+                    basicaudioframe.mstimestamp = startTime + 13 * framecount;
                    // basicframe.fillPars();
                     
 //                    if( !framecount &&  basicframe.h264_pars.slice_type == H264SliceType::aud) //AUD Delimiter
 //                    {
 //                          continue;
 //                    }
+                    if( resetParser ) //AUD Delimiter
+                    {
+                          fragmp4_muxer.sendMeta();
+                          resetParser =false;
+                    }
                     framecount++;
+                    // info.run(&basicframe);
+                    fragmp4_muxer.run(&basicaudioframe);
+
+                    basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+                                       
+                    av_packet_unref(&pkt);
                     
-                    if(framecount == 700 )
-                        break;
-                    // std::cout << "afterGettingFrame: " << basicframe << std::endl;
-
-                    //basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
-
-                   // info.run(&basicframe);
-                    fragmp4_muxer.run(&basicframe);
-
-                    basicframe.payload.resize(basicframe.payload.capacity());
-
-                    //
-                    int x = 0;
-                    // decode(cdc_ctx, frame, pkt, fp_out);
+                     std::this_thread::sleep_for(std::chrono::microseconds(10000));
+                    
                 }
             }
+                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+            
+           // fclose(fout);
+            fclose(in_file);
+            av_dict_free(&opt);
 
-        
-            free(in_buffer);
-            fclose(fp_in);
             av_frame_free(&frame);
-            av_packet_free(&pkt);
-            avcodec_close(cdc_ctx);
-            avcodec_free_context(&cdc_ctx);
-            
-            
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
-
+            avcodec_free_context(&c);
         }
         
         
@@ -545,10 +616,28 @@ namespace base {
         
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
      
-
+#if 0
         /* Add an output stream. */
         void  FFParse::add_stream(OutputStream *ost, AVFormatContext *oc,
                 AVCodec **codec,
@@ -557,7 +646,8 @@ namespace base {
             int i;
 
             /* find the encoder */
-            *codec = avcodec_find_encoder(codec_id);
+             *codec = avcodec_find_encoder_by_name("libfdk_aac"); //Specify the use of file encoding type
+           // *codec = avcodec_find_encoder(codec_id);
             if (!(*codec)) {
                 fprintf(stderr, "Could not find encoder for '%s'\n",
                         avcodec_get_name(codec_id));
@@ -579,8 +669,9 @@ namespace base {
 
             switch ((*codec)->type) {
                 case AVMEDIA_TYPE_AUDIO:
-                    c->sample_fmt = (*codec)->sample_fmts ?
-                            (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
+                     c->sample_fmt = AV_SAMPLE_FMT_S16;
+                   // c->sample_fmt = (*codec)->sample_fmts ?
+                      //      (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_S16;
                     c->bit_rate = 64000;
                     c->sample_rate = 44100;
                     if ((*codec)->supported_samplerates) {
@@ -656,6 +747,7 @@ namespace base {
 
             /* open it */
             av_dict_copy(&opt, opt_arg, 0);
+            c->profile = FF_PROFILE_AAC_LOW;
             ret = avcodec_open2(c, codec, &opt);
             av_dict_free(&opt);
             if (ret < 0) {
@@ -663,11 +755,6 @@ namespace base {
                return;
             }
 
-            /* init signal generator */
-            ost->t = 0;
-            ost->tincr = 2 * M_PI * 110.0 / c->sample_rate;
-            /* increment frequency by 110 Hz per second */
-            ost->tincr2 = 2 * M_PI * 110.0 / c->sample_rate / c->sample_rate;
 
             if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
                 nb_samples = 10000;
@@ -676,8 +763,7 @@ namespace base {
 
             ost->frame = alloc_audio_frame(c->sample_fmt, c->channel_layout,
                     c->sample_rate, nb_samples);
-            ost->tmp_frame = alloc_audio_frame(AV_SAMPLE_FMT_S16, c->channel_layout,
-                    c->sample_rate, nb_samples);
+            
 
             /* copy the stream parameters to the muxer */
             ret = avcodec_parameters_from_context(ost->st->codecpar, c);
@@ -686,48 +772,68 @@ namespace base {
                return;
             }
 
-            /* create resampler context */
-            ost->swr_ctx = swr_alloc();
-            if (!ost->swr_ctx) {
-                fprintf(stderr, "Could not allocate resampler context\n");
-               return;
-            }
 
-            /* set options */
-            av_opt_set_int(ost->swr_ctx, "in_channel_count", c->channels, 0);
-            av_opt_set_int(ost->swr_ctx, "in_sample_rate", c->sample_rate, 0);
-            av_opt_set_sample_fmt(ost->swr_ctx, "in_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-            av_opt_set_int(ost->swr_ctx, "out_channel_count", c->channels, 0);
-            av_opt_set_int(ost->swr_ctx, "out_sample_rate", c->sample_rate, 0);
-            av_opt_set_sample_fmt(ost->swr_ctx, "out_sample_fmt", c->sample_fmt, 0);
-
-            /* initialize the resampling context */
-            if ((ret = swr_init(ost->swr_ctx)) < 0) {
-                fprintf(stderr, "Failed to initialize the resampling context\n");
-               return;
-            }
         }
 
         /* Prepare a 16 bit dummy audio frame of 'frame_size' samples and
          * 'nb_channels' channels. */
         AVFrame * FFParse::get_audio_frame(OutputStream *ost) {
-            AVFrame *frame = ost->tmp_frame;
-            int j, i, v;
-            int16_t *q = (int16_t*) frame->data[0];
+            AVFrame *frame = ost->frame;
+//            int j, i, v;
+//            int16_t *q = (int16_t*) frame->data[0];
 
             //    /* check if we want to generate more frames */
             //    if (av_compare_ts(ost->next_pts, ost->enc->time_base,
             //                      STREAM_DURATION, (AVRational){ 1, 1 }) >= 0)
             //        return NULL;
 
-            for (j = 0; j < frame->nb_samples; j++) {
-                v = (int) (sin(ost->t) * 10000);
-                for (i = 0; i < ost->enc->channels; i++)
-                    *q++ = v;
-                ost->t += ost->tincr;
-                ost->tincr += ost->tincr2;
+//            for (j = 0; j < frame->nb_samples; j++) {
+//                v = (int) (sin(ost->t) * 10000);
+//                for (i = 0; i < ost->enc->channels; i++)
+//                    *q++ = v;
+//                ost->t += ost->tincr;
+//                ost->tincr += ost->tincr2;
+//            }
+            AVCodecContext *c;
+            c = ost->enc;
+            
+            int size = av_samples_get_buffer_size(NULL, c->channels,c->frame_size,c->sample_fmt, 1);
+            uint8_t* frame_buf = (uint8_t *)av_malloc(size);
+
+            if(!ost->in_file)
+            {
+                ost->in_file = fopen("/var/tmp/test.pcm","rb");
+                if(ost->in_file){
+                    av_log(NULL,AV_LOG_INFO,"open file success \n");
+                }else{
+                    av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                    return nullptr;
+                }
             }
 
+            
+           
+            if (fread(frame_buf, 1, size, ost->in_file) <= 0){
+                 printf("Failed to read raw data! \n");
+                 return nullptr;
+
+
+             }else if(feof(ost->in_file)){
+                 
+                 
+                 fseek(ost->in_file, 0, SEEK_SET);
+                 printf("End of audio file \n"); 
+                //return;
+                return nullptr;
+             }
+            
+             int ret = av_frame_make_writable(frame);
+                if (ret < 0)
+                   return 0;
+             
+
+            frame->data[0] = frame_buf;  //PCM Data
+ 
             frame->pts = ost->next_pts;
             ost->next_pts += frame->nb_samples;
 
@@ -750,37 +856,37 @@ namespace base {
             c = ost->enc;
 
             frame = get_audio_frame(ost);
-
-            if (frame) {
-                /* convert samples from native format to destination codec format, using the resampler */
-                /* compute destination number of samples */
-                dst_nb_samples = av_rescale_rnd(swr_get_delay(ost->swr_ctx, c->sample_rate) + frame->nb_samples,
-                        c->sample_rate, c->sample_rate, AV_ROUND_UP);
-                av_assert0(dst_nb_samples == frame->nb_samples);
-
-                /* when we pass a frame to the encoder, it may keep a reference to it
-                 * internally;
-                 * make sure we do not overwrite it here
-                 */
-                ret = av_frame_make_writable(ost->frame);
-                if (ret < 0)
-                   return 0;
-
-                /* convert to destination format */
-                ret = swr_convert(ost->swr_ctx,
-                        ost->frame->data, dst_nb_samples,
-                        (const uint8_t **) frame->data, frame->nb_samples);
-                if (ret < 0) {
-                    fprintf(stderr, "Error while converting\n");
-                   return 0;
-                }
-                frame = ost->frame;
-
-                frame->pts = av_rescale_q(ost->samples_count, (AVRational) {
-                    1, c->sample_rate
-                }, c->time_base);
-                ost->samples_count += dst_nb_samples;
-            }
+//
+//            if (frame) {
+//                /* convert samples from native format to destination codec format, using the resampler */
+//                /* compute destination number of samples */
+//                dst_nb_samples = av_rescale_rnd(swr_get_delay(ost->swr_ctx, c->sample_rate) + frame->nb_samples,
+//                        c->sample_rate, c->sample_rate, AV_ROUND_UP);
+//                av_assert0(dst_nb_samples == frame->nb_samples);
+//
+//                /* when we pass a frame to the encoder, it may keep a reference to it
+//                 * internally;
+//                 * make sure we do not overwrite it here
+//                 */
+//                ret = av_frame_make_writable(ost->frame);
+//                if (ret < 0)
+//                   return 0;
+//
+//                /* convert to destination format */
+//                ret = swr_convert(ost->swr_ctx,
+//                        ost->frame->data, dst_nb_samples,
+//                        (const uint8_t **) frame->data, frame->nb_samples);
+//                if (ret < 0) {
+//                    fprintf(stderr, "Error while converting\n");
+//                   return 0;
+//                }
+//                frame = ost->frame;
+//
+//                frame->pts = av_rescale_q(ost->samples_count, (AVRational) {
+//                    1, c->sample_rate
+//                }, c->time_base);
+//                ost->samples_count += dst_nb_samples;
+//            }
 
             ret = avcodec_encode_audio2(c, &pkt, frame, &got_packet);
             if (ret < 0) {
@@ -828,9 +934,9 @@ namespace base {
         void  FFParse::close_stream(AVFormatContext *oc, OutputStream *ost) {
             avcodec_free_context(&ost->enc);
             av_frame_free(&ost->frame);
-            av_frame_free(&ost->tmp_frame);
-            sws_freeContext(ost->sws_ctx);
-            swr_free(&ost->swr_ctx);
+//            av_frame_free(&ost->tmp_frame);
+ //           sws_freeContext(ost->sws_ctx);
+  //          swr_free(&ost->swr_ctx);
         }
 
         
@@ -978,8 +1084,8 @@ namespace base {
 //                    }
                     framecount++;
                     
-                    if(framecount == 700 )
-                        break;
+                    //if(framecount == 700 )
+                     //   break;
                     
                     std::cout << "encode and write audio" << std::endl << std::flush;
                     encode_audio = !write_audio_frame(oc, &audio_st);
@@ -1031,10 +1137,12 @@ namespace base {
             return 0;
         }
 
-        
+#endif
         
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
 
     }
 

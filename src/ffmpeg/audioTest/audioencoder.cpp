@@ -165,10 +165,10 @@ int main(int argc, char **argv)
     AVCodecContext *c= NULL;
     AVFrame *frame;
     AVPacket pkt;
-    int i, j, k, ret, got_output;
-    FILE *f;
+    int ret, got_output;
+    FILE *fout;
     uint16_t *samples;
-    float t, tincr;
+    //float t, tincr;
 
 
     filename = "/tmp/test.aac";
@@ -207,15 +207,15 @@ int main(int argc, char **argv)
     c->sample_rate    = select_sample_rate(codec);
     c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
     c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
-
+    //c->profile = FF_PROFILE_AAC_LOW;
     /* open it */
     if (avcodec_open2(c, codec, NULL) < 0) {
         fprintf(stderr, "Could not open codec\n");
         exit(1);
     }
 
-    f = fopen(filename, "wb");
-    if (!f) {
+    fout = fopen(filename, "wb");
+    if (!fout) {
         fprintf(stderr, "Could not open %s\n", filename);
         exit(1);
     }
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
     }
 
 ///////////////////////////////////////////////////////
- while(1){   
+    while(1){   
        if (fread(frame_buf, 1, size, in_file) <= 0){
             printf("Failed to read raw data! \n");
             break;
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
             exit(1);
         }
         if (got_output) {
-            fwrite(pkt.data, 1, pkt.size, f);
+            fwrite(pkt.data, 1, pkt.size, fout);
             av_packet_unref(&pkt);
         }
     }
@@ -324,19 +324,21 @@ int main(int argc, char **argv)
 //    }
 
     /* get the delayed frames */
-    for (got_output = 1; got_output; i++) {
-        ret = avcodec_encode_audio2(c, &pkt, NULL, &got_output);
-        if (ret < 0) {
-            fprintf(stderr, "Error encoding frame\n");
-            exit(1);
-        }
-
-        if (got_output) {
-            fwrite(pkt.data, 1, pkt.size, f);
-            av_packet_unref(&pkt);
-        }
-    }
-    fclose(f);
+//    for (got_output = 1; got_output; i++) {
+//        ret = avcodec_encode_audio2(c, &pkt, NULL, &got_output);
+//        if (ret < 0) {
+//            fprintf(stderr, "Error encoding frame\n");
+//            exit(1);
+//        }
+//
+//        if (got_output) {
+//            fwrite(pkt.data, 1, pkt.size, fout);
+//            av_packet_unref(&pkt);
+//        }
+//    }
+    fclose(fout);
+    fclose(in_file);
+    
 
     av_frame_free(&frame);
     avcodec_free_context(&c);

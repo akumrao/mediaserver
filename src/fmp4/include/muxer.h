@@ -59,7 +59,8 @@ protected: //frames
 public:
     BasicFrame                  internal_basicframe; ///< 
     MuxFrame                    internal_frame;      ///< outgoing muxed frame
-    BasicFrame                  extradata_frame;     ///< capture decoder extradata here
+    BasicFrame                  extradata_videoframe;     ///< capture decoder extradata here
+    BasicFrame                  extradata_audioframe;     ///< capture decoder extradata here
     virtual void run(Frame* frame);
 protected:
     virtual void defineMux() = 0; ///< Define container format (format_name) & muxing parameters (av_dict).  Define in child classes.

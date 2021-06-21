@@ -42,7 +42,7 @@ extern "C" {
 
 namespace base {
 namespace fmp4 {
- 
+ #if 0 
    // a wrapper around a single output AVStream
 typedef struct OutputStream {
     AVStream *st;
@@ -53,14 +53,20 @@ typedef struct OutputStream {
     int samples_count;
 
     AVFrame *frame;
-    AVFrame *tmp_frame;
+    //AVFrame *tmp_frame;
 
-    float t, tincr, tincr2;
+    //float t, tincr, tincr2;
 
-    struct SwsContext *sws_ctx;
-    struct SwrContext *swr_ctx;
+   // struct SwsContext *sws_ctx;
+   // struct SwrContext *swr_ctx;
+    
+    FILE *in_file;
+//    OutputStream()
+//    {
+//        in_file = nullptr;
+//    }
 } OutputStream;
-
+#endif
 
  class FFParse: public Thread
  {
@@ -107,11 +113,12 @@ typedef struct OutputStream {
     
     std::string fileName;
     
-    
+ #if 0   
     /* Add an output stream. */
   void add_stream(OutputStream *ost, AVFormatContext *oc,
                        AVCodec **codec,
                        enum AVCodecID codec_id);
+
 
      AVFrame *alloc_audio_frame(enum AVSampleFormat sample_fmt,
                                   uint64_t channel_layout,
@@ -120,6 +127,7 @@ typedef struct OutputStream {
      AVFrame *get_audio_frame(OutputStream *ost);
      int write_audio_frame(AVFormatContext *oc, OutputStream *ost);
     void close_stream(AVFormatContext *oc, OutputStream *ost);
+#endif
     
 
  };

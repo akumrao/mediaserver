@@ -31,10 +31,10 @@
   * Access Unit Delimiter (AUD) type 9. An AUD is an optional NALU that can be use to delimit frames in an elementary stream. It is not required (unless otherwise stated by the container/protocol, like TS), and is often not included in order to save space, but it can be useful to finds the start of a frame without having to fully parse each NALU.
   
   I-slice is a portion of a picture composed of macroblocks, all of which are based upon macroblocks within the same picture.
-  Thus, H.264 introduces a new concept called slices — segments of a picture bigger than macroblocks but smaller than a frame.
+  Thus, H.264 introduces a new concept called slices ��� segments of a picture bigger than macroblocks but smaller than a frame.
   Just as there are I-slices, there are P- and B-slices. P- and B-slices are portions of a picture composed of macroblocks that are not dependent on macroblocks in the same picture. 
   
-  H264 encoder sends an IDR (Instantaneous Decoder Refresh) coded picture (a group of I slices ) to clear the contents of the reference picture buffer. When we send an IDR coded picture, the decoder marks all pictures in the reference buffer as ‘unused for reference’. All subsequently transmitted slices are decoded without reference to any frame decoded prior to the IDR picture. However, the reference buffer is not cleared with an I frame i.e, any frame after an I frame can use the reference buffer before the I frame. The first picture in a coded video sequence is always an IDR picture.
+  H264 encoder sends an IDR (Instantaneous Decoder Refresh) coded picture (a group of I slices ) to clear the contents of the reference picture buffer. When we send an IDR coded picture, the decoder marks all pictures in the reference buffer as ���unused for reference���. All subsequently transmitted slices are decoded without reference to any frame decoded prior to the IDR picture. However, the reference buffer is not cleared with an I frame i.e, any frame after an I frame can use the reference buffer before the I frame. The first picture in a coded video sequence is always an IDR picture.
 
 An IDR frame( Kye frame having sps and pps) is a special type of I-frame in H.264. An IDR frame specifies that no frame after the IDR frame can reference any frame before it. This makes seeking the H.264 file easier and more responsive to the player.
 
@@ -162,8 +162,8 @@ void MuxFrameFilter::initMux() {
                 av_codec_context->time_base = timebase; // 1/1000
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
                 ///*
-                av_codec_context->extradata = extradata_frame.payload.data();
-                av_codec_context->extradata_size = extradata_frame.payload.size();
+                av_codec_context->extradata = extradata_videoframe.payload.data();
+                av_codec_context->extradata_size = extradata_videoframe.payload.size();
                 //*/
 
                 /*
@@ -214,27 +214,33 @@ void MuxFrameFilter::initMux() {
                 // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
                 // std::cout << "initMux: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
             }
-            else if (codec_id== AV_CODEC_ID_PCM_S16LE)
+            else if (codec_id== AV_CODEC_ID_AAC)
             {
                 AVCodecContext *av_codec_context;
                 AVStream *av_stream;
 
                 av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
-                av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
-                av_codec_context->height = 576;
-                av_codec_context->bit_rate = 1024 * 1024;
+                
+               // av_codec_context->sample_fmt  = codec->sample_fmts ?  codec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
+                
+                av_codec_context->bit_rate = 64000;
                 av_codec_context->time_base = timebase; // 1/1000
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
-                ///*
-                av_codec_context->extradata = extradata_frame.payload.data();
-                av_codec_context->extradata_size = extradata_frame.payload.size();
-                //*/
+                av_codec_context->sample_rate = 44100;
+                av_codec_context->profile = FF_PROFILE_AAC_LOW;
+              
+                av_codec_context->extradata = extradata_audioframe.payload.data();
+                av_codec_context->extradata_size = extradata_audioframe.payload.size();
+                
+                //unsigned short int aacspec = 5136;  //0001010000010000 hex 1410 https://kxcblog.com/post/avcodec/aac-audio-specific-config/#:~:text=AAC%20Audio%20AudioSpecificConfig
+             
+                //AAC AudioSpecificConfig
+                //memcpy( av_codec_context->extradata, &aacspec , 2);
+                        
+                 av_codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
+                 av_codec_context->channels        = av_get_channel_layout_nb_channels(av_codec_context->channel_layout);
 
-                /*
-                std::cout << "initMux: extradata_size: " << av_codec_context->extradata_size 
-                    << std::endl;
-                 */
-
+                // ost->st->time_base = (AVRational){ 1, c->sample_rate };
                 // std::cout << "avformat_new_stream" << std::endl;
                 av_stream = avformat_new_stream(av_format_context, av_codec_context->codec); // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
 
@@ -254,6 +260,12 @@ void MuxFrameFilter::initMux() {
                 // av_stream->codec->time_base = av_stream->time_base;
                 // NOTE: member "codec" is deprecated, should use "codecpar"
                 i = avcodec_parameters_from_context(av_stream->codecpar, av_codec_context);
+                
+
+                av_stream->codecpar->extradata = ( uint8_t *)av_malloc(av_codec_context->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
+                av_stream->codecpar->extradata_size =  av_codec_context->extradata_size ;
+                memcpy(av_stream->codecpar->extradata, av_codec_context->extradata, av_codec_context->extradata_size);
+                
 
                 /*
                 std::cout << "initMux: extradata_size 2: " << 
@@ -267,8 +279,7 @@ void MuxFrameFilter::initMux() {
                  */
 
 
-                //av_stream->codec->extradata = extradata_frame.payload.data();
-                //av_stream->codec->extradata_size = extradata_frame.payload.size();
+        
 
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
                 codec_contexes[setupframe.subsession_index] = av_codec_context;
@@ -414,11 +425,36 @@ void MuxFrameFilter::go(Frame* frame) {
             return;
         } // INIT
     }// SETUPFRAME
-
+    
     else if (frame->getFrameClass() == FrameClass::basic) { // BASICFRAME
         BasicFrame *basicframe = static_cast<BasicFrame*> (frame);
-
-        if (!has_extradata) {
+        
+        if (basicframe->codec_id == AV_CODEC_ID_AAC) {
+            
+             
+            if (!initialized) { // can't init this file.. de-activate
+                
+                 extradata_audioframe.payload.insert(
+                            extradata_audioframe.payload.end(),
+                            basicframe->payload.begin(),
+                            basicframe->payload.end()
+                            );
+                 
+                initMux(); // modifies member initialized
+            }
+            else
+            {
+                writeFrame(basicframe);
+               // write_audio_frame(av_format_context, &audio_st);
+                
+                
+            }
+             
+            return;
+             
+        }
+        
+        else if (!has_extradata) {
             // https://stackoverflow.com/questions/54119705/fragmented-mp4-problem-playing-in-browser
             // http://aviadr1.blogspot.com/2010/05/h264-extradata-partially-explained-for.html
             if (basicframe->codec_id == AV_CODEC_ID_H264) {
@@ -430,8 +466,8 @@ void MuxFrameFilter::go(Frame* frame) {
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
 #endif
                     SInfo << "MuxFrameFilter : appending extradata";
-                    extradata_frame.payload.insert(
-                            extradata_frame.payload.end(),
+                    extradata_videoframe.payload.insert(
+                            extradata_videoframe.payload.end(),
                             basicframe->payload.begin(),
                             basicframe->payload.end()
                             );
@@ -452,7 +488,7 @@ void MuxFrameFilter::go(Frame* frame) {
 #ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: extradata ok" << std::endl;
 #endif
-                    extradata_frame.copyMetaFrom(basicframe); // timestamps etc.
+                    extradata_videoframe.copyMetaFrom(basicframe); // timestamps etc.
                 }
             }
         }
@@ -469,7 +505,8 @@ void MuxFrameFilter::go(Frame* frame) {
             }
         }
 
-        if (ready and active and !initialized) { // got setup frames, writing has been requested, but file has not been opened yet
+        if (ready and active and !initialized)
+        { // got setup frames, writing has been requested, but file has not been opened yet
 #ifdef MUXSTATE
             std::cout << "MuxFrameFilter: go: state: calling initMux & setting initialized=true" << std::endl;
 #endif
@@ -478,12 +515,12 @@ void MuxFrameFilter::go(Frame* frame) {
                 deActivate_();
             } else {
                 // set zero time
-                // mstimestamp0 = extradata_frame.mstimestamp;
+                // mstimestamp0 = extradata_videoframe.mstimestamp;
                 mstimestamp0 = basicframe->mstimestamp;
-                extradata_frame.mstimestamp = mstimestamp0;
-                extradata_frame.subsession_index = 0;
+                extradata_videoframe.mstimestamp = mstimestamp0;
+                extradata_videoframe.subsession_index = 0;
                 // std::cout << "writing extradata" << std::endl;
-                writeFrame(&extradata_frame); // send sps & pps data to muxer only once
+                writeFrame(&extradata_videoframe); // send sps & pps data to muxer only once
                 // std::cout << "wrote extradata" << std::endl;
             }
         }
@@ -702,6 +739,9 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     // It seems that once "frag_size" has been set to a small value, this starts getting complete frames, 
     // instead of several frames in the same bytebuffer
     //
+    
+    //SInfo  << "write_packet " << buf_size_;
+    
     // buf_size_ : amount of data libavformat gives us
     FragMP4MuxFrameFilter* me = static_cast<FragMP4MuxFrameFilter*> (opaque);
     MuxFrame& internal_frame = me->internal_frame;
@@ -744,13 +784,17 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     std::cout << std::endl;
 #endif
 
-    while (cc < buf_size) { // consume bytes given by libavformat while they last
-        if (missing > 0) {
+    while (cc < buf_size) 
+    { // consume bytes given by libavformat while they last
+        if (missing > 0) 
+        {
 #ifdef MUXPARSE
             std::cout << "taking up missing bytes " << missing << std::endl;
 #endif
             len = missing;
-        } else { // start of a new mp4 box
+        } 
+        else 
+        { // start of a new mp4 box
 #ifdef MUXPARSE
             std::cout << std::endl << "start: [";
             for (i = 0; i <= 9; i++) {
@@ -765,7 +809,8 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
                 std::cout << "MuxFrameFilter: overflow: len: " << len << std::endl;
                 // exit(2);
                 return -1;
-            } else if (len < 1) {
+            } else if (len < 1)
+            {
                 SError << "MuxFrameFilter: packet of length zero!";
                 cc += 4;
                 continue;
@@ -790,7 +835,8 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             std::cout << "missing bytes: " << missing << std::endl;
 #endif
             cc += buf_size;
-        } else { // all required bytes are in the buffer
+        } else
+        { // all required bytes are in the buffer
             memcpy(internal_frame.payload.data() + ccf, buf + cc, len);
             missing = 0;
 #ifdef MUXPARSE

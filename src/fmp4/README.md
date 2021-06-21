@@ -185,9 +185,10 @@ https://ffmpeg.org/doxygen/trunk/encode__audio_8c_source.html
 
 https://ffmpeg.org/doxygen/trunk/muxing_8c-example.html
 
+online mp4 parser
 
-
-
+http://download.tsi.telecom-paristech.fr/gpac/mp4box.js/filereader.html
+https://www.onlinemp4parser.com/
 
 
 
@@ -253,3 +254,7 @@ nal_unit_type
 
 
 
+
+Media Source Extensions for Audio
+
+https://developers.google.com/web/fundamentals/media/mse/seamless-playback
