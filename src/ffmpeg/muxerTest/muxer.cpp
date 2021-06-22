@@ -462,12 +462,19 @@ static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt)
 
 static int write_frame(AVFormatContext *fmt_ctx, const AVRational *time_base, AVStream *st, AVPacket *pkt)
 {
+    
+    std::cout << "Stream0 " << pkt->stream_index << " DTS " << pkt->dts << " PTS "  <<  pkt->pts  << " size " << pkt->size << " timesbae "  << st->time_base.den << std::endl;
+
     /* rescale output packet timestamp values from codec to stream timebase */
     av_packet_rescale_ts(pkt, *time_base, st->time_base);
     pkt->stream_index = st->index;
 
     /* Write the compressed frame to the media file. */
     log_packet(fmt_ctx, pkt);
+    
+    std::cout << "Stream1 " << pkt->stream_index << " DTS " << pkt->dts << " PTS "  <<  pkt->pts  << " size " << pkt->size << " timesbae "  << st->time_base.den << std::endl;
+
+    
     return av_interleaved_write_frame(fmt_ctx, pkt);
 }
 
@@ -668,7 +675,9 @@ static AVFrame *get_audio_frame(OutputStream *ost)
     /* check if we want to generate more frames */
     if (av_compare_ts(ost->next_pts, ost->enc->time_base,
                       STREAM_DURATION, (AVRational){ 1, 1 }) >= 0)
+                      {
         return NULL;
+                      }
 
     for (j = 0; j <frame->nb_samples; j++) {
         v = (int)(sin(ost->t) * 10000);
@@ -679,6 +688,7 @@ static AVFrame *get_audio_frame(OutputStream *ost)
     }
 
     frame->pts = ost->next_pts;
+    std::cout << "get_audio_frame " <<   frame->pts << std::endl;
     ost->next_pts  += frame->nb_samples;
 
     return frame;
@@ -728,6 +738,9 @@ static int write_audio_frame(AVFormatContext *oc, OutputStream *ost)
         frame = ost->frame;
 
         frame->pts = av_rescale_q(ost->samples_count, (AVRational){1, c->sample_rate}, c->time_base);
+        
+        std::cout << "write_audio_frame " <<   frame->pts << std::endl;
+          
         ost->samples_count += dst_nb_samples;
     }
 
@@ -847,7 +860,9 @@ static AVFrame *get_video_frame(OutputStream *ost)
     /* check if we want to generate more frames */
     if (av_compare_ts(ost->next_pts, c->time_base,
                       STREAM_DURATION, (AVRational){ 1, 1 }) >= 0)
-        return NULL;
+                      {
+                          return NULL;
+                      }
 
     /* when we pass a frame to the encoder, it may keep a reference to it
      * internally; make sure we do not overwrite it here */
@@ -879,6 +894,8 @@ static AVFrame *get_video_frame(OutputStream *ost)
 
     ost->frame->pts = ost->next_pts++;
 
+   std::cout << "get_video_frame " <<  ost->frame->pts << std::endl;
+      
     return ost->frame;
 }
 
@@ -1024,9 +1041,16 @@ int main(int argc, char **argv)
     while (encode_video || encode_audio) {
         /* select the stream to encode */
         if (encode_video && (!encode_audio || av_compare_ts(video_st.next_pts, video_st.enc->time_base,  audio_st.next_pts, audio_st.enc->time_base) <= 0)) {
+          
             encode_video = !write_video_frame(oc, &video_st);
+            
+              std::cout <<  " encode_video "  <<  encode_video << std::endl;
+            
         } else {
             encode_audio = !write_audio_frame(oc, &audio_st);
+            
+            std::cout <<  " audio frame "  <<  encode_audio  << std::endl;
+             
         }
     }
 

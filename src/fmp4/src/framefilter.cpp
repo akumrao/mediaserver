@@ -40,7 +40,7 @@ DummyFrameFilter::~DummyFrameFilter()
 void DummyFrameFilter::go(Frame *frame) {
     if (verbose) {
         // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
-        std::cout << "DummyFrameFilter : " << this->name << " : got frame : " << *(frame) << std::endl;
+        STrace << "DummyFrameFilter : " << this->name << " : got frame : " << *(frame) ;
 
 
 
@@ -65,7 +65,7 @@ void DummyFrameFilter::go(Frame *frame) {
         if(conn)
         conn->send((const char*)muxframe->payload.data(), meta->size, true );
         
-        SInfo << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
+        STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
     }
 }

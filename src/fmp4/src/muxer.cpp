@@ -142,12 +142,7 @@ void MuxFrameFilter::initMux() {
     for (auto it = setupframes.begin(); it != setupframes.end(); it++) 
     {
         SetupFrame &setupframe = *it;
-        if (setupframe.stream_index < 0) { // not been initialized
-            
-            SError<< "wrong stream id";
-        } 
-        else
-        { // got setupframe
+        if (setupframe.stream_index >=0) { // not been initialized
             AVCodecID codec_id = setupframe.codec_id;
 
             if (codec_id == AV_CODEC_ID_H264)
@@ -267,27 +262,11 @@ void MuxFrameFilter::initMux() {
                 memcpy(av_stream->codecpar->extradata, av_codec_context->extradata, av_codec_context->extradata_size);
                 
 
-                /*
-                std::cout << "initMux: extradata_size 2: " << 
-                    av_stream->codec->extradata_size 
-                    << std::endl;
-
-                std::cout << "initMux: extradata_size 3: " << 
-                    av_stream->codecpar->extradata_size 
-                    << std::endl;
-                // yes, that's correct
-                 */
-
-
-        
-
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
                 codec_contexes[setupframe.stream_index] = av_codec_context;
                 streams[setupframe.stream_index] = av_stream;
                 
-                // std::cout << "initMux: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
-                // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
-                // std::cout << "initMux: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
+ 
             }
             
             initialized = true; // so, at least one substream init'd
@@ -296,6 +275,7 @@ void MuxFrameFilter::initMux() {
     }
 
     if (!initialized) {
+        SError << "Stream is not setup correctly";
         return;
     }
 
@@ -401,10 +381,6 @@ void MuxFrameFilter::go(Frame* frame) {
     std::cout << "Got frame " << ncount++ << std::endl;
 
 
-#ifdef MUXSTATE
-    std::cout << "MuxFrameFilter: go: state: ready, active, initd: " << int(ready) << " " << int(active)
-            << " " << int(initialized) << std::endl;
-#endif
 
     //std::cout << "MuxFrameFilter: go: frame " << *frame << std::endl;
 
@@ -422,6 +398,8 @@ void MuxFrameFilter::go(Frame* frame) {
 #endif
                 SInfo << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
                 setupframes[setupframe->stream_index].copyFrom(setupframe);
+                
+                 mstimestamp0 = setupframe->mstimestamp;
             }
             return;
         } // INIT
@@ -449,6 +427,7 @@ void MuxFrameFilter::go(Frame* frame) {
                { // can't init this file.. de-activate
                  
                     initMux(); // modifies member initialized
+                    writeFrame(basicframe);
                 }
                 else
                 {
@@ -518,12 +497,13 @@ void MuxFrameFilter::go(Frame* frame) {
                     } else {
                         // set zero time
                         // mstimestamp0 = extradata_videoframe.mstimestamp;
-                        mstimestamp0 = basicframe->mstimestamp;
+                       
                         extradata_videoframe.mstimestamp = mstimestamp0;
                         extradata_videoframe.stream_index = 0;
                         // std::cout << "writing extradata" << std::endl;
                         writeFrame(&extradata_videoframe); // send sps & pps data to muxer only once
                         // std::cout << "wrote extradata" << std::endl;
+                        writeFrame(basicframe);
                     }
                 }
                 else
@@ -573,7 +553,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
         dt = 0;
     }
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
-    SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
+    //SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
     SInfo << "MuxFrameFilter : writing frame " << *basicframe;
     // internal_basicframe2.fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
     // internal_basicframe.fillAVPacket(avpkt);
@@ -601,7 +581,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
             (streams[basicframe->stream_index]->time_base.num * 1000);
             // complicated & stupid
          */
-        // std::cout << "PTS " << dt << std::endl;
+        
         // NOTICE: this is critical.  the mp4 muxer goes sour if you dont feed
         // it increasing timestamps.  went almost nuts for this.
         if (avpkt->pts <= prevpts) {
@@ -633,6 +613,9 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
 
     // std::cout << "avpkt->pts: " << avpkt->pts << std::endl;
     // std::cout << "MuxFrameFilter : avpkt size " << avpkt->size << std::endl;
+    
+    SInfo << "Stream " << basicframe->stream_index << " DTS " << dt << " PTS "  <<  avpkt->pts  << " size " << avpkt->size << " timesbae "  << av_stream->time_base.den;
+    
     int res = av_interleaved_write_frame(av_format_context, avpkt); // => this calls write_packet
     // std::cout << "MuxFrameFilter : av_write_frame returned " << res << std::endl;
     if (res < 0) {
@@ -846,7 +829,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             if (strcmp(boxname, "moof") == 0) {
                 metap->is_first = moofHasFirstSampleFlag(internal_frame.payload.data());
                 //#ifdef MUXPARSE
-                std::cout << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) << std::endl;
+                STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
                 // #endif
             }
             //*/

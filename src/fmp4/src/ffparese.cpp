@@ -126,11 +126,11 @@ namespace base {
 
             stream_index = 0;
             //audio only
-//            if (parseAACHeader()) {
-//                 ++stream_index;
-//                parseAACContent();
-//            }
-//            return;
+            if (parseAACHeader()) {
+                 ++stream_index;
+                parseAACContent();
+            }
+            return;
 
             //video only
 //            if (parseH264Header()) {
@@ -284,7 +284,7 @@ namespace base {
             
             AVPacket audiopkt;
              
-            long framecount =0;
+           
             
             int ret, got_output;
              
@@ -312,7 +312,7 @@ namespace base {
             uint8_t* frame_audobuf = (uint8_t *)av_malloc(audiosize);
 
             
-
+             long framecount =1;
             while(1)
             {   
                if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
@@ -565,25 +565,13 @@ namespace base {
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
             unsigned char *cur_videoptr;
-            int cur_videosize;
+            int cur_videosize=0;
 
-            long framecount =0;
+            long framecount =1;
 
             while (1) {
 
-                if (fseek(fileVideo, 0, SEEK_SET))
-                    return;
-
-                cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
-
-
-                SInfo << "Read H264 filee " << cur_videosize;
-
-                if (cur_videosize == 0)
-                    break;
-                cur_videoptr = in_videobuffer;
-
-                while (cur_videosize > 0) {
+                if (cur_videosize > 0) {
 
                     ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
                     if (ret < 4) {
@@ -606,7 +594,7 @@ namespace base {
                     //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                     // BasicFrame        basicframe;
                     basicvideoframe.copyFromAVPacket(videopkt);
-                    basicvideoframe.mstimestamp = startTime + 10.4 * framecount;
+                    basicvideoframe.mstimestamp = startTime + 40 * framecount;
                     basicvideoframe.fillPars();
 
                     if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
@@ -637,6 +625,20 @@ namespace base {
                     //
 
                 }
+                else
+                {
+                     if (fseek(fileVideo, 0, SEEK_SET))
+                    return;
+
+                    cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
+
+
+                    SInfo << "Read H264 filee " << cur_videosize;
+
+                    if (cur_videosize == 0)
+                        break;
+                    cur_videoptr = in_videobuffer;
+                    }
             }
 
         }
@@ -668,12 +670,12 @@ namespace base {
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
             unsigned char *cur_videoptr;
-            int cur_videosize;
+            int cur_videosize=0;
 
             
             
             ////////////////////////////////////
-             AVPacket audiopkt;
+            AVPacket audiopkt;
              
      
             
@@ -704,12 +706,11 @@ namespace base {
             ///////////////////////////////
             
             
-            long framecount =0;
-
+            long videoframecount =1;
+            long audioframecount =1;
             while (1) {
 
-                if((framecount % 2) ==0 )
-                    
+                if(videoframecount > 0 )
                 {
                     if (cur_videosize > 0)
                     {
@@ -735,7 +736,7 @@ namespace base {
                         //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                         // BasicFrame        basicframe;
                         basicvideoframe.copyFromAVPacket(videopkt);
-                        basicvideoframe.mstimestamp = startTime + 10.4 * framecount;
+                        basicvideoframe.mstimestamp = startTime + 40 * videoframecount;
                         basicvideoframe.fillPars();
 
                         if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
@@ -744,13 +745,16 @@ namespace base {
                             resetParser = false;
                         }
 
-                        if (!basicvideoframe.h264_pars.slice_type == H264SliceType::idr && basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr) //AUD Delimiter
+                        if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                         {
+                            continue;
+                        }
+                        else if (!((basicvideoframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr))) {
                             continue;
                         }
 
 
-                        framecount++;
+                        videoframecount++;
 
                         info.run(&basicvideoframe);
 
@@ -759,11 +763,10 @@ namespace base {
 
                         basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
 
-                        std::this_thread::sleep_for(std::chrono::microseconds(10000));
-                        //
-
+                     
+                    
                     }
-                    else
+                    else 
                     {
 
                         if (fseek(fileVideo, 0, SEEK_SET))
@@ -777,10 +780,10 @@ namespace base {
                         if (cur_videosize == 0)
                             break;
                         cur_videoptr = in_videobuffer;
-
+                        continue;
                     }
                 }
-                else //audio 
+                if( (videoframecount  % 2) == 0 ) //audio 
                 {
                      if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
@@ -823,26 +826,26 @@ namespace base {
 
                         basicaudioframe.copyFromAVPacket(&audiopkt);
 
-                        basicaudioframe.mstimestamp = startTime + 23 * framecount;
+                        basicaudioframe.mstimestamp = startTime + 23 * audioframecount;
 
-                        if( resetParser ) 
-                        {
-                              fragmp4_muxer.sendMeta();
-                              resetParser =false;
-                        }
-                        framecount++;
+//                        if( resetParser ) 
+//                        {
+//                              fragmp4_muxer.sendMeta();
+//                              resetParser =false;
+//                        }
+                        audioframecount++;
                         fragmp4_muxer.run(&basicaudioframe);
 
                         basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
 
                         av_packet_unref(&audiopkt);
 
-                         std::this_thread::sleep_for(std::chrono::microseconds(21000));
+                    //     std::this_thread::sleep_for(std::chrono::microseconds(21000));
 
                     }
                 }//audio 
             
-            
+                   std::this_thread::sleep_for(std::chrono::microseconds(10000));
             }
 
         }

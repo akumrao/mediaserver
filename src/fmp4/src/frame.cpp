@@ -173,9 +173,9 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
   payload.resize(pkt->size);
   memcpy(payload.data(),pkt->data,pkt->size);
   // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
-  stream_index=pkt->stream_index;
+//  stream_index=pkt->stream_index;
   // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
-  mstimestamp=(long int)pkt->pts;
+ // mstimestamp=(long int)pkt->pts;
 }
 
 

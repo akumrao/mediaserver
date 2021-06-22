@@ -258,3 +258,47 @@ nal_unit_type
 Media Source Extensions for Audio
 
 https://developers.google.com/web/fundamentals/media/mse/seamless-playback
+
+
+
+
+What is video timescale, timebase, or timestamp in ffmpeg
+
+
+Modern containers govern the time component of presentation of video (and audio) frames using timestamps, rather than framerate. So, instead of recording a video as 25 fps, and thus implying that each frame should be drawn 0.04 seconds apart, they store a timestamp for each frame e.g.
+
+ Frame      pts_time
+   0          0.00
+   1          0.04
+   2          0.08
+   3          0.12
+   ...
+For the sake of precise resolution of these time values, a timebase is used i.e. a unit of time which represents one tick of a clock, as it were. So, a timebase of 1/75 represents 1/75th of a second. The Presentation TimeStamps are then denominated in terms of this timebase. Timescale is simply the reciprocal of the timebase. FFmpeg shows the timescale as the tbn value in the readout of a stream.
+
+Timebase = 1/75; Timescale = 75
+ Frame        pts           pts_time
+   0          0          0 x 1/75 = 0.00
+   1          3          3 x 1/75 = 0.04 
+   2          6          6 x 1/75 = 0.08
+   3          9          9 x 1/75 = 0.12
+   ...
+This method of regulating time allows variable frame-rate video.
+
+Share
+Improve this answer
+Follow
+answered Apr 11 '17 at 5:12
+
+Gyan
+63.6k77 gold badges102102 silver badges142142 bronze badges
+2
+The timebase can be any number that at least respects the FPS i.e. for 25 fps, it should be at least 1/25. If it is 1/15, then depending on the muxer, ffmpeg will either drop frames or alter the output framerate to 15. Framerates can be fractional hence a rational number. Timebases are rational because they represent fractions of a second. – Gyan Nov 12 '17 at 5:23
+20
+The reason for the typical use of 90,000 as a common base of calculation is that it is a number which is divisible by 24, by 25, and by 30 (in each case the result is an integer - there is no remainder, decimal or fraction), thus the maths is equally suitable for handling 24 frames per second, 25 fps, and 30 fps. – Ed999 Dec 3 '17 at 3:43
+5
+@Ed999 is correct that 90000 is an integral multiple of 24, 25 and 30 but that is not the reason. 600 suffices for that purpose, and Quicktime writers typically use that value for timescale. – Gyan Jun 26 '19 at 14:13
+3
+"For notational convenience, equations in which PCR, PTS, or DTS appear, lead to values of time which are accurate to some integral multiple of (300 × 2^33/system_clock_frequency) seconds. This is due to the encoding of PCR timing information as 33 bits of 1/300 of the system clock frequency plus 9 bits for the remainder, and encoding as 33 bits of the system clock frequency divided by 300 for PTS and DTS." – Gyan Jun 26 '19 at 14:13
+3
+27 Mhz / 300 = 90000 Hz. – Gyan Jun 26 '19 at 14:13
+Show 7 more comments
