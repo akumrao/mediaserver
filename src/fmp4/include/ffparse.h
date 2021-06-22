@@ -117,7 +117,8 @@ typedef struct OutputStream {
    /// Audio End 
     
     long int startTime{0};
-    int               stream_index{0};
+    int stream_index{0};
+    void parseMuxContent();
        
  private:
      
@@ -127,7 +128,7 @@ typedef struct OutputStream {
     InfoFrameFilter info;
     
     
-    std::string fileName;
+    //std::string fileName;
     
  #if 0   
     /* Add an output stream. */

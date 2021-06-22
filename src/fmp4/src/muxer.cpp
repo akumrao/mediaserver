@@ -49,8 +49,8 @@ using namespace base;
 // #define MUXSTATE //enable if you need to check the state of the muxer
 
 MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
-FrameFilter(name, next), active(false), initialized(false), mstimestamp0(0), zerotimeset(false), ready(false), av_format_ctx(NULL), avio_ctx(NULL),
-avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"), has_extradata(false), extradata_count(0) {
+FrameFilter(name, next), active(false), initialized(false), mstimestamp0(0), zerotimeset(false), av_format_ctx(NULL), avio_ctx(NULL),
+avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"),  extradata_count(0) {
     // two substreams per stream
     this->codec_contexes.resize(2, NULL);
     this->streams.resize(2, NULL);
@@ -372,7 +372,8 @@ void MuxFrameFilter::closeMux() {
         av_free(avio_ctx);
     }
     initialized = false;
-    has_extradata = false;
+    has_extraVideodata = false;
+    has_extraAudiodata = false;
     extradata_count = 0;
     prevpts = 0;
     missing = 0;
@@ -431,33 +432,42 @@ void MuxFrameFilter::go(Frame* frame) {
         
         if (basicframe->codec_id == AV_CODEC_ID_AAC) {
             
-             
-            if (!initialized) { // can't init this file.. de-activate
-                
+            if (!has_extraAudiodata) 
+            {
+                 SInfo << "MuxFrameFilter : appending extraAudiodata";
                  extradata_audioframe.payload.insert(
                             extradata_audioframe.payload.end(),
                             basicframe->payload.begin(),
                             basicframe->payload.end()
                             );
-                 
-                initMux(); // modifies member initialized
+                 has_extraAudiodata = true;
             }
             else
             {
-                writeFrame(basicframe);
-               // write_audio_frame(av_format_context, &audio_st);
                 
+               if (!initialized) 
+               { // can't init this file.. de-activate
+                 
+                    initMux(); // modifies member initialized
+                }
+                else
+                {
+                    writeFrame(basicframe);
+                   // write_audio_frame(av_format_context, &audio_st);
+                }
                 
             }
+           
              
-            return;
-             
-        }
+            
+        }//end Audio read
         
-        else if (!has_extradata) {
+        else if (basicframe->codec_id == AV_CODEC_ID_H264 )
+        {
             // https://stackoverflow.com/questions/54119705/fragmented-mp4-problem-playing-in-browser
             // http://aviadr1.blogspot.com/2010/05/h264-extradata-partially-explained-for.html
-            if (basicframe->codec_id == AV_CODEC_ID_H264) {
+            if (!has_extraVideodata) 
+            {
                 // this kind of stuff should be in the frame class itself..
                 // should arrive in sps, pps order
                 if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
@@ -465,91 +475,67 @@ void MuxFrameFilter::go(Frame* frame) {
 #ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
 #endif
-                    SInfo << "MuxFrameFilter : appending extradata";
+                  
                     extradata_videoframe.payload.insert(
                             extradata_videoframe.payload.end(),
                             basicframe->payload.begin(),
                             basicframe->payload.end()
                             );
-                }
+               
 
-                if (basicframe->h264_pars.slice_type == H264SliceType::sps and
-                        extradata_count == 0) {
-                    extradata_count = 1;
-                }
+                    if (basicframe->h264_pars.slice_type == H264SliceType::sps and
+                            extradata_count == 0) {
+                        extradata_count = 1;
+                          SInfo << "MuxFrameFilter : appending extraVideodata SPS";
+                    }
 
-                if (basicframe->h264_pars.slice_type == H264SliceType::pps and
-                        extradata_count == 1) {
-                    extradata_count = 2;
-                }
+                    if (basicframe->h264_pars.slice_type == H264SliceType::pps and
+                            extradata_count == 1) {
+                        extradata_count = 2;
+                         SInfo << "MuxFrameFilter : appending extraVideodata PPS";
+                    }
 
-                if (extradata_count >= 2) {
-                    has_extradata = true;
-#ifdef MUXSTATE
-                    std::cout << "MuxFrameFilter: go: state: extradata ok" << std::endl;
-#endif
-                    extradata_videoframe.copyMetaFrom(basicframe); // timestamps etc.
-                }
-            }
-        }
-
-        if (!ready) {
-            if (((setupframes[0].stream_index > -1) or (setupframes[1].stream_index > -1)) and has_extradata) {
-                // TODO: should fix subsession index handling to something more sane
-                // Now the subsession index is forced to 0 in live.cpp
-                // we have got at least one setupframe and after that, payload
-#ifdef MUXSTATE
-                std::cout << "MuxFrameFilter: go: state: setting ready=true" << std::endl;
-#endif
-                ready = true;
-            }
-        }
-
-        if (ready and active and !initialized)
-        { // got setup frames, writing has been requested, but file has not been opened yet
-#ifdef MUXSTATE
-            std::cout << "MuxFrameFilter: go: state: calling initMux & setting initialized=true" << std::endl;
-#endif
-            initMux(); // modifies member initialized
-            if (!initialized) { // can't init this file.. de-activate
-                deActivate_();
-            } else {
-                // set zero time
-                // mstimestamp0 = extradata_videoframe.mstimestamp;
-                mstimestamp0 = basicframe->mstimestamp;
-                extradata_videoframe.mstimestamp = mstimestamp0;
-                extradata_videoframe.stream_index = 0;
-                // std::cout << "writing extradata" << std::endl;
-                writeFrame(&extradata_videoframe); // send sps & pps data to muxer only once
-                // std::cout << "wrote extradata" << std::endl;
-            }
-        }
-
-        if (initialized) { // everything's ok! just write..
-            ///*
-            if (basicframe->codec_id == AV_CODEC_ID_H264) {
-                // this kind of stuff should be in the frame class itself..
-                // should arrive in sps, pps order
-                if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
-                        (basicframe->h264_pars.slice_type == H264SliceType::pps)) {
-                    return; // don't feed with sps & pps again
-                } else if (!((basicframe->h264_pars.slice_type == H264SliceType::idr) or
-                        (basicframe->h264_pars.slice_type == H264SliceType::nonidr))) {
-                    // std::cout << ">>>" << int(basicframe->h264_pars.slice_type) << std::endl;
-                    return;
-                } else if (basicframe->h264_pars.slice_type == H264SliceType::idr) {
-                    /*
-                    extradata_frame.mstimestamp = basicframe->mstimestamp;
-                    std::cout << "refeeding sps + pps" << std::endl; // sps & pps have sequence information as well.. hmm.
-                    writeFrame(&extradata_frame);
-                     */
+                    if (extradata_count >= 2) {
+                        has_extraVideodata = true;
+    #ifdef MUXSTATE
+                        std::cout << "MuxFrameFilter: go: state: extradata ok" << std::endl;
+    #endif
+                        extradata_videoframe.copyMetaFrom(basicframe); // timestamps etc.
+                    }
                 }
             }
-            //*/
-            // any (extra) frames you feed to the muxer that produce "no frame!" in vlc/ffplay when playing the file
-            // won't be accepted by media source extensions
-            writeFrame(basicframe);
-        }
+            else //end header read
+            {
+                  
+                if (!initialized)
+                { // got setup frames, writing has been requested, but file has not been opened yet
+        #ifdef MUXSTATE
+                    std::cout << "MuxFrameFilter: go: state: calling initMux & setting initialized=true" << std::endl;
+        #endif
+                    initMux(); // modifies member initialized
+                    if (!initialized) { // can't init this file.. de-activate
+                        deActivate_();
+                    } else {
+                        // set zero time
+                        // mstimestamp0 = extradata_videoframe.mstimestamp;
+                        mstimestamp0 = basicframe->mstimestamp;
+                        extradata_videoframe.mstimestamp = mstimestamp0;
+                        extradata_videoframe.stream_index = 0;
+                        // std::cout << "writing extradata" << std::endl;
+                        writeFrame(&extradata_videoframe); // send sps & pps data to muxer only once
+                        // std::cout << "wrote extradata" << std::endl;
+                    }
+                }
+                else
+                {
+                     writeFrame(basicframe);
+                }
+                
+            }// end  content read
+        }// end h264
+
+    
+
 
     }// BASICFRAME
     else {

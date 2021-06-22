@@ -17,9 +17,10 @@ public:                                                              //
     
 protected:
     bool active;                       ///< Writing to muxer has been requested
-    bool has_extradata;                ///< Got "extradata" (sps & pps)
+    bool has_extraVideodata{false};                ///< Got "extradata" (sps & pps)
+    bool has_extraAudiodata{false};                ///< Got AAC audio config spec 
     int extradata_count;               ///< Check that we have the sps => pps sequence
-    bool ready;                        ///< Got enough setup frames & extradata
+    //bool ready;                        ///< Got enough setup frames & extradata
     /** After ready & active, initMux is called 
      * (set streams, codec ctx, etc. & initialized is set */
     bool initialized;                  

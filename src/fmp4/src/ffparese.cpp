@@ -125,16 +125,30 @@ namespace base {
         void FFParse::run() {
 
             stream_index = 0;
-            
-//              if( parseAACHeader())
-//               parseAACContent();
-      
-            
-              if(parseH264Header())
-              {
-                  ++stream_index;                
-                 parseH264Content();
-              }
+            //audio only
+//            if (parseAACHeader()) {
+//                 ++stream_index;
+//                parseAACContent();
+//            }
+//            return;
+
+            //video only
+//            if (parseH264Header()) {
+//                ++stream_index;
+//                parseH264Content();
+//            }
+//            return;
+
+//            //Vidoe and Audio mux
+            if (parseH264Header()) {
+                ++stream_index;
+                if (parseAACHeader()) {
+                    ++stream_index;
+                    parseMuxContent();
+                }
+               
+            }
+//            
            // startAudio();
             //parseAACHeader("/var/tmp/songs/hindi.pcm");
             
@@ -170,7 +184,7 @@ namespace base {
             SInfo << "fmp4 thread exit";
 
             // fileName = "/var/tmp/videos/test.mp4";
-            fileName = "/var/tmp/kunal720.mp4";
+         
             //fmp4(fileName.c_str(), "fragTmp.mp4");
             //fmp4(fileName.c_str());
         }
@@ -203,7 +217,7 @@ namespace base {
             AVCodecContext *c = nullptr ;
            
            
-            int ret;
+           // int ret =0;
           //  FILE *fout;
             uint16_t *samples;
     //float t, tincr;
@@ -243,13 +257,7 @@ namespace base {
             //if (oc->oformat->flags & AVFMT_GLOBALHEADER)
              c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             
-          //  ret = avcodec_parameters_from_context(st->codecpar, c);
-            if (ret < 0) {
-                fprintf(stderr, "Could not copy the stream parameters\n");
-               return false;
-            }
-            // av_dict_set(&opt, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof", 0);
-            
+               
     /* open it */
             if (avcodec_open2(c, codec, &opt) < 0) {
                 fprintf(stderr, "Could not open codec\n");
@@ -274,7 +282,7 @@ namespace base {
         void FFParse:: parseAACContent()
         {
             
-            AVPacket pkt;
+            AVPacket audiopkt;
              
             long framecount =0;
             
@@ -300,14 +308,14 @@ namespace base {
                return ;
             }
     
-            int size = av_samples_get_buffer_size(NULL, audioContext->channels,audioContext->frame_size,audioContext->sample_fmt, 1);
-            uint8_t* frame_buf = (uint8_t *)av_malloc(size);
+            int audiosize = av_samples_get_buffer_size(NULL, audioContext->channels,audioContext->frame_size,audioContext->sample_fmt, 1);
+            uint8_t* frame_audobuf = (uint8_t *)av_malloc(audiosize);
 
             
 
             while(1)
             {   
-               if (fread(frame_buf, 1, size, fileAudio) <= 0){
+               if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
                     break;
 
@@ -320,16 +328,16 @@ namespace base {
                     
                 }
 
-               av_init_packet(&pkt);
-                pkt.data = NULL; // packet data will be allocated by the encoder
-                pkt.size = 0;
+               av_init_packet(&audiopkt);
+                audiopkt.data = NULL; // packet data will be allocated by the encoder
+                audiopkt.size = 0;
 
 
                ret = av_frame_make_writable(frame);
                 if (ret < 0)
                     return ;
 
-               frame->data[0] = frame_buf;  //PCM Data
+               frame->data[0] = frame_audobuf;  //PCM Data
                 //pFrame->pts=i*100;
                // encode(encodeContext,pFrame,&pkt);
                 //i++;
@@ -338,7 +346,7 @@ namespace base {
 	       //c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 
-                ret = avcodec_encode_audio2(audioContext, &pkt, frame, &got_output);
+                ret = avcodec_encode_audio2(audioContext, &audiopkt, frame, &got_output);
                 if (ret < 0) {
                     fprintf(stderr, "Error encoding audio frame\n");
                     return ;
@@ -346,7 +354,7 @@ namespace base {
                 if (got_output) 
                 {
                   
-                    basicaudioframe.copyFromAVPacket(&pkt);
+                    basicaudioframe.copyFromAVPacket(&audiopkt);
                   
                     basicaudioframe.mstimestamp = startTime + 23 * framecount;
                    
@@ -360,7 +368,7 @@ namespace base {
 
                     basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
                                        
-                    av_packet_unref(&pkt);
+                    av_packet_unref(&audiopkt);
                     
                      std::this_thread::sleep_for(std::chrono::microseconds(21000));
                     
@@ -498,9 +506,13 @@ namespace base {
                       foundsps = true;
                 }
 
-                if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::pps) //AUD Delimiter
+                else if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::pps) //AUD Delimiter
                 {
-                      foundsps = true;
+                      foundpps = true;
+                }
+                else
+                {
+                    continue;
                 }
 
                 //info.run(&basicframe);
@@ -512,7 +524,7 @@ namespace base {
 
                 //std::this_thread::sleep_for(std::chrono::microseconds(10000));
 
-                if( foundsps && foundsps )
+                if( foundsps && foundpps )
                     break;
             }
 
@@ -522,15 +534,15 @@ namespace base {
             av_packet_free(&pkt);
  //           avcodec_close(cdc_ctx);
 //            avcodec_free_context(&cdc_ctx);
-            return foundsps & foundsps;
+            return foundsps & foundpps;
 
         }
         
         
         void FFParse::parseH264Content() {
-            AVPacket *pkt = NULL;
+            AVPacket *videopkt = NULL;
              int ret = 0;
-            if ((pkt = av_packet_alloc()) == NULL) {
+            if ((videopkt = av_packet_alloc()) == NULL) {
                 fprintf(stderr, "av_packet_alloc failed.\n");
                 //goto ret3;
                 return;
@@ -539,21 +551,21 @@ namespace base {
 
             if (fseek(fileVideo, 0, SEEK_END))
                 return;
-            ssize_t fileSize = (ssize_t) ftell(fileVideo);
-            if (fileSize < 0)
+            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            if (videofileSize < 0)
                 return;
             if (fseek(fileVideo, 0, SEEK_SET))
                 return;
 
-            SInfo << "H264 file Size " << fileSize;
+            SInfo << "H264 file Size " << videofileSize;
 
 
             // av_init_packet(pkt);
 
-            const int in_buffer_size = fileSize;
-            unsigned char *in_buffer = (unsigned char*) malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_ptr;
-            int cur_size;
+            const int in_videobuffer_size = videofileSize;
+            unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *cur_videoptr;
+            int cur_videosize;
 
             long framecount =0;
 
@@ -562,51 +574,38 @@ namespace base {
                 if (fseek(fileVideo, 0, SEEK_SET))
                     return;
 
-                cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
+                cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
 
 
-                SInfo << "Read H264 filee " << cur_size;
+                SInfo << "Read H264 filee " << cur_videosize;
 
-                if (cur_size == 0)
+                if (cur_videosize == 0)
                     break;
-                cur_ptr = in_buffer;
+                cur_videoptr = in_videobuffer;
 
-                while (cur_size > 0) {
-                    /*Only input video data*/
-                    //                    if ((ret = av_parser_parse2(parser, cdc_ctx, &pkt->data, &pkt->size,
-                    //                            cur_ptr, cur_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
-                    //                        fprintf(stderr, "av_parser_parse2 failed.\n");
-                    //                        //goto ret8;
-                    //                        return;
-                    //                    }
+                while (cur_videosize > 0) {
 
-                    ret = get_nal_size(cur_ptr, cur_size, &pkt->data, &pkt->size);
+                    ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
                     if (ret < 4) {
-                        cur_ptr += 1;
-                        cur_size -= 1;
+                        cur_videoptr += 1;
+                        cur_videosize -= 1;
                         continue;
                     }
 
 
                     // avcodec_decode_video2
 
-                    cur_ptr += ret;
-                    cur_size -= ret;
+                    cur_videoptr += ret;
+                    cur_videosize -= ret;
 
-                    if (pkt->size == 0)
+                    if (videopkt->size == 0)
                         continue;
 
                     //Some Info from AVCodecParserContext
 
                     //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                     // BasicFrame        basicframe;
-                    basicvideoframe.copyFromAVPacket(pkt);
-                    basicvideoframe.codec_id = AV_CODEC_ID_H264;
-
-
-                    // unsigned target_size=frameSize+numTruncatedBytes;
-                    // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
-                    // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
+                    basicvideoframe.copyFromAVPacket(videopkt);
                     basicvideoframe.mstimestamp = startTime + 10.4 * framecount;
                     basicvideoframe.fillPars();
 
@@ -616,19 +615,16 @@ namespace base {
                         resetParser = false;
                     }
                     
-                    if (!basicvideoframe.h264_pars.slice_type == H264SliceType::idr && basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr) //AUD Delimiter
+                    if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                     {
+                        continue;
+                    }
+                    else if (!((basicvideoframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr))) {
                         continue;
                     }
                     
 
                     framecount++;
-
-                    //                    if(framecount == 200 )
-                    //                        break;
-                    // std::cout << "afterGettingFrame: " << basicframe << std::endl;
-
-                    //  basicframe.payload.resize(pkt->size); // set correct frame size .. now information about the packet length goes into the filter chain
 
                     info.run(&basicvideoframe);
 
@@ -643,17 +639,213 @@ namespace base {
                 }
             }
 
-
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
+        void FFParse::parseMuxContent() 
+        {
+            AVPacket *videopkt = NULL;
+            int ret = 0;
+            if ((videopkt = av_packet_alloc()) == NULL) {
+                fprintf(stderr, "av_packet_alloc failed.\n");
+                //goto ret3;
+                return;
+            }
+
+
+            if (fseek(fileVideo, 0, SEEK_END))
+                return;
+            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            if (videofileSize < 0)
+                return;
+            if (fseek(fileVideo, 0, SEEK_SET))
+                return;
+
+            SInfo << "H264 file Size " << videofileSize;
+
+
+            // av_init_packet(pkt);
+
+            const int in_videobuffer_size = videofileSize;
+            unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *cur_videoptr;
+            int cur_videosize;
+
+            
+            
+            ////////////////////////////////////
+             AVPacket audiopkt;
+             
+     
+            
+            int got_output;
+             
+            AVFrame *frame;
+             
+                    /* frame containing input raw audio */
+            frame = av_frame_alloc();
+            if (!frame) {
+                fprintf(stderr, "Could not allocate audio frame\n");
+                return ;
+            }
+
+            frame->nb_samples     = audioContext->frame_size;
+            frame->format         = audioContext->sample_fmt;
+            frame->channel_layout = audioContext->channel_layout;
+
+            /* allocate the data buffers */
+            ret = av_frame_get_buffer(frame, 0);
+            if (ret < 0) {
+                fprintf(stderr, "Could not allocate audio data buffers\n");
+               return ;
+            }
+    
+            int audiosize = av_samples_get_buffer_size(NULL, audioContext->channels,audioContext->frame_size,audioContext->sample_fmt, 1);
+            uint8_t* frame_audobuf = (uint8_t *)av_malloc(audiosize);
+            ///////////////////////////////
+            
+            
+            long framecount =0;
+
+            while (1) {
+
+                if((framecount % 2) ==0 )
+                    
+                {
+                    if (cur_videosize > 0)
+                    {
+
+                        ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
+                        if (ret < 4) {
+                            cur_videoptr += 1;
+                            cur_videosize -= 1;
+                            continue;
+                        }
+
+
+                        // avcodec_decode_video2
+
+                        cur_videoptr += ret;
+                        cur_videosize -= ret;
+
+                        if (videopkt->size == 0)
+                            continue;
+
+                        //Some Info from AVCodecParserContext
+
+                        //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
+                        // BasicFrame        basicframe;
+                        basicvideoframe.copyFromAVPacket(videopkt);
+                        basicvideoframe.mstimestamp = startTime + 10.4 * framecount;
+                        basicvideoframe.fillPars();
+
+                        if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+                        {
+                            fragmp4_muxer.sendMeta();
+                            resetParser = false;
+                        }
+
+                        if (!basicvideoframe.h264_pars.slice_type == H264SliceType::idr && basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr) //AUD Delimiter
+                        {
+                            continue;
+                        }
+
+
+                        framecount++;
+
+                        info.run(&basicvideoframe);
+
+                        fragmp4_muxer.run(&basicvideoframe);
+
+
+                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+
+                        std::this_thread::sleep_for(std::chrono::microseconds(10000));
+                        //
+
+                    }
+                    else
+                    {
+
+                        if (fseek(fileVideo, 0, SEEK_SET))
+                        return;
+
+                        cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
+
+
+                        SInfo << "Read H264 filee " << cur_videosize;
+
+                        if (cur_videosize == 0)
+                            break;
+                        cur_videoptr = in_videobuffer;
+
+                    }
+                }
+                else //audio 
+                {
+                     if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
+                    printf("Failed to read raw data! \n");
+                    break;
+
+
+                    }else if(feof(fileAudio)){
+
+                         if (fseek(fileAudio, 0, SEEK_SET))
+                        return;
+                        continue;
+
+                    }
+
+                    av_init_packet(&audiopkt);
+                    audiopkt.data = NULL; // packet data will be allocated by the encoder
+                    audiopkt.size = 0;
+
+
+                    ret = av_frame_make_writable(frame);
+                     if (ret < 0)
+                         return ;
+
+                    frame->data[0] = frame_audobuf;  //PCM Data
+                     //pFrame->pts=i*100;
+                    // encode(encodeContext,pFrame,&pkt);
+                     //i++;
+
+                     //if (c->oformat->flags & AVFMT_GLOBALHEADER)
+                    //c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+
+                    ret = avcodec_encode_audio2(audioContext, &audiopkt, frame, &got_output);
+                    if (ret < 0) {
+                        fprintf(stderr, "Error encoding audio frame\n");
+                        return ;
+                    }
+                    if (got_output) 
+                    {
+
+                        basicaudioframe.copyFromAVPacket(&audiopkt);
+
+                        basicaudioframe.mstimestamp = startTime + 23 * framecount;
+
+                        if( resetParser ) 
+                        {
+                              fragmp4_muxer.sendMeta();
+                              resetParser =false;
+                        }
+                        framecount++;
+                        fragmp4_muxer.run(&basicaudioframe);
+
+                        basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+
+                        av_packet_unref(&audiopkt);
+
+                         std::this_thread::sleep_for(std::chrono::microseconds(21000));
+
+                    }
+                }//audio 
+            
+            
+            }
+
+        }
         
         
         
