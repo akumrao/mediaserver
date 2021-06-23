@@ -126,11 +126,11 @@ namespace base {
 
             stream_index = 0;
             //audio only
-            if (parseAACHeader()) {
-                 ++stream_index;
-                parseAACContent();
-            }
-            return;
+//            if (parseAACHeader()) {
+//                 ++stream_index;
+//                parseAACContent();
+//            }
+//            return;
 
             //video only
 //            if (parseH264Header()) {
@@ -312,7 +312,7 @@ namespace base {
             uint8_t* frame_audobuf = (uint8_t *)av_malloc(audiosize);
 
             
-             long framecount =1;
+            long framecount =0;
             while(1)
             {   
                if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
@@ -356,14 +356,14 @@ namespace base {
                   
                     basicaudioframe.copyFromAVPacket(&audiopkt);
                   
-                    basicaudioframe.mstimestamp = startTime + 23 * framecount;
+                    basicaudioframe.mstimestamp = startTime + framecount;
                    
                     if( resetParser ) 
                     {
                           fragmp4_muxer.sendMeta();
                           resetParser =false;
                     }
-                    framecount++;
+                    framecount = framecount + AUDIOSAMPLE ;
                     fragmp4_muxer.run(&basicaudioframe);
 
                     basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
@@ -424,8 +424,8 @@ namespace base {
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
           
 
-            basicvideoframe.media_type           =AVMEDIA_TYPE_VIDEO;
-            basicvideoframe.codec_id             =AV_CODEC_ID_H264;
+            basicvideoframe.media_type          =AVMEDIA_TYPE_VIDEO;
+            basicvideoframe.codec_id            =AV_CODEC_ID_H264;
             basicvideoframe.stream_index     =stream_index;
             // prepare setup frame
             setupframe.sub_type             =SetupFrameType::stream_init;
@@ -567,7 +567,7 @@ namespace base {
             unsigned char *cur_videoptr;
             int cur_videosize=0;
 
-            long framecount =1;
+            long framecount =0;
 
             while (1) {
 
@@ -594,7 +594,7 @@ namespace base {
                     //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                     // BasicFrame        basicframe;
                     basicvideoframe.copyFromAVPacket(videopkt);
-                    basicvideoframe.mstimestamp = startTime + 40 * framecount;
+                    basicvideoframe.mstimestamp = startTime +  framecount;
                     basicvideoframe.fillPars();
 
                     if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
@@ -706,11 +706,17 @@ namespace base {
             ///////////////////////////////
             
             
-            long videoframecount =1;
-            long audioframecount =1;
+            int64_t videoframecount=0;
+            int64_t audioframecount=0;
+            
+            AVRational  videotimebase= (AVRational){ 1,STREAM_FRAME_RATE };
+            AVRational  audiotimebase = (AVRational){ 1,SAMPLINGRATE };
+            
+                             
+                    
             while (1) {
 
-                if(videoframecount > 0 )
+                if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
                 {
                     if (cur_videosize > 0)
                     {
@@ -736,7 +742,7 @@ namespace base {
                         //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                         // BasicFrame        basicframe;
                         basicvideoframe.copyFromAVPacket(videopkt);
-                        basicvideoframe.mstimestamp = startTime + 40 * videoframecount;
+                        basicvideoframe.mstimestamp = startTime +  videoframecount;
                         basicvideoframe.fillPars();
 
                         if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
@@ -783,7 +789,7 @@ namespace base {
                         continue;
                     }
                 }
-                if( (videoframecount  % 2) == 0 ) //audio 
+                else //audio 
                 {
                      if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
@@ -826,14 +832,14 @@ namespace base {
 
                         basicaudioframe.copyFromAVPacket(&audiopkt);
 
-                        basicaudioframe.mstimestamp = startTime + 23 * audioframecount;
+                        basicaudioframe.mstimestamp = startTime + audioframecount;
 
 //                        if( resetParser ) 
 //                        {
 //                              fragmp4_muxer.sendMeta();
 //                              resetParser =false;
 //                        }
-                        audioframecount++;
+                        audioframecount = audioframecount + AUDIOSAMPLE;
                         fragmp4_muxer.run(&basicaudioframe);
 
                         basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
@@ -845,7 +851,7 @@ namespace base {
                     }
                 }//audio 
             
-                   std::this_thread::sleep_for(std::chrono::microseconds(10000));
+                   std::this_thread::sleep_for(std::chrono::microseconds(13500));
             }
 
         }

@@ -9,6 +9,10 @@
 #include <chrono>
  
 
+#define STREAM_FRAME_RATE 25 
+#define SAMPLINGRATE 44100
+#define AUDIOSAMPLE 1024
+
 class MuxFrameFilter:  public FrameFilter {      
     
 public:                                                              //
@@ -26,7 +30,7 @@ protected:
     bool initialized;                  
     long int mstimestamp0;             ///< Time of activation (i.e. when the recording started)
     long int zerotime;                 ///< Start time set explicitly by the user
-    long int prevpts;
+   
     bool zerotimeset;
     bool testflag;
     // bool sps_ok, pps_ok;
@@ -40,8 +44,10 @@ protected: //libav stuff
     AVFormatContext               *av_format_ctx;
     AVIOContext                   *avio_ctx;
     uint8_t                       *avio_ctx_buffer;
-    AVRational                    timebase;
+//    AVRational                    timebase;
     std::vector<AVCodecContext*>  codec_contexes;
+    std::vector<int64_t>  prevpts;
+    
     std::vector<AVStream*>        streams;
     AVFormatContext               *av_format_context;
     AVPacket                      *avpkt;
@@ -76,6 +82,7 @@ public: // API calls
     // setFileName(const char* fname); ///< Sets the output filename                           
     void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
     void deActivate();                                           ///< Stop streaming           
+    
     
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size); // define separately in child classes

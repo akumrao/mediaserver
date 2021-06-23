@@ -19,7 +19,7 @@ using namespace base;
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Info));
     //test::init();
     
    Application app;

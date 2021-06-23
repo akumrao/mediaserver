@@ -31,7 +31,7 @@
 
 
 #define SERVER_HOST  "127.0.0.1"               
-#define SERVER_PORT 8443 //443
+#define SERVER_PORT 1111 //443
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
 #define VIDEOFILE  "/experiment/live/testProgs/test.264"

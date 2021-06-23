@@ -41,6 +41,8 @@ An IDR frame( Kye frame having sps and pps) is a special type of I-frame in H.26
 The IDR frames are introduced to avoid any distortions in the video when you want to skip/forward to some place in the video or start watching in the middle of the video.
   */ 
 
+
+
 using namespace base;
 
 //#define logger filterlogger //TODO: create a new logger for muxers
@@ -54,6 +56,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
     // two substreams per stream
     this->codec_contexes.resize(2, NULL);
     this->streams.resize(2, NULL);
+    this->prevpts.resize(2, 0);
 
     /* some sekoilu..
     this->internal_basicframe2.payload.reserve(1024*500);
@@ -65,12 +68,11 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
      */
 
     this->setupframes.resize(2);
-    this->timebase = av_make_q(1, 1000); // we're using milliseconds
+    //this->timebase = av_make_q(1, 1000); // we're using milliseconds
     // this->timebase = av_make_q(1,20); // we're using milliseconds
     this->avpkt = new AVPacket();
     av_init_packet(this->avpkt);
 
-    this->prevpts = 0;
 
     this->avio_ctx_buffer = (uint8_t*) av_malloc(this->avio_ctx_buffer_size);
     this->avio_ctx = NULL;
@@ -154,7 +156,7 @@ void MuxFrameFilter::initMux() {
                 av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
                 av_codec_context->height = 576;
                 av_codec_context->bit_rate = 1024 * 1024;
-                av_codec_context->time_base = timebase; // 1/1000
+                av_codec_context->time_base =  (AVRational){ 1, STREAM_FRAME_RATE };
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
                 ///*
                 av_codec_context->extradata = extradata_videoframe.payload.data();
@@ -171,7 +173,7 @@ void MuxFrameFilter::initMux() {
 
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
-                av_stream->time_base = timebase; // 1/1000
+                av_stream->time_base = (AVRational){ 1, STREAM_FRAME_RATE };
                 av_stream->id = setupframe.stream_index;
                 /*
                 // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
@@ -204,6 +206,7 @@ void MuxFrameFilter::initMux() {
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
                 codec_contexes[setupframe.stream_index] = av_codec_context;
                 streams[setupframe.stream_index] = av_stream;
+                prevpts[setupframe.stream_index]=0;
                 
                 // std::cout << "initMux: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
                 // std::cout << "initMux: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
@@ -219,10 +222,11 @@ void MuxFrameFilter::initMux() {
                // av_codec_context->sample_fmt  = codec->sample_fmts ?  codec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
                 
                 av_codec_context->bit_rate = 64000;
-                av_codec_context->time_base = timebase; // 1/1000
+                
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
-                av_codec_context->sample_rate = 44100;
+                av_codec_context->sample_rate = SAMPLINGRATE;
                 av_codec_context->profile = FF_PROFILE_AAC_LOW;
+                av_codec_context->time_base = (AVRational){ 1, av_codec_context->sample_rate };//timebase; // 1/1000
               
                 av_codec_context->extradata = extradata_audioframe.payload.data();
                 av_codec_context->extradata_size = extradata_audioframe.payload.size();
@@ -241,7 +245,7 @@ void MuxFrameFilter::initMux() {
 
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
-                av_stream->time_base = timebase; // 1/1000
+                av_stream->time_base = (AVRational){ 1, av_codec_context->sample_rate };//timebase; // 1/1000
                 av_stream->id = setupframe.stream_index;
                 /*
                 // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
@@ -265,7 +269,7 @@ void MuxFrameFilter::initMux() {
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
                 codec_contexes[setupframe.stream_index] = av_codec_context;
                 streams[setupframe.stream_index] = av_stream;
-                
+                prevpts[setupframe.stream_index]=0;
  
             }
             
@@ -355,7 +359,7 @@ void MuxFrameFilter::closeMux() {
     has_extraVideodata = false;
     has_extraAudiodata = false;
     extradata_count = 0;
-    prevpts = 0;
+  
     missing = 0;
     ccf = 0;
 }
@@ -548,10 +552,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
         return;
     }
 
-    long int dt = (basicframe->mstimestamp - mstimestamp0);
-    if (dt < 0) {
-        dt = 0;
-    }
+
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
     //SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
     SInfo << "MuxFrameFilter : writing frame " << *basicframe;
@@ -567,39 +568,28 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     AVStream *av_stream = streams[basicframe->stream_index];
     AVCodecContext *av_codec_context = codec_contexes[basicframe->stream_index];
 
-    // std::cout << "writeFrame: codec_ctx timebase: " << av_codec_context->time_base.num << "/" << av_codec_context->time_base.den << std::endl;
-    // std::cout << "writeFrame: stream timebase   : " << av_stream->time_base.num << "/" << av_stream->time_base.den << std::endl;
-    // stream timebase goes automagically to value 1/16000
-    // std::cout << "writeFrame: stream->codecpar timebase   : " << av_stream->codecpar->time_base.num << "/" << av_stream->codecpar->time_base.den << std::endl;
-
-    // avpkt->buf = NULL;
-    if (dt >= 0) {
-        avpkt->pts = (int64_t) (dt);
-        /*
-        avpkt->pts = 
-            (streams[basicframe->stream_index]->time_base.den * dt)/
-            (streams[basicframe->stream_index]->time_base.num * 1000);
-            // complicated & stupid
-         */
-        
-        // NOTICE: this is critical.  the mp4 muxer goes sour if you dont feed
-        // it increasing timestamps.  went almost nuts for this.
-        if (avpkt->pts <= prevpts) {
-            avpkt->pts = prevpts + 1;
-        }
-        prevpts = avpkt->pts;
-        // std::cout << "avpkt->pts: " << avpkt->pts << std::endl;
-    } else {
-        std::cout << "fragmp4mux: NEGATIVE TIMESTAMP" << std::endl;
-        avpkt->pts = AV_NOPTS_VALUE;
-    }
+  
+    avpkt->pts = prevpts[basicframe->stream_index] + 1;
+    prevpts[basicframe->stream_index] = avpkt->pts;
+       
+   
+   SInfo << "StreamA " << basicframe->stream_index  << " PTS "  <<  avpkt->pts  << " size " << avpkt->size << " stream_timesbase "  << av_stream->time_base.den << " context_timesbase "  << av_codec_context->time_base.den;
+   
+   
+   if(av_codec_context->time_base.den == SAMPLINGRATE)
+   {
+      avpkt->pts =avpkt->pts*AUDIOSAMPLE;
+   }
 
     if (basicframe->h264_pars.slice_type == H264SliceType::idr) {  //arvind
         avpkt->flags = AV_PKT_FLAG_KEY;
     }
 
+         
     av_packet_rescale_ts(avpkt, av_codec_context->time_base, av_stream->time_base);
 
+    
+     
     /*
     if (basicframe->h264_pars.slice_type == H264SliceType::sps) {
         avpkt->flags = AV_PKT_FLAG_KEY;
@@ -614,7 +604,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     // std::cout << "avpkt->pts: " << avpkt->pts << std::endl;
     // std::cout << "MuxFrameFilter : avpkt size " << avpkt->size << std::endl;
     
-    SInfo << "Stream " << basicframe->stream_index << " DTS " << dt << " PTS "  <<  avpkt->pts  << " size " << avpkt->size << " timesbae "  << av_stream->time_base.den;
+
     
     int res = av_interleaved_write_frame(av_format_context, avpkt); // => this calls write_packet
     // std::cout << "MuxFrameFilter : av_write_frame returned " << res << std::endl;
