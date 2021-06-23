@@ -34,8 +34,8 @@
 #define SERVER_PORT 1111 //443
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
-#define VIDEOFILE  "/experiment/live/testProgs/test.264"
-
+//#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
 
 using namespace base::net;
 

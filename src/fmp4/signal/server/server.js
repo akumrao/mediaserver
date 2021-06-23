@@ -141,53 +141,18 @@ wss.on('connection', function connection(ws) {
       }
     });
 
-    // console.log(message.data);
-    // console.log(message.type);
-
-
-    //  if (message.type === 'binary') {
-    //   // バイナリデータを受信した場合
-    //   console.log("Received Binary Message of " + message.binaryData.length + " bytes");
-    //   console.log(message.binaryData);
-
-    //   var data = message.binaryData;
-    //   var len = data.length;
-
-    //   // 受信したRAW画像をグレースケールにする
-    //   var buf = new Buffer(len);
-    //   var arr = new Uint32Array(buf);
-    //   for (var i = 0; i < len; i+=4 ) {
-    //     var r = data.readUInt8(i);
-    //     var g = data.readUInt8(i+1);
-    //     var b = data.readUInt8(i+2);
-    //     var y = Math.floor((77*r + 28*g + 151*b)/255);
-
-    //     // Canvasにそのまま投入するために
-    //     // 4チャンネル8ビットのRGBAにする
-    //     var v = y + (y << 8) + (y << 16) + (0xFF << 24);
-    //     buf.writeInt32LE(v, i);
-    //   }
-    //   // グレースケールにした物をクライアントに送信する
-    //   connection.sendBytes(buf);
-    // }
-    // else if (typeof message == 'string') {
-    // // `message` is either a `Buffer` or an `ArrayBuffer`.
-
-    //    console.log('test message: %s', message);
-
-    //        wss.clients.forEach(function each(client) {
-    //       if ( client.readyState === WebSocket.OPEN) {
-    //         client.send(message);
-    //       }
-    //     });
-
-
-       
-    //  }
-
-
+  
 
   });
+
+
+ws.on('error', function incoming(err) {
+       console.log('error: %s', err );
+
+  });
+
+
+
 });
 
 
