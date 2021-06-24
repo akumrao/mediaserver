@@ -2,7 +2,10 @@
 #include "framefilter.h"
 #include "tools.h"
 
-using namespace base;
+
+namespace base {
+namespace fmp4 {
+
 
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
@@ -21,7 +24,7 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name,  base::net::ClientConnecton *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
 {
     // std::cout << ">>>>>>" << verbose << std::endl;
     const char *input_file = "/tmp/test.mp4"; 
@@ -63,7 +66,7 @@ void DummyFrameFilter::go(Frame *frame) {
         tolalMp4Size +=ret;
         
         if(conn)
-        conn->send((const char*)muxframe->payload.data(), meta->size, true );
+         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true );
         
         STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
@@ -85,4 +88,8 @@ void InfoFrameFilter::go(Frame *frame)
     // std::cout << "InfoFrameFilter:<" << frame->dumpAVFrame() << ">" << std::endl;
     std::cout << "InfoFrameFilter: timediff: " << frame->mstimestamp - getCurrentMsTimestamp() << std::endl;
     std::cout << "InfoFrameFilter: " << name << " <<end dump   " << std::endl;
+}
+
+
+    }
 }

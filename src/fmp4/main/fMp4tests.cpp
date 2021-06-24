@@ -12,7 +12,11 @@
 #include "base/logger.h"
 #include "base/application.h"
 #include "fmp4.h"
+#include "ff/ff.h"
+#include "ff/mediacapture.h"
 
+#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
 
 using namespace base;
 

@@ -14,7 +14,7 @@
 #ifndef FMP4_H
 #define FMP4_H
 
-#include "ffparse.h"
+
 
 #include "base/thread.h"
 #include <string>
@@ -24,11 +24,16 @@
 #include "net/netInterface.h"
 #include "http/HttpsClient.h"
 
+#include "WebSocketServer.h"
+
+
+ 
+
 namespace base {
 namespace fmp4 {
     
-
- class ReadMp4: public Thread
+class FFParse;
+ class ReadMp4: public Thread, public WebSocketServer
  {
      
      
@@ -38,6 +43,8 @@ namespace fmp4 {
      ~ReadMp4( );
      
      void websocketConnect();
+     
+      //void send(const char * data, int size, bool binary);
      
      int fmp4( const char *in_filename, const char *out_filename =nullptr, bool fragmented_mp4_options=true);
           
@@ -52,9 +59,20 @@ namespace fmp4 {
      FFParse  *ffparser;
  private:
      
-    net::ClientConnecton *conn{nullptr};
+    //net::ClientConnecton *conn{nullptr};
      
      std::string fileName;
+     
+ public:
+     
+     //ChatServer( int port );
+  //  ~ChatServer( );
+    virtual void onConnect(    int socketID                        );
+    virtual void onMessage(    int socketID, const string& data    );
+    virtual void onDisconnect( int socketID                        );
+    virtual void   onError(    int socketID, const string& message );
+     
+     
 
  };
  

@@ -68,6 +68,8 @@ typedef struct OutputStream {
 } OutputStream;
 #endif
 
+
+
  class FFParse: public Thread
  {
      
@@ -75,7 +77,7 @@ typedef struct OutputStream {
  public:
   
     
-     FFParse( base::net::ClientConnecton *conn, const char* audioFile, const char*  videofile );
+     FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char*  videofile );
      
      ~FFParse( );
      

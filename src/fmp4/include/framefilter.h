@@ -1,12 +1,12 @@
 #ifndef framefilter_HEADER_GUARD
 #define framefilter_HEADER_GUARD
-
+#include "fmp4.h"
 
 #include "frame.h"
 
 #include "net/netInterface.h"
 #include "http/HttpsClient.h"
-//#include "framefifo.h"
+
 
 /** The mother class of all frame filters!  
  * FrameFilters are used to create "filter chains".  These chains can be used to manipulate the frames, feed them to fifo's, copy them, etc.
@@ -15,7 +15,8 @@
  */
 
                                                 
-
+namespace base {
+namespace fmp4 {
 
 class FrameFilter { 
 
@@ -48,13 +49,21 @@ public: // API
 /** A "hello world" demo class: prints its own name if verbose is set to true.
  * @ingroup filters_tag
  */
+//namespace base {
+//namespace fmp4 {
+//    class ReadMp4;
+//    
+//}
+//}
+
+
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name,  base::net::ClientConnecton *conn, bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn , bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
 
-     base::net::ClientConnecton *conn; 
+     base::fmp4::ReadMp4 *conn; 
 protected:
     bool verbose;
    
@@ -437,5 +446,9 @@ public:
  * @ingroup filters_tag
  * @ingroup queues_tag
  */
+
+
+    }
+}
 
 #endif

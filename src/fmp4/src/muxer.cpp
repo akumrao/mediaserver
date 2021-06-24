@@ -43,7 +43,8 @@ The IDR frames are introduced to avoid any distortions in the video when you wan
 
 
 
-using namespace base;
+namespace base {
+namespace fmp4 {
 
 //#define logger filterlogger //TODO: create a new logger for muxers
 
@@ -912,91 +913,9 @@ bool moofHasFirstSampleFlag(uint8_t* data) {
 }
 
 
-/* correct:
-<Box: ftyp of 36 bytes> False
-<Box: moov of 773 bytes> False
-<Box: moof of 104 bytes> True
-<Box: mdat of 110622 bytes> False
-<Box: moof of 108 bytes> False
-<Box: mdat of 4788 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 6681 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 11342 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 10721 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 17788 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 14732 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 13937 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 28250 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 10608 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 12796 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 27097 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 5577 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 13950 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 39919 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 8324 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 11605 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 26379 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 5257 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 27924 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 5349 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 28010 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 10311 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 13025 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 28500 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 51782 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 14090 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 18932 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 20703 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 21285 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 9702 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 38228 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 4038 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 13065 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 27714 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 5358 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 14695 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 29267 bytes> False
-<Box: moof of 100 bytes> False
-<Box: mdat of 10533 bytes> False
- */
 
 
-
-
+}
+}
 
 

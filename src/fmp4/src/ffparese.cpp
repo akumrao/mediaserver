@@ -15,6 +15,7 @@
 #include "base/define.h"
 #include "base/test.h"
 #include "tools.h"
+#include "fmp4.h"
 
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
@@ -39,7 +40,7 @@ namespace base {
         // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
 
-        FFParse::FFParse( base::net::ClientConnecton *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
+        FFParse::FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
 
             fragmp4_muxer.activate();
             

@@ -13,6 +13,11 @@
 #define SAMPLINGRATE 44100
 #define AUDIOSAMPLE 1024
 
+
+namespace base {
+namespace fmp4 {
+    
+
 class MuxFrameFilter:  public FrameFilter {      
     
 public:                                                              //
@@ -144,5 +149,6 @@ if strcmp(name, "moof") == 0 {
 */
 
 bool moofHasFirstSampleFlag(uint8_t* data);
-
+    }
+}
 #endif
