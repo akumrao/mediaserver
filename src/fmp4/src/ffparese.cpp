@@ -42,7 +42,7 @@ namespace base {
 
         FFParse::FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
 
-            fragmp4_muxer.activate();
+          //  fragmp4_muxer.activate();
             
             
             
@@ -615,7 +615,7 @@ namespace base {
 
                     framecount++;
 
-                    info.run(&basicvideoframe);
+                   // info.run(&basicvideoframe);
 
                     fragmp4_muxer.run(&basicvideoframe);
 
@@ -715,7 +715,11 @@ namespace base {
             
                              
                     
-            while (1) {
+            while (1)
+            {
+                
+                 long int currentTime =  getCurrentMsTimestamp();
+
 
                 if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
                 {
@@ -763,7 +767,7 @@ namespace base {
 
                         videoframecount++;
 
-                        info.run(&basicvideoframe);
+                       // info.run(&basicvideoframe);
 
                         fragmp4_muxer.run(&basicvideoframe);
 
@@ -852,7 +856,8 @@ namespace base {
                     }
                 }//audio 
             
-                   std::this_thread::sleep_for(std::chrono::microseconds(13500));
+                long int deltaTimeMillis =getCurrentMsTimestamp() - currentTime;
+                std::this_thread::sleep_for(std::chrono::microseconds(14500 - (deltaTimeMillis*1000)));
             }
 
         }

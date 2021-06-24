@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-#include <thread>
+
 #include "webrtc/fmp4.h"
 #include "webrtc/peer.h"
 
@@ -11,10 +11,16 @@
 #include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
-
+#include <thread>
 
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+
+
+#define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
+//#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
+#include "webrtc/ffparse.h"
 
 #define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256
@@ -29,10 +35,55 @@
 //40960*6
 
 namespace base {
+    
+
+     
+
+    namespace fmp4 {
+
+        ReadMp4::ReadMp4() {
+            
+            
+         ffparser = new FFParse(this,AUDIOFILE, VIDEOFILE);
+         ffparser->start(); 
+            
+
+        }
+
+        ReadMp4::~ReadMp4() {
+            SInfo << "~ReadMp4( )";
+            ffparser->stop();
+            ffparser->join();
+            delete ffparser;
+        }
+        
+        void ReadMp4::run()
+        {
+            
+        }
+    }
+    
+    
+    
     namespace wrtc {
 
+        ReadMp4::ReadMp4(Peer *pc) : pc(pc) {
 
-        // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
+        }
+
+        ReadMp4::~ReadMp4() {
+            SInfo << "~ReadMp4( )";
+        }
+
+        
+        void ReadMp4::run()
+        {
+            
+        }
+        
+#if 0
+        
+            // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
         static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag) {
             AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
@@ -49,7 +100,7 @@ namespace base {
             //outputData.insert(outputData.end(), buf, buf + bufSize);
             ReadMp4 *obj = (ReadMp4 *) opaque;
 
-            obj->pc->sendDataBinary((const uint8_t *) buf, bufSize);
+           // obj->pc->sendDataBinary((const uint8_t *) buf, bufSize);
             std::this_thread::sleep_for(std::chrono::milliseconds(15));
 
             //  obj->outputData.insert(obj->outputData.end(), buf, buf + bufSize);
@@ -64,16 +115,6 @@ namespace base {
             return bufSize;
         }
 
-        ReadMp4::ReadMp4(Peer *pc) : pc(pc) {
-
-        }
-
-        ReadMp4::~ReadMp4() {
-            SInfo << "~ReadMp4( )";
-        }
-
-        
-        /*
         void ReadMp4::run() {
 
             int64_t startTime = time::hrtime();
@@ -120,7 +161,6 @@ namespace base {
             //fmp4(fileName.c_str(), "fragTmp.mp4");
             //fmp4(fileName.c_str());
         }
-*/
        
         void ReadMp4::run() 
         {
@@ -405,7 +445,7 @@ namespace base {
 
 
 
-
+#endif
 
 
 

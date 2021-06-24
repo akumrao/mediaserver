@@ -25,7 +25,7 @@ public:                                                              //
     virtual ~MuxFrameFilter();                                       //
     
 protected:
-    bool active;                       ///< Writing to muxer has been requested
+   // bool active {false};                       ///< Writing to muxer has been requested
     bool has_extraVideodata{false};                ///< Got "extradata" (sps & pps)
     bool has_extraAudiodata{false};                ///< Got AAC audio config spec 
     int extradata_count;               ///< Check that we have the sps => pps sequence
@@ -33,8 +33,8 @@ protected:
     /** After ready & active, initMux is called 
      * (set streams, codec ctx, etc. & initialized is set */
     bool initialized;                  
-    long int mstimestamp0;             ///< Time of activation (i.e. when the recording started)
-    long int zerotime;                 ///< Start time set explicitly by the user
+   // long int mstimestamp0{0};             ///< Time of activation (i.e. when the recording started)
+   // long int zerotime{false};                 ///< Start time set explicitly by the user
    
     bool zerotimeset;
     bool testflag;
@@ -85,10 +85,10 @@ protected:
   
 public: // API calls                                                                           
     // setFileName(const char* fname); ///< Sets the output filename                           
-    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
-    void deActivate();                                           ///< Stop streaming           
-    
-    
+//    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
+//    void deActivate();                                           ///< Stop streaming           
+//    
+//    
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size); // define separately in child classes
     static int read_packet(void *opaque, uint8_t *buf, int buf_size) {return 0;} // dummy function

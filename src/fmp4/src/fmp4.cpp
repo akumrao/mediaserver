@@ -19,9 +19,6 @@
 
 #include <thread>
 
-//#include "net/netInterface.h"
-//#include "http/websocket.h"
-//#include "http/HttpsClient.h"
 
 
 #define MAX_CHUNK_SIZE 2048
@@ -38,21 +35,27 @@
 #define SERVER_PORT 1111 //443
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
-//#define VIDEOFILE  "/experiment/live/testProgs/test.264"
-#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
-#include "framefilter.h"
+#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+//#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
+#include "ffparse.h"
 
 using namespace base::net;
 
 namespace base {
     namespace fmp4 {
 
-        ReadMp4::ReadMp4():WebSocketServer(1111) {
-            
-            
-         ffparser = new FFParse(this,AUDIOFILE, VIDEOFILE);
-         ffparser->start(); 
-            
+//        ReadMp4::ReadMp4():WebSocketServer(1111) {
+//            
+//            
+//         ffparser = new FFParse(this,AUDIOFILE, VIDEOFILE);
+//         ffparser->start(); 
+//            
+//
+//        }
+//        
+        
+        ReadMp4::ReadMp4() {
+       
 
         }
 
@@ -63,68 +66,79 @@ namespace base {
             delete ffparser;
         }
 
-//        void ReadMp4::websocketConnect() {
-//
-//
-//            conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/");
-//
-//
-//            //            {
-//            //                m_client = new HttpClient("ws", _host, _port, url.str());
-//            //            }
-//            //            else
-//            //            {
-//            //                 m_client = new HttpsClient("wss", _host, _port, url.str());
-//            //            }
-//
-//            // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
-//            conn->fnComplete = [&](const Response & response) {
-//                std::string reason = response.getReason();
-//                StatusCode statuscode = response.getStatus();
-//                std::string body = conn->readStream() ? conn->readStream()->str() : "";
-//                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
-//            };
-//
-//            conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-//                std::string got = std::string(data, sz);
-//                STrace << "client->fnPayload " << got;
-//                
-//                //  m_ping_timeout_timer.Reset();
-//                //  m_packet_mgr.put_payload(std::string(data,sz));
-//                if( got == "reset")
-//                    ffparser->reset();    
-//            };
-//
-//
-//            conn->fnConnect = [&](HttpBase * con) {
-//                STrace << "onconnect ";
-//                
-//                //this->start();
-//                ffparser = new FFParse(conn, AUDIOFILE, VIDEOFILE);
-//                ffparser->start();    
-//                // conn->send(x, 2, true);
-//            };
-//
-//
-//            conn->fnClose = [&](HttpBase * con, std::string str) {
-//                STrace << "client->fnClose " << str;
-//
-//                //on_close();
-//            };
-//
-//            //  conn->_request.setKeepAlive(false);
-//            conn->setReadStream(new std::stringstream);
-//            conn->send();
-//            LTrace("sendHandshakeRequest over")
-//            
-//
-//        }
+        void ReadMp4::websocketConnect() {
+
+
+            conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/");
+
+
+            //            {
+            //                m_client = new HttpClient("ws", _host, _port, url.str());
+            //            }
+            //            else
+            //            {
+            //                 m_client = new HttpsClient("wss", _host, _port, url.str());
+            //            }
+
+            // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
+            conn->fnComplete = [&](const Response & response) {
+                std::string reason = response.getReason();
+                StatusCode statuscode = response.getStatus();
+                std::string body = conn->readStream() ? conn->readStream()->str() : "";
+                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
+            };
+
+            conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
+                std::string got = std::string(data, sz);
+                STrace << "client->fnPayload " << got;
+                
+                //  m_ping_timeout_timer.Reset();
+                //  m_packet_mgr.put_payload(std::string(data,sz));
+                if( got == "reset")
+                    ffparser->reset();    
+            };
+
+
+            conn->fnConnect = [&](HttpBase * con) {
+                STrace << "onconnect ";
+                
+                //this->start();
+                ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
+                ffparser->start();    
+                // conn->send(x, 2, true);
+            };
+
+
+            conn->fnClose = [&](HttpBase * con, std::string str) {
+                STrace << "client->fnClose " << str;
+
+                //on_close();
+            };
+
+            //  conn->_request.setKeepAlive(false);
+            conn->setReadStream(new std::stringstream);
+            conn->send();
+            LTrace("sendHandshakeRequest over")
+            
+
+        }
         
+        void ReadMp4::broadcast(const char * data, int size, bool binary   )
+        {
+            conn->send( data, size, binary    );
+
+        }
+        
+         void ReadMp4::run() {
+             
+         }
+#if 0 
          void ReadMp4::websocketConnect() {
              
              runwebsocket( 1000000 ); // millisecond
              
          }
+
 
         void ReadMp4::run() {
 
@@ -226,7 +240,7 @@ namespace base {
 //        
         
       
-        
+#endif  
         
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

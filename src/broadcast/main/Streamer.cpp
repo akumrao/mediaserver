@@ -26,6 +26,7 @@ CMemLeakDetect memLeakDetect;
 #define JOIN_ROOM  "foo"        
 
 #include "webrtc/signaler.h"
+#include "webrtc/fmp4.h"
 
 //std::string sampleDataDir(const std::string& file) {
 //    std::string dir;
@@ -63,14 +64,17 @@ int main(int argc, char** argv) {
     //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
     
 
-    sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
+     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
     
       av_register_all();
     // init network
       avformat_network_init();
 
       avcodec_register_all();
-
+      
+      base::fmp4::ReadMp4 readMp4;
+      
+    
     // test._capturer.start();
 
 //    auto rtcthread = rtc::Thread::Current();

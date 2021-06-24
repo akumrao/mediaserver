@@ -24,7 +24,7 @@
 #include "net/netInterface.h"
 #include "http/HttpsClient.h"
 
-#include "WebSocketServer.h"
+//#include "WebSocketServer.h"
 
 
  
@@ -33,7 +33,7 @@ namespace base {
 namespace fmp4 {
     
 class FFParse;
- class ReadMp4: public Thread, public WebSocketServer
+ class ReadMp4: public Thread//, public WebSocketServer
  {
      
      
@@ -59,19 +59,20 @@ class FFParse;
      FFParse  *ffparser;
  private:
      
-    //net::ClientConnecton *conn{nullptr};
+     net::ClientConnecton *conn{nullptr};
      
      std::string fileName;
      
  public:
      
-     //ChatServer( int port );
-  //  ~ChatServer( );
-    virtual void onConnect(    int socketID                        );
-    virtual void onMessage(    int socketID, const string& data    );
-    virtual void onDisconnect( int socketID                        );
-    virtual void   onError(    int socketID, const string& message );
+     void broadcast(const char * data, int size, bool binary  );
      
+
+//    virtual void onConnect(    int socketID                        );
+//    virtual void onMessage(    int socketID, const string& data    );
+//    virtual void onDisconnect( int socketID                        );
+//    virtual void   onError(    int socketID, const string& message );
+//     
      
 
  };

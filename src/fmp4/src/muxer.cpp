@@ -52,7 +52,7 @@ namespace fmp4 {
 // #define MUXSTATE //enable if you need to check the state of the muxer
 
 MuxFrameFilter::MuxFrameFilter(const char* name, FrameFilter *next) :
-FrameFilter(name, next), active(false), initialized(false), mstimestamp0(0), zerotimeset(false), av_format_ctx(NULL), avio_ctx(NULL),
+FrameFilter(name, next),  initialized(false),  av_format_ctx(NULL), avio_ctx(NULL),
 avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"),  extradata_count(0) {
     // two substreams per stream
     this->codec_contexes.resize(2, NULL);
@@ -94,7 +94,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
 }
 
 MuxFrameFilter::~MuxFrameFilter() {
-    deActivate();
+ //   deActivate();
     av_free(avio_ctx_buffer);
     av_free_packet(avpkt);
     delete avpkt;
@@ -262,7 +262,7 @@ void MuxFrameFilter::initMux() {
                 i = avcodec_parameters_from_context(av_stream->codecpar, av_codec_context);
                 
 
-                av_stream->codecpar->extradata = ( uint8_t *)av_malloc(av_codec_context->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
+                av_stream->codecpar->extradata = extradata_audioframe.payload.data();//( uint8_t *)av_malloc(av_codec_context->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
                 av_stream->codecpar->extradata_size =  av_codec_context->extradata_size ;
                 memcpy(av_stream->codecpar->extradata, av_codec_context->extradata, av_codec_context->extradata_size);
                 
@@ -310,12 +310,12 @@ void MuxFrameFilter::initMux() {
      */
 
     // so far so good ..
-    if (zerotime > 0) { // user wants to set time reference explicitly and not from first arrived packet ..
-        mstimestamp0 = zerotime;
-        zerotimeset = true;
-    } else {
-        zerotimeset = false;
-    }
+//    if (zerotime > 0) { // user wants to set time reference explicitly and not from first arrived packet ..
+//        mstimestamp0 = zerotime;
+//        zerotimeset = true;
+//    } else {
+//        zerotimeset = false;
+//    }
 
     //
     //std::cout << "timebase " 
@@ -370,7 +370,7 @@ void MuxFrameFilter::deActivate_() {
         av_write_trailer(av_format_context);
         closeMux();
     }
-    active = false;
+//    active = false;
 }
 
 void MuxFrameFilter::run(Frame* frame) {
@@ -381,9 +381,9 @@ void MuxFrameFilter::run(Frame* frame) {
 void MuxFrameFilter::go(Frame* frame) {
     std::unique_lock<std::mutex> lk(this->mutex);
 
-    static int ncount = 0;
+  //  static long ncount = 0;
 
-    std::cout << "Got frame " << ncount++ << std::endl;
+  //  std::cout << "Got frame " << ncount++ << std::endl;
 
 
 
@@ -404,7 +404,7 @@ void MuxFrameFilter::go(Frame* frame) {
                 SInfo << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
                 setupframes[setupframe->stream_index].copyFrom(setupframe);
                 
-                 mstimestamp0 = setupframe->mstimestamp;
+                 //mstimestamp0 = setupframe->mstimestamp;
             }
             return;
         } // INIT
@@ -503,7 +503,7 @@ void MuxFrameFilter::go(Frame* frame) {
                         // set zero time
                         // mstimestamp0 = extradata_videoframe.mstimestamp;
                        
-                        extradata_videoframe.mstimestamp = mstimestamp0;
+                       // extradata_videoframe.mstimestamp = mstimestamp0;
                         extradata_videoframe.stream_index = 0;
                         // std::cout << "writing extradata" << std::endl;
                         writeFrame(&extradata_videoframe); // send sps & pps data to muxer only once
@@ -556,7 +556,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
 
     // std::cout << "MuxFrameFilter : writing frame with mstimestamp " << dt << std::endl;
     //SInfo << "MuxFrameFilter : writing frame with mstimestamp " << dt;
-    SInfo << "MuxFrameFilter : writing frame " << *basicframe;
+    // STrace  << "MuxFrameFilter : writing frame " << *basicframe;
     // internal_basicframe2.fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
     // internal_basicframe.fillAVPacket(avpkt);
     basicframe->fillAVPacket(avpkt); // copies metadata to avpkt, points to basicframe's payload
@@ -574,7 +574,7 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     prevpts[basicframe->stream_index] = avpkt->pts;
        
    
-   SInfo << "StreamA " << basicframe->stream_index  << " PTS "  <<  avpkt->pts  << " size " << avpkt->size << " stream_timesbase "  << av_stream->time_base.den << " context_timesbase "  << av_codec_context->time_base.den;
+ //  SInfo << "StreamA " << basicframe->stream_index  << " PTS "  <<  avpkt->pts  << " size " << avpkt->size << " stream_timesbase "  << av_stream->time_base.den << " context_timesbase "  << av_codec_context->time_base.den;
    
    
    if(av_codec_context->time_base.den == SAMPLINGRATE)
@@ -626,23 +626,23 @@ void MuxFrameFilter::writeFrame(BasicFrame* basicframe) {
     }
 }
 
-void MuxFrameFilter::activate(long int zerotime) {
-    std::unique_lock<std::mutex> lk(this->mutex);
-    if (active) {
-        deActivate_();
-    }
+//void MuxFrameFilter::activate(long int zerotime) {
+//    std::unique_lock<std::mutex> lk(this->mutex);
+//    if (active) {
+//        deActivate_();
+//    }
+//
+//    this->zerotime = zerotime;
+//    this->active = true;
+//}
 
-    this->zerotime = zerotime;
-    this->active = true;
-}
-
-void MuxFrameFilter::deActivate() {
-    std::unique_lock<std::mutex> lk(this->mutex);
-
-    // std::cout << "FileFrameFilter: deActivate:" << std::endl;
-    deActivate_();
-    // std::cout << "FileFrameFilter: deActivate: bye" << std::endl;
-}
+//void MuxFrameFilter::deActivate() {
+//    std::unique_lock<std::mutex> lk(this->mutex);
+//
+//    // std::cout << "FileFrameFilter: deActivate:" << std::endl;
+//    deActivate_();
+//    // std::cout << "FileFrameFilter: deActivate: bye" << std::endl;
+//}
 
 FragMP4MuxFrameFilter::FragMP4MuxFrameFilter(const char* name, FrameFilter *next) :
 MuxFrameFilter(name, next), got_ftyp(false), got_moov(false) {
@@ -694,6 +694,8 @@ void FragMP4MuxFrameFilter::defineMux() {
 }
 
 int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size_) {
+    
+
     // what's coming here?  A complete muxed "frame" or a bytebuffer with several frames.  
     // The frames may continue in the next bytebuffer.
     // It seems that once "frag_size" has been set to a small value, this starts getting complete frames, 
@@ -826,7 +828,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             //*/
             memcpy(&metap->name[0], boxname, 4);
 
-            std::cout << "boxname " << boxname << std::endl;
+             STrace << "boxname " << boxname ;
 
             // TODO: get timestamp from the MP4 structure
             // at the moment, internal_frame does not have any timestamp

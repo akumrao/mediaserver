@@ -155,13 +155,13 @@ void BasicFrame::fillAVPacket(AVPacket *avpkt) {
   }
 
   // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
-
-  if (mstimestamp>=0) {
-    avpkt->pts=(int64_t)mstimestamp;
-  }
-  else {
-    avpkt->pts=AV_NOPTS_VALUE;
-  }
+//
+//  if (mstimestamp>=0) {
+//    avpkt->pts=(int64_t)mstimestamp;
+//  }
+//  else {
+//    avpkt->pts=AV_NOPTS_VALUE;
+ // }
 
   // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
 

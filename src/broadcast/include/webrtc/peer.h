@@ -45,7 +45,7 @@ public:
         Answer ///< Operating as answerer
     };
 
-    ReadMp4 readmp4;
+    wrtc::ReadMp4 readmp4;
     
     Peer(PeerManager* manager,
          PeerFactoryContext* context,
