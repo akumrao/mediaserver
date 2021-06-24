@@ -18,8 +18,8 @@
 
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
-//#define VIDEOFILE  "/experiment/live/testProgs/test.264"
-#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
+#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+//#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
 #include "webrtc/ffparse.h"
 
 #define MAX_CHUNK_SIZE 10240*8
@@ -36,8 +36,7 @@
 
 namespace base {
     
-
-     
+    fmp4::ReadMp4 *self;
 
     namespace fmp4 {
 
@@ -47,6 +46,7 @@ namespace base {
          ffparser = new FFParse(this,AUDIOFILE, VIDEOFILE);
          ffparser->start(); 
             
+         self = this;
 
         }
 
@@ -61,26 +61,88 @@ namespace base {
         {
             
         }
+        
+        void ReadMp4::add(wrtc::PeerfMp4 *obj)
+        {
+            g_num_mutex.lock(); 
+            setfmp4Peers.insert(obj );
+            g_num_mutex.unlock();
+        }
+        
+        void ReadMp4::remove(wrtc::PeerfMp4 *obj)
+        {
+            g_num_mutex.lock();
+            if( setfmp4Peers.find(obj) != setfmp4Peers.end())
+            {
+                setfmp4Peers.erase(obj);
+            }
+            g_num_mutex.unlock();
+        }
+        
+        
+         void ReadMp4::broadcast(const char * data, int size, bool binary   )
+         {
+             g_num_mutex.lock();
+              
+             std::set<wrtc::PeerfMp4*>::iterator it;
+            for (it = setfmp4Peers.begin(); it != setfmp4Peers.end(); ++it) {
+                
+                wrtc::PeerfMp4 *obj = *it; 
+                obj->pc->sendDataBinary((const uint8_t *) data, size);
+            }
+            
+            g_num_mutex.unlock();
+
+             
+         }
+        
+        
     }
     
     
     
     namespace wrtc {
 
-        ReadMp4::ReadMp4(Peer *pc) : pc(pc) {
-
-        }
-
-        ReadMp4::~ReadMp4() {
-            SInfo << "~ReadMp4( )";
-        }
-
-        
-        void ReadMp4::run()
-        {
+        PeerfMp4::PeerfMp4(Peer *pc) : pc(pc) {
             
+           
+        }
+
+        PeerfMp4::~PeerfMp4() {
+            SInfo << "~PeerfMp4( )";
         }
         
+        
+        void PeerfMp4::onConnect()
+        {
+           SInfo << " datachannel onConnect" ;
+              
+            self->add(this);
+        }
+        
+        void PeerfMp4::ondisConnect()
+        {
+           SInfo << " datachannel onDisConnect" ;
+            self->remove(this);
+        }
+        
+        
+        void PeerfMp4::onMessage(std::string str)
+        {
+            SInfo << " datachannel onMessage" << str;
+                
+                //  m_ping_timeout_timer.Reset();
+                //  m_packet_mgr.put_payload(std::string(data,sz));
+            if( str == "reset")
+                self->ffparser->reset();    
+        }
+
+        
+//        void PeerfMp4::run()
+//        {
+//            
+//        }
+//        
 #if 0
         
             // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html

@@ -34,7 +34,16 @@
       <div class="row">
         <div class="col">
         <!--  <video id="localVideo" autoplay muted playsinline></video> -->
-         <video id="remoteVideo"  playsinline controls></video>
+         
+         <video id="stream_live" 
+            controls="false" autoplay="true"
+            muted="muted" 
+            preload="auto">
+            Your browser does not support the video tag.
+        </video> 
+
+
+         
         </div>
       </div>
       <div class="row">Mute: <input type="checkbox" id="checkmute" onclick="onMuteClick()"> </div>

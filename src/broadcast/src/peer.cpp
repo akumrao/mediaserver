@@ -243,7 +243,9 @@ void Peer::OnStateChange() {
        // std::thread send_thread = std::thread(send_loop, this);
        // send_thread.detach();
         
-        readmp4.start();
+       // readmp4.start();
+        
+        readmp4.onConnect();
     }
   }
 }
@@ -256,15 +258,17 @@ void Peer::OnMessage(const webrtc::DataBuffer& buffer) {
   msg[size] = 0;
  // if (OnDataFromDataChannelReady)
    // OnDataFromDataChannelReady(msg);
-  
+   readmp4.onMessage(msg);
   SInfo << "datachannel msg:"  << msg;
   delete[] msg;
 }
 
 void Peer::CloseDataChannel() {
-    readmp4.stop();
-    readmp4.join();
+    //readmp4.stop();
+   // readmp4.join();
     
+     readmp4.ondisConnect();
+     
   if (data_channel_.get()) {
     data_channel_->UnregisterObserver();
     data_channel_->Close();
