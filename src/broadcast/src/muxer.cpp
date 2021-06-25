@@ -3,6 +3,12 @@
 #include "webrtc/tools.h"
 #include "base/logger.h"
 
+
+#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+
+
  /*
 
   H.264 comes in a variety of stream formats. One variation is called "Annex B".
@@ -103,7 +109,7 @@ MuxFrameFilter::~MuxFrameFilter() {
 
 void MuxFrameFilter::initMux() {
     int i;
-    AVCodecID codec_id;
+   // AVCodecID codec_id;
     initialized = false;
     missing = 0;
 
@@ -157,24 +163,29 @@ void MuxFrameFilter::initMux() {
                 av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
                 av_codec_context->height = 576;
                 av_codec_context->bit_rate = 1024 * 1024;
-                av_codec_context->time_base =  (AVRational){ 1, STREAM_FRAME_RATE };
+
+
+                AVRational tb;
+                tb.num = 1;
+                tb.den = STREAM_FRAME_RATE;
+                                
+                av_codec_context->time_base = tb;//  (AVRational){ 1, STREAM_FRAME_RATE };
+
+
+
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
                 ///*
                 av_codec_context->extradata = extradata_videoframe.payload.data();
                 av_codec_context->extradata_size = extradata_videoframe.payload.size();
                 //*/
 
-                /*
-                std::cout << "initMux: extradata_size: " << av_codec_context->extradata_size 
-                    << std::endl;
-                 */
 
                 // std::cout << "avformat_new_stream" << std::endl;
                 av_stream = avformat_new_stream(av_format_context, av_codec_context->codec); // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
 
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
-                av_stream->time_base = (AVRational){ 1, STREAM_FRAME_RATE };
+                av_stream->time_base = tb;//(AVRational){ 1, STREAM_FRAME_RATE };
                 av_stream->id = setupframe.stream_index;
                 /*
                 // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
@@ -227,7 +238,14 @@ void MuxFrameFilter::initMux() {
                 av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
                 av_codec_context->sample_rate = SAMPLINGRATE;
                 av_codec_context->profile = FF_PROFILE_AAC_LOW;
-                av_codec_context->time_base = (AVRational){ 1, av_codec_context->sample_rate };//timebase; // 1/1000
+
+
+                AVRational tb;
+                tb.num = 1;
+                tb.den =  av_codec_context->sample_rate;
+                                
+              
+                av_codec_context->time_base = tb; //(AVRational){ 1, };//timebase; // 1/1000
               
                 av_codec_context->extradata = extradata_audioframe.payload.data();
                 av_codec_context->extradata_size = extradata_audioframe.payload.size();
@@ -246,7 +264,7 @@ void MuxFrameFilter::initMux() {
 
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
-                av_stream->time_base = (AVRational){ 1, av_codec_context->sample_rate };//timebase; // 1/1000
+                av_stream->time_base = tb;//(AVRational){ 1, av_codec_context->sample_rate };//timebase; // 1/1000
                 av_stream->id = setupframe.stream_index;
                 /*
                 // write some reasonable values here.  I'm unable to re-write this .. should be put into av_codec_context ?
@@ -329,7 +347,7 @@ int MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size) {
 }
 
 void MuxFrameFilter::closeMux() {
-    int i;
+  //  int i;
 
     if (initialized) {
         // std::cout << "MuxFrameFilter: closeMux: freeing ctx" << std::endl;
@@ -454,7 +472,7 @@ void MuxFrameFilter::go(Frame* frame) {
             {
                 // this kind of stuff should be in the frame class itself..
                 // should arrive in sps, pps order
-                if ((basicframe->h264_pars.slice_type == H264SliceType::sps) or
+                if ((basicframe->h264_pars.slice_type == H264SliceType::sps) ||
                         (basicframe->h264_pars.slice_type == H264SliceType::pps)) {
 #ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
@@ -467,13 +485,13 @@ void MuxFrameFilter::go(Frame* frame) {
                             );
                
 
-                    if (basicframe->h264_pars.slice_type == H264SliceType::sps and
+                    if (basicframe->h264_pars.slice_type == H264SliceType::sps &&
                             extradata_count == 0) {
                         extradata_count = 1;
                           SInfo << "MuxFrameFilter : appending extraVideodata SPS";
                     }
 
-                    if (basicframe->h264_pars.slice_type == H264SliceType::pps and
+                    if (basicframe->h264_pars.slice_type == H264SliceType::pps &&
                             extradata_count == 1) {
                         extradata_count = 2;
                          SInfo << "MuxFrameFilter : appending extraVideodata PPS";
@@ -664,7 +682,7 @@ void FragMP4MuxFrameFilter::sendMeta() {
     if (!next) {
         return;
     }
-    if (got_ftyp and got_moov) {
+    if (got_ftyp && got_moov) {
         std::cout << "FragMP4MuxFrameFilter: sending metadata!" << std::endl;
         next->run(&ftyp_frame);
         next->run(&moov_frame);

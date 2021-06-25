@@ -19,22 +19,22 @@
 #include <vector>
 #include "muxer.h"
 
-#include "net/netInterface.h"
-#include "http/HttpsClient.h"
+// #include "net/netInterface.h"
+// #include "http/HttpsClient.h"
 
 
 
 extern "C" {
  
-#include <libavutil/avassert.h>    
-#include <libavcodec/avcodec.h>
-#include <libavutil/opt.h>
-#include <libswscale/swscale.h>
-#ifdef HAVE_FFMPEG_SWRESAMPLE
-#include <libswresample/swresample.h>
-#else
-#include <libavresample/avresample.h>
-#endif
+// #include <libavutil/avassert.h>    
+ #include <libavcodec/avcodec.h>
+// #include <libavutil/opt.h>
+// #include <libswscale/swscale.h>
+// #ifdef HAVE_FFMPEG_SWRESAMPLE
+// #include <libswresample/swresample.h>
+// #else
+// #include <libavresample/avresample.h>
+// #endif
 }
 
  
@@ -110,10 +110,10 @@ typedef struct OutputStream {
     
     int startAudio( );
       
-    ssize_t get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size);
+    long get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size);
       
     
-    net::ClientConnecton *conn;    
+   // net::ClientConnecton *conn;    
      
     BasicFrame        basicaudioframe;  ///< Data is being copied into this frame
    /// Audio End 

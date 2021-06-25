@@ -16,10 +16,7 @@
 
 #include "constant.h"
 
-/** Enumeration of Frame classes used by Valkka
- * 
- * @ingroup frames_tag
- */
+
 enum class FrameClass
 {
     none, ///< unknown

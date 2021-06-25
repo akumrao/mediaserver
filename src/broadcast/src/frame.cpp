@@ -1,10 +1,19 @@
+/* This file is part of mediaserver. A webrtc sfu server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ */
 
 
 #include "webrtc/frame.h"
 
 
 
-Frame::Frame() : mstimestamp(0), n_slot(0), stream_index(-1) {
+Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
 
   
@@ -83,7 +92,9 @@ std::string BasicFrame::dumpPayload() {
 
 
 void BasicFrame::dumpPayloadToFile(std::ofstream& fout) {
-  std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
+
+
+  //std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout)); // arvind
 }
 
 
@@ -150,7 +161,7 @@ void BasicFrame::fillAVPacket(AVPacket *avpkt) {
   avpkt->size         =payload.size(); // -4;
   avpkt->stream_index =stream_index;
 
-  if (codec_id==AV_CODEC_ID_H264 and h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
+  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
     avpkt->flags=AV_PKT_FLAG_KEY;
   }
 
@@ -307,7 +318,7 @@ std::string MuxFrame::dumpPayload() {
 
 
 void MuxFrame::dumpPayloadToFile(std::ofstream& fout) {
-    std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
+    ///std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));  // arvind
 }
 
 

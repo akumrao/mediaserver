@@ -1,7 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* This file is part of mediaserver. A webrtc sfu server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
  */
 
 
@@ -10,10 +14,10 @@
 
 
 
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
-#include "base/define.h"
-#include "base/test.h"
+// #include "ff/ff.h"
+// #include "ff/mediacapture.h"
+// #include "base/define.h"
+// #include "base/test.h"
 #include "webrtc/tools.h"
 #include "webrtc/fmp4.h"
 
@@ -220,7 +224,7 @@ namespace base {
            
            // int ret =0;
           //  FILE *fout;
-            uint16_t *samples;
+          //  uint16_t *samples;
     //float t, tincr;
             
             ///////////////////////////////////////////////////////
@@ -387,8 +391,8 @@ namespace base {
         }
         
         
-        ssize_t FFParse::get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size) {
-            ssize_t pos = 3;
+        long FFParse::get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size) {
+            long pos = 3;
             while ((size - pos) > 3) {
                 if (buf[pos] == 0 && buf[pos + 1] == 0 && buf[pos + 2] == 1)
                 {
@@ -449,13 +453,13 @@ namespace base {
             
              if (fseek(fileVideo, 0, SEEK_END))
                return false;
-            ssize_t fileSize = (ssize_t)ftell(fileVideo);
+            long fileSize = (long)ftell(fileVideo);
             if (fileSize < 0)
                 return false;
             if (fseek(fileVideo, 0, SEEK_SET))
                 return false;
     
-            SInfo << "H264 file Size " << fileSize;
+            //SInfo << "H264 file Size " << fileSize;
           
 
            // av_init_packet(pkt);
@@ -552,13 +556,13 @@ namespace base {
 
             if (fseek(fileVideo, 0, SEEK_END))
                 return;
-            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            long videofileSize = (long) ftell(fileVideo);
             if (videofileSize < 0)
                 return;
             if (fseek(fileVideo, 0, SEEK_SET))
                 return;
 
-            SInfo << "H264 file Size " << videofileSize;
+            //SInfo << "H264 file Size " << videofileSize;
 
 
             // av_init_packet(pkt);
@@ -604,7 +608,7 @@ namespace base {
                         resetParser = false;
                     }
                     
-                    if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+                    if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                     {
                         continue;
                     }
@@ -657,7 +661,7 @@ namespace base {
 
             if (fseek(fileVideo, 0, SEEK_END))
                 return;
-            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            long videofileSize = (long) ftell(fileVideo);
             if (videofileSize < 0)
                 return;
             if (fseek(fileVideo, 0, SEEK_SET))
@@ -710,15 +714,19 @@ namespace base {
             int64_t videoframecount=0;
             int64_t audioframecount=0;
             
-            AVRational  videotimebase= (AVRational){ 1,STREAM_FRAME_RATE };
-            AVRational  audiotimebase = (AVRational){ 1,SAMPLINGRATE };
-            
+            AVRational  videotimebase;//= (AVRational){ 1, };
+            videotimebase.num = 1;
+            videotimebase.den = STREAM_FRAME_RATE;
+
+            AVRational  audiotimebase ;//= (AVRational){ 1,SAMPLINGRATE };
+            audiotimebase.num = 1;
+            audiotimebase.den = SAMPLINGRATE;
                              
                     
             while (1)
             {
                 
-                 long int currentTime =  getCurrentMsTimestamp();
+                long int currentTime =  getCurrentMsTimestamp();
 
 
                 if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
@@ -756,7 +764,7 @@ namespace base {
                             resetParser = false;
                         }
 
-                        if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+                        if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                         {
                             continue;
                         }

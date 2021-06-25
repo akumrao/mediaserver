@@ -5,8 +5,12 @@
 #include <iostream>
 #include  <vector>
 
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
+//#include <algorithm>
+//#include <iterator>
+//#include  <vector>
+
+ #include "ff/ff.h"
+ #include "ff/mediacapture.h"
 
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
