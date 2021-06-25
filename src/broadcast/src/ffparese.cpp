@@ -210,7 +210,7 @@ namespace base {
             setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
             setupframe.codec_id             =AV_CODEC_ID_AAC;   // what frame types are to be expected from this stream
             setupframe.stream_index     =stream_index;
-            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
             info.run(&setupframe);
@@ -437,7 +437,7 @@ namespace base {
             setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
             setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
             setupframe.stream_index     =stream_index;
-            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
             info.run(&setupframe);
@@ -726,7 +726,7 @@ namespace base {
             while (1)
             {
                 
-                long int currentTime =  getCurrentMsTimestamp();
+                uint64_t currentTime =  CurrentTime_microseconds();
 
 
                 if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
@@ -864,8 +864,8 @@ namespace base {
                     }
                 }//audio 
             
-                long int deltaTimeMillis =getCurrentMsTimestamp() - currentTime;
-                std::this_thread::sleep_for(std::chrono::microseconds(14500 - (deltaTimeMillis*1000)));
+                uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                std::this_thread::sleep_for(std::chrono::microseconds(14500 - deltaTimeMillis));
             }
 
         }

@@ -117,15 +117,10 @@ class Frame
 public:
     Frame();          ///< Default ctor
     virtual ~Frame(); ///< Default virtual dtor
-    frame_essentials(FrameClass::none, Frame);
-    frame_clone(FrameClass::none, Frame);
-    /*Frame(const Frame &f); ///< Default copy ctor
-  
-  
-public: // frame essentials : must be defined for each frame subclass
-  virtual FrameClass getFrameClass(); ///< Returns the subclass frame type.  See Frame::frameclass
-  virtual void copyFrom(Frame *f);    ///< Copies data to this frame from a frame of the same type (also metadata)
-  */
+    //frame_essentials(FrameClass::none, Frame);
+    //frame_essentials(FrameClass::none, Frame);
+    
+     virtual std::string type(){return "base";}
 
 public:                                                  // redefined virtual
     virtual void print(std::ostream &os) const;          ///< Produces frame output
@@ -145,7 +140,7 @@ protected:
 public:                   // public metadata
     SlotNumber n_slot;    ///< Slot number identifying the media source
     int stream_index; ///< Media subsession index
-    long int mstimestamp; ///< Presentation time stamp (PTS) in milliseconds
+    uint64_t mstimestamp; ///< Presentation time stamp (PTS) in milliseconds
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Frame &f)
@@ -171,8 +166,8 @@ class BasicFrame : public Frame
 public:
     BasicFrame();          ///< Default ctor
     virtual ~BasicFrame(); ///< Default virtual dtor
-    frame_essentials(FrameClass::basic, BasicFrame);
-    frame_clone(FrameClass::basic, BasicFrame);
+    //frame_essentials(FrameClass::basic, BasicFrame);
+    //frame_essentials(FrameClass::basic, BasicFrame);
     /*BasicFrame(const BasicFrame &f); ///< Default copy ctor
   
 public: // frame essentials
@@ -180,6 +175,7 @@ public: // frame essentials
   virtual void copyFrom(Frame *f);            ///< Copies data to this frame from a frame of the same type
   */
 
+   virtual std::string type(){return "BasicFrame";}
 public:                                         // redefined virtual
     virtual void print(std::ostream &os) const; ///< How to print this frame to output stream
     virtual std::string dumpPayload();
@@ -225,8 +221,8 @@ class MuxFrame : public Frame {
 public:
     MuxFrame(); ///< Default ctor
     virtual ~MuxFrame(); ///< Default virtual dtor
-    frame_essentials(FrameClass::mux, MuxFrame);
-    frame_clone(FrameClass::mux, MuxFrame);
+    //frame_essentials(FrameClass::mux, MuxFrame);
+    //frame_essentials(FrameClass::mux, MuxFrame);
         
 public: // redefined virtual
     virtual void print(std::ostream& os) const;             ///< Produces frame output
@@ -234,7 +230,7 @@ public: // redefined virtual
     virtual void dumpPayloadToFile(std::ofstream& fout);    ///< Dumps internal payload data into a file
     virtual void reset();                                   ///< Reset the internal data
     //virtual bool isSeekable();                              ///< Can we seek to this frame? 
-
+    virtual std::string type(){return "MuxFrame";}
 /*
 public:
     virtual bool isInit();  ///< for frag-MP4: ftyp, moov
@@ -283,8 +279,8 @@ class SetupFrame : public Frame
 public:
     SetupFrame();          ///< Default ctor
     virtual ~SetupFrame(); ///< Default virtual dtor
-    frame_essentials(FrameClass::setup, SetupFrame);
-    frame_clone(FrameClass::setup, SetupFrame);
+    //frame_essentials(FrameClass::setup, SetupFrame);
+    //frame_essentials(FrameClass::setup, SetupFrame);
     /*
   SetupFrame(const SetupFrame &f); ///< Default copy ctor
   
@@ -292,7 +288,7 @@ public: // frame essentials
   virtual FrameClass getFrameClass();         ///< Returns the subclass frame type.  See Frame::frameclass
   virtual void copyFrom(Frame *f);            ///< Copies data to this frame from a frame of the same type
   */
-
+     virtual std::string type(){return "SetupFrame";}
 public:                                         // redefined virtual
     virtual void print(std::ostream &os) const; ///< How to print this frame to output stream
     virtual void reset();                       ///< Reset the internal data
@@ -322,8 +318,8 @@ class AVMediaFrame : public Frame
 public:
     AVMediaFrame();          ///< Default ctor
     virtual ~AVMediaFrame(); ///< Default virtual dtor
-    //frame_essentials(FrameClass::avmedia,AVMediaFrame); // now this is a virtual class ..
-    //frame_clone(FrameClass::avmedia,AVMediaFrame);
+    ////frame_essentials(FrameClass::avmedia,AVMediaFrame); // now this is a virtual class ..
+    ////frame_essentials(FrameClass::avmedia,AVMediaFrame);
     /*AVMediaFrame(const AVMediaFrame &f); ///< Default copy ctor
     
     public: // frame essentials
@@ -336,6 +332,8 @@ public:
     virtual void updateAux() = 0; ///< update any helper objects
     virtual void update() = 0;
 */
+    
+     virtual std::string type(){return "AVMediaFrame";}
 
 public: // redefined virtual
     virtual std::string dumpPayload();
@@ -378,8 +376,8 @@ class AVBitmapFrameNP : public AVMediaFrame {
 public:
   AVBitmapFrameNP(); ///< Default ctor
   virtual ~AVBitmapFrameNP(); ///< Default virtual dtor
-  frame_essentials(FrameClass::avbitmap_np, AVBitmapFrameNP);
-  frame_clone(FrameClass::avbitmap_np, AVBitmapFrameNP); // TODO: think about this!
+  //frame_essentials(FrameClass::avbitmap_np, AVBitmapFrameNP);
+  //frame_essentials(FrameClass::avbitmap_np, AVBitmapFrameNP); // TODO: think about this!
   
 public: // redefined virtual
   virtual std::string dumpPayload();
@@ -401,8 +399,10 @@ class MarkerFrame : public Frame
 public:
     MarkerFrame();          ///< Default ctor
     virtual ~MarkerFrame(); ///< Default virtual dtor
-    frame_essentials(FrameClass::marker, MarkerFrame);
-    frame_clone(FrameClass::marker, MarkerFrame);
+    //frame_essentials(FrameClass::marker, MarkerFrame);
+    ////frame_essentials(FrameClass::marker, MarkerFrame);
+    
+    virtual std::string type(){return "MarkerFrame";}
 
 public: // redefined virtual
     // virtual std::string dumpPayload();

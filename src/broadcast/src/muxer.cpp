@@ -410,7 +410,7 @@ void MuxFrameFilter::go(Frame* frame) {
     internal_frame.n_slot = frame->n_slot;
 
     // make a copy of the setup frames ..
-    if (frame->getFrameClass() == FrameClass::setup) { // SETUPFRAME
+       if (frame->type() == "SetupFrame") { // SETUPFRAME
         SetupFrame *setupframe = static_cast<SetupFrame*> (frame);
         if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
             if (setupframe->stream_index > 1) {
@@ -420,7 +420,7 @@ void MuxFrameFilter::go(Frame* frame) {
                 std::cout << "MuxFrameFilter:  go: state: got setup frame " << *setupframe << std::endl;
 #endif
                 SInfo << "MuxFrameFilter :  go : got setup frame " << *setupframe << std::endl;
-                setupframes[setupframe->stream_index].copyFrom(setupframe);
+                setupframes[setupframe->stream_index] = *setupframe ;  
                 
                  //mstimestamp0 = setupframe->mstimestamp;
             }
@@ -428,7 +428,7 @@ void MuxFrameFilter::go(Frame* frame) {
         } // INIT
     }// SETUPFRAME
     
-    else if (frame->getFrameClass() == FrameClass::basic) { // BASICFRAME
+    else if (frame->type() == "BasicFrame") { // BASICFRAME
         BasicFrame *basicframe = static_cast<BasicFrame*> (frame);
         
         if (basicframe->codec_id == AV_CODEC_ID_AAC) {
@@ -856,11 +856,11 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->slot = internal_frame.n_slot;
 
             if (strcmp(boxname, "ftyp") == 0) {
-                me->ftyp_frame.copyFrom(&internal_frame);
+                me->ftyp_frame = internal_frame;
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
             } else if (strcmp(boxname, "moov") == 0) {
-                me->moov_frame.copyFrom(&internal_frame);
+                me->moov_frame= internal_frame;
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;
                 // std::cout << "FragMP4MuxFrameFilter: metadata cached" << std::endl;

@@ -56,7 +56,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-        if (frame->getFrameClass() != FrameClass::mux) {
+        if (frame->type() != "MuxFrame") {
             std::cout << "FragMP4ShmemFrameFilter: go: ERROR: MuxFrame required" << std::endl;
             return;
         }
@@ -95,7 +95,7 @@ void InfoFrameFilter::go(Frame *frame)
     std::cout << frame->dumpPayload();
     std::cout << "]" << std::endl;
     // std::cout << "InfoFrameFilter:<" << frame->dumpAVFrame() << ">" << std::endl;
-    std::cout << "InfoFrameFilter: timediff: " << frame->mstimestamp - getCurrentMsTimestamp() << std::endl;
+   // std::cout << "InfoFrameFilter: timediff: " << frame->mstimestamp - getCurrentMsTimestamp() << std::endl;
     std::cout << "InfoFrameFilter: " << name << " <<end dump   " << std::endl;
 }
 
