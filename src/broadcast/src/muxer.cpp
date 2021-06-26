@@ -310,7 +310,7 @@ void MuxFrameFilter::initMux() {
     i = avformat_write_header(av_format_context, &av_dict);
     if (i < 0) {
         SError << "MuxFrameFilter : initMux : Error occurred while muxing";
-        perror("libValkka: MuxFrameFilter: initMux");
+        perror("Fmp4Muxer: MuxFrameFilter: initMux error");
         exit(2);
         // av_err2str(i)
         // closeMux();
@@ -838,7 +838,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap = (FragMP4Meta*) (internal_frame.meta_blob.data());
             // set values in-place:
             ///*
-            if (strcmp(boxname, "moof") == 0) {
+            if (strncmp(boxname, "moof",4) == 0) {
                 metap->is_first = moofHasFirstSampleFlag(internal_frame.payload.data());
                 //#ifdef MUXPARSE
                 STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
@@ -856,11 +856,11 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->size = boxlen; // internal_frame.payload.size();
             metap->slot = internal_frame.n_slot;
 
-            if (strcmp(boxname, "ftyp") == 0) {
+            if (strncmp(boxname, "ftyp",4) == 0) {
                 me->ftyp_frame = internal_frame;
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
-            } else if (strcmp(boxname, "moov") == 0) {
+            } else if (strncmp(boxname, "moov",4) == 0) {
                 me->moov_frame= internal_frame;
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;
@@ -906,7 +906,7 @@ uint32_t getSubBoxIndex(uint8_t* data, const char name[4]) {
     while (cc <= thislen) {
         getLenName(data + cc, len_, &name_[0]); // take the next sub-box
         // std::cout << "NAME:" << name_ << std::endl;
-        if (strcmp(name, name_) == 0) {
+        if (strncmp(name, name_, 4) == 0) {
             return cc;
         }
         cc += len_;
