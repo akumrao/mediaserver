@@ -13,9 +13,11 @@
 #include "base/test.h"
 #include <thread>
 
-#include <libavutil/timestamp.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-
+}
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
 #define VIDEOFILE  "/experiment/live/testProgs/test.264"

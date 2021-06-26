@@ -4,11 +4,12 @@
 #include "base/logger.h"
 
 
-#include <libavutil/timestamp.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-
-
+}
  /*
 
   H.264 comes in a variety of stream formats. One variation is called "Annex B".
@@ -751,7 +752,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     uint32_t len = 0; // number of bytes: either a complete box or what is missing from the box
     // ..consume this many bytes from the current byte buffer and add them to the frame buffer
     uint32_t buf_size = uint32_t(buf_size_); // size of the current byte buffer to be consumed
-    int i;
+//    int i;
     uint32_t boxlen;
     char boxname[4];
 

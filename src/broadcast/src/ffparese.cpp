@@ -21,9 +21,12 @@
 #include "webrtc/tools.h"
 #include "webrtc/fmp4.h"
 
-#include <libavutil/timestamp.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+}
 
 #define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256
@@ -569,7 +572,7 @@ namespace base {
 
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_videoptr;
+            unsigned char *cur_videoptr = nullptr;
             int cur_videosize=0;
 
             long framecount =0;
@@ -674,7 +677,7 @@ namespace base {
 
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_videoptr;
+            unsigned char *cur_videoptr = nullptr;;
             int cur_videosize=0;
 
             
