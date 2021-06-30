@@ -2,38 +2,29 @@
 #define TOOLS_HEADER_GUARD
 
 
-
+#define BIG_ENDIAN 1
 //
-////#include "common.h"
-//#include "constant.h"
-////#include "logging.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <chrono>
+#include <cstdint>
 
-/** posix time doodle:
-*
-* time_t (sec)
-* 
-* struct timeval (tv_sec, tv_usec)
-* 
-* struct timespec (tv_sec, tv_nsec)
-* 
-*/
+inline uint64_t CurrentTime_milliseconds() 
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+              (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
 
-static const int64_t NANOSEC_PER_SEC = 1000000000;
+inline uint64_t CurrentTime_microseconds() 
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>
+              (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
 
-long int getCurrentMsTimestamp(); ///< Utility function: returns current unix epoch timestamp in milliseconds.  Uses timeval
-//
-long int getMsDiff(timeval tv1, timeval tv2); ///< Utility function: return timedif of two timeval structs in milliseconds
+inline uint64_t CurrentTime_nanoseconds()
+{
+    return std::chrono::duration_cast<std::chrono::nanoseconds>
+              (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}  
 
-struct timeval msToTimeval(long int mstimestamp); ///< Milliseconds to timeval
-
-long int timevalToMs(struct timeval time); /// Timeval to milliseconds
-
-//bool slotOk(SlotNumber n_slot); ///< Checks the slot number range
-
-void normalize_timespec(struct timespec *ts, time_t sec, int64_t nanosec);
 
 
 #ifdef BIG_ENDIAN

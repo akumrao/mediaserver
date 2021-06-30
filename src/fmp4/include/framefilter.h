@@ -4,8 +4,10 @@
 
 #include "frame.h"
 
-#include "net/netInterface.h"
-#include "http/HttpsClient.h"
+#include <map>
+
+// #include "net/netInterface.h"
+// #include "http/HttpsClient.h"
 
 
 /** The mother class of all frame filters!  

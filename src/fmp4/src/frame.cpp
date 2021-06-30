@@ -13,7 +13,7 @@
 
 
 
-Frame::Frame() : mstimestamp(0), n_slot(0), stream_index(-1) {
+Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
 
   
@@ -159,7 +159,7 @@ void BasicFrame::fillAVPacket(AVPacket *avpkt) {
   avpkt->size         =payload.size(); // -4;
   avpkt->stream_index =stream_index;
 
-  if (codec_id==AV_CODEC_ID_H264 and h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
+  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
     avpkt->flags=AV_PKT_FLAG_KEY;
   }
 

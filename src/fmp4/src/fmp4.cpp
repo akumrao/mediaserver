@@ -4,31 +4,20 @@
  * and open the template in the editor.
  */
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 #include "fmp4.h"
 
-#include "base/logger.h"
+#include "ff/ff.h"
+#include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
+#include <thread>
 #include "ffparse.h"
 
-#include <thread>
-
-
-
-#define MAX_CHUNK_SIZE 2048
-// maximum send buffer 262144  =1024 *256
-#define highWaterMark  8 * 1048576
-//maximum buffer = 16 *1048576 where  1024*1024 =1048576
-
-
-#define IOBUFSIZE 40960
-//40960*6
+extern "C"
+{
+//#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+}
 
 
 #define SERVER_HOST  "127.0.0.1"               
@@ -37,25 +26,29 @@
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
 #define VIDEOFILE  "/experiment/live/testProgs/test.264"
 //#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
-#include "ffparse.h"
 
-using namespace base::net;
+
+#define MAX_CHUNK_SIZE 10240*8
+// maximum send buffer 262144  =1024 *256
+
+#define highWaterMark  8 * 1048576
+//maximum buffer = 16 *1048576 where  1024*1024 =1048576
+
+
+
+
+#define IOBUFSIZE 40960
+//40960*6
 
 namespace base {
+    
+    fmp4::ReadMp4 *self;
+
     namespace fmp4 {
 
-//        ReadMp4::ReadMp4():WebSocketServer(1111) {
-//            
-//            
-//         ffparser = new FFParse(this,AUDIOFILE, VIDEOFILE);
-//         ffparser->start(); 
-//            
-//
-//        }
-//        
-        
         ReadMp4::ReadMp4() {
-       
+            
+         self = this;
 
         }
 
@@ -81,14 +74,14 @@ namespace base {
             //            }
 
             // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
-            conn->fnComplete = [&](const Response & response) {
+            conn->fnComplete = [&](const net::Response & response) {
                 std::string reason = response.getReason();
-                StatusCode statuscode = response.getStatus();
+                net::StatusCode statuscode = response.getStatus();
                 std::string body = conn->readStream() ? conn->readStream()->str() : "";
                 STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
             };
 
-            conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
+            conn->fnPayload = [&](net::HttpBase * con, const char* data, size_t sz) {
                 std::string got = std::string(data, sz);
                 STrace << "client->fnPayload " << got;
                 
@@ -99,7 +92,7 @@ namespace base {
             };
 
 
-            conn->fnConnect = [&](HttpBase * con) {
+            conn->fnConnect = [&](net::HttpBase * con) {
                 STrace << "onconnect ";
                 
                 //this->start();
@@ -109,7 +102,7 @@ namespace base {
             };
 
 
-            conn->fnClose = [&](HttpBase * con, std::string str) {
+            conn->fnClose = [&](net::HttpBase * con, std::string str) {
                 STrace << "client->fnClose " << str;
 
                 //on_close();

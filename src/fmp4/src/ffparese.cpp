@@ -1,7 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* This file is part of mediaserver. A webrtc sfu server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
  */
 
 
@@ -10,16 +14,19 @@
 
 
 
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
-#include "base/define.h"
-#include "base/test.h"
+// #include "ff/ff.h"
+// #include "ff/mediacapture.h"
+// #include "base/define.h"
+// #include "base/test.h"
 #include "tools.h"
 #include "fmp4.h"
 
-#include <libavutil/timestamp.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+}
 
 #define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256
@@ -206,7 +213,7 @@ namespace base {
             setupframe.media_type           =AVMEDIA_TYPE_AUDIO;
             setupframe.codec_id             =AV_CODEC_ID_AAC;   // what frame types are to be expected from this stream
             setupframe.stream_index     =stream_index;
-            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
             info.run(&setupframe);
@@ -218,11 +225,7 @@ namespace base {
             AVCodecContext *c = nullptr ;
            
            
-           // int ret =0;
-          //  FILE *fout;
-            uint16_t *samples;
-    //float t, tincr;
-            
+                
             ///////////////////////////////////////////////////////
           ///  AVFormatContext *oc;
             AVDictionary *opt = NULL;
@@ -250,7 +253,9 @@ namespace base {
 
 
             /* select other audio parameters supported by the encoder */
-            c->sample_rate    = 44100;//select_sample_rate(codec);
+
+			c->sample_rate = SAMPLINGRATE;//  
+
             c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
             c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
             c->profile = FF_PROFILE_AAC_LOW;
@@ -314,7 +319,7 @@ namespace base {
 
             
             long framecount =0;
-            while(1)
+            while(!stopped())
             {   
                if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
@@ -387,8 +392,8 @@ namespace base {
         }
         
         
-        ssize_t FFParse::get_nal_size(uint8_t *buf, ssize_t size,  uint8_t **poutbuf, int *poutbuf_size) {
-            ssize_t pos = 3;
+        long FFParse::get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size) {
+            long pos = 3;
             while ((size - pos) > 3) {
                 if (buf[pos] == 0 && buf[pos + 1] == 0 && buf[pos + 2] == 1)
                 {
@@ -433,7 +438,7 @@ namespace base {
             setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
             setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
             setupframe.stream_index     =stream_index;
-            setupframe.mstimestamp          = getCurrentMsTimestamp();
+            setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
             info.run(&setupframe);
@@ -449,13 +454,13 @@ namespace base {
             
              if (fseek(fileVideo, 0, SEEK_END))
                return false;
-            ssize_t fileSize = (ssize_t)ftell(fileVideo);
+            long fileSize = (long)ftell(fileVideo);
             if (fileSize < 0)
                 return false;
             if (fseek(fileVideo, 0, SEEK_SET))
                 return false;
     
-            SInfo << "H264 file Size " << fileSize;
+            //SInfo << "H264 file Size " << fileSize;
           
 
            // av_init_packet(pkt);
@@ -552,25 +557,25 @@ namespace base {
 
             if (fseek(fileVideo, 0, SEEK_END))
                 return;
-            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            long videofileSize = (long) ftell(fileVideo);
             if (videofileSize < 0)
                 return;
             if (fseek(fileVideo, 0, SEEK_SET))
                 return;
 
-            SInfo << "H264 file Size " << videofileSize;
+            //SInfo << "H264 file Size " << videofileSize;
 
 
             // av_init_packet(pkt);
 
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_videoptr;
+            unsigned char *cur_videoptr = nullptr;
             int cur_videosize=0;
 
             long framecount =0;
 
-            while (1) {
+            while (!stopped()) {
 
                 if (cur_videosize > 0) {
 
@@ -604,7 +609,7 @@ namespace base {
                         resetParser = false;
                     }
                     
-                    if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+                    if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                     {
                         continue;
                     }
@@ -657,7 +662,7 @@ namespace base {
 
             if (fseek(fileVideo, 0, SEEK_END))
                 return;
-            ssize_t videofileSize = (ssize_t) ftell(fileVideo);
+            long videofileSize = (long) ftell(fileVideo);
             if (videofileSize < 0)
                 return;
             if (fseek(fileVideo, 0, SEEK_SET))
@@ -670,7 +675,7 @@ namespace base {
 
             const int in_videobuffer_size = videofileSize;
             unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_videoptr;
+            unsigned char *cur_videoptr = nullptr;;
             int cur_videosize=0;
 
             
@@ -710,15 +715,19 @@ namespace base {
             int64_t videoframecount=0;
             int64_t audioframecount=0;
             
-            AVRational  videotimebase= (AVRational){ 1,STREAM_FRAME_RATE };
-            AVRational  audiotimebase = (AVRational){ 1,SAMPLINGRATE };
-            
+            AVRational  videotimebase;//= (AVRational){ 1, };
+            videotimebase.num = 1;
+            videotimebase.den = STREAM_FRAME_RATE;
+
+            AVRational  audiotimebase ;//= (AVRational){ 1,SAMPLINGRATE };
+            audiotimebase.num = 1;
+            audiotimebase.den = SAMPLINGRATE;
                              
                     
-            while (1)
+            while (!stopped())
             {
                 
-                 long int currentTime =  getCurrentMsTimestamp();
+                uint64_t currentTime =  CurrentTime_microseconds();
 
 
                 if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
@@ -756,7 +765,7 @@ namespace base {
                             resetParser = false;
                         }
 
-                        if (!basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+                        if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                         {
                             continue;
                         }
@@ -856,8 +865,8 @@ namespace base {
                     }
                 }//audio 
             
-                long int deltaTimeMillis =getCurrentMsTimestamp() - currentTime;
-                std::this_thread::sleep_for(std::chrono::microseconds(14500 - (deltaTimeMillis*1000)));
+                uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                std::this_thread::sleep_for(std::chrono::microseconds(14500 - deltaTimeMillis));
             }
 
         }
