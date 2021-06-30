@@ -144,6 +144,9 @@ git remote add arvind https://github.com/scopear/webrtc.git
 
 git remote update
 
+gclient sync -D
+
+
 git checkout 
 
       1 * (HEAD detached at arvind/multiplex-video)

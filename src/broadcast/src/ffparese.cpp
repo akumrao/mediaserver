@@ -225,11 +225,7 @@ namespace base {
             AVCodecContext *c = nullptr ;
            
            
-           // int ret =0;
-          //  FILE *fout;
-          //  uint16_t *samples;
-    //float t, tincr;
-            
+                
             ///////////////////////////////////////////////////////
           ///  AVFormatContext *oc;
             AVDictionary *opt = NULL;
@@ -257,7 +253,9 @@ namespace base {
 
 
             /* select other audio parameters supported by the encoder */
-            c->sample_rate    = 44100;//select_sample_rate(codec);
+
+			c->sample_rate = SAMPLINGRATE;//  
+
             c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
             c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
             c->profile = FF_PROFILE_AAC_LOW;
@@ -321,7 +319,7 @@ namespace base {
 
             
             long framecount =0;
-            while(1)
+            while(!stopped())
             {   
                if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
@@ -577,7 +575,7 @@ namespace base {
 
             long framecount =0;
 
-            while (1) {
+            while (!stopped()) {
 
                 if (cur_videosize > 0) {
 
@@ -726,7 +724,7 @@ namespace base {
             audiotimebase.den = SAMPLINGRATE;
                              
                     
-            while (1)
+            while (!stopped())
             {
                 
                 uint64_t currentTime =  CurrentTime_microseconds();

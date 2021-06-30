@@ -11,11 +11,13 @@
 
  #include "ff/ff.h"
  #include "ff/mediacapture.h"
-
-#include <libavutil/timestamp.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+}
 
-#include "micro.h"
+//#include "micro.h"
 #include "codec.h"
 
 #include "constant.h"
