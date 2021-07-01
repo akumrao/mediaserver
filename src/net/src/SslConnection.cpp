@@ -21,12 +21,12 @@ namespace base {
 namespace net {
 
 
-SslConnection::SslConnection(Listener* listener)
-    : TcpConnection(listener, true)
+SslConnection::SslConnection()
+    : TcpConnectionBase( true)
 //    , _sslContext(nullptr)
 //    , _sslSession(nullptr)
     , _sslAdapter(this)
-    ,listener(listener)
+  
 {
     LTrace("Create")
     
@@ -34,11 +34,11 @@ SslConnection::SslConnection(Listener* listener)
 }
 
 
-SslConnection::SslConnection(Listener* listener, bool server)
-    : TcpConnection(listener , true)
+SslConnection::SslConnection( bool server)
+    : TcpConnectionBase( true)
   //  , _sslSession(nullptr)
     , _sslAdapter(this)
-    ,listener(listener),serverMode(server)
+    ,serverMode(server)
 {
     if(server)
         _sslAdapter.initServer();
@@ -220,7 +220,9 @@ void SslConnection::on_read(const char* data, size_t len)
    // LTrace("SslConnection::on_read ", len)
    // LTrace("SslConnection::on_read ", data)
 
-    listener->on_read(this,data,len );
+//    listener->on_read(this,data,len );
+    
+    throw(" Never code should reach here, please override this function");
   
 }
 
@@ -231,8 +233,8 @@ void SslConnection::on_connect()
         _sslAdapter.initClient();
         // _sslAdapter.start();
     //emit
-    if(listener)
-    listener->on_connect( this);
+  //  if(listener)
+    //listener->on_connect( this);
         
    // }
 }

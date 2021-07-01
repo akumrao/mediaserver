@@ -266,9 +266,9 @@ namespace base
 // condition
             // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
             if(ssl)
-             *connection = new SslConnection(listener, true);
+             *connection = new SslConnection(true);
             else
-            *connection = new TcpConnection(listener);
+            *connection = new TcpConnectionBase();
             
             
         }

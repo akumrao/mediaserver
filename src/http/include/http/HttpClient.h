@@ -23,7 +23,7 @@ namespace base {
     namespace net {
         
 
-        class HttpClient : public TcpConnection, public GetAddrInfoReq, public ClientConnecton {
+        class HttpClient : public TcpConnectionBase, public GetAddrInfoReq, public ClientConnecton {
         public:
 
             HttpClient(const std::string& protocol, const std::string &ip, int port, const std::string& query);

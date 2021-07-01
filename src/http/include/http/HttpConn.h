@@ -30,7 +30,7 @@ namespace base {
         class WebSocketConnection;
 
         //template < class T>
-        class HttpConnection : public TcpConnection, public HttpBase {
+        class HttpConnection : public TcpConnectionBase, public HttpBase {
         public:
 
         public:

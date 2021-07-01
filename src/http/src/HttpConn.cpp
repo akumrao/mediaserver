@@ -26,7 +26,7 @@ namespace base {
     namespace net {
 
         HttpConnection::HttpConnection(Listener* listener, http_parser_type type)
-        : TcpConnection(listener),
+        : TcpConnectionBase(),
            listener(listener),HttpBase(type),wsAdapter(nullptr) {
 
 
@@ -96,7 +96,7 @@ namespace base {
         
         void HttpConnection::Close()
         {
-            TcpConnection::Close();
+            TcpConnectionBase::Close();
         }
           
         void HttpConnection::send(const char* data, size_t len, bool binary) {

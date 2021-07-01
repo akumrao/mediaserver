@@ -26,7 +26,7 @@ namespace base {
     namespace net {
 
         HttpsClient::HttpsClient(URL url) :
-         SslConnection(nullptr)
+         SslConnection()
         , ClientConnecton(HTTP_RESPONSE)
         , listener(nullptr)
         , _url(url)
@@ -39,7 +39,7 @@ namespace base {
 
      
         HttpsClient::HttpsClient(const std::string& protocol, const std::string &ip, int port, const std::string& query):
-            SslConnection(nullptr)
+            SslConnection()
           , ClientConnecton(HTTP_RESPONSE)
           , listener(nullptr)
           , _connect(false)
