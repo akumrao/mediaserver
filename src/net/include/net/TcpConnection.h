@@ -15,6 +15,7 @@
 #include <string>
 #include <functional>
 
+// TcpConnection class is for RFC 4571 for RTP transport. Please do not use it other than SFU/MCU.
 
 namespace base
 {
@@ -100,7 +101,7 @@ namespace base
             void OnUvRead(ssize_t nread, const uv_buf_t* buf);
             void OnUvWrite(int status,onSendCallback cb);
 
-          
+            void send(const char* data, size_t len) override ;
 
         protected:
             // Passed by argument.
@@ -184,7 +185,7 @@ namespace base
         }
 
       /*******************************************************************************************************************************************************/
-
+        // TcpConnection class is for RFC 4571 for RTP transport. Please do not use it other than SFU/MCU.
         class TcpConnection : public TcpConnectionBase
         {
         public:

@@ -17,6 +17,7 @@
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()
 
+// TcpConnection class is for RFC 4571 for RTP transport. Please do not use it other than SFU/MCU.
 
 namespace base {
     namespace net {
@@ -586,11 +587,18 @@ namespace base {
                 Close();
             }
         }
+        
+        
+        void TcpConnectionBase::send(const char* data, size_t len) {
+
+           Write(data, len, nullptr);
+        }
 
         /*************************************************************************************************************/
-
+        // TcpConnection class is for RFC 4571 for RTP transport. Please do not use it other than SFU/MCU.
+        
         static constexpr size_t ReadBufferSize{ 65536 };
-	static uint8_t ReadBuffer[ReadBufferSize];
+	    static uint8_t ReadBuffer[ReadBufferSize];
 
         TcpConnection::TcpConnection(Listener* listener, bool tls)
         : TcpConnectionBase(tls), listener(listener) {

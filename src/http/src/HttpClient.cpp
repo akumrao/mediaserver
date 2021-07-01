@@ -120,12 +120,12 @@ namespace base {
              TcpConnectionBase::send(data, len);
          }
          
-        void HttpClient::send(const char* data, size_t len) {
+        void HttpClient::send(const char* data, size_t len , bool binary) {
             connect();
             
             if(wsAdapter)
             {
-                wsAdapter->send(data,len );
+                wsAdapter->send(data,len, binary );
                 return;
             }
 
@@ -138,7 +138,7 @@ namespace base {
         }
 
         void HttpClient::send(const std::string &str) {
-            send(str.c_str(), str.length());
+            send(str.c_str(), str.length(), false);
         }
 
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {

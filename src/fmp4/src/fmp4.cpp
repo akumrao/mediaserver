@@ -21,7 +21,7 @@ extern "C"
 
 
 #define SERVER_HOST  "127.0.0.1"               
-#define SERVER_PORT 1111 //443
+#define SERVER_PORT 8000
 
 #define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
 #define VIDEOFILE  "/experiment/live/testProgs/test.264"
@@ -62,7 +62,8 @@ namespace base {
         void ReadMp4::websocketConnect() {
 
 
-            conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/");
+            conn = new net::HttpClient("ws", SERVER_HOST, SERVER_PORT, "/");
+	    //conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/"); for https
 
 
             //            {

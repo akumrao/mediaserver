@@ -140,7 +140,7 @@ fetch --nohooks webrtc_android.
 cd src git checkout branch-heads/m75
 Then type gclient sync
 
-git remote add arvind https://github.com/scopear/webrtc.git
+git remote add arvind git@github.com:akumrao/webrtc-android.git
 
 git remote update
 
