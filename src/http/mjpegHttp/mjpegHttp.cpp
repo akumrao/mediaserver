@@ -26,6 +26,8 @@ using namespace base::test;
 #include "opencv2/opencv.hpp"
 /// apt-get install libopencv-dev
 
+//browse http://localhost:8888/
+
 using namespace cv;
 
 RunnableQueue< std::vector<uchar> > test1(20);

@@ -1,8 +1,8 @@
 ################################################################################
 ### CUSTOMIZE BELOW HERE #######################################################
 
-CC	= clang
-CXX     = clang++
+CC	= gcc
+CXX     = g++
 TARGET=runHttp # define the name of the executable
 SOURCES=$(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http_parser/*.cpp )
 
