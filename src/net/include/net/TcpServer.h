@@ -69,7 +69,7 @@ namespace base
             bool SetLocalAddress();
 
             /* Pure virtual methods that must be implemented by the subclass. */
-        protected:
+        public:
             virtual void UserOnTcpConnectionAlloc(TcpConnectionBase** connection) = 0;
             virtual bool UserOnNewTcpConnection(TcpConnectionBase* connection) = 0;
             virtual void UserOnTcpConnectionClosed(TcpConnectionBase* connection) = 0;

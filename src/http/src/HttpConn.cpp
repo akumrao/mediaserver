@@ -99,6 +99,12 @@ namespace base {
             TcpConnectionBase::Close();
         }
           
+        
+        void HttpConnection::tcpsend(const char* data, size_t len)
+        {
+              Write(data, len,nullptr);
+        }
+        
         void HttpConnection::send(const char* data, size_t len, bool binary) {
 
              LTrace("HttpConnection::send()")
@@ -183,11 +189,11 @@ namespace base {
 
             if (_responder)
                 _responder->onRequest(_request, _response);
-            else
-            {    Close();
-                 this->listener->on_close(this);
-                
-            }
+//            else
+//            {    Close();
+//                 this->listener->on_close(this);
+//                
+//            }
                 
         }
 

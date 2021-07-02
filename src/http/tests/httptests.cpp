@@ -68,13 +68,36 @@ public:
     }
 };
 
+
+class testwebscoket: public net::HttpServer 
+{
+public:
+    
+     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr): net::HttpServer(  ip, port,  nullptr)
+     {
+         
+     }
+    
+    void on_read(Listener* connection, const char* BODY, size_t len) {
+      
+        //connection->send("arvind", 6 );
+        
+        WebSocketConnection *con = (WebSocketConnection*)connection;
+        
+        con->send("arvind", 6 );
+         
+    }
+    
+};
+
+
 int main(int argc, char** argv) {
 
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     //test::init();
   
         Application app;
-        net::HttpServer socket("0.0.0.0", 8000 );
+        testwebscoket socket("0.0.0.0", 8000 );
         socket.start();
 
         app.waitForShutdown([&](void*) {

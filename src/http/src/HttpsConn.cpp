@@ -100,6 +100,12 @@ namespace base {
             TcpConnectionBase::Close();
         }
         
+        
+        void  HttpsConnection::tcpsend(const char* data, size_t len)
+        {
+              Write(data, len,nullptr);
+        }
+        
         void HttpsConnection::send(const char* data, size_t len, bool binary) {
 
              LTrace("HttpsConnection::send()")

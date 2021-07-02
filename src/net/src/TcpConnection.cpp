@@ -56,8 +56,8 @@ namespace base {
             LInfo("onClose");
             TcpConnectionBase *obj = (TcpConnectionBase *) handle->data;
 
-            //if (obj)
-            //    obj->on_close();
+            if (obj)
+                obj->on_close();
             delete handle;
             handle = nullptr;
         }

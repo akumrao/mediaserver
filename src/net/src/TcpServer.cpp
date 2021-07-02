@@ -190,7 +190,7 @@ namespace base
                 delete connection;
         }
 
-        inline void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
+        void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
 
             LDebug("TcpServerBase connection closed");
@@ -199,7 +199,7 @@ namespace base
             this->connections.erase(connection);
 
             // Notify the subclass.
-            UserOnTcpConnectionClosed(connection);
+            // UserOnTcpConnectionClosed(connection);
 
             // Delete it.
             delete connection;
@@ -288,7 +288,7 @@ namespace base
 
         void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            //this->listener->on_close( (TcpConnection*)connection);
+            TcpServerBase::OnTcpConnectionClosed(connection);
         }
 
     } // namespace net
