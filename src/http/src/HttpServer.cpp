@@ -31,7 +31,7 @@ namespace base {
 
         /*************************************************************************************************************/
         /******************************************************************************************************************/
-        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
+        static constexpr size_t MaxTcpConnectionsPerServer{ 1000};
 
         /* Instance methods. */
 

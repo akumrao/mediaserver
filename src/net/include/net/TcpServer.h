@@ -39,7 +39,7 @@ namespace base
             const std::string& GetLocalIp() const;
             uint16_t GetLocalPort() const;
             size_t GetNumConnections() const;
-
+	    std::unordered_set<TcpConnectionBase*>& GetConnections();	
 
             bool setNoDelay(bool enable)
             {
@@ -101,6 +101,10 @@ namespace base
 
         inline size_t TcpServerBase::GetNumConnections() const {
             return this->connections.size();
+        }
+	
+	inline std::unordered_set<TcpConnectionBase*> & TcpServerBase::GetConnections(){
+            return this->connections;
         }
 
         inline const struct sockaddr* TcpServerBase::GetLocalAddress() const {

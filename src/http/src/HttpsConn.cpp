@@ -40,7 +40,15 @@ namespace base {
         }
 
         HttpsConnection::~HttpsConnection() {
-            LTrace("~HttpsConnection()")
+            if(wsAdapter)
+            {    
+                 SInfo <<  "wsAdapter delete connection " << wsAdapter; 
+                delete wsAdapter;
+                wsAdapter = nullptr;
+                 
+            }
+            
+            SInfo << "~HttpsConnection()";
         }
 
         void HttpsConnection::on_read(const char* data, size_t len) {
@@ -63,10 +71,11 @@ namespace base {
         
           void HttpsConnection::on_close() {
 
-            LTrace("on_close()")
+            SInfo << "HttpsConnection::on_close()";
                     
             if (_responder) {
                 _responder->onClose();
+                delete _responder;
             }
              
             this->listener->on_close(this);
@@ -148,7 +157,12 @@ namespace base {
                         // scope we just swap the SocketAdapter instance pointers and do
                         // a deferred delete on the old adapter. No more callbacks will be
                         // received from the old adapter after replaceAdapter is called.
+                           
+                        if(wsAdapter)
+                               delete wsAdapter;
                           wsAdapter = new WebSocketConnection( listener, this, ServerSide);
+                          SInfo <<  "wsAdapter new connection " << wsAdapter;  
+
                         //   replaceAdapter(wsAdapter);
 
                            // Send the handshake request to the WS adapter for handling.
@@ -167,12 +181,15 @@ namespace base {
 
                            wsAdapter->onSocketRecv( buffer);
             }
+            else
+            {
 
             // Notify the server the connection is ready for data flow
             //   _server.onConnectionReady(*this);
 
             // Instantiate the responder now that request headers have been parsed
-            this->listener->on_header(this);
+                this->listener->on_header(this);
+            }
 
             // Upgraded connections don't receive the onHeaders callback
             if (_responder && !_upgrade)

@@ -68,12 +68,18 @@ namespace base {
             /// Send the outdoing HTTP header.
             virtual long sendHeader() ;
 
-            WebSocketConnection *wsAdapter{ nullptr};
+            WebSocketConnection* getWebSocketCon()
+            {
+               return wsAdapter;
+            }
+           
+
+            
 
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-
+            WebSocketConnection *wsAdapter{ nullptr};
 
 
         public:

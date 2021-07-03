@@ -185,15 +185,19 @@ namespace base
 
             // Notify the subclass and delete the connection if not accepted by the subclass.
             if (UserOnNewTcpConnection(connection))
+            {
+                   SInfo << "TcpServerBase new connection "  << connection;
                 this->connections.insert(connection);
+            }
             else
                 delete connection;
         }
 
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-
-            LDebug("TcpServerBase connection closed");
+            
+            SInfo << "TcpServerBase connection close "  << connection;
+              
 
             // Remove the TcpConnectionBase from the set.
             this->connections.erase(connection);
@@ -270,7 +274,7 @@ namespace base
             else
             *connection = new TcpConnectionBase();
             
-            
+            SInfo << "TcpServer new connection "  << connection;
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {

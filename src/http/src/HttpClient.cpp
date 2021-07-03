@@ -92,11 +92,17 @@ namespace base {
             if (_url.scheme() == "ws") {
                 //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
                 wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+                SInfo <<  "wsAdapter new connection " << wsAdapter;  
             }
         }
          
         HttpClient::~HttpClient() {
-            LTrace("~HttpClient()")
+
+            SInfo <<  "wsAdapter delete connection " << wsAdapter;  
+            delete wsAdapter;
+            wsAdapter = nullptr;
+            
+            SInfo << "~HttpClient ";
         }
 
         void HttpClient::send() {
