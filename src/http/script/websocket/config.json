@@ -1,0 +1,10 @@
+{
+	"UseFrontend": false,
+	"UseMatchmaker": false,
+	"UseHTTPS": false,
+	"UseAuthentication": false,
+	"LogToFile": true,
+	"HomepageFile": "test.html",
+	"AdditionalRoutes": {},
+	"EnableWebserver": true
+}
