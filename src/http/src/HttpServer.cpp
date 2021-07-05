@@ -74,8 +74,8 @@ namespace base {
 
         void HttpServerBase::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            //this->listener->on_close(connection);
-              TcpServerBase::OnTcpConnectionClosed(connection);
+            //override this function
+
         }
 
         /*******************************************************************************************************************/
@@ -113,10 +113,11 @@ namespace base {
         }
 
         void HttpServer::on_close(Listener* connection) {
+	     //override this function
 
             TcpConnectionBase *con = (TcpConnectionBase*)connection;
             STrace << "HttpServer::on_close, LocalIP" << con->GetLocalIp() << " PeerIP" << con->GetPeerIp() << std::endl << std::flush;
-            HttpServerBase::UserOnTcpConnectionClosed(con);
+          
         }
 
        

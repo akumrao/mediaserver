@@ -140,6 +140,9 @@ public:
              else if (endswith(file_to_open, "png"))
             {
                response.setContentType( "image/png");
+            }else
+            {
+                 SError << "file format not supported " << file_to_open;
             }
 
 
@@ -153,7 +156,7 @@ public:
         }
         else
         {
-             response.setStatusAndReason(StatusCode::BadRequest, "File not found or supported" );
+             response.setStatusAndReason(StatusCode::BadRequest, "File not found" );
              
              response.setContentLength(file_to_open.length()); // headers will be auto flushed
 
@@ -207,12 +210,12 @@ public:
     void on_read(Listener* connection, const char* msg, size_t len) {
       
         //connection->send("arvind", 6 );
-        
+        SInfo << "msg " << std::string(msg,len);
         WebSocketConnection *con = (WebSocketConnection*)connection;
         
-        //con->send("arvind", 6 );
+        con->send( msg, len );
         
-        sendAll( msg, len );
+        //sendAll( msg, len );
          
     }
     
@@ -220,13 +223,15 @@ public:
       
         //connection->send("arvind", 6 );
         
-        int x = this->GetNumConnections();
+
+        
+        SInfo << "No of Connectons " << this->GetNumConnections();
         
         for (auto* connection :  this->GetConnections())
         {
-            WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
-        
-            con->send(msg ,len );
+             WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
+             if(con)
+             con->send(msg ,len );
         }
       
         
@@ -241,7 +246,7 @@ int main(int argc, char** argv) {
     //test::init();
   
         Application app;
-        testwebscoket socket("0.0.0.0", 8000 );
+        testwebscoket socket("0.0.0.0", 8000, new StreamingResponderFactory() );
         socket.start();
 
         app.waitForShutdown([&](void*) {

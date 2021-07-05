@@ -361,7 +361,8 @@ int main(int argc, char** argv) {
         };
 
         conn->fnPayload = [&](HttpBase * con, const char* data, size_t sz) {
-            std::cout << "client->fnPayload" << data << std::endl << std::flush;
+            
+            std::cout << "client->fnPayload " << data << std::endl << std::flush;
         };
 
         //       conn->clientConn->_request.setMethod("GET");

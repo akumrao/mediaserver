@@ -35,6 +35,7 @@ namespace base
         }
 
         inline static void onClose(uv_handle_t* handle) {
+            SInfo << " TcpServerBase::onClose"  ;
             delete handle;
         }
 
@@ -87,7 +88,7 @@ namespace base
             // Tell the UV handle that the TcpServerBase has been closed.
             this->uvHandle->data = nullptr;
 
-            LDebug("closing %zu active connections", this->connections.size());
+            SInfo << " TcpServerBase::Close,  closing all active connections"  <<  this->connections.size();
 
             for (auto* connection : this->connections)
             {
@@ -155,7 +156,7 @@ namespace base
 
             try
             {
-                connection->Setup( &(this->localAddr), this->localIp, this->localPort);
+                connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
             } catch (const std::exception& error)
             {
                 delete connection;
@@ -196,14 +197,14 @@ namespace base
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
             
-            SInfo << "TcpServerBase connection close "  << connection;
+            SInfo << "TcpServerBase::        int numCons =  connection close "  << connection;
               
 
             // Remove the TcpConnectionBase from the set.
             this->connections.erase(connection);
 
             // Notify the subclass.
-            // UserOnTcpConnectionClosed(connection);
+             UserOnTcpConnectionClosed(connection);
 
             // Delete it.
             delete connection;
@@ -274,7 +275,7 @@ namespace base
             else
             *connection = new TcpConnectionBase();
             
-            SInfo << "TcpServer new connection "  << connection;
+            //SInfo << "TcpServer::UserOnTcpConnectionAlloc new connection "  << *connection;
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
@@ -292,7 +293,7 @@ namespace base
 
         void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            TcpServerBase::OnTcpConnectionClosed(connection);
+            //override this function
         }
 
     } // namespace net

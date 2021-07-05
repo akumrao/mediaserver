@@ -33,6 +33,16 @@ namespace base
 
         
         public:
+            
+            class ListenerClose
+            {
+            public:
+                    virtual ~ListenerClose() = default;
+
+            public:
+                    virtual void OnTcpConnectionClosed(TcpConnectionBase* connection) = 0;
+            };
+
 
             struct UvWriteData
             {
@@ -70,10 +80,10 @@ namespace base
             virtual void on_connect() { }
             virtual void on_read(const char* data, size_t len) {}
             virtual void on_tls_read(const char* data, size_t len){}
-            virtual void on_close() {}
+            virtual void on_close();
             virtual void Dump() const;
             void Setup(
-                  //  Listener* listener,
+                    ListenerClose* listenerClose,
                     struct sockaddr_storage* localAddr,
                     const std::string& localIp,
                     uint16_t localPort);
@@ -115,9 +125,10 @@ namespace base
             struct sockaddr_storage peerAddr;
             std::string peerIp;
             uint16_t peerPort{ 0};
+           
 
         public:
-            
+             ListenerClose* listenerClose{nullptr};
             size_t GetRecvBytes() const;
             size_t GetSentBytes() const;
             

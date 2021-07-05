@@ -52,14 +52,22 @@ namespace base {
         }
 
         inline static void onClose(uv_handle_t* handle) {
-
-            LInfo("onClose");
+            
+            
             TcpConnectionBase *obj = (TcpConnectionBase *) handle->data;
-
+            
+            SInfo << "onClose ";
+            
+           
             if (obj)
                 obj->on_close();
-            delete handle;
-            handle = nullptr;
+            
+             if(obj->listenerClose)
+             obj->listenerClose->OnTcpConnectionClosed(obj);
+                    
+            
+//            delete handle;
+//              handle = nullptr;
         }
 
         inline static void onShutdown(uv_shutdown_t* req, int /*status*/) {
@@ -83,7 +91,9 @@ namespace base {
 
             this->uvHandle = new uv_tcp_t;
             this->uvHandle->data = (void*) this;
-
+           
+            SInfo << "TcpConnectionBase new handle " <<  this->uvHandle;
+             
             // NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
         }
 
@@ -94,11 +104,22 @@ namespace base {
                 Close();
 
             delete[] this->buffer;
+            
+            SInfo << "~TcpConnectionBase delete handle " <<  this->uvHandle;
+            delete   this->uvHandle;
+            this->uvHandle = nullptr;        
+            
         }
+        
+        
+         void TcpConnectionBase::on_close() 
+         {
+             
+         }
 
         void TcpConnectionBase::Close() {
 
-            LTrace("Close ", this->uvHandle)
+            STrace << "Close handle " ;
             if (this->closed)
                 return;
 
@@ -106,7 +127,7 @@ namespace base {
 
             this->closed = true;
 
-            this->uvHandle->data = this;
+           // this->uvHandle->data = this;
 
             // Tell the UV handle that the TcpConnectionBase has been closed.
             /*this->uvHandle->data = nullptr;
@@ -153,9 +174,9 @@ namespace base {
             LDebug("</TcpConnectionBase>");
         }
 
-        void TcpConnectionBase::Setup(
+        void TcpConnectionBase::Setup( ListenerClose* listenerClose,
                 struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
-
+            this->listenerClose = listenerClose;
 
             // Set the UV handle.
             int err = uv_tcp_init(Application::uvGetLoop(), this->uvHandle);

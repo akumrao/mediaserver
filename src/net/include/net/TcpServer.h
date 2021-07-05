@@ -22,7 +22,7 @@ namespace base
     namespace net
     {
 
-        class TcpServerBase : public Listener
+        class TcpServerBase : public Listener, public TcpConnectionBase::ListenerClose
         {
         public:
             /**
