@@ -192,8 +192,6 @@ public:
         }
 
         
-        
-        
     }
 };
 
@@ -213,9 +211,9 @@ public:
         SInfo << "msg " << std::string(msg,len);
         WebSocketConnection *con = (WebSocketConnection*)connection;
         
-        con->send( msg, len );
+        //con->send( msg, len );
         
-        //sendAll( msg, len );
+        sendAll( msg, len );
          
     }
     

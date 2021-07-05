@@ -197,7 +197,7 @@ namespace base
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
             
-            SInfo << "TcpServerBase::        int numCons =  connection close "  << connection;
+            SInfo << "TcpServerBase:: connection close "  << connection;
               
 
             // Remove the TcpConnectionBase from the set.
@@ -249,7 +249,7 @@ namespace base
         }
 
         /******************************************************************************************************************/
-        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
+        static constexpr size_t MaxTcpConnectionsPerServer{ 1000};
 
         /* Instance methods. */
 

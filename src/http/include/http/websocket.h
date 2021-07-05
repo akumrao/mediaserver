@@ -54,6 +54,30 @@ namespace base {
             Pong = 0x0a, ///< Pong frame.
             Bitmask = 0x0f ///< Bit mask for opcodes.
         };
+        
+        
+        enum WebSocketFrameType {
+                ERROR_FRAME=0xFF00,
+                INCOMPLETE_FRAME=0xFE00,
+
+                OPENING_FRAME=0x3300,
+                CLOSING_FRAME=0x3400,
+
+                INCOMPLETE_TEXT_FRAME=0x01,
+                INCOMPLETE_BINARY_FRAME=0x02,
+                INCOMPLETE_CONTINUATION_FRAME=0x03,
+                
+                TEXT_FRAME=0x81,
+                BINARY_FRAME=0x82,
+                CONTINUATION_FRAME=0x83,
+
+                // Control frame can not be fragmented
+                CLOSE_FRAME=0x18,
+                PING_FRAME=0x19,
+                PONG_FRAME=0x1A
+                        
+        };
+
 
 
         /// Combined header flags and opcodes for identifying
@@ -209,7 +233,7 @@ namespace base {
            // void send(const char* data, size_t len, int flags) ; // flags = Text || Binary
 
             bool shutdown(uint16_t statusCode, const std::string& statusMessage);
-
+            bool pong();
             //
             /// Client side
 
@@ -235,7 +259,7 @@ namespace base {
             
 
         protected:
-            HttpBase* _connection;
+            HttpBase* _connection{nullptr};
 
             friend class WebSocketFramer;
 

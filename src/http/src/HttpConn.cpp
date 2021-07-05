@@ -57,7 +57,7 @@ namespace base {
 
            LTrace("on_read()")
                     
-           STrace << "on_read:TCP server send data: " << data << "len: " << len << std::endl << std::flush;
+          // SInfo << "on_read:TCP server send data: " << std::string((char*)data, len) << "len: " << len << std::endl << std::flush;
                     
             if(wsAdapter)
             {

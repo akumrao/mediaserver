@@ -53,6 +53,19 @@ namespace base {
             
             return true;
         }
+        
+        bool WebSocketConnection::pong() {
+            char buffer[2];
+            BitWriter writer(buffer, 2);
+            //writer.putU16(statusCode);
+            //writer.put(statusMessage);
+
+            assert(socket);
+             send(buffer, writer.position(),
+                    unsigned(FrameFlags::Fin) | unsigned(Opcode::Pong));
+            
+            return true;
+        }
 
         void WebSocketConnection::send(const char* data, size_t len, bool binary) {
            // LTrace("Send: ", len, ": ", std::string(data, len))
@@ -152,7 +165,8 @@ namespace base {
         void WebSocketConnection::onSocketRecv( std::string buffer) {
             //LTrace("On recv: ", buffer.size())
 
-            if (framer.handshakeComplete()) {
+            if (framer.handshakeComplete()) 
+            {
 
                 // Note: The spec wants us to buffer partial frames, but our
                 // software does not require this feature, and furthermore
@@ -162,12 +176,90 @@ namespace base {
                 //
                 // Incoming frames may be joined, so we parse them
                 // in a loop until the read buffer is empty.
+                 WebSocketFrameType wsFrameTyp;
+                 
+                if(buffer.size() < 3) 
+                {
+                     storeBuf = storeBuf + buffer;
+                     wsFrameTyp= WebSocketFrameType::INCOMPLETE_FRAME;
+                     
+                     SInfo << "Incomplete frame buffer, continue for more buffer to make a  ws frame.. "  << this;
+                     
+                     return;
+                }
+
 
                 if( !storeBuf.empty())
                 {
                     buffer = storeBuf + buffer;
                     storeBuf.clear();
                 }
+                
+               
+                
+                unsigned char msg_opcode = buffer[0] & 0x0F;
+                unsigned char msg_fin = (buffer[0] >> 7) & 0x01;
+                unsigned char msg_masked = (buffer[1] >> 7) & 0x01;
+                
+                switch(msg_opcode)
+                        
+                {
+                    case 0x0:
+                    {
+                        wsFrameTyp= (msg_fin)?CONTINUATION_FRAME:INCOMPLETE_CONTINUATION_FRAME;   
+                    }
+                    break;
+                    case 0x1:
+                    {
+                        wsFrameTyp= (msg_fin)?TEXT_FRAME:INCOMPLETE_TEXT_FRAME;
+                    }
+                    break;
+                    case 0x2:
+                    {
+                        wsFrameTyp= (msg_fin)?BINARY_FRAME:INCOMPLETE_BINARY_FRAME;
+                    }
+                    break; 
+                    
+                    case 0x8:
+                    {
+                        wsFrameTyp= CLOSE_FRAME; 
+                        
+                         SInfo << "Close "  << this;
+                         
+                         if(listener)
+                        listener->on_close(listener);
+
+                         if(_connection)
+                        _connection->Close();
+                         
+                         return;
+                    }
+                    break;
+
+                    case 0x9:
+                    {
+                        wsFrameTyp= PING_FRAME; 
+                        SInfo << "Ping "  << this;
+                        pong();
+                        return;
+                    }
+                    break;
+                    case 0xA:
+                    {
+                      
+                        wsFrameTyp= PONG_FRAME;
+                        SInfo << "Pong "  << this;
+                    }
+                    break;
+                    default:
+                    {
+                        wsFrameTyp= ERROR_FRAME;  
+                        SError << "Error frame "  << this;
+                    }
+                    
+                };
+                
+      
 
                 BitReader reader(buffer);
 
@@ -206,8 +298,8 @@ namespace base {
                      }
                      else
                      {
-			            storeBuf = buffer.substr(offset);
-			            return ;
+                            storeBuf = buffer.substr(offset);
+                             return ;
                      }
                 }//end while
                 assert(offset == total);
@@ -445,6 +537,7 @@ namespace base {
 
             return frame.position();
         }
+        
 
         uint64_t WebSocketFramer::readFrame(BitReader& frame, char*& payload) {
             assert(handshakeComplete());
@@ -453,10 +546,10 @@ namespace base {
             // assert(offset == 0);
 
 
-            if( frame.available() < 2)
-            {
-                return 0;
-            }
+//            if( frame.available() < 3)
+//            {
+//                return 0;
+//            }
 
             // Read the frame header
             char header[MAX_HEADER_LENGTH];
