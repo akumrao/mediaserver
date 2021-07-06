@@ -167,7 +167,8 @@ MP4Box -dash 10000 -frag 1000 -rap -single-segment test.mp4
 
 MP4Box ( gpac) is c source code very compklex to understand. Please use Bento4 C++ easy to understand 
 -------------------------------------------------------------------------------------------------------------------------------
-
+for mp3 original codec copy
+fmpeg -i quintin.mp3 -codec copy -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof  /tmp/output3.mp4
 
 
 ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4
