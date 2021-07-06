@@ -133,12 +133,15 @@ namespace base {
         void FFParse::run() {
 
             stream_index = 0;
-            //audio only
-//            if (parseAACHeader()) {
-//                 ++stream_index;
-//                parseAACContent();
-//            }
-//            return;
+            
+            parseMp4a();
+            return;
+           //audio only
+            if (parseAACHeader()) {
+                 ++stream_index;
+                parseAACContent();
+            }
+            return;
 
             //video only
 //            if (parseH264Header()) {
@@ -254,7 +257,7 @@ namespace base {
 
             /* select other audio parameters supported by the encoder */
 
-			c->sample_rate = SAMPLINGRATE;//  
+	    c->sample_rate = SAMPLINGRATE;//  
 
             c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
             c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
@@ -321,6 +324,9 @@ namespace base {
             long framecount =0;
             while(!stopped())
             {   
+                uint64_t currentTime =  CurrentTime_microseconds();
+
+                
                if (fread(frame_audobuf, 1, audiosize, fileAudio) <= 0){
                     printf("Failed to read raw data! \n");
                     break;
@@ -376,7 +382,8 @@ namespace base {
                                        
                     av_packet_unref(&audiopkt);
                     
-                     std::this_thread::sleep_for(std::chrono::microseconds(21000));
+                    uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                    std::this_thread::sleep_for(std::chrono::microseconds(23000 - deltaTimeMillis));
                     
                 }
             }
@@ -683,8 +690,6 @@ namespace base {
             ////////////////////////////////////
             AVPacket audiopkt;
              
-     
-            
             int got_output;
              
             AVFrame *frame;
@@ -729,7 +734,6 @@ namespace base {
                 
                 uint64_t currentTime =  CurrentTime_microseconds();
 
-
                 if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
                 {
                     if (cur_videosize > 0)
@@ -741,8 +745,6 @@ namespace base {
                             cur_videosize -= 1;
                             continue;
                         }
-
-
                         // avcodec_decode_video2
 
                         cur_videoptr += ret;
@@ -779,11 +781,7 @@ namespace base {
                        // info.run(&basicvideoframe);
 
                         fragmp4_muxer.run(&basicvideoframe);
-
-
                         basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
-
-                     
                     
                     }
                     else 
@@ -874,7 +872,187 @@ namespace base {
         
         
         
+        #define INBUF_SIZE 4096
+
+        void FFParse::parseMp4a() // iTunes
+        {
+
+
+            SetupFrame setupframe; ///< This frame is used to send subsession information
+
+            BasicFrame basicaudioframe;
+            basicaudioframe.media_type = AVMEDIA_TYPE_AUDIO;
+            basicaudioframe.codec_id = AV_CODEC_ID_AAC;
+            basicaudioframe.stream_index = stream_index;
+            // prepare setup frame
+            setupframe.sub_type = SetupFrameType::stream_init;
+            setupframe.media_type = AVMEDIA_TYPE_AUDIO;
+            setupframe.codec_id = AV_CODEC_ID_AAC; // what frame types are to be expected from this stream
+            setupframe.stream_index = stream_index;
+            setupframe.mstimestamp = CurrentTime_milliseconds();
+            // send setup frame
+
+            info.run(&setupframe);
+            fragmp4_muxer.run(&setupframe);
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            const AVCodec *codec;
+            AVCodecParserContext *parser;
+            AVCodecContext *c = NULL;
+          
+
+            /* find the MPEG-1 video decoder */
+            // codec = avcodec_find_decoder(AV_CODEC_ID_AAC);
+
+            codec = avcodec_find_encoder_by_name("libfdk_aac"); //avcodec_find_decoder(AV_CODEC_ID_MP3);
+            if (!codec) {
+                SError << "codec not found ";
+                return;
+            }
+
+            parser = av_parser_init(codec->id);
+            if (!parser) {
+                SError << "parser not found ";
+                return;
+            }
+
+            c = avcodec_alloc_context3(codec);
+
+            c->bit_rate = 64000;
+
+            /* check that the encoder supports s16 pcm input */
+            c->sample_fmt = AV_SAMPLE_FMT_S16;
+            /* select other audio parameters supported by the encoder */
+
+            c->sample_rate = SAMPLINGRATE; //  
+
+            c->channel_layout = AV_CH_LAYOUT_STEREO; //select_channel_layout(codec);
+            c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
+
+
+
+            c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            /* open it */
+            if (avcodec_open2(c, codec, NULL) < 0) {
+                SError << "codec could not open";
+                return;
+            }
+
+            const char* filename = "/var/tmp/songs/hindi.mp4a";
+
+          
+
+            startTime = basicaudioframe.mstimestamp;
+            int extrasize = c->extradata_size;
+            basicaudioframe.payload.resize(extrasize);
+            memcpy(basicaudioframe.payload.data(), c->extradata, extrasize);
+            basicaudioframe.codec_id = codec->id;
+            basicaudioframe.mstimestamp = startTime;
+            fragmp4_muxer.run(&basicaudioframe);
+            basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+
+
+
+            while (!stopped()) {
+                /////////////////////////////////////////////////////////////////////////////////
+
+                AVFormatContext* _formatCtx;
+                AVInputFormat* inputFormat;
+                AVDictionary** formatParams;
+
+
+
+                if (avformat_open_input(&_formatCtx, filename, inputFormat, formatParams) < 0) {
+                    SError << "Cannot open the media source: " << filename;
+                    ;
+                }
+
+                // _formatCtx->max_analyze_duration = 0;
+                if (avformat_find_stream_info(_formatCtx, nullptr) < 0) {
+                    //throw std::runtime_error("Cannot find stream information: " + filename);
+                }
+
+                av_dump_format(_formatCtx, 0, filename, 0);
+
+                for (unsigned i = 0; i < _formatCtx->nb_streams; i++) {
+                    auto stream = _formatCtx->streams[i];
+                    auto codec = stream->codec;
+                    if (codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+
+                    } else if (codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+
+                    }
+                }
+
+
+
+
+
+                int res;
+                AVPacket ipacket;
+                av_init_packet(&ipacket);
+
+
+
+
+                // Read input packets until complete
+                while ((res = av_read_frame(_formatCtx, &ipacket)) >= 0) {
+                    //            STrace << "Read frame: "
+                    //                   << "pts=" << ipacket.pts << ", "
+                    //                   << "dts=" << ipacket.dts << endl;
+
+                    if (stopped())
+                        break;
+
+                    uint64_t currentTime = CurrentTime_microseconds();
+                    if (ipacket.stream_index == 0) {
+
+
+                        basicaudioframe.copyFromAVPacket(&ipacket);
+
+                        basicaudioframe.mstimestamp = startTime;
+
+                        if (resetParser) {
+                            fragmp4_muxer.sendMeta();
+                            resetParser = false;
+                        }
+                        // framecount = framecount + AUDIOSAMPLE ;
+                        fragmp4_muxer.run(&basicaudioframe);
+
+                        basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
+
+                        // av_packet_unref(pkt);
+
+                        uint64_t deltaTimeMillis = CurrentTime_microseconds() - currentTime;
+                        std::this_thread::sleep_for(std::chrono::microseconds(23000 - deltaTimeMillis));
+
+                    }
+
+                    av_packet_unref(&ipacket);
+                }
+
+
+                avformat_close_input(&_formatCtx);
+
+            }
+
+
+
+            /////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+            return;
+        }
         
+        
+       
         
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
