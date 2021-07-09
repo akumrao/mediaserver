@@ -121,6 +121,8 @@ typedef struct OutputStream {
     long int startTime{0};
     int stream_index{0};
     void parseMuxContent();
+    
+    void parseMp4a(); //iTunes
        
  private:
      
