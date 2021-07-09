@@ -7,7 +7,7 @@ namespace base {
 namespace fmp4 {
 
 
-// #define TIMESTAMPFILTER_DEBUG // keep this commented
+ #define TIMESTAMPFILTER_DEBUG // keep this commented
 
 FrameFilter::FrameFilter(const char *name, FrameFilter *next) : name(name), next(next){};
 

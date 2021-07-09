@@ -23,7 +23,7 @@
 
 #include "net/netInterface.h"
 #include "http/HttpClient.h"
-//#include "http/HttpsClient.h"  for https
+#include "http/HttpServer.h" 
 
 
  
@@ -32,16 +32,16 @@ namespace base {
 namespace fmp4 {
     
 class FFParse;
- class ReadMp4: public Thread//, public WebSocketServer
+ class ReadMp4: public Thread, public net::HttpServer 
  {
      
      
  public:
-     ReadMp4( );
+     ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory );
      
      ~ReadMp4( );
      
-     void websocketConnect();
+    // void websocketConnect();
      
       //void send(const char * data, int size, bool binary);
      
@@ -58,15 +58,15 @@ class FFParse;
      FFParse  *ffparser;
  private:
      
-     net::ClientConnecton *conn{nullptr};
+    // net::ClientConnecton *conn{nullptr};
      
      std::string fileName;
      
  public:
      
      void broadcast(const char * data, int size, bool binary  );
+     void on_read(net::Listener* connection, const char* msg, size_t len) ;
      
-
 //    virtual void onConnect(    int socketID                        );
 //    virtual void onMessage(    int socketID, const string& data    );
 //    virtual void onDisconnect( int socketID                        );

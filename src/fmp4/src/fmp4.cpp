@@ -28,17 +28,22 @@ extern "C"
 //#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
 
 
-#define MAX_CHUNK_SIZE 10240*8
+//#define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256
 
-#define highWaterMark  8 * 1048576
+//#define highWaterMark  8 * 1048576
 //maximum buffer = 16 *1048576 where  1024*1024 =1048576
 
 
 
 
-#define IOBUFSIZE 40960
+//#define IOBUFSIZE 40960
 //40960*6
+
+
+
+#include "http/websocket.h"
+
 
 namespace base {
     
@@ -46,9 +51,12 @@ namespace base {
 
     namespace fmp4 {
 
-        ReadMp4::ReadMp4() {
+        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory){
             
          self = this;
+         
+            ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
+            ffparser->start();    
 
         }
 
@@ -59,67 +67,106 @@ namespace base {
             delete ffparser;
         }
 
-        void ReadMp4::websocketConnect() {
+//        void ReadMp4::websocketConnect() {
+//
+//
+//            conn = new net::HttpClient("ws", SERVER_HOST, SERVER_PORT, "/");
+//	    //conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/"); for https
+//
+//
+//            //            {
+//            //                m_client = new HttpClient("ws", _host, _port, url.str());
+//            //            }
+//            //            else
+//            //            {
+//            //                 m_client = new HttpsClient("wss", _host, _port, url.str());
+//            //            }
+//
+//            // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
+//            conn->fnComplete = [&](const net::Response & response) {
+//                std::string reason = response.getReason();
+//                net::StatusCode statuscode = response.getStatus();
+//                std::string body = conn->readStream() ? conn->readStream()->str() : "";
+//                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
+//            };
+//
+//            conn->fnPayload = [&](net::HttpBase * con, const char* data, size_t sz) {
+//                std::string got = std::string(data, sz);
+//                STrace << "client->fnPayload " << got;
+//                
+//                //  m_ping_timeout_timer.Reset();
+//                //  m_packet_mgr.put_payload(std::string(data,sz));
+//                if( got == "reset")
+//                    ffparser->reset();    
+//            };
+//
+//
+//            conn->fnConnect = [&](net::HttpBase * con) {
+//                STrace << "onconnect ";
+//                
+//                //this->start();
+//                ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
+//                ffparser->start();    
+//                // conn->send(x, 2, true);
+//            };
+//
+//
+//            conn->fnClose = [&](net::HttpBase * con, std::string str) {
+//                STrace << "client->fnClose " << str;
+//
+//                //on_close();
+//            };
+//
+//            //  conn->_request.setKeepAlive(false);
+//            conn->setReadStream(new std::stringstream);
+//            conn->send();
+//            LTrace("sendHandshakeRequest over")
+//            
+//
+//        }
 
+        void  ReadMp4::on_read(net::Listener* connection, const char* msg, size_t len) {
 
-            conn = new net::HttpClient("ws", SERVER_HOST, SERVER_PORT, "/");
-	    //conn = new net::HttpsClient("wss", SERVER_HOST, SERVER_PORT, "/"); for https
-
-
-            //            {
-            //                m_client = new HttpClient("ws", _host, _port, url.str());
-            //            }
-            //            else
-            //            {
-            //                 m_client = new HttpsClient("wss", _host, _port, url.str());
-            //            }
-
-            // conn->Complete += sdelegate(&context, &CallbackContext::onClientConnectionComplete);
-            conn->fnComplete = [&](const net::Response & response) {
-                std::string reason = response.getReason();
-                net::StatusCode statuscode = response.getStatus();
-                std::string body = conn->readStream() ? conn->readStream()->str() : "";
-                STrace << "SocketIO handshake response:" << "Reason: " << reason << " Response: " << body;
-            };
-
-            conn->fnPayload = [&](net::HttpBase * con, const char* data, size_t sz) {
-                std::string got = std::string(data, sz);
-                STrace << "client->fnPayload " << got;
+            //connection->send("arvind", 6 );
+   
+            
+             std::string got = std::string(msg, len);
+             STrace << "on_read " << got;
                 
                 //  m_ping_timeout_timer.Reset();
                 //  m_packet_mgr.put_payload(std::string(data,sz));
                 if( got == "reset")
                     ffparser->reset();    
-            };
-
-
-            conn->fnConnect = [&](net::HttpBase * con) {
-                STrace << "onconnect ";
-                
-                //this->start();
-                ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
-                ffparser->start();    
-                // conn->send(x, 2, true);
-            };
-
-
-            conn->fnClose = [&](net::HttpBase * con, std::string str) {
-                STrace << "client->fnClose " << str;
-
-                //on_close();
-            };
-
-            //  conn->_request.setKeepAlive(false);
-            conn->setReadStream(new std::stringstream);
-            conn->send();
-            LTrace("sendHandshakeRequest over")
+               
             
+        
+
+            //con->send( msg, len );
+
+           // sendAll(msg, len);
 
         }
-        
+    
         void ReadMp4::broadcast(const char * data, int size, bool binary   )
         {
-            conn->send( data, size, binary    );
+           // conn->send( data, size, binary    );
+            static int noCon =0;
+            
+            if(noCon !=this->GetNumConnections())
+                
+            {
+                noCon = this->GetNumConnections();
+                SInfo << "No of Connectons " << noCon;
+            }
+
+            for (auto* connection :  this->GetConnections())
+            {
+                 net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
+                 if(con)
+                 con->send(data ,size, binary );
+            }
+
+        
 
         }
         

@@ -11,6 +11,8 @@
 #include "base/test.h"
 #include "base/logger.h"
 #include "base/application.h"
+#include "http/HTTPResponder.h"
+
 #include "fmp4.h"
 #include "ff/ff.h"
 #include "ff/mediacapture.h"
@@ -34,14 +36,14 @@ int main(int argc, char** argv) {
     avcodec_register_all();
 
       
-    fmp4::ReadMp4 readmp4;
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 1111, new net::StreamingResponderFactory()  );
     
-    readmp4.websocketConnect();
+    //readmp4.websocketConnect();
 
 
     app.run();
     
-    readmp4.stop();
+    readmp4->stop();
     
 
 }
