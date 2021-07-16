@@ -136,7 +136,7 @@ namespace SdpParse
 	  json& offerMediaObject,
 	  const std::string& reuseMid,
 	  json& offerRtpParameters,
-	  json& answerRtpParameters,
+	  json& answerRtpParameters,const json& sctpParameters,
 	  const json* codecOptions)
 	{
 		
@@ -145,7 +145,7 @@ namespace SdpParse
 		  this->iceParameters,
 		  this->iceCandidates,
 		  this->dtlsParameters,
-		  this->sctpParameters,
+		  sctpParameters,
 		  offerMediaObject,
 		  offerRtpParameters,
 		  answerRtpParameters,
@@ -167,7 +167,7 @@ namespace SdpParse
 	  const std::string& kind,
 	  const json& offerRtpParameters,
 	  const std::string& streamId,
-	  const std::string& trackId)
+	  const std::string& trackId, const json& sctpParameters)
 	{
 		
 
@@ -175,7 +175,7 @@ namespace SdpParse
 		  this->iceParameters,
 		  this->iceCandidates,
 		  this->dtlsParameters,
-		  nullptr, // sctpParameters must be null here.
+		  sctpParameters, // sctpParameters must be null here.
 		  mid,
 		  kind,
 		  offerRtpParameters,

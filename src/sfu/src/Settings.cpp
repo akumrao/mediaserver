@@ -53,8 +53,8 @@ void Settings::SetConfiguration(json &cnfg)
             
             Level ld = getLevelFromString(loglevel.c_str());
             
-            //Logger::instance().add(new ConsoleChannel("mediaserver", ld));
-            Logger::instance().add(new FileChannel("mediaserver","/var/log/sfuserver", ld));
+            Logger::instance().add(new ConsoleChannel("mediaserver", ld));
+            //Logger::instance().add(new FileChannel("mediaserver","/var/log/sfuserver", ld));
             Logger::instance().setWriter(new AsyncLogWriter);
             
         }
@@ -134,6 +134,12 @@ void Settings::SetConfiguration(json &cnfg)
         }
         if (cnfg.find("transport_close") != cnfg.end()) {
            Settings::configuration.transport_close = cnfg["transport_close"];
+        }
+        if (cnfg.find("transport_produceData") != cnfg.end()) {
+           Settings::configuration.transport_produceData = cnfg["transport_produceData"];
+        }
+        if (cnfg.find("transport_consumeData") != cnfg.end()) {
+           Settings::configuration.transport_consumeData = cnfg["transport_consumeData"];
         }
 
 	/* Post configuration. */

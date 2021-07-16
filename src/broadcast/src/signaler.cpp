@@ -21,6 +21,8 @@ namespace base {
         }
 
         Signaler::~Signaler() {
+            
+            SInfo << "~Signaler() ";
         }
 
         void Signaler::startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping) {

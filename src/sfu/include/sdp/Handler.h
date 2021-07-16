@@ -64,6 +64,7 @@ namespace SdpParse {
         ~Producers();
 
         void close_producer( const std::string &producerid);
+        void close_producer_sctp( const std::string &producerid);
         void runit(std::function<void (const std::string & )> cbAns);
         
 //        struct MapProCon
@@ -91,7 +92,7 @@ namespace SdpParse {
         
         
     private:
-        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters,std::string mid, std::string reuseMid,  nlohmann::json &offerMediaObject );
+        void GetAnswer(std::string & kind , nlohmann::json &sendingRtpParameters,std::string mid, std::string reuseMid,  nlohmann::json &offerMediaObject, const nlohmann::json& sctpParameters );
         
         std::string cnameForProducers; 
         
@@ -112,6 +113,7 @@ namespace SdpParse {
         void resume( const std::string& consumerId , bool pause);
 
         void close_consumer(const std::string& producerid, const std::string& conumserid );
+        void close_consumer_sctp(const std::string& producerid, const std::string& conumserid); //
         void consumer_getStats( const std::string& consumerIds); 
          void sendSDP(std::string &from);
        // void onUnSubscribe(const std::string& producerPeer);

@@ -32,7 +32,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
-		const RTC::SctpStreamParameters& GetSctpStreamParameters() const;
+		RTC::SctpStreamParameters& GetSctpStreamParameters() ;
 		bool IsActive() const;
 		void TransportConnected();
 		void TransportDisconnected();
@@ -62,7 +62,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline const RTC::SctpStreamParameters& DataConsumer::GetSctpStreamParameters() const
+	inline RTC::SctpStreamParameters& DataConsumer::GetSctpStreamParameters() 
 	{
 		return this->sctpStreamParameters;
 	}

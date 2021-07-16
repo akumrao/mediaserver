@@ -27,27 +27,27 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
-		const RTC::SctpStreamParameters& GetSctpStreamParameters() const;
+		 RTC::SctpStreamParameters& GetSctpStreamParameters() ;
 		void ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.
 		const std::string id;
+                std::string label;
+		std::string protocol;
 
 	private:
 		// Passed by argument.
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		RTC::SctpStreamParameters sctpStreamParameters;
-		std::string label;
-		std::string protocol;
 		size_t messagesReceived{ 0 };
 		size_t bytesReceived{ 0 };
 	};
 
 	/* Inline methods. */
 
-	inline const RTC::SctpStreamParameters& DataProducer::GetSctpStreamParameters() const
+	inline  RTC::SctpStreamParameters& DataProducer::GetSctpStreamParameters() 
 	{
 		return this->sctpStreamParameters;
 	}

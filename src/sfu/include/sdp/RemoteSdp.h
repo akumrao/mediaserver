@@ -33,14 +33,14 @@ namespace SdpParse
 			  nlohmann::json& offerMediaObject,
 			  const std::string& reuseMid,
 			  nlohmann::json& offerRtpParameters,
-			  nlohmann::json& answerRtpParameters,
+			  nlohmann::json& answerRtpParameters,const nlohmann::json& sctpParameters,
 			  const nlohmann::json* codecOptions);
 			void Receive(
 			  const std::string& mid,
 			  const std::string& kind,
 			  const nlohmann::json& offerRtpParameters,
 			  const std::string& streamId,
-			  const std::string& trackId);
+			  const std::string& trackId , const nlohmann::json& sctpParameters);
 			void UpdateIceParameters(const nlohmann::json& iceParameters);
 			void UpdateDtlsRole(const std::string& role);
 			void DisableMediaSection(const std::string& mid);

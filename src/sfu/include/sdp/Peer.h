@@ -25,7 +25,7 @@ namespace SdpParse {
                 
         bool CanProduce(const std::string& kind);
 
-        nlohmann::json GetNativeSctpCapabilities();
+       // nlohmann::json GetNativeSctpCapabilities();
         
         std::string participantID;
         std::string participantName;
@@ -46,7 +46,7 @@ namespace SdpParse {
         nlohmann::json recvRtpCapabilities;
         // Whether we can produce audio/video based on computed extended RTP capabilities.
         // Local SCTP capabilities.
-        nlohmann::json sctpCapabilities;
+      ///  nlohmann::json sctpCapabilities;
         
       
             

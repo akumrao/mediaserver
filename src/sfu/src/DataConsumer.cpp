@@ -124,7 +124,8 @@ namespace RTC
 
 		this->transportConnected = true;
 
-		MS_DEBUG_DEV("Transport connected [dataConsumerId:%s]", this->id.c_str());
+		//MS_DEBUG_DEV("Transport connected [dataConsumerId:%s]", this->id.c_str());
+		SInfo << "Transport connected dataConsumerId:" << this->id;
 	}
 
 	void DataConsumer::TransportDisconnected()
@@ -133,7 +134,8 @@ namespace RTC
 
 		this->transportConnected = false;
 
-		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
+	
+		SInfo << "Transport disconnected dataConsumerId:" << this->id;
 	}
 
 	void DataConsumer::SctpAssociationConnected()
@@ -142,7 +144,7 @@ namespace RTC
 
 		this->sctpAssociationConnected = true;
 
-		MS_DEBUG_DEV("SctpAssociation connected [dataConsumerId:%s]", this->id.c_str());
+		SInfo << "SctpAssociation connected  dataConsumerId:" << this->id;
 	}
 
 	void DataConsumer::SctpAssociationClosed()
@@ -151,7 +153,8 @@ namespace RTC
 
 		this->sctpAssociationConnected = false;
 
-		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
+		//MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
+		SInfo << "SctpAssociation closed  dataConsumerId:" << this->id;
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
@@ -172,6 +175,8 @@ namespace RTC
 	void DataConsumer::SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
+                
+                SInfo << "SctpAssociation SendSctpMessage  dataConsumerId:" << this->id;
 
 		if (!IsActive())
 			return;

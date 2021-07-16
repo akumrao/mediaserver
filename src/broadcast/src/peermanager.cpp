@@ -13,9 +13,12 @@ namespace base {
         PeerManager::PeerManager() // (PeerFactoryContext* context)
         // : _context(context)
         {
+            SInfo << "PeerManager()";
+            
         }
 
         PeerManager::~PeerManager() {
+             SInfo << "PeerManager()";
         }
 
         void PeerManager::sendSDP(Peer* conn, const std::string& type, const std::string& sdp) {
@@ -53,14 +56,14 @@ namespace base {
                 return;
             }
             
-             LTrace("recvCandidate" , cnfg::stringify(message))
+             LInfo("recvCandidate" , cnfg::stringify(message))
 
             std::string mid = message.value(kCandidateSdpMidName, "");
             int mlineindex = message.value(kCandidateSdpMlineIndexName, -1);
             std::string sdp = message.value(kCandidateSdpName, "");
             if (mlineindex == -1 || mid.empty() || sdp.empty()) {
                 LError("Invalid candidate format")
-                assert(0 && "bad candiate");
+               // assert(0 && "bad candiate");
                 return;
             }
 
@@ -82,14 +85,12 @@ namespace base {
 
         void PeerManager::onClosed(Peer* conn) {
             LInfo("Deleting peer connection: ", conn->peerid())
-                    //arvind
-                    //  if (remove(conn))
-                    //        deleteLater<Peer>(conn); // async delete
+            
         }
 
         void PeerManager::onFailure(Peer* conn, const std::string& error) {
             LInfo("Deleting peer connection: ", conn->peerid())
-                    //arvind
+                    //arvind  // probably remove teh following line and move it to singaller.cpp, it shoudl be simillar to onclose
                      if (remove(conn))
                          delete conn;
                     //   deleteLater<Peer>(conn); // async delete

@@ -52,6 +52,8 @@ public:
                 json consumer_setPreferredLayers;
                 json transport_enableTraceEvent;
                 json transport_close;
+                json transport_produceData;
+                json transport_consumeData;
 	};
 
 public:

@@ -80,6 +80,9 @@ namespace RTC
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:
+            
+                int16_t m_streamId{-1};
+                
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		uint16_t os{ 1024 };
@@ -90,10 +93,12 @@ namespace RTC
 		uint8_t* messageBuffer{ nullptr };
 		// Others.
 		SctpState state{ SctpState::NEW };
-		struct socket* socket{ nullptr };
+		//struct socket* socket{ nullptr };
 		uint16_t desiredOs{ 0 };
 		size_t messageBufferLen{ 0 };
 		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.
+        public:
+                struct socket* socket{ nullptr };
 	};
 
 	/* Inline static methods. */

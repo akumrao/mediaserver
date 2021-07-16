@@ -43,7 +43,7 @@ namespace sdptransform
 						// names:
 						{ "username", "sessionId", "sessionVersion", "netType", "ipVer", "address" },
 						// types:
-						{ 's', 'd', 'd', 's', 'd', 's' },
+						{ 's', 'u', 'u', 's', 'd', 's' },
 						// format:
 						"%s %d %d %s IP%d %s"
 					}
@@ -1053,7 +1053,36 @@ namespace sdptransform
 						// format:
 						"mediaclk:%s"
 					},
-
+					// a=sctp-port:5000
+					{
+						// name:
+						"sctpPort",
+						// push:
+						"",
+						// reg:
+						std::regex("^sctp-port:(\\d+)$"),
+						// names:
+						{ },
+						// types:
+						{ 'd' },
+						// format:
+						"sctp-port:%s"
+					},
+					// a=max-message-size:100000
+					{
+						// name:
+						"maxMessageSize",
+						// push:
+						"",
+						// reg:
+						std::regex("^max-message-size:(\\d+)$"),
+						// names:
+						{ },
+						// types:
+						{ 'd' },
+						// format:
+						"max-message-size:%s"
+					},
 					// Any a= that we don't understand is kepts verbatim on media.invalid.
 					{
 						// name:

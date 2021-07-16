@@ -5,7 +5,7 @@
 #include "RTC/DataProducer.h"
 #include <json.hpp>
 #include <unordered_map>
-
+#include "RTC/SctpAssociation.h"
 using json = nlohmann::json;
 
 namespace RTC
@@ -14,13 +14,13 @@ namespace RTC
 	{
 	public:
 		void FillJson(json& jsonObject) const;
-		void AddDataProducer(RTC::DataProducer* dataProducer);
+		void AddDataProducer(RTC::SctpAssociation*, RTC::DataProducer* dataProducer);
 		void RemoveDataProducer(RTC::DataProducer* dataProducer);
-		RTC::DataProducer* GetDataProducer(uint16_t streamId);
+		RTC::DataProducer* GetDataProducer( RTC::SctpAssociation* sctpAssociation);
 
 	public:
 		// Table of streamId / DataProducer pairs.
-		std::unordered_map<uint16_t, RTC::DataProducer*> streamIdTable;
+		std::unordered_map< RTC::SctpAssociation* , RTC::DataProducer*> sctpTable;
 	};
 } // namespace RTC
 

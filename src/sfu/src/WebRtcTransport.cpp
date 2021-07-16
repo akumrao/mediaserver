@@ -905,7 +905,7 @@ namespace RTC
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTING ||
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
+			//MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
 
 			this->dtlsTransport->ProcessDtlsData(data, len);
 		}
