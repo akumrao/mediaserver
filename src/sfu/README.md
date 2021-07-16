@@ -43,6 +43,14 @@ Firfox does not work with self signed certificate.  If you do not have proper ce
 Also, you know that h264 in each browser depends on profile-level-id value, right and level id.
 
 
+
+For datachannel tutorial look at
+
+usrsctp/
+
+mediaserver/src/sfu/deps/usrsctp/usrsctp/tutorial
+
+
 **Background**
 The WebRTC specification has evolved over the years. Notable API changes in the past include the shift to addTrack() and other “track-based” APIs from the legacy addStream() and other “stream-based” APIs. The track-based APIs exposed senders and receivers, allowing replacing which track to send without renegotiation and getting and setting encoding parameters, but there is one more stage left in the evolution towards WebRTC 1.0.
 The specification has settled on an SDP format called “Unified Plan” which is different than the Chrome’s SDP format, “Plan B”. Switching SDP format will impact many applications in possibly breaking ways, including what SDP format is generated/accepted and assumptions no longer holding (e.g. local and remote track IDs no longer match in some cases). It also adds a set of new APIs: transceivers. This guide outlines the differences between “Plan B” and “Unified Plan” to help developers prepare for the switch. Firefox already supports Unified Plan, which is the only SDP format they support. Other browsers will follow.
