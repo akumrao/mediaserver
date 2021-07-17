@@ -109,6 +109,8 @@ namespace RTC
 			// This may throw.
 			this->sctpAssociation =
 			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+                        
+                        SInfo << "sctpAssociation " <<  sctpAssociation;
 		}
 
 		// Create the RTCP timer.
@@ -117,7 +119,7 @@ namespace RTC
 
 	Transport::~Transport()
 	{
-		MS_TRACE();
+                SInfo << "~Transport delete sctp "  <<  sctpAssociation; 
 
 		// Set the destroying flag.
 		this->destroying = true;
@@ -1423,9 +1425,8 @@ namespace RTC
 
 	void Transport::ReceiveSctpData(const uint8_t* data, size_t len)
 	{   
-                SInfo << "ReceiveSctpData sctpAssociation:" << sctpAssociation;
-            
-		MS_TRACE();
+ 		MS_TRACE();
+                 SDebug << "ReceiveSctpData sctpAssociation:" << sctpAssociation;
 
 		if (!this->sctpAssociation)
 		{
@@ -2424,7 +2425,7 @@ namespace RTC
 	{
 		MS_TRACE();
                 
-                SInfo << " OnDataProducerSctpMessageReceived dataProducer" <<  dataProducer->id  << " sctpAssociation "  << sctpAssociation;
+                SInfo << "OnDataProducerSctpMessageReceived dataProducer " <<  dataProducer->id  << " sctpAssociation "  << sctpAssociation;
 
 		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
 	}
@@ -2433,7 +2434,7 @@ namespace RTC
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
-                 SInfo << " OnDataProducerSctpMessageReceived dataConsumer" <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
+                 SInfo << " OnDataProducerSctpMessageReceived dataConsumer " <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
                  
 		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
@@ -2441,7 +2442,7 @@ namespace RTC
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
-                 SInfo << " OnDataConsumerDataProducerClosed dataConsumer" <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
+                 SInfo << " OnDataConsumerDataProducerClosed dataConsumer " <<  dataConsumer->id << " sctpAssociation "  << sctpAssociation;
 
 		// Remove it from the maps.
 		this->mapDataConsumers.erase(dataConsumer->id);
@@ -2465,7 +2466,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+		Channel::Notifier::Emit(this->id, "sctpstatechange ", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2531,8 +2532,8 @@ namespace RTC
 	inline void Transport::OnSctpAssociationSendData(
 	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
 	{
-		MS_TRACE();
-                SInfo << "OnSctpAssociationSendData sctpAssociation " << sctpAssociation;
+		//MS_TRACE();
+                SDebug << "OnSctpAssociationSendData sctpAssociation " << sctpAssociation;
 
 		// Ignore if destroying.
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,

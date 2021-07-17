@@ -319,8 +319,20 @@ namespace SdpParse
                         exit(-1);
                     }
 
-                    for (auto proCon = mapProducer[trackid]->mapProCon.begin(); proCon != mapProducer[trackid]->mapProCon.end(); ) {
-                        proCon->first->close_consumer(trackid, proCon->second);
+                    for (auto proCon = mapProducer[trackid]->mapProCon.begin(); proCon != mapProducer[trackid]->mapProCon.end(); ) 
+                    {
+                    
+                       
+                        std::string  kind =  mapProducer[trackid]->producer["kind"].get<std::string>();
+                        
+                        
+                        if( kind == "application" )
+                             proCon->first->close_consumer_sctp(trackid, proCon->second);
+                        else
+                            proCon->first->close_consumer(trackid, proCon->second);
+
+                       
+                        //proCon->first->close_consumer(trackid, proCon->second);
                         SInfo  <<  "Delete consumer id " << proCon->second;
                         proCon->first->mapConsumer.erase(proCon->second);
                         proCon = mapProducer[trackid]->mapProCon.erase(proCon); // note it will = next(it) after erase
@@ -584,6 +596,7 @@ namespace SdpParse
                     consumers->close_consumer_sctp(producerid, consumerID);
                 else
                     consumers->close_consumer(producerid, consumerID);
+                
                 setConsumer.insert(consumers);
                 proCon = producer->mapProCon.erase(proCon); // note it will = next(it) after erase
                 SInfo  <<  "Delete consumer id " << consumerID;
@@ -804,7 +817,7 @@ namespace SdpParse
          
          signaler->mapNotification.erase(conumserid);
 
-         SInfo << "Close Mid: " << mid << " Conumer id: " << conumserid << "sctp Producer ID: " << producerid << " Participant id " << peer->participantID;
+         SInfo << "Close Mid: " << mid << " Conumer id: " << conumserid << " sctp Producer ID: " << producerid << " Participant id " << peer->participantID;
          delete mapConsumer[conumserid];
 
 
@@ -1159,11 +1172,21 @@ namespace SdpParse
              
             std::string consumerid  = cons->second->consumer["id"].get<std::string>();
             std::string  producerId= cons->second->consumer["producerId"].get<std::string>();
+            
+            std::string  kind= cons->second->consumer["kind"].get<std::string>();
+             
             SInfo  <<  "Delete consumer id " << consumerid  << " producerId  "  << producerId;
               
             Producers *producers = cons->second->producers;
-         
-            close_consumer(producerId, consumerid);
+            
+             
+            if( kind == "application" )
+                close_consumer_sctp(producerId, consumerid);
+            else
+                close_consumer(producerId, consumerid);
+             
+             
+            
             producers->mapProducer[producerId]->mapProCon.erase(this);
             
             cons = mapConsumer.erase(cons);

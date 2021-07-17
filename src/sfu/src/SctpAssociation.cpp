@@ -554,14 +554,15 @@ namespace RTC
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
                 
-            SInfo << " SendSctpMessage dataConsumer" <<  dataConsumer;
-
 		// This must be controlled by the DataConsumer.
 		assertm(
-		  len <= this->maxSctpMessageSize,
+		len <= this->maxSctpMessageSize,
 		  "given message exceeds max allowed message size" );
 
 		auto& parameters = dataConsumer->GetSctpStreamParameters();
+                parameters.streamId = m_streamId;
+                
+                SInfo << "Send Sct pMessage to dataConsumer " <<  dataConsumer  <<  " to stream id " <<  parameters.streamId;; 
 
 		// Fill stcp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -610,42 +611,58 @@ namespace RTC
 			  std::strerror(errno));
 		}
                 
-                  SInfo << "usrsctp_sendv with this "  << this <<  " socket " << this->socket  << " msg " << msg ;
+                  SInfo << "usrsctp_sendv with this "  << this <<  " socket " << this->socket  << " msg " <<  std::string((const char*) msg, len) ;
 	}
 
 	void SctpAssociation::HandleDataConsumer(RTC::DataConsumer* dataConsumer)
 	{
+//             if( m_streamId < 0  )
+//             {
+//                 SError << "SCTP is not initialzed yet. You can try to supply correct value from config file";
+//                 return ;
+//             }
+//            else
+//            dataConsumer->GetSctpStreamParameters().streamId = m_streamId; 
 		
-
-		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
-
-		// We need more OS.
-		if (streamId > this->os - 1)
-			AddOutgoingStreams(/*force*/ false);
+            
+            auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
+		// We need more than 1024 OS. 
+            if (m_streamId > this->os - 1)   // tjos cpde will never get executed
+                    AddOutgoingStreams(/*force*/ false);
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
 	{
 		
-
-		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
+                if( m_streamId < 0  )
+                {
+                   SError << "SCTP is not initialzed yet. You can try to supply correct value from config file";
+                   return ;
+                }
+                
+		dataProducer->GetSctpStreamParameters().streamId = m_streamId;
 
 		// Send SCTP_RESET_STREAMS to the remote.
 		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
 		if (this->isDataChannel)
-			ResetSctpStream(streamId, StreamDirection::OUTGOING);
+			ResetSctpStream(m_streamId, StreamDirection::OUTGOING);
 		else
-			ResetSctpStream(streamId, StreamDirection::INCOMING);
+			ResetSctpStream(m_streamId, StreamDirection::INCOMING);
 	}
 
 	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
 	{
 		
-
-		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
-
+                if( m_streamId < 0  )
+                {
+                   SError << "SCTP is not initialzed yet. You can try to supply correct value from config file";
+                   return ;
+                }
+                  
+		dataConsumer->GetSctpStreamParameters().streamId = m_streamId;
 		// Send SCTP_RESET_STREAMS to the remote.
-		ResetSctpStream(streamId, StreamDirection::OUTGOING);
+		ResetSctpStream(m_streamId, StreamDirection::OUTGOING);
+                
 	}
 
 	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction)
@@ -799,6 +816,7 @@ namespace RTC
                             /* XXX: error handling? */
                             return;
                         }
+                        m_streamId = i_stream;
                         SInfo << " channel open request streamid " <<  i_stream << " this " << this;
                         
                        // req = (struct rtcweb_datachannel_open_request *) data;

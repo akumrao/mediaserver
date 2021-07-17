@@ -80,6 +80,9 @@ namespace RTC
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:
+            
+                int16_t m_streamId{-1};
+                
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		uint16_t os{ 1024 };
