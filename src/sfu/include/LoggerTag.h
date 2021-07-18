@@ -65,39 +65,6 @@ using namespace base;
 #define MS_ERROR_STD(...) { LogStream(Level::Trace, _fileName(__FILE__), __LINE__).write(__VA_ARGS__); }
 
 
-#define  _MS_LOG_STR " | "
-#define _MS_LOG_ARG __FILE__, __LINE__, MS_CLASS, __FUNCTION__
-
-
-#define MS_DUMP_DATA(data, len) \
-	do \
-	{ \
-		char buffer [256];\
-                int loggerWritten = std::snprintf(buffer, 256, "X(data) " _MS_LOG_STR, _MS_LOG_ARG); \
-		LTrace(buffer); \
-		size_t bufferDataLen{ 0 }; \
-		for (size_t i{0}; i < len; ++i) \
-		{ \
-		  if (i % 8 == 0) \
-		  { \
-		  	if (bufferDataLen != 0) \
-		  	{ \
-		  		LTrace(buffer) ; \
-		  		bufferDataLen = 0; \
-		  	} \
-		    int loggerWritten = std::snprintf(buffer + bufferDataLen, 256, "X%06X ", static_cast<unsigned int>(i)); \
-		    bufferDataLen += loggerWritten; \
-		  } \
-		  int loggerWritten = std::snprintf(buffer + bufferDataLen, 256, "%02X ", static_cast<unsigned char>(data[i])); \
-		  bufferDataLen += loggerWritten; \
-		} \
-		if (bufferDataLen != 0) \
-			LTrace(buffer) ; \
-	} \
-	while (false)
-
-
-
 
 #define MS_TRACE() 
 #define MS_TRACE_STD()

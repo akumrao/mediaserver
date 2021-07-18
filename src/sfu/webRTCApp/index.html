@@ -127,7 +127,7 @@ hr.new4 {
 <table border="0" cellpadding="0">
 <tbody>
 <tr style="background-color: #1ffff0;">
-<th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;Augmented Reality Worklink Router</th>
+<th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;SFU Router</th>
 </tr>
 <tr style="background-color: #f9ecf2;">
 <td colspan="3">
@@ -162,6 +162,7 @@ hr.new4 {
         <fieldset id="fs_connection">
           
           <div><button id="btn_connect">Connect</button> </div>
+
         </fieldset>
 
 </td>
@@ -178,19 +179,6 @@ hr.new4 {
           <div>
             <button id="btn_screen">Share Screen</button>
           </div>
-          <div>
-           
-              <input type="text" id="dataInput" value="Testing Data Channel"/>
-
-              <button id="btn_datasend"> Send IT</button>
-
-              <ul id="dataList">
-           
-              </ul>
-
-
-          </div>
-
            
 <!--            <div><button id="btn_subscribe_pause">Pause</button> <span id="sub_status"></span>-->
 <!--            <div><button id="btn_subscribe_resume">Resume</button> <span id="sub_status"></span>-->
@@ -214,6 +202,36 @@ hr.new4 {
         <div id="chatDiv" style="overflow-y: auto; height:130px; ">
     
           <ul id="chatmessages"></ul>
+        </div>
+
+        <div id="container">
+
+
+            <section>
+              <div >
+                <form id="fileInfo">
+                  <input type="file" id="fileInput" name="files"/>
+                </form>
+                <button disabled id="sendFile">Send</button>
+                <button disabled id="abortButton">Abort</button>
+              </div>
+
+              <div class="progress">
+                <div class="label">Send progress: </div>
+                <progress id="sendProgress" max="0" value="0"></progress>
+              </div>
+
+              <div class="progress">
+                <div class="label">Receive progress: </div>
+                <progress id="receiveProgress" max="0" value="0"></progress>
+              </div>
+
+              <div id="bitrate"></div>
+              <a id="download"></a>
+              <span id="status"></span>
+
+            </section>
+
         </div>
 </td>
 </tr>
@@ -288,15 +306,13 @@ hr.new4 {
 
 
 <tr style="background-color: #f9ecf2;">
-<td colspan="3"> Worklink rounter is a SFU, which route Augmented VR contents. It supports Android and IOS devices. It helps in rapid diagnostics of Worklink. Also in audio and video conference<br> If you need access of this server, please contant Brent or Arvind <td>
+<td colspan="3"> SFU Router. Please contant Arvind Umrao<akumrao@yahoo.com> for more informaion <td>
   
 
 </tr>  
 
 </tbody>
 </table>
-
-
 
 
 
@@ -315,5 +331,8 @@ hr.new4 {
 
   <script src="js/main.js" async  ></script>
   <script src="js/webrtc.js" async></script>
+<!--   <script src="js/filetransfer.js" async></script> -->
+
+
 
 </html>
