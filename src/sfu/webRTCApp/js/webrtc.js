@@ -137,8 +137,8 @@ var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
 
-var channelSnd ;
-var channelRec ;
+let channelSnd =null;
+let channelRec =null;
 //var localStream;
 //var track;
 
@@ -549,7 +549,7 @@ function initPC()
             sdpSemantics       : 'unified-plan'
         });
 
-/*
+
      pc1.ondatachannel = function (event) {
           if (event.channel.label == dataChannelLabel) {
             dataChannel = event.channel;
@@ -561,9 +561,8 @@ function initPC()
     }
 
 
-    channelSnd = pc1.createDataChannel(dataChannelLabel);
-    setupDataChannel(channelSnd);
-    */
+    
+    
 
     // channelSnd.onopen = function(event)
     // {
@@ -1180,6 +1179,12 @@ async function publish(isWebcam)
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
 
+  if(channelSnd == null)
+  {
+      channelSnd = pc1.createDataChannel(dataChannelLabel);
+      setupSendDataChannel(channelSnd);
+  }
+
   if(pc1 == null)
   {
 
@@ -1676,7 +1681,7 @@ async function handleFileInputChange() {
 
 async function createConnection() {
   abortButton.disabled = false;
-  sendFileButton.disabled = true;
+ // sendFileButton.disabled = true;
 
 
   //pc1 = new RTCPeerConnection();
@@ -1721,6 +1726,8 @@ async function createConnection() {
 
 async function initSendDataChannel()
 {
+    if(channelSnd)
+        return;
 
       pc1.ondatachannel = function (event) {
           if (event.channel.label == dataChannelLabel) {
@@ -1773,7 +1780,7 @@ function sendData() {
   if (file.size === 0) {
     bitrateDiv.innerHTML = '';
     statusMessage.textContent = 'File is empty, please select a non-empty file';
-    closeDataChannels();
+    //closeDataChannels();
     return;
   }
   sendProgress.max = file.size;
@@ -1889,12 +1896,12 @@ function onReceiveMessageCallback(event) {
     bitrateDiv.innerHTML =
       `<strong>Average Bitrate:</strong> ${bitrate} kbits/sec (max: ${bitrateMax} kbits/sec)`;
 
-    if (statsInterval) {
-      clearInterval(statsInterval);
-      statsInterval = null;
-    }
+    // if (statsInterval) {
+    //   clearInterval(statsInterval);
+    //   statsInterval = null;
+    // }
 
-    closeDataChannels();
+    //closeDataChannels();
   }
 }
 
@@ -1904,15 +1911,23 @@ function onSendChannelStateChange() {
     console.log(`Send channel state is: ${readyState}`);
     if (readyState === 'open') {
       sendData();
+
+      // if (statsInterval) 
+      // {
+      //   clearInterval(statsInterval);
+      //   statsInterval = null;
+      // }
+
+
     }
   }
 }
 
 function onError(error) {
-  if (channelSnd) {
+  /*if (channelSnd) {
     console.error('Error in channelSnd:', error);
     return;
-  }
+  }*/
   console.log('Error in channelSnd which is already closed:', error);
 }
 
@@ -1923,8 +1938,8 @@ async function onReceiveChannelStateChange() {
     if (readyState === 'open') {
       timestampStart = (new Date()).getTime();
       timestampPrev = timestampStart;
-      statsInterval = setInterval(displayStats, 500);
-      await displayStats();
+      // statsInterval = setInterval(displayStats, 500);
+      // await displayStats();
     }
   }
 }
@@ -1956,8 +1971,6 @@ async function displayStats() {
     }
   }
 }
-
-
 
 
 

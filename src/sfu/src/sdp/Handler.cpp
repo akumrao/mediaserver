@@ -150,11 +150,7 @@ namespace SdpParse
                 
         if(kind == "application" )
         {
-               
-          
-            
-            int x = 0;
-         
+          int x = 0; // in case if you need to proccess data channel in future
         }
         else
         {
@@ -242,6 +238,7 @@ namespace SdpParse
             //SInfo <<  " Deleted " << ack_resp;
         });
     }
+
     void Producers::close_producer_sctp(const std::string &producerid) {
         json param = json::array();
         param.push_back("dataProducer.close");
@@ -370,47 +367,112 @@ namespace SdpParse
                 }
                 continue;
             }
-
             //////////////////////////////////////////
-            
-            json sendingRtpParameters;
-            Producer *p = new Producer();
+
+            if ((mapProducer.find(producerId) == mapProducer.end()))
+            {
+
+                json sendingRtpParameters;
+                Producer *p = new Producer();
+
+		 auto sctpParameters = json::object(); 
+       
+		 sctpParameters["maxMessageSize"] = offerMediaObject["maxMessageSize"];
+		 sctpParameters["protocol"] = offerMediaObject["protocol"];
+		 sctpParameters["sctpPort"] = offerMediaObject["sctpPort"];
+
 
                 //   Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
-             auto sctpParameters = json::object(); 
-       
-            sctpParameters["maxMessageSize"] = offerMediaObject["maxMessageSize"];
-            sctpParameters["protocol"] = offerMediaObject["protocol"];
-            sctpParameters["sctpPort"] = offerMediaObject["sctpPort"];
-            
-            SInfo << "sendingRtpParameters " << sendingRtpParameters.dump(4);
-            SInfo << "offerMediaObject " << offerMediaObject.dump(4);
+
+                GetAnswer(kind, sendingRtpParameters, *midIt, "", offerMediaObject, sctpParameters);
+
+              
 
 
-            GetAnswer(kind, sendingRtpParameters, *midIt, "", offerMediaObject, sctpParameters);
-                
-            
-            if (constructor_name != "PipeTransport")
-            {
-                // If CNAME is given and we don't have yet a CNAME for Producers in this
-                // Transport, take it.
-                if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end())
+                /////////////////////
+                if (constructor_name != "PipeTransport")
                 {
-                    cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
-                }
-                // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
-                // do not include CNAME, create a random one.
-                if (cnameForProducers.empty())
-                {
-                    cnameForProducers = base::util::randomString(8);
-                }
-                // Override Producer's CNAME.
+                    // If CNAME is given and we don't have yet a CNAME for Producers in this
+                    // Transport, take it.
+                    if (cnameForProducers.empty() && sendingRtpParameters.find("rtcp") != sendingRtpParameters.end() && sendingRtpParameters["rtcp"].find("cname") != sendingRtpParameters["rtcp"].end())
+                    {
+                        cnameForProducers = sendingRtpParameters["rtcp"]["cname"];
+                    }
+                    // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
+                    // do not include CNAME, create a random one.
+                    if (cnameForProducers.empty())
+                    {
+                        cnameForProducers = base::util::randomString(8);
+                    }
+                    // Override Producer's CNAME.
 
-            }
-            
-            
-            if( kind == "application" )
-            {
+                    if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end())
+                    {
+                        sendingRtpParameters["rtcp"] = json::object();
+                    }
+
+                    sendingRtpParameters["rtcp"]["cname"] = cnameForProducers;
+                }
+
+        	if( kind != "application" )
+                {	
+			 json param = json::array();
+			param.push_back("transport.produce");
+			param.push_back(peer->participantID);
+			json &trans = Settings::configuration.transport_produce;
+
+                	trans["internal"]["producerId"] = trackid; //uuid4::uuid();
+
+		        // This may throw.
+		        auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
+
+		        auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(kind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
+
+
+		        //SInfo << "consumableRtpParameters " << consumableRtpParameters.dump(4);
+		        // STrace << "rtpMapping " << rtpMapping.dump(4);
+
+		        json data = {
+		            {"kind", kind},
+		            {"paused", false},
+		            {"rtpMapping", rtpMapping},
+		            {"rtpParameters", sendingRtpParameters},
+		        };
+
+		        trans["data"] = data;
+
+		        raiseRequest(param, trans, [&p, &trans, &kind,&mid, &consumableRtpParameters, &sizeofMid,&cbAns, i,this](const json & ack_resp)
+		        {
+
+		            p->producer = {
+		                { "id", trans["internal"]["producerId"]},
+		                {"kind", kind},
+		                {"recvRtpCapabilities", peer->GetRtpCapabilities()}, //{"rtpParameters", sendingRtpParameters},
+		                {"type", ack_resp["data"]["type"]},
+		                 {"mid", std::to_string(mid)},
+		                { "consumableRtpParameters", consumableRtpParameters}
+		            };
+
+		            // SInfo << "Final Producer " << p->producer.dump(4);
+		            mapProducer[p->producer["id"]] = p;
+		            mapProdMid[ mid] = p->producer["id"];
+		            SInfo << "mid : " << mid << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
+		            if (p->producer["kind"] == "audio")
+		            {
+		                rtpObserver_addProducer(p->producer["id"], true);
+		            }
+
+		            if (sizeofMid == i + 1)
+		            {
+		                auto answer = remoteSdp->GetSdp();
+		                        cbAns(answer);
+		            }
+
+
+		        });
+		}
+		else // if "application"
+                {
                 
 
                 json param = json::array();
@@ -448,80 +510,9 @@ namespace SdpParse
 
                     
                 });
+	      }
 
-
-            }
-            else if ((mapProducer.find(producerId) == mapProducer.end()))
-            {
-
-                
-                //   Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = remoteSdp->GetNextMediaSectionIdx();
-
-               if (sendingRtpParameters.find("rtcp") == sendingRtpParameters.end())
-                {
-                    sendingRtpParameters["rtcp"] = json::object();
-                }
-
-                sendingRtpParameters["rtcp"]["cname"] = cnameForProducers;
-
-                json param = json::array();
-                param.push_back("transport.produce");
-                param.push_back(peer->participantID);
-                json &trans = Settings::configuration.transport_produce;
-
-                trans["internal"]["producerId"] = trackid; //uuid4::uuid();
-
-
-  
-
-                // This may throw.
-                auto rtpMapping = SdpParse::ortc::getProducerRtpParametersMapping(sendingRtpParameters, Settings::configuration.routerCapabilities);
-
-                auto consumableRtpParameters = SdpParse::ortc::getConsumableRtpParameters(kind, sendingRtpParameters, Settings::configuration.routerCapabilities, rtpMapping);
-
-
-                //SInfo << "consumableRtpParameters " << consumableRtpParameters.dump(4);
-                // STrace << "rtpMapping " << rtpMapping.dump(4);
-
-                json data = {
-                    {"kind", kind},
-                    {"paused", false},
-                    {"rtpMapping", rtpMapping},
-                    {"rtpParameters", sendingRtpParameters},
-                };
-
-                trans["data"] = data;
-
-                raiseRequest(param, trans, [&p, &trans, &kind,&mid, &consumableRtpParameters, &sizeofMid,&cbAns, i,this](const json & ack_resp)
-                {
-
-                    p->producer = {
-                        { "id", trans["internal"]["producerId"]},
-                        {"kind", kind},
-                        {"recvRtpCapabilities", peer->GetRtpCapabilities()}, //{"rtpParameters", sendingRtpParameters},
-                        {"type", ack_resp["data"]["type"]},
-                         {"mid", std::to_string(mid)},
-                        { "consumableRtpParameters", consumableRtpParameters}
-                    };
-
-                    // SInfo << "Final Producer " << p->producer.dump(4);
-                    mapProducer[p->producer["id"]] = p;
-                    mapProdMid[ mid] = p->producer["id"];
-                    SInfo << "mid : " << mid << " mapProducer " << p->producer["id"] << " kind " << p->producer["kind"];
-                    if (p->producer["kind"] == "audio")
-                    {
-                        rtpObserver_addProducer(p->producer["id"], true);
-                    }
-
-                    if (sizeofMid == i + 1)
-                    {
-                        auto answer = remoteSdp->GetSdp();
-                                cbAns(answer);
-                    }
-
-
-                });
-            }
+            } //  ((mapProducer.find(producerId) == mapProducer.end()))
             else
             {
                 if (sizeofMid == i + 1)
