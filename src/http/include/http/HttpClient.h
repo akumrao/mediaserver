@@ -23,7 +23,7 @@ namespace base {
     namespace net {
         
 
-        class HttpClient : public TcpConnection, public GetAddrInfoReq, public ClientConnecton {
+        class HttpClient : public TcpConnectionBase, public GetAddrInfoReq, public ClientConnecton {
         public:
 
             HttpClient(const std::string& protocol, const std::string &ip, int port, const std::string& query);
@@ -38,7 +38,7 @@ namespace base {
 
         public:
             void tcpsend(const char* data, size_t len) override;
-            void send(const char* data, size_t len) override;
+            void send(const char* data, size_t len, bool binary=false) override;
             void send() override;
             void send(Request& req) override;
             void send(const std::string &str) override;

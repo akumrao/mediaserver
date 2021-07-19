@@ -66,19 +66,18 @@ namespace base
         uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
     }
 
-    void Timer::Start(uint64_t timeout, uint64_t repeat) {
+    void Timer::Start(uint64_t timeout_ms, uint64_t repeat_ms) {
         
-
         if (this->closed)
             LError("closed");
 
-        this->timeout = timeout;
-        this->repeat = repeat;
+        this->timeout = timeout_ms;
+        this->repeat = repeat_ms;
 
         if (uv_is_active(reinterpret_cast<uv_handle_t*> (this->uvHandle)) != 0)
             Stop();
 
-        int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb> (onTimer), timeout, repeat);
+        int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb> (onTimer),  this->timeout, this->repeat);
 
         if (err != 0)
             LError("uv_timer_start() failed: %s", uv_strerror(err));

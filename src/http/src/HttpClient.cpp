@@ -27,7 +27,7 @@ namespace base {
 
 
         HttpClient::HttpClient(URL url) :
-         TcpConnection(nullptr)
+         TcpConnectionBase()
         , ClientConnecton(HTTP_RESPONSE)
         , listener(nullptr)
         , _url(url)
@@ -40,7 +40,7 @@ namespace base {
 
      
         HttpClient::HttpClient(const std::string& protocol, const std::string &ip, int port, const std::string& query):
-            TcpConnection(nullptr)
+            TcpConnectionBase()
           , ClientConnecton(HTTP_RESPONSE)
           , listener(nullptr)
           , _connect(false)
@@ -58,7 +58,7 @@ namespace base {
            
     
         HttpClient::HttpClient(Listener* listener, const URL& url, http_parser_type type)
-        : TcpConnection(listener)
+        : TcpConnectionBase()
         , ClientConnecton(type)
         , listener(listener)
         , _url(url)
@@ -92,11 +92,17 @@ namespace base {
             if (_url.scheme() == "ws") {
                 //  conn->replaceAdapter(new ws::ConnectionAdapter(conn.get(), ws::ClientSide));
                 wsAdapter = new WebSocketConnection(listener, this, ClientSide);
+                SInfo <<  "wsAdapter new connection " << wsAdapter;  
             }
         }
          
         HttpClient::~HttpClient() {
-            LTrace("~HttpClient()")
+
+            SInfo <<  "wsAdapter delete connection " << wsAdapter;  
+            delete wsAdapter;
+            wsAdapter = nullptr;
+            
+            SInfo << "~HttpClient ";
         }
 
         void HttpClient::send() {
@@ -112,33 +118,33 @@ namespace base {
         void HttpClient::Close() {
             _connect = true;
             _active = true;
-            TcpConnection::Close();
+            TcpConnectionBase::Close();
         }
 
          void HttpClient::tcpsend(const char* data, size_t len) {
     
-             TcpConnection::send(data, len);
+             TcpConnectionBase::send(data, len);
          }
          
-        void HttpClient::send(const char* data, size_t len) {
+        void HttpClient::send(const char* data, size_t len , bool binary) {
             connect();
             
             if(wsAdapter)
             {
-                wsAdapter->send(data,len );
+                wsAdapter->send(data,len, binary );
                 return;
             }
 
             if (_active)
                 // Raw data will be pushed onto the Outgoing packet stream
-                TcpConnection::send(data, len);
+                TcpConnectionBase::send(data, len);
             else
                 _outgoingBuffer.push_back(std::string((char*) data, len));
             return;
         }
 
         void HttpClient::send(const std::string &str) {
-            send(str.c_str(), str.length());
+            send(str.c_str(), str.length(), false);
         }
 
         void HttpClient::cbDnsResolve(addrinfo* res, std::string ip) {
@@ -204,7 +210,7 @@ namespace base {
             if (!_outgoingBuffer.empty()) {
                 // LTrace("Sending buffered: ", _outgoingBuffer.size())
                 for (const auto& packet : _outgoingBuffer) {
-                    TcpConnection::send((const char*) packet.c_str(), packet.length());
+                    TcpConnectionBase::send((const char*) packet.c_str(), packet.length());
                 }
                 _outgoingBuffer.clear();
             } else {
@@ -237,7 +243,7 @@ namespace base {
                 wsAdapter->onSocketRecv( std::string((char*)data, len));
                 return;
             }
-            // TcpConnection::on_read( data, len);
+            // TcpConnectionBase::on_read( data, len);
             _parser.parse((const char*) data, len);
             
             
@@ -332,7 +338,7 @@ namespace base {
             LTrace("TcpHTTPConnection::sendHeader:head")
 
             STrace << head;
-            TcpConnection::send((const char*) head.c_str(), head.length());
+            TcpConnectionBase::send((const char*) head.c_str(), head.length());
             return head.length();
         }
 

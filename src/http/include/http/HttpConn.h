@@ -30,7 +30,7 @@ namespace base {
         class WebSocketConnection;
 
         //template < class T>
-        class HttpConnection : public TcpConnection, public HttpBase {
+        class HttpConnection : public TcpConnectionBase, public HttpBase {
         public:
 
         public:
@@ -38,7 +38,8 @@ namespace base {
             ~HttpConnection() override;
 
         public:
-            void send(const char* data, size_t len) override;
+            void send(const char* data, size_t len, bool binary=false) override;
+            void tcpsend(const char* data, size_t len) override;
             void  Close() override;
 
             /* Pure virtual methods inherited from ::HttpConnection. */
@@ -62,12 +63,16 @@ namespace base {
             /// Send the outdoing HTTP header.
             virtual long sendHeader();
 
-
-            WebSocketConnection *wsAdapter{ nullptr};
+           WebSocketConnection* getWebSocketCon()
+           {
+               return wsAdapter;
+           }
+           
 
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
+            WebSocketConnection *wsAdapter{ nullptr};
 
 
         public:

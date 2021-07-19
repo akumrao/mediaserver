@@ -39,7 +39,7 @@ namespace base
 
     public:
         void Close();
-        void Start(uint64_t timeout, uint64_t repeat = 0);
+        void Start(uint64_t timeout_ms, uint64_t repeat_ms = 0);
         void Stop();
         void Reset();
         void Restart();

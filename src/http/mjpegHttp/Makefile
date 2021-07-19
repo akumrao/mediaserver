@@ -1,8 +1,8 @@
 ################################################################################
 ### CUSTOMIZE BELOW HERE #######################################################
 
-CC	= clang
-CXX     = clang++
+CC	= gcc
+CXX     = g++
 TARGET=runMjpegHttp # define the name of the executable
 SOURCES=$(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http_parser/*.cpp )
 
@@ -10,7 +10,7 @@ CXXFLAGS   := -g  -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitializ
  
 
 CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
-              -DWEBRTC_POSIX -D_GLIBCXX_USE_CXX11_ABI=0 \
+              -DWEBRTC_POSIX \
               
 LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
 

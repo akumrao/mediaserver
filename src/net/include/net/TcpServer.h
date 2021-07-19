@@ -22,7 +22,7 @@ namespace base
     namespace net
     {
 
-        class TcpServerBase : public Listener
+        class TcpServerBase : public Listener, public TcpConnectionBase::ListenerClose
         {
         public:
             /**
@@ -39,7 +39,7 @@ namespace base
             const std::string& GetLocalIp() const;
             uint16_t GetLocalPort() const;
             size_t GetNumConnections() const;
-
+	    std::unordered_set<TcpConnectionBase*>& GetConnections();	
 
             bool setNoDelay(bool enable)
             {
@@ -69,7 +69,7 @@ namespace base
             bool SetLocalAddress();
 
             /* Pure virtual methods that must be implemented by the subclass. */
-        protected:
+        public:
             virtual void UserOnTcpConnectionAlloc(TcpConnectionBase** connection) = 0;
             virtual bool UserOnNewTcpConnection(TcpConnectionBase* connection) = 0;
             virtual void UserOnTcpConnectionClosed(TcpConnectionBase* connection) = 0;
@@ -101,6 +101,10 @@ namespace base
 
         inline size_t TcpServerBase::GetNumConnections() const {
             return this->connections.size();
+        }
+	
+	inline std::unordered_set<TcpConnectionBase*> & TcpServerBase::GetConnections(){
+            return this->connections;
         }
 
         inline const struct sockaddr* TcpServerBase::GetLocalAddress() const {

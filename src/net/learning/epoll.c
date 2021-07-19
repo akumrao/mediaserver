@@ -318,4 +318,19 @@ int main(int argc, char** argv)
  * it will not report again. Also lets say fd is already readable, you are adding an event EPOLLIN | EPOLLET and calling epoll_wait, it will report EP * OLLIN.
  * 
  * Default behaviour is level trigerred. To enable EdgeTrigerred use EPOLLET option while adding events. 
+
+
+ Epoll* System Calls
+While working with select and poll we manage everything on user space and we send the sets on each call to wait. To add another socket we need to add it to the set and call select/poll again.
+
+Epoll* system calls help us to create and manage the context in the kernel. We divide the task to 3 steps:
+
+create a context in the kernel using epoll_create
+add and remove file descriptors to/from the context using epoll_ctl
+wait for events in the context using epoll_wait
+# operations  |  poll  |  select   | epoll
+10            |   0.61 |    0.73   | 0.41
+100           |   2.9  |    3.0    | 0.42
+1000          |  35    |   35      | 0.53
+10000         | 990    |  930      | 0.66
  */

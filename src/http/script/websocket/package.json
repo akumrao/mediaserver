@@ -1,0 +1,29 @@
+{
+  "name": "mp3-data-channel",
+  "version": "1.0.0",
+  "description": "mp3-data-channel.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "mp3-data-channel"
+  },
+  "keywords": [
+    "webrtc"
+  ],
+  "author": "shane tully",
+  "license": "MIT",
+  "bugs": {
+    "url": "mp3-data-channel"
+  },
+  "homepage": "mp3-data-channel",
+  "dependencies": {
+    "ws": "^3.3.2",
+    "express": "^4.16.4",
+    "helmet": "^3.21.3",
+    "yargs": "^15.3.0"
+  }
+}

@@ -35,6 +35,7 @@ namespace base
         }
 
         inline static void onClose(uv_handle_t* handle) {
+            SInfo << " TcpServerBase::onClose"  ;
             delete handle;
         }
 
@@ -87,7 +88,7 @@ namespace base
             // Tell the UV handle that the TcpServerBase has been closed.
             this->uvHandle->data = nullptr;
 
-            LDebug("closing %zu active connections", this->connections.size());
+            SInfo << " TcpServerBase::Close,  closing all active connections"  <<  this->connections.size();
 
             for (auto* connection : this->connections)
             {
@@ -155,7 +156,7 @@ namespace base
 
             try
             {
-                connection->Setup( &(this->localAddr), this->localIp, this->localPort);
+                connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
             } catch (const std::exception& error)
             {
                 delete connection;
@@ -185,21 +186,25 @@ namespace base
 
             // Notify the subclass and delete the connection if not accepted by the subclass.
             if (UserOnNewTcpConnection(connection))
+            {
+                   SInfo << "TcpServerBase new connection "  << connection;
                 this->connections.insert(connection);
+            }
             else
                 delete connection;
         }
 
-        inline void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
+        void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-
-            LDebug("TcpServerBase connection closed");
+            
+            SInfo << "TcpServerBase:: connection close "  << connection;
+              
 
             // Remove the TcpConnectionBase from the set.
             this->connections.erase(connection);
 
             // Notify the subclass.
-            UserOnTcpConnectionClosed(connection);
+             UserOnTcpConnectionClosed(connection);
 
             // Delete it.
             delete connection;
@@ -244,7 +249,7 @@ namespace base
         }
 
         /******************************************************************************************************************/
-        static constexpr size_t MaxTcpConnectionsPerServer{ 100000};
+        static constexpr size_t MaxTcpConnectionsPerServer{ 1000};
 
         /* Instance methods. */
 
@@ -266,11 +271,11 @@ namespace base
 // condition
             // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
             if(ssl)
-             *connection = new SslConnection(listener, true);
+             *connection = new SslConnection(true);
             else
-            *connection = new TcpConnection(listener);
+            *connection = new TcpConnectionBase();
             
-            
+            //SInfo << "TcpServer::UserOnTcpConnectionAlloc new connection "  << *connection;
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {
@@ -288,7 +293,7 @@ namespace base
 
         void TcpServer::UserOnTcpConnectionClosed(TcpConnectionBase* connection) {
 
-            //this->listener->on_close( (TcpConnection*)connection);
+            //override this function
         }
 
     } // namespace net

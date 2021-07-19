@@ -39,7 +39,9 @@ namespace base {
             ~HttpsConnection() override;
 
         public:
-            void send(const char* data, size_t len) override;
+            void send(const char* data, size_t len, bool binary=false) override;
+            void tcpsend(const char* data, size_t len) override;
+            
             void Close() override;
 
             /* Pure virtual methods inherited from ::HttpsConnection. */
@@ -66,12 +68,18 @@ namespace base {
             /// Send the outdoing HTTP header.
             virtual long sendHeader() ;
 
-            WebSocketConnection *wsAdapter{ nullptr};
+            WebSocketConnection* getWebSocketCon()
+            {
+               return wsAdapter;
+            }
+           
+
+            
 
         private:
             // Passed by argument.
             Listener* listener{ nullptr};
-
+            WebSocketConnection *wsAdapter{ nullptr};
 
 
         public:
