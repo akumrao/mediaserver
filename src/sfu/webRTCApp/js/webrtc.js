@@ -1,5 +1,7 @@
 'use strict';
 
+  var dataChannelLabel = "chat";
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -134,6 +136,9 @@ var cons_stat = document.getElementById("cons_stat");
 var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
+
+let channelSnd =null;
+let channelRec =null;
 //var localStream;
 //var track;
 
@@ -240,6 +245,21 @@ function initPC()
 
 
 
+
+    channelRec = pc2.createDataChannel(dataChannelLabel);
+    channelRec.binaryType = 'arraybuffer';
+    setupRecDataChannel(channelRec);
+    
+ 
+    pc2.ondatachannel = function (event) {
+          if (event.channel.label == dataChannelLabel) {
+            dataChannel = event.channel;
+            console.log("DataChannel received");
+            setupDataChannel(event.channel);
+          } else {
+            console.log("Unknown CataChannel label: " + event.channel.label);
+          }
+        }
        
     pc2.ontrack = ({transceiver, streams: [stream]}) => {
 
@@ -487,27 +507,29 @@ function initPC()
         switch (pc2.iceConnectionState)
         {
             case 'checking':
-                console.log( 'subscribing...');
+                console.log( 'PC2 subscribing...');
                 break;
             case 'connected':
+
+              console.log( 'PC2 subscribed & connected');
+               break;
+
             case 'completed':
 
-
-                console.log( 'subscribed...');
-
+                console.log( 'PC2 subscribed & completed');
                 break;
             case 'failed':
                // pc2.close();
 
-                console.log( 'failed...');
+                console.log( 'PC2 failed...');
                 break;
             case 'disconnected':
                // pc2.close();
-                console.log( 'Peerconnection disconnected...');
+                console.log( 'PC2 disconnected...');
                 break;
             case 'closed':
                 //pc2.close();
-                console.log( 'failed...');
+                console.log( 'PC2 closed...');
                 break;
         }
     });
@@ -515,6 +537,7 @@ function initPC()
 
 
     /////////////////////////////////////////////////////////////////////////////////
+
 
 
     pc1 = new RTCPeerConnection(
@@ -526,30 +549,63 @@ function initPC()
             sdpSemantics       : 'unified-plan'
         });
 
+
+     pc1.ondatachannel = function (event) {
+          if (event.channel.label == dataChannelLabel) {
+            dataChannel = event.channel;
+            console.log("DataChannel received");
+            setupDataChannel(event.channel);
+          } else {
+            console.log("Unknown CataChannel label: " + event.channel.label);
+          }
+    }
+
+
+    
+    
+
+    // channelSnd.onopen = function(event)
+    // {
+    //     //channelSnd.send('Hi you!');
+    // }
+    
+    // channelSnd.onmessage = function(event)
+    // {
+    //     console.log(event.data);
+
+    //     wirtechanneldata(event.data);
+    // }
+
+
     // Handle RTCPeerConnection connection status.
     pc1.addEventListener('iceconnectionstatechange', () =>
     {
         switch (pc1.iceConnectionState)
         {
             case 'checking':
-                console.log( 'publishing...');
+                console.log( 'PC1 publishing...');
                 break;
             case 'connected':
+
+              console.log( 'PC1 published & connected');
+               break;
+
             case 'completed':
 
-                console.log( 'published...');
+                console.log( 'PC1 published & completed');
                 break;
+
             case 'failed':
                // pc1.close();
-                console.log( 'failed...');
+                console.log( 'PC1 failed...');
                 break;
             case 'disconnected':
                // pc1.close();
-                console.log( 'failed...');
+                console.log( 'PC1 disconnected...');
                 break;
             case 'closed':
                // pc1.close();
-                 console.log( 'failed...');
+                 console.log( 'PC1 closed...');
                 break;
         }
     });
@@ -574,7 +630,7 @@ function sendMessage(message) {
 async  function processOffer( remotePeerID,  sdp)
 {
 
-    console.log( " Pc2 offers %o", sdp);
+    console.log( " Pc2 offers %o", sdp.sdp);
 
     await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
 
@@ -678,10 +734,10 @@ var _awaitQueue = new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 // This client receives a message
 socket.on('message',  async function(message) {
-  console.log('Client received message:', message.type);
-
+  
+  //console.log('Client received message:', message.type);
   if (message.type === 'offer') {
-
+     console.log('Client received message:', message.type);
       return _awaitQueue.push(
           async () =>  processOffer(message.from, message.desc  ));
      //await processOffer(message.from, message.desc  );
@@ -881,7 +937,7 @@ function addProducerVideoAudio() {
 
                     var offer1 = await pc1.createOffer();
 
-                    console.log("after close offer %o ", offer1);
+                    console.log("after close offer %o ", offer1.sdp);
 
                     await pc1.setLocalDescription(offer1);
 
@@ -1123,6 +1179,12 @@ async function publish(isWebcam)
   // const isWebcam = (e.target.id === 'btn_webcam');
   // $txtPublish = isWebcam ? $txtWebcam : $txtScreen;
 
+  if(channelSnd == null)
+  {
+      channelSnd = pc1.createDataChannel(dataChannelLabel);
+      setupSendDataChannel(channelSnd);
+  }
+
   if(pc1 == null)
   {
 
@@ -1223,8 +1285,8 @@ async function publish(isWebcam)
 
         var offer = await pc1.createOffer();
 
-        console.log( "PC1 offer made: %o", offer);
-
+        console.log( 'PC1 offer made:%o', offer.sdp ); 
+  
          await pc1.setLocalDescription(offer);
 
         // We can now get the transceiver.mid.
@@ -1396,7 +1458,7 @@ function soundlevel(message)
        var audLevel = document.getElementById(`consoundLevel-${element.producerId}`); 
        if(audLevel != null)
        {    
-           console.log(`${ 70 + element.volume}px`);
+           //console.log(`${ 70 + element.volume}px`);
            audLevel.style.width =  `${ 70 + element.volume}px` ;
        }
        
@@ -1491,3 +1553,529 @@ function displayMessage(data) {
 
 
     //////////////////////////////chat end ////////////////////////////////////
+
+
+// function btn_senddata()
+// {
+//     var sendme = document.getElementById("dataInput").value ;
+//     channelSnd.send(sendme);
+// }
+
+
+
+
+
+// function wirtechanneldata(x) {
+//   var node = document.createElement("LI");
+//   var textnode = document.createTextNode(x);
+//   node.appendChild(textnode);
+//   document.getElementById("dataList").appendChild(node);
+// }
+
+
+
+
+
+/**
+* Add the various callback handlers to the DataChannel.
+* Shared between both clients.
+*/
+// var setupDataChannel = function (dataChannel) {
+// dataChannel.onopen = function (e) {
+//   console.log("DataChannel open and ready to be used");
+
+//   // $("#send_datachannel_msg").click(function () {
+//   //   var msg = $("#datachannel_msg").val();
+//   //   console.log("Sending message: " + msg);
+//   //   dataChannel.send(msg);
+//   // });
+// };
+
+// dataChannel.onclose = function () {
+//   console.log("DataChannel closed");
+// };
+
+// dataChannel.onerror = function (e) {
+//   console.log("DataChannel error: " + e.message);
+//   console.log(e);
+// };
+
+// dataChannel.onmessage = function (e) {
+//   console.log("Received message: " + e.data);
+//   // if (sourceBuffer != null) {
+//   //   sourceBuffer.appendBuffer(e.data);
+//   // } else {
+//   //   console.log("Got data but sourceBuffer is null");
+//   // }
+// };
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////// file transfer//////////////////////////////////////////////////////////
+
+
+/*
+ * https://raw.githubusercontent.com/webrtc/samples/gh-pages/src/content/datachannel/filetransfer/js/main.js
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree.
+ */
+'use strict';
+
+
+//let channelSnd;
+//let channelRec;
+let fileReader;
+const bitrateDiv = document.querySelector('div#bitrate');
+const fileInput = document.querySelector('input#fileInput');
+const abortButton = document.querySelector('button#abortButton');
+const downloadAnchor = document.querySelector('a#download');
+const sendProgress = document.querySelector('progress#sendProgress');
+const receiveProgress = document.querySelector('progress#receiveProgress');
+const statusMessage = document.querySelector('span#status');
+const sendFileButton = document.querySelector('button#sendFile');
+
+let receiveBuffer = [];
+let receivedSize = 0;
+
+let bytesPrev = 0;
+let timestampPrev = 0;
+let timestampStart;
+let statsInterval = null;
+let bitrateMax = 0;
+
+sendFileButton.addEventListener('click', () => createConnection());
+fileInput.addEventListener('change', handleFileInputChange, false);
+abortButton.addEventListener('click', () => {
+  if (fileReader && fileReader.readyState === 1) {
+    console.log('Abort read!');
+    fileReader.abort();
+  }
+});
+
+async function handleFileInputChange() {
+
+
+  initSendDataChannel();
+
+
+  const file = fileInput.files[0];
+  if (!file) {
+    console.log('No file chosen');
+  } else {
+    sendFileButton.disabled = false;
+  }
+}
+
+async function createConnection() {
+  abortButton.disabled = false;
+ // sendFileButton.disabled = true;
+
+
+  //pc1 = new RTCPeerConnection();
+  //console.log('Created local peer connection object pc1');
+
+  // channelSnd = pc1.createDataChannel('sendDataChannel');
+  // channelSnd.binaryType = 'arraybuffer';
+  // console.log('Created send data channel');
+
+  // channelSnd.addEventListener('open', onSendChannelStateChange);
+  // channelSnd.addEventListener('close', onSendChannelStateChange);
+  // channelSnd.addEventListener('error', onError);
+
+  // pc1.addEventListener('icecandidate', async event => {
+  //   console.log('Local ICE candidate: ', event.candidate);
+  //   await pc2.addIceCandidate(event.candidate);
+  // });
+
+  // pc2 = new RTCPeerConnection();
+  // console.log('Created remote peer connection object pc2');
+
+  // pc2.addEventListener('icecandidate', async event => {
+  //   console.log('Remote ICE candidate: ', event.candidate);
+  //   await pc1.addIceCandidate(event.candidate);
+  // });
+  // pc2.addEventListener('datachannel', receiveChannelCallback);
+
+  // try {
+  //   const offer = await pc1.createOffer();
+  //   await gotLocalDescription(offer);
+  // } catch (e) {
+  //   console.log('Failed to create session description: ', e);
+  // }
+
+
+  onSendChannelStateChange();
+
+  //channelSnd.send("ravind");
+
+  fileInput.disabled = true;
+}
+
+async function initSendDataChannel()
+{
+    if(channelSnd)
+        return;
+
+      pc1.ondatachannel = function (event) {
+          if (event.channel.label == dataChannelLabel) {
+            dataChannel = event.channel;
+            console.log("DataChannel received");
+            setupDataChannel(event.channel);
+          } else {
+            console.log("Unknown CataChannel label: " + event.channel.label);
+          }
+    }
+
+
+    channelSnd = pc1.createDataChannel(dataChannelLabel);
+    channelSnd.binaryType = 'arraybuffer';
+    setupSendDataChannel(channelSnd);
+    
+
+     var offer = await pc1.createOffer();
+
+        console.log( 'PC1 offer made:%o', offer.sdp ); 
+  
+         await pc1.setLocalDescription(offer);
+
+        // We can now get the transceiver.mid.
+        //const localId = transceiver.mid;
+
+        //console.log("arvind transceiver.mid " + transceiver.mid);
+
+        isStarted = true;
+
+        //document.querySelector('#local_video').srcObject = stream;
+
+
+        sendMessage ({
+          room: roomId,
+          //to: remotePeerID,
+          type: pc1.localDescription.type,
+          desc: pc1.localDescription
+        });
+
+}
+
+function sendData() {
+  const file = fileInput.files[0];
+  console.log(`File is ${[file.name, file.size, file.type, file.lastModified].join(' ')}`);
+
+  // Handle 0 size files.
+  statusMessage.textContent = '';
+  downloadAnchor.textContent = '';
+  if (file.size === 0) {
+    bitrateDiv.innerHTML = '';
+    statusMessage.textContent = 'File is empty, please select a non-empty file';
+    //closeDataChannels();
+    return;
+  }
+  sendProgress.max = file.size;
+  receiveProgress.max = file.size;
+  const chunkSize = 16384;
+  fileReader = new FileReader();
+  let offset = 0;
+  fileReader.addEventListener('error', error => console.error('Error reading file:', error));
+  fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
+  fileReader.addEventListener('load', e => {
+    console.log('FileRead.onload ', e);
+    channelSnd.send(e.target.result);
+    offset += e.target.result.byteLength;
+    sendProgress.value = offset;
+    if (offset < file.size) {
+      readSlice(offset);
+    }
+  });
+  const readSlice = o => {
+    console.log('readSlice ', o);
+    const slice = file.slice(offset, o + chunkSize);
+    fileReader.readAsArrayBuffer(slice);
+  };
+  readSlice(0);
+}
+
+function closeDataChannels() {
+
+  if(channelSnd)
+  {
+    console.log('Closing data channels');
+    channelSnd.close();
+    console.log(`Closed data channel with label: ${channelSnd.label}`);
+    channelSnd = null;
+    console.log('Closed peer connections');
+ }
+  // if (channelRec) {
+  //   channelRec.close();
+  //   console.log(`Closed data channel with label: ${channelRec.label}`);
+  //   channelRec = null;
+  // }
+  // pc1.close();
+  // pc2.close();
+  // pc1 = null;
+  // pc2 = null;
+
+
+  // re-enable the file select
+  fileInput.disabled = false;
+  abortButton.disabled = true;
+  sendFileButton.disabled = false;
+}
+
+// async function gotLocalDescription(desc) {
+//   await pc1.setLocalDescription(desc);
+//   console.log(`Offer from pc1\n ${desc.sdp}`);
+//   await pc2.setRemoteDescription(desc);
+//   try {
+//     const answer = await pc2.createAnswer();
+//     await gotRemoteDescription(answer);
+//   } catch (e) {
+//     console.log('Failed to create session description: ', e);
+//   }
+// }
+
+// async function gotRemoteDescription(desc) {
+//   await pc2.setLocalDescription(desc);
+//   console.log(`Answer from pc2\n ${desc.sdp}`);
+//   await pc1.setRemoteDescription(desc);
+// }
+
+// function receiveChannelCallback(event) {
+//   console.log('Receive Channel Callback');
+//   channelRec = event.channel;
+//   channelRec.binaryType = 'arraybuffer';
+//   channelRec.onmessage = onReceiveMessageCallback;
+//   channelRec.onopen = onReceiveChannelStateChange;
+//   channelRec.onclose = onReceiveChannelStateChange;
+
+//   receivedSize = 0;
+//   bitrateMax = 0;
+//   downloadAnchor.textContent = '';
+//   downloadAnchor.removeAttribute('download');
+//   if (downloadAnchor.href) {
+//     URL.revokeObjectURL(downloadAnchor.href);
+//     downloadAnchor.removeAttribute('href');
+//   }
+// }
+
+function onReceiveMessageCallback(event) {
+  console.log(`Received Message ${event.data.byteLength}`);
+  receiveBuffer.push(event.data);
+  receivedSize += event.data.byteLength;
+  receiveProgress.value = receivedSize;
+
+  // we are assuming that our signaling protocol told
+  // about the expected file size (and name, hash, etc).
+  //const file = fileInput.files[0];
+  //if (receivedSize === file.size)
+   var filename = channelRec.label;
+   {
+    const received = new Blob(receiveBuffer);
+    receiveBuffer = [];
+
+    downloadAnchor.href = URL.createObjectURL(received);
+    downloadAnchor.download = filename;
+    downloadAnchor.textContent =
+      `Click to download '${filename}' (${receivedSize} bytes)`;
+    downloadAnchor.style.display = 'block';
+
+    const bitrate = Math.round(receivedSize * 8 /
+      ((new Date()).getTime() - timestampStart));
+    bitrateDiv.innerHTML =
+      `<strong>Average Bitrate:</strong> ${bitrate} kbits/sec (max: ${bitrateMax} kbits/sec)`;
+
+    // if (statsInterval) {
+    //   clearInterval(statsInterval);
+    //   statsInterval = null;
+    // }
+
+    //closeDataChannels();
+  }
+}
+
+function onSendChannelStateChange() {
+  if (channelSnd) {
+    const {readyState} = channelSnd;
+    console.log(`Send channel state is: ${readyState}`);
+    if (readyState === 'open') {
+      sendData();
+
+      // if (statsInterval) 
+      // {
+      //   clearInterval(statsInterval);
+      //   statsInterval = null;
+      // }
+
+
+    }
+  }
+}
+
+function onError(error) {
+  /*if (channelSnd) {
+    console.error('Error in channelSnd:', error);
+    return;
+  }*/
+  console.log('Error in channelSnd which is already closed:', error);
+}
+
+async function onReceiveChannelStateChange() {
+  if (channelRec) {
+    const readyState = channelRec.readyState;
+    console.log(`Receive channel state is: ${readyState}`);
+    if (readyState === 'open') {
+      timestampStart = (new Date()).getTime();
+      timestampPrev = timestampStart;
+      // statsInterval = setInterval(displayStats, 500);
+      // await displayStats();
+    }
+  }
+}
+
+// display bitrate statistics.
+async function displayStats() {
+  if (pc2 && pc2.iceConnectionState === 'connected') {
+    const stats = await pc2.getStats();
+    let activeCandidatePair;
+    stats.forEach(report => {
+      if (report.type === 'transport') {
+        activeCandidatePair = stats.get(report.selectedCandidatePairId);
+      }
+    });
+    if (activeCandidatePair) {
+      if (timestampPrev === activeCandidatePair.timestamp) {
+        return;
+      }
+      // calculate current bitrate
+      const bytesNow = activeCandidatePair.bytesReceived;
+      const bitrate = Math.round((bytesNow - bytesPrev) * 8 /
+        (activeCandidatePair.timestamp - timestampPrev));
+      bitrateDiv.innerHTML = `<strong>Current Bitrate:</strong> ${bitrate} kbits/sec`;
+      timestampPrev = activeCandidatePair.timestamp;
+      bytesPrev = bytesNow;
+      if (bitrate > bitrateMax) {
+        bitrateMax = bitrate;
+      }
+    }
+  }
+}
+
+
+
+
+
+/**
+* Add the various callback handlers to the DataChannel.
+* Shared between both clients.
+*/
+var setupSendDataChannel = function (dataChannel) {
+dataChannel.onopen = function (e) {
+  console.log("DataChannel open and ready to be used for sending file");
+
+  // $("#send_datachannel_msg").click(function () {
+  //   var msg = $("#datachannel_msg").val();
+  //   console.log("Sending message: " + msg);
+  //   dataChannel.send(msg);
+  // });
+
+    
+
+};
+
+dataChannel.onclose = function () {
+
+  onSendChannelStateChange();
+  console.log("DataChannel closed");
+};
+
+dataChannel.onerror = function (e) {
+  console.log("DataChannel error: " + e.message);
+
+  onError();
+  console.log(e);
+};
+
+dataChannel.onmessage = function (e) {
+  console.log("Received message: " + e.data);
+  // if (sourceBuffer != null) {
+  //   sourceBuffer.appendBuffer(e.data);
+  // } else {
+  //   console.log("Got data but sourceBuffer is null");
+  // }
+};
+};
+
+
+
+
+
+/**
+* Add the various callback handlers to the DataChannel.
+* Shared between both clients.
+*/
+
+
+
+var setupRecDataChannel = function (dataChannel) {
+dataChannel.onopen = function (e) {
+  console.log("DataChannel open and ready to be used for receiving files");
+
+  // $("#send_datachannel_msg").click(function () {
+  //   var msg = $("#datachannel_msg").val();
+  //   console.log("Sending message: " + msg);
+  //   dataChannel.send(msg);
+  // });
+
+
+  receivedSize = 0;
+  bitrateMax = 0;
+  downloadAnchor.textContent = '';
+  downloadAnchor.removeAttribute('download');
+  if (downloadAnchor.href) {
+    URL.revokeObjectURL(downloadAnchor.href);
+    downloadAnchor.removeAttribute('href');
+  }
+
+  onReceiveChannelStateChange();
+
+
+};
+
+dataChannel.onclose = function () {
+  onReceiveChannelStateChange();
+  console.log("DataChannel closed");
+};
+
+dataChannel.onerror = function (e) {
+  console.log("DataChannel error: " + e.message);
+
+  onError();
+  console.log(e);
+};
+
+dataChannel.onmessage = function (e) {
+  console.log("Received message: " + e.data);
+
+  onReceiveMessageCallback(e);
+
+  // if (sourceBuffer != null) {
+  //   sourceBuffer.appendBuffer(e.data);
+  // } else {
+  //   console.log("Got data but sourceBuffer is null");
+  // }
+};
+};
+
+
