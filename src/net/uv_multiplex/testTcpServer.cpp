@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-#elif 0
+#elif 1
 
 
 #include <inttypes.h>
@@ -280,15 +280,16 @@ int main(int argc, char** argv) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct child_worker {
-    uv_process_t req;
-    uv_process_options_t options;
+    //uv_process_t req;
+  ////  uv_process_options_t options;
     uv_pipe_t pipe;
     uv_thread_t thread;
 
 
-    uv_loop_t loppworker;
+    uv_loop_t *loppworker;
     uv_pipe_t queue;
 
+    int fds[2];
 
 } *workers;
 
@@ -362,7 +363,7 @@ void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf
     assert(pending == UV_TCP);
 
     uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
-    uv_tcp_init(&tmp->loppworker, client); //arvind
+    uv_tcp_init(tmp->loppworker, client); //arvind
     if (uv_accept(q, (uv_stream_t*) client) == 0) {
         SInfo << __func__;
         uv_os_fd_t fd;
@@ -378,17 +379,19 @@ static void workermain(void* _worker) {
     SInfo << __func__;
 
     child_worker *tmp = (child_worker*) _worker;
+    
+    tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
 
-    int e = uv_loop_init(&tmp->loppworker);
+    int e = uv_loop_init(tmp->loppworker);
 
 
-    e = uv_pipe_init(&tmp->loppworker, &tmp->queue, 1/* ipc */);
-    e = uv_pipe_open(&tmp->queue, 0);
+    e = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
+    e = uv_pipe_open(&tmp->queue, tmp->fds[1]);
 
     tmp->queue.data = tmp;
 
     e = uv_read_start((uv_stream_t*) & tmp->queue, alloc_buffer_worker, on_new_worker_connection);
-    uv_run(&tmp->loppworker, UV_RUN_DEFAULT);
+    uv_run(tmp->loppworker, UV_RUN_DEFAULT);
 
 }
 
@@ -445,21 +448,20 @@ void on_new_connection(uv_stream_t *server, int status) {
 void setup_workers() {
     SInfo << __func__;
     size_t path_size = 500;
-    uv_exepath(worker_path, &path_size);
-    strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
-    fprintf(stderr, "Worker path: %s\n", worker_path);
+   // uv_exepath(worker_path, &path_size);
+   // strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
+   // fprintf(stderr, "Worker path: %s\n", worker_path);
 
-    char* args[2];
-    args[0] = worker_path;
-    args[1] = NULL;
+   // char* args[2];
+  //  args[0] = worker_path;
+  //  args[1] = NULL;
 
     round_robin_counter = 0;
-
     // ...
 
     // launch same number of workers as number of CPUs
     uv_cpu_info_t *info;
-    int cpu_count = 1;
+    int cpu_count = 2;
     //uv_cpu_info(&info, &cpu_count);
     //uv_free_cpu_info(info, cpu_count);
 
@@ -469,20 +471,23 @@ void setup_workers() {
     while (cpu_count--) {
         struct child_worker *worker = &workers[cpu_count];
         uv_pipe_init(loppmain, &worker->pipe, 1);
+        
+        socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+        uv_pipe_open(&worker->pipe, worker->fds[0]);
 
-        uv_stdio_container_t child_stdio[3];
-        child_stdio[0].flags = (uv_stdio_flags) (UV_CREATE_PIPE | UV_READABLE_PIPE);
-        child_stdio[0].data.stream = (uv_stream_t*) & worker->pipe;
-        child_stdio[1].flags = UV_IGNORE;
-        child_stdio[2].flags = UV_INHERIT_FD;
-        child_stdio[2].data.fd = 2;
+//        uv_stdio_container_t child_stdio[3];
+//        child_stdio[0].flags = (uv_stdio_flags) (UV_CREATE_PIPE | UV_READABLE_PIPE);
+//        child_stdio[0].data.stream = (uv_stream_t*) & worker->pipe;
+//        child_stdio[1].flags = UV_IGNORE;
+//        child_stdio[2].flags = UV_INHERIT_FD;
+//        child_stdio[2].data.fd = 2;
 
-        worker->options.stdio = child_stdio;
-        worker->options.stdio_count = 3;
-
-        worker->options.exit_cb = close_process_handle;
-        worker->options.file = args[0];
-        worker->options.args = args;
+       // worker->options.stdio = child_stdio;
+   //     worker->options.stdio_count = 3;
+//
+ //       worker->options.exit_cb = close_process_handle;
+  //      worker->options.file = args[0];
+   //     worker->options.args = args;
 
         //uv_spawn(loppmain, &worker->req, &worker->options); 
 
@@ -491,7 +496,7 @@ void setup_workers() {
             fatal(e);
 
 
-        fprintf(stderr, "Started worker %d\n", worker->req.pid);
+       // fprintf(stderr, "Started worker %d\n", worker->req.pid);
     }
 }
 
@@ -527,7 +532,7 @@ int main() {
 
 #include <uv.h>
 
-sss
+
 uv_loop_t *loop[2];
 uv_pipe_t pipearvind[2];
 
@@ -581,7 +586,7 @@ void on_new_connection(uv_stream_t *server, int status) { SInfo << __func__;
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
         uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
         dummy_buf = uv_buf_init("a", 1);
-        //向管道worker->pipe写入信息
+        //���������worker->pipe������������
         uv_write2(write_req, (uv_stream_t*) & pipearvind[0], &dummy_buf, 1, (uv_stream_t*) client, echo_write);
     } else {
         uv_close((uv_handle_t*) client, NULL);
