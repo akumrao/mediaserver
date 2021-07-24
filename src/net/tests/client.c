@@ -6,7 +6,7 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #define MAX 80 
-#define PORT 11505 
+#define PORT 1111
 #define SA struct sockaddr 
 void func(int sockfd) 
 { 
