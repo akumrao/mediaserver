@@ -31,22 +31,154 @@ namespace base
             if (server == nullptr)
                 return;
 
-            server->OnUvConnection(status);
+            server->OnUvConnection(handle , status);
         }
 
         inline static void onClose(uv_handle_t* handle) {
             SInfo << " TcpServerBase::onClose"  ;
             delete handle;
         }
+        
+   
+        void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
+            
+         
+            
+            SInfo << __func__;
+            if (nread < 0) {
+                SInfo << __func__;
+                if (nread != UV_EOF)
+                    fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+                uv_close((uv_handle_t*) q, NULL);
+                return;
+            }
 
+            uv_pipe_t *pipe = (uv_pipe_t*) q;
+            if (!uv_pipe_pending_count(pipe)) {
+                SInfo << __func__;
+                fprintf(stderr, "No pending count\n");
+                return;
+            }
+
+            child_worker *tmp = (child_worker*) pipe->data;
+
+            uv_handle_type pending = uv_pipe_pending_type(pipe);
+            assert(pending == UV_TCP);
+            
+           
+            SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
+                    
+           tmp->obj->worker_connection(tmp->loppworker, q);
+           
+          //  g_num_mutex1.unlock();
+
+//            uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+//            uv_tcp_init(tmp->loppworker, client); //arvind
+//            if (uv_accept(q, (uv_stream_t*) client) == 0) {
+//                SInfo << __func__;
+//                uv_os_fd_t fd;
+//                uv_fileno((const uv_handle_t*) client, &fd);
+//                fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
+//                uv_read_start((uv_stream_t*) client, alloc_buffer_worker, echo_read);  // arvind
+//            } else {
+//                uv_close((uv_handle_t*) client, NULL);
+//            }
+        }
+        
+        void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+            SInfo << __func__;
+            buf->base = (char*) malloc(suggested_size);
+            buf->len = suggested_size;
+        }
+
+
+        static void workermain(void* _worker) {
+            SInfo << __func__;
+
+            child_worker *tmp = (child_worker*) _worker;
+
+            tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
+            
+
+            int e = uv_loop_init(tmp->loppworker);
+
+
+            e = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
+            e = uv_pipe_open(&tmp->queue, tmp->fds[1]);
+
+            tmp->queue.data = tmp;
+
+            e = uv_read_start((uv_stream_t*) & tmp->queue, alloc_buffer_worker, on_new_worker_connection);  // arvind
+            uv_run(tmp->loppworker, UV_RUN_DEFAULT);
+            
+            SInfo << "close workermain ";
+
+        }
+
+        
+       
+        
+        void  TcpServerBase::setup_workers() {
+            SInfo << __func__;
+            //size_t path_size = 500;
+            // uv_exepath(worker_path, &path_size);
+            // strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
+            // fprintf(stderr, "Worker path: %s\n", worker_path);
+
+            // char* args[2];
+            //  args[0] = worker_path;
+            //  args[1] = NULL;
+
+            round_robin_counter = 0;
+            // ...
+
+            // launch same number of workers as number of CPUs
+            uv_cpu_info_t *info;
+            int cpu_count = 1;
+            //uv_cpu_info(&info, &cpu_count);
+            //uv_free_cpu_info(info, cpu_count);
+
+            child_worker_count = cpu_count;
+
+            workers = (child_worker*) calloc(cpu_count, sizeof (struct child_worker));
+            while (cpu_count--) {
+                struct child_worker *worker = &workers[cpu_count];
+                
+                worker->obj = this;
+                
+                uv_pipe_init(Application::uvGetLoop(), &worker->pipe, 1);
+
+                socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+                uv_pipe_open(&worker->pipe, worker->fds[0]);
+
+                int e = uv_thread_create(&worker->thread, workermain, (void *) worker);
+                if (0 != e)
+                {
+                    SError << "Error creating thread";
+                }
+
+
+                // fprintf(stderr, "Started worker %d\n", worker->req.pid);
+            }
+        }
+
+        
+        
+        
+        
+        
+        
         /* Instance methods. */
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 
-        TcpServerBase::TcpServerBase(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle) {
+        TcpServerBase::TcpServerBase(uv_tcp_t* uvHandle, int backlog, bool multiThreaded) : uvHandle(uvHandle), multithreaded(multiThreaded) {
 
             int err;
 
+            if(multithreaded)
+            setup_workers();
+            
             this->uvHandle->data = (void*) this;
 
             err = uv_listen(
@@ -133,7 +265,8 @@ namespace base
             return true;
         }
 
-        inline void TcpServerBase::OnUvConnection(int status) {
+        uv_buf_t dummy_buf;
+        inline void TcpServerBase::OnUvConnection(uv_stream_t* uvh, int status) {
 
 
             if (this->closed)
@@ -147,16 +280,97 @@ namespace base
 
                 return;
             }
+            
+            
+
+            if(multithreaded)
+            {
+                g_num_mutex2.lock();
+
+                SInfo << "OnUvConnection " << round_robin_counter;
+                
+                uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+                uv_tcp_init(Application::uvGetLoop(), client);
+                if (uv_accept(reinterpret_cast<uv_stream_t*> (this->uvHandle), (uv_stream_t*) client) == 0) {
+                    uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
+                    dummy_buf = uv_buf_init("a", 1);
+                    struct child_worker *worker = &workers[round_robin_counter];
+                    int e = uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
+                    round_robin_counter = (round_robin_counter + 1) % child_worker_count;
+                } else {
+                    uv_close((uv_handle_t*) client, NULL);
+                }
+                
+                g_num_mutex2.unlock();
+
+            }
+            else
+            {
 
             // Notify the subclass so it provides an allocated derived class of TCPConnection.
+                TcpConnectionBase* connection = nullptr;
+                UserOnTcpConnectionAlloc(&connection);
+
+                ASSERT(connection != nullptr);
+
+                try
+                {
+                    connection->Setup(this, Application::uvGetLoop(), &(this->localAddr), this->localIp, this->localPort);
+                } catch (const std::exception& error)
+                {
+                    delete connection;
+
+                    return;
+                }
+
+                // Accept the connection.
+                err = uv_accept(
+                        reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                        reinterpret_cast<uv_stream_t*> (connection->GetUvHandle()));
+
+                if (err != 0)
+                    LError("uv_accept() failed: %s", uv_strerror(err));
+
+                // Start receiving data.
+                try
+                {
+                    // NOTE: This may throw.
+                    connection->Start();
+                } catch (const std::exception& error)
+                {
+                    delete connection;
+
+                    return;
+                }
+
+                // Notify the subclass and delete the connection if not accepted by the subclass.
+                if (UserOnNewTcpConnection(connection))
+                {
+                       SInfo << "TcpServerBase new connection "  << connection;
+                    this->connections.insert(connection);
+                }
+                else
+                    delete connection;
+                
+            }
+            
+            
+        }
+        
+        
+         void  TcpServerBase::worker_connection( uv_loop_t *loppworker, uv_stream_t *q) 
+        {
+             int err;
+             
+           // Notify the subclass so it provides an allocated derived class of TCPConnection.
             TcpConnectionBase* connection = nullptr;
             UserOnTcpConnectionAlloc(&connection);
 
             ASSERT(connection != nullptr);
-
-            try
+            
+             try
             {
-                connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
+                connection->Setup(this, loppworker,  &(this->localAddr), this->localIp, this->localPort);
             } catch (const std::exception& error)
             {
                 delete connection;
@@ -166,7 +380,7 @@ namespace base
 
             // Accept the connection.
             err = uv_accept(
-                    reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                    q,
                     reinterpret_cast<uv_stream_t*> (connection->GetUvHandle()));
 
             if (err != 0)
@@ -197,7 +411,7 @@ namespace base
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
             
-            SInfo << "TcpServerBase:: connection close "  << connection;
+            SInfo << " TcpConnectionBase close "  << connection;
               
 
             // Remove the TcpConnectionBase from the set.
@@ -253,8 +467,8 @@ namespace base
 
         /* Instance methods. */
 
-        TcpServer::TcpServer(Listener* listener, std::string ip, int port, bool ssl)
-        : TcpServerBase(BindTcp(ip, port), 256), listener(listener),ssl(ssl){
+        TcpServer::TcpServer(Listener* listener, std::string ip, int port,  bool multiThreaded, bool ssl )
+        : TcpServerBase(BindTcp(ip, port), 256, multiThreaded), listener(listener),ssl(ssl){
 
         }
 
@@ -271,9 +485,9 @@ namespace base
 // condition
             // Allocate a new RTC::TcpConnection for the TcpServer to handle it.
             if(ssl)
-             *connection = new SslConnection(true);
+             *connection = new SslConnection( true);
             else
-            *connection = new TcpConnectionBase();
+            *connection = new TcpConnectionBase(listener);
             
             //SInfo << "TcpServer::UserOnTcpConnectionAlloc new connection "  << *connection;
         }

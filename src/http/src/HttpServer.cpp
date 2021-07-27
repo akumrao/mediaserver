@@ -35,8 +35,8 @@ namespace base {
 
         /* Instance methods. */
 
-        HttpServerBase::HttpServerBase(Listener *listener, std::string ip, int port, bool ssl)
-        : TcpServerBase( BindTcp(ip, port), 256),listener(listener),ssl(ssl)
+        HttpServerBase::HttpServerBase(Listener *listener, std::string ip, int port, bool multithreaded,  bool ssl)
+        : TcpServerBase( BindTcp(ip, port), 256, multithreaded),listener(listener),ssl(ssl)
         {
 
         }
@@ -82,8 +82,8 @@ namespace base {
 
 
 
-        HttpServer::HttpServer( std::string ip, int port, ServerConnectionFactory *factory) 
-        : HttpServerBase( this,  ip, port )
+        HttpServer::HttpServer( std::string ip, int port, ServerConnectionFactory *factory, bool multithreaded ) 
+        : HttpServerBase( this,  ip, port, multithreaded )
         ,ip(ip), port(port), _factory(factory)
         {
  

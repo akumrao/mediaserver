@@ -22,7 +22,7 @@ namespace net {
 
 
 SslConnection::SslConnection()
-    : TcpConnectionBase( true)
+    : TcpConnectionBase(nullptr, true)
 //    , _sslContext(nullptr)
 //    , _sslSession(nullptr)
     , _sslAdapter(this)
@@ -35,7 +35,7 @@ SslConnection::SslConnection()
 
 
 SslConnection::SslConnection( bool server)
-    : TcpConnectionBase( true)
+    : TcpConnectionBase(nullptr, true)
   //  , _sslSession(nullptr)
     , _sslAdapter(this)
     ,serverMode(server)

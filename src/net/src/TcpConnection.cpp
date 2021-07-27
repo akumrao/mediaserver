@@ -34,6 +34,7 @@ namespace base {
         inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
             auto* connection = static_cast<TcpConnectionBase*> (handle->data);
 
+           // SInfo << "onRead "  << connection;
             if (connection)
             	connection->OnUvRead(nread, buf);
         }
@@ -87,7 +88,7 @@ namespace base {
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 
-        TcpConnectionBase::TcpConnectionBase(bool tls) : tls(tls) {
+        TcpConnectionBase::TcpConnectionBase(Listener *listener, bool tls) : tls(tls), listener(listener){
 
             this->uvHandle = new uv_tcp_t;
             this->uvHandle->data = (void*) this;
@@ -174,12 +175,12 @@ namespace base {
             LDebug("</TcpConnectionBase>");
         }
 
-        void TcpConnectionBase::Setup( ListenerClose* listenerClose,
+        void TcpConnectionBase::Setup( ListenerClose* listenerClose, uv_loop_t* _loop,
                 struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort) {
             this->listenerClose = listenerClose;
 
             // Set the UV handle.
-            int err = uv_tcp_init(Application::uvGetLoop(), this->uvHandle);
+            int err = uv_tcp_init(_loop, this->uvHandle);
 
             if (err != 0) {
                 delete this->uvHandle;
@@ -570,6 +571,9 @@ namespace base {
                     on_tls_read((const char*) buf->base, nread);
                 else
                     on_read((const char*) buf->base, nread);
+                
+                if(listener)
+                listener->on_read(this, (const char*) buf->base, nread); //arvind
 
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {
@@ -622,7 +626,7 @@ namespace base {
 	    static uint8_t ReadBuffer[ReadBufferSize];
 
         TcpConnection::TcpConnection(Listener* listener, bool tls)
-        : TcpConnectionBase(tls), listener(listener) {
+        : TcpConnectionBase(listener, tls){
 
         }
 

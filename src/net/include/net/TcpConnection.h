@@ -69,7 +69,7 @@ namespace base
             friend class TcpServerBase;
 
         public:
-            explicit TcpConnectionBase(bool tls = false);
+            explicit TcpConnectionBase(Listener *lis = nullptr, bool tls = false);
             TcpConnectionBase& operator=(const TcpConnectionBase&) = delete;
             TcpConnectionBase(const TcpConnectionBase&) = delete;
             virtual ~TcpConnectionBase();
@@ -83,7 +83,7 @@ namespace base
             virtual void on_close();
             virtual void Dump() const;
             void Setup(
-                    ListenerClose* listenerClose,
+                    ListenerClose* listenerClose, uv_loop_t* _loop,
                     struct sockaddr_storage* localAddr,
                     const std::string& localIp,
                     uint16_t localPort);
@@ -150,6 +150,9 @@ namespace base
             bool hasError{ false};
             
             bool tls;
+            
+            protected:
+            Listener* listener{ nullptr};
             
         };
 
@@ -223,7 +226,7 @@ namespace base
 
         public:
             // Passed by argument.
-            Listener* listener{ nullptr};
+          
             // Others.
         public:
             size_t frameStart{ 0}; // Where the latest frame starts.

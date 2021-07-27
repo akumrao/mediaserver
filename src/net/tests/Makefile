@@ -6,17 +6,17 @@ CXX     = g++
 TARGET=runNet # define the name of the executable
 SOURCES=$(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../crypto/src/*.cpp ../../base/src/*.cpp )
 
-CXXFLAGS   := -g  -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
+CXXFLAGS   := -g   -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized -Wno-attributes -Wno-fpermissive -Wno-deprecated-declarations
 
 
-CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
-              -DWEBRTC_POSIX -D_GLIBCXX_USE_CXX11_ABI=0 \
+CPPFLAGS   := -I./include/ -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
+
               
 LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
 
 
 
-LDLIBS    := -lpthread -lm -ldl  -lssl -lcrypto -lX11 
+LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto 
 
 #SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
 

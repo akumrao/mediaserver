@@ -23,7 +23,7 @@ class testwebscoket: public net::HttpServer
 {
 public:
     
-     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr): net::HttpServer(  ip, port,  factory)
+     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr,  bool multithreaded =false) : net::HttpServer(  ip, port,  factory, multithreaded)
      {
          
      }
@@ -64,15 +64,15 @@ int main(int argc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Info));
     //test::init();
   
-        Application app;
-        testwebscoket socket("0.0.0.0", 8000, new StreamingResponderFactory() );
-        socket.start();
+    Application app;
+    testwebscoket socket("0.0.0.0", 8000, new StreamingResponderFactory(), true );
+    socket.start();
 
-        app.waitForShutdown([&](void*) {
+    app.waitForShutdown([&](void*) {
 
-            socket.shutdown();
+    socket.shutdown();
 
-        });
+    });
 
     
     /*

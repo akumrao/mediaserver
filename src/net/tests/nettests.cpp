@@ -38,35 +38,40 @@ public:
 
 };
 
-class tesTcpServer : Listener {
+class tesTcpServer : public Listener {
 public:
 
     tesTcpServer() {
     }
 
-    void start() {
+    void start(std::string ip, int port) {
         // socket.send("Arvind", "127.0.0.1", 7331);
-        tcpServer = new TcpServer(this, "0.0.0.0", 7000);
+        tcpServer = new TcpServer(this, ip, port, true);
 
     }
 
-    void shutdown() {
+    void shutdown()
+    {
         // socket.send("Arvind", "127.0.0.1", 7331);
         delete tcpServer;
         tcpServer = nullptr;
 
     }
 
-    void OnTcpConnectionClosed(TcpServer* /*tcpServer*/, TcpConnection* connection) {
+    void on_close(Listener* connection) {
 
         std::cout << "TCP server closing, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
     }
 
-    void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
+    void on_read(Listener* connection, const char* data, size_t len) {
         std::cout << "TCP server send data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
         connection->send((const char*) send.c_str(), 5);
+       /* 
+        TcpConnectionBase *obj = (TcpConnectionBase*) connection;
+        obj->Close();
+	*/
 
     }
     TcpServer *tcpServer;
@@ -82,9 +87,9 @@ public:
     void start() {
 
         // socket.send("Arvind", "127.0.0.1", 7331);
-        tcpClient = new TcpConnection(this);
+        tcpClient = new TcpConnectionBase(this);
 
-        tcpClient->Connect("0.0.0.0", 7000);
+        tcpClient->Connect("0.0.0.0", 1111);
         const char snd[6] = "12345";
         std::cout << "TCP Client send data: " << snd << "len: " << strlen((const char*) snd) << std::endl << std::flush;
 
@@ -92,26 +97,30 @@ public:
 
     }
 
-    void shutdown() {
+    void shutdown() 
+    {
         // socket.send("Arvind", "127.0.0.1", 7331);
         delete tcpClient;
         tcpClient = nullptr;
 
     }
 
-    void OnTcpConnectionClosed(TcpConnection* connection) {
+    void on_close(Listener* connection) 
+    {
 
         std::cout << " Close Con LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
 
     }
 
-    void OnTcpConnectionPacketReceived(TcpConnection* connection, const char* data, size_t len) {
+    void on_read(Listener* connection, const char* data, size_t len)
+    { 
         std::cout << "data: " << data << "len: " << len << std::endl << std::flush;
         std::string send = "12345";
         connection->send((const char*) send.c_str(), 5);
 
     }
-    TcpConnection *tcpClient;
+    
+    TcpConnectionBase *tcpClient;
 
 };
 
@@ -123,11 +132,11 @@ int main(int argc, char** argv) {
         Application app;
 
         tesTcpServer socket;
-        socket.start();
+        socket.start("0.0.0.0", 1111);
 
         app.waitForShutdown([&](void*) {
 
-            socket.shutdown();
+           socket.shutdown();
 
         });
 
@@ -135,22 +144,22 @@ int main(int argc, char** argv) {
     });
 
     /**/
-    describe("client", []() {
-
-
-        Application app;
-
-        tesTcpClient socket;
-        socket.start();
-
-
-        app.waitForShutdown([&](void*) {
-            socket.shutdown();
-
-        });
-
-
-    });
+//    describe("client", []() {
+//
+//
+//        Application app;
+//
+//        tesTcpClient socket;
+//        socket.start();
+//
+//
+//        app.waitForShutdown([&](void*) {
+//            socket.shutdown();
+//
+//        });
+//
+//
+//    });
 
     test::runAll();
 
