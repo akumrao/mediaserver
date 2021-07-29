@@ -20,7 +20,12 @@
 #include "http/request.h"
 #include "http/response.h"
 #include "base/random.h"
-//#include "http/HttpConn.h"
+#include "base/Timer.h"
+
+#include  <mutex>
+#include  <queue>
+
+
 
 
 
@@ -234,6 +239,10 @@ namespace base {
 
             bool shutdown(uint16_t statusCode, const std::string& statusMessage);
             bool pong();
+            
+            void dummy_timer_cb();
+            
+            void push( const char* data, size_t len, bool binary);
             //
             /// Client side
 
@@ -267,6 +276,11 @@ namespace base {
 
             Request& _request;
             Response& _response;
+            
+            Timer dummy_timer{ nullptr};
+            std::mutex dummy_mutex;
+            
+            std::queue<std::string> dummy_queue;
         };
 
 

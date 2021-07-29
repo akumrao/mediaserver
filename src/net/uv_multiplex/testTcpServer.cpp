@@ -27,7 +27,7 @@ using namespace base;
 using namespace net;
 using namespace base::test;
 
-#if 0
+#if 1
 
 #define uv_fatal(e) { SInfo << __func__; SInfo << __func__; \
         assert(0 != e); \
@@ -249,8 +249,6 @@ int main(int argc, char** argv) {
 
     /* If there are not enough resources to sustain our workers, we abort */
     for (i = 0; i < THREAD_COUNT; i++) {
-        SInfo << __func__;
-        SInfo << __func__;
         UserInfo *userInf = new UserInfo();
         userInf->id = i + 1;
         uv_multiplex_worker_create(&m, i, userInf);

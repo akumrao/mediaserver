@@ -42,9 +42,6 @@ public:
     
     void sendAll(const char* msg, size_t len) {
       
-        //connection->send("arvind", 6 );
-        
-
         
         SInfo << "No of Connectons " << this->GetNumConnections();
         

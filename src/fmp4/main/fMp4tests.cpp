@@ -41,9 +41,15 @@ int main(int argc, char** argv) {
     //readmp4.websocketConnect();
 
 
-    app.run();
-    
+    app.waitForShutdown([&](void*) {
+
     readmp4->stop();
+        
+    readmp4->shutdown();
+    });
     
+   // app.run();
+    
+   
 
 }

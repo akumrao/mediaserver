@@ -16,6 +16,7 @@
 #include <uv.h>
 #include <string>
 #include <unordered_set>
+#include "uv_multiplex.h"
 
 #include <mutex>
 
@@ -23,21 +24,6 @@ namespace base
 {
     namespace net
     {
-        
-        struct child_worker {
-            //uv_process_t req;
-          ////  uv_process_options_t options;
-            uv_pipe_t pipe;
-            uv_thread_t thread;
-
-            uv_loop_t *loppworker;
-            uv_pipe_t queue;
-
-            int fds[2];
-            
-            TcpServerBase *obj;
-
-        } ;//*workers;
 
         class TcpServerBase : public Listener, public TcpConnectionBase::ListenerClose
         {
@@ -57,10 +43,6 @@ namespace base
             uint16_t GetLocalPort() const;
             size_t GetNumConnections() const;
 	    std::unordered_set<TcpConnectionBase*>& GetConnections();	
-            
-            
-            void setup_workers();
-             
 
             bool setNoDelay(bool enable)
             {
@@ -88,8 +70,6 @@ namespace base
 
         private:
             bool SetLocalAddress();
-            
-            child_worker *workers{nullptr};
 
             /* Pure virtual methods that must be implemented by the subclass. */
         public:
@@ -104,10 +84,12 @@ namespace base
             /* Methods inherited from TcpConnectionBase::Listener. */
         public:
             void OnTcpConnectionClosed(TcpConnectionBase* connection) ;
-            void worker_connection( uv_loop_t *loppworker, uv_stream_t *q);
 
         protected:
                uv_tcp_t* BindTcp(std::string &ip, int port);
+               
+               uv_multiplex_t m;
+               
         protected:
             struct sockaddr_storage localAddr;
             std::string localIp;
@@ -124,10 +106,8 @@ namespace base
             
             int round_robin_counter{0};
             int child_worker_count{0};
-            
-            
-            std::mutex g_num_mutex2;
-            
+         
+          
         };
 
         /* Inline methods. */

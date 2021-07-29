@@ -51,7 +51,7 @@ namespace base {
 
     namespace fmp4 {
 
-        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory){
+        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true){
             
          self = this;
          
@@ -163,16 +163,16 @@ namespace base {
             {
                  net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
                  if(con)
-                 con->send(data ,size, binary );
+                 con->push(data ,size, binary );
             }
 
         
 
         }
         
-         void ReadMp4::run() {
+        void ReadMp4::run() {
              
-         }
+        }
 #if 0 
          void ReadMp4::websocketConnect() {
              

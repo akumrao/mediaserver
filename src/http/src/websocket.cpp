@@ -39,6 +39,9 @@ namespace base {
          framer(mode)
         {
             _connection->shouldSendHeader(false);
+            
+            dummy_timer.cb_timeout = std::bind(&WebSocketConnection::dummy_timer_cb, this);
+            dummy_timer.Start(7,7);
         }
 
         bool WebSocketConnection::shutdown(uint16_t statusCode, const std::string& statusMessage) {
@@ -113,10 +116,44 @@ namespace base {
             listener->on_connect( this);
             // Call net::SocketEmitter::onSocketConnect to notify handlers that data may flow
             //net::SocketEmitter::onSocketConnect(*socket.get());
+            
+
+            
+        }
+        
+        void WebSocketConnection::push( const char* data, size_t len, bool binary)
+        { 
+            dummy_mutex.lock();
+            
+            dummy_queue.push(std::string(data, len ));
+            
+            dummy_mutex.unlock();
         }
 
-        
-       
+        void WebSocketConnection::dummy_timer_cb() {
+          
+            
+//            static int x = 0;
+//            char tmp[5];
+//            sprintf( tmp,  "%d", x++ );
+//            
+//            send(tmp,5 , false);
+            
+            SInfo << "WebSocketConnection " <<    uv_thread_self();
+            std::string tmp;
+            dummy_mutex.lock();
+            if(dummy_queue.size())
+            {
+                tmp = dummy_queue.front();
+                dummy_queue.pop();
+            }
+             dummy_mutex.unlock();
+            if(tmp.length())
+            send(&tmp[0],tmp.length() , true);
+            
+           
+           
+        }
         
         void WebSocketConnection::handleServerRequest(const std::string & buffer) {
             LTrace("Server request: ", buffer)
