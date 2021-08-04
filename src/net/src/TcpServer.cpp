@@ -18,22 +18,10 @@
 #include "net/IP.h"
 #include "net/SslConnection.h"
 
-
-#define IPC_PIPE_NAME "pearl_server_ipc"
-#define BACKLOG 128
-#define THREAD_COUNT 4
-
 namespace base
 {
     namespace net
     {
-        
-        struct UserInfo {
-            int id;
-            pthread_t tid;
-            TcpServerBase *obj;
-        };
-
 
         /* Static methods for UV callbacks. */
 
@@ -52,81 +40,132 @@ namespace base
         }
         
    
-      
-       
-       static void __on_http_connection(uv_stream_t *listener, const int status) {
-
-            UserInfo* usrInfo = (UserInfo*) listener->data;
-            int e;
-
-            if (0 != status)
-            {
-                SError << status;
-            }
+        void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
             
-          //  auto* server = static_cast<TcpServerBase*> (listener->data);
-             
-            SInfo << "__on_http_connection  thread id " << usrInfo->id << " tid " << usrInfo->tid  << " loop " << listener->loop;
+         
             
-            usrInfo->obj->OnUvConnection(listener , status);
-            
-            return;
-
-            //    uv_tcp_t *conn = ( uv_tcp_t *) calloc(1, sizeof(*conn));
-            //
-            //    e = uv_tcp_init(listener->loop, conn);
-            //    if (0 != status)
-            //        uv_fatal(e);
-            //
-            //    e = uv_accept(listener, (uv_stream_t*)conn);
-            //    if (0 != e)
-            //        uv_fatal(e);
-            //    
-
-            
-
-            uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
-            client->data = listener->data;
-            uv_tcp_init(listener->loop, client);
-            if (uv_accept(listener, (uv_stream_t*) client) == 0) {
+            SInfo << __func__;
+            if (nread < 0) {
                 SInfo << __func__;
-//                uv_read_start((uv_stream_t*) client, alloc_buffer, echo_read);
-            } else {
- //               uv_close((uv_handle_t*) client, on_close);
+                if (nread != UV_EOF)
+                    fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+                uv_close((uv_handle_t*) q, NULL);
+                return;
             }
 
+            uv_pipe_t *pipe = (uv_pipe_t*) q;
+            if (!uv_pipe_pending_count(pipe)) {
+                SInfo << __func__;
+                fprintf(stderr, "No pending count\n");
+                return;
+            }
 
-            //  h2o_socket_t *sock =
-            //    h2o_uv_socket_create((uv_stream_t*)conn, (uv_close_cb)free);
+            child_worker *tmp = (child_worker*) pipe->data;
 
-            // struct timeval connected_at = *h2o_get_timestamp(&thread->ctx, NULL, NULL);
+            uv_handle_type pending = uv_pipe_pending_type(pipe);
+            assert(pending == UV_TCP);
+            
+           
+            SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
+                    
+           tmp->obj->worker_connection(tmp->loppworker, q);
+           
+          //  g_num_mutex1.unlock();
 
-            //  thread->accept_ctx.ctx = &thread->ctx;
-            //  thread->accept_ctx.hosts = sv->cfg.hosts;
-            //  h2o_http1_accept(&thread->accept_ctx, sock, connected_at);
+//            uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+//            uv_tcp_init(tmp->loppworker, client); //arvind
+//            if (uv_accept(q, (uv_stream_t*) client) == 0) {
+//                SInfo << __func__;
+//                uv_os_fd_t fd;
+//                uv_fileno((const uv_handle_t*) client, &fd);
+//                fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
+//                uv_read_start((uv_stream_t*) client, alloc_buffer_worker, echo_read);  // arvind
+//            } else {
+//                uv_close((uv_handle_t*) client, NULL);
+//            }
+        }
+        
+        void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+            SInfo << __func__;
+            buf->base = (char*) malloc(suggested_size);
+            buf->len = suggested_size;
         }
 
-        static void __worker_start(void* _worker) {
-            // assert(uv_tcp);
 
-            uv_multiplex_worker_t* worker = (uv_multiplex_worker_t*) _worker;
+        static void workermain(void* _worker) {
+            SInfo << __func__;
 
-            uv_tcp_t* listener = (uv_tcp_t*) & worker->listener;
-            UserInfo* usrInfo = (UserInfo*) listener->data;
+            child_worker *tmp = (child_worker*) _worker;
 
-            usrInfo->tid = worker->thread;
+            tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
+            
 
-            //  h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
+            int e = uv_loop_init(tmp->loppworker);
 
-            int e = uv_listen((uv_stream_t*) listener, BACKLOG,
-                    __on_http_connection);
-            if (e != 0)
-                SError << e;
 
-            while (1)
-                uv_run(listener->loop, UV_RUN_DEFAULT);
+            e = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
+            e = uv_pipe_open(&tmp->queue, tmp->fds[1]);
+
+            tmp->queue.data = tmp;
+
+            e = uv_read_start((uv_stream_t*) & tmp->queue, alloc_buffer_worker, on_new_worker_connection);  // arvind
+            uv_run(tmp->loppworker, UV_RUN_DEFAULT);
+            
+            SInfo << "close workermain ";
+
         }
 
+        
+       
+        
+        void  TcpServerBase::setup_workers() {
+            SInfo << __func__;
+            //size_t path_size = 500;
+            // uv_exepath(worker_path, &path_size);
+            // strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
+            // fprintf(stderr, "Worker path: %s\n", worker_path);
+
+            // char* args[2];
+            //  args[0] = worker_path;
+            //  args[1] = NULL;
+
+            round_robin_counter = 0;
+            // ...
+
+            // launch same number of workers as number of CPUs
+            uv_cpu_info_t *info;
+            int cpu_count = 1;
+            //uv_cpu_info(&info, &cpu_count);
+            //uv_free_cpu_info(info, cpu_count);
+
+            child_worker_count = cpu_count;
+
+            workers = (child_worker*) calloc(cpu_count, sizeof (struct child_worker));
+            while (cpu_count--) {
+                struct child_worker *worker = &workers[cpu_count];
+                
+                worker->obj = this;
+                
+                uv_pipe_init(Application::uvGetLoop(), &worker->pipe, 1);
+
+                socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+                uv_pipe_open(&worker->pipe, worker->fds[0]);
+
+                int e = uv_thread_create(&worker->thread, workermain, (void *) worker);
+                if (0 != e)
+                {
+                    SError << "Error creating thread";
+                }
+
+
+                // fprintf(stderr, "Started worker %d\n", worker->req.pid);
+            }
+        }
+
+        
+        
+        
+        
         
         
         /* Instance methods. */
@@ -136,58 +175,30 @@ namespace base
         TcpServerBase::TcpServerBase(uv_tcp_t* uvHandle, int backlog, bool multiThreaded) : uvHandle(uvHandle), multithreaded(multiThreaded) {
 
             int err;
-            int i;
 
-           // 
-           // setup_workers();
-            
             if(multithreaded)
-            {
-                    uv_multiplex_init(&m, uvHandle, IPC_PIPE_NAME, THREAD_COUNT, __worker_start);
-
-                   // UserInfo *threads = calloc(sv->nworkers + 1, sizeof(UserInfo));
-                   // if (!sv->threads)
-                   //   exit(-1);
-
-                   /* If there are not enough resources to sustain our workers, we abort */
-                   for (i = 0; i < THREAD_COUNT; i++) {
-
-                       UserInfo *userInf = new UserInfo();
-                       userInf->id = i + 1;
-                       userInf->obj = this;
-                       uv_multiplex_worker_create(&m, i, userInf);
-                   }
-                   if(  m.listener->loop != Application::Application::uvGetLoop())
-                   {
-                      SError<< " wrong loop" ;
-                   }
-                   uv_multiplex_dispatch(&m);
-            }
-            else
-            {
+            setup_workers();
             
- 
-                this->uvHandle->data = (void*) this;
+            this->uvHandle->data = (void*) this;
 
-                err = uv_listen(
-                        reinterpret_cast<uv_stream_t*> (this->uvHandle),
-                        backlog,
-                        static_cast<uv_connection_cb> (onConnection));
+            err = uv_listen(
+                    reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                    backlog,
+                    static_cast<uv_connection_cb> (onConnection));
 
-                if (err != 0)
-                {
-                    uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
+            if (err != 0)
+            {
+                uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
-                    LError("uv_listen() failed: %s", uv_strerror(err));
-                }
+                LError("uv_listen() failed: %s", uv_strerror(err));
+            }
 
-                // Set local address.
-                if (!SetLocalAddress())
-                {
-                    uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
+            // Set local address.
+            if (!SetLocalAddress())
+            {
+                uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
 
-                    LError("error setting local IP and port");
-                }
+                LError("error setting local IP and port");
             }
         }
 
@@ -254,7 +265,8 @@ namespace base
             return true;
         }
 
-        inline void TcpServerBase::OnUvConnection(uv_stream_t* listener, int status) {
+        uv_buf_t dummy_buf;
+        inline void TcpServerBase::OnUvConnection(uv_stream_t* uvh, int status) {
 
 
             if (this->closed)
@@ -271,16 +283,94 @@ namespace base
             
             
 
+            if(multithreaded)
+            {
+                g_num_mutex2.lock();
 
-        // Notify the subclass so it provides an allocated derived class of TCPConnection.
+                SInfo << "OnUvConnection " << round_robin_counter;
+                
+                uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+                uv_tcp_init(Application::uvGetLoop(), client);
+                if (uv_accept(reinterpret_cast<uv_stream_t*> (this->uvHandle), (uv_stream_t*) client) == 0) {
+                    uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
+                    dummy_buf = uv_buf_init("a", 1);
+                    struct child_worker *worker = &workers[round_robin_counter];
+                    int e = uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
+                    round_robin_counter = (round_robin_counter + 1) % child_worker_count;
+                } else {
+                    uv_close((uv_handle_t*) client, NULL);
+                }
+                
+                g_num_mutex2.unlock();
+
+            }
+            else
+            {
+
+            // Notify the subclass so it provides an allocated derived class of TCPConnection.
+                TcpConnectionBase* connection = nullptr;
+                UserOnTcpConnectionAlloc(&connection);
+
+                ASSERT(connection != nullptr);
+
+                try
+                {
+                    connection->Setup(this, Application::uvGetLoop(), &(this->localAddr), this->localIp, this->localPort);
+                } catch (const std::exception& error)
+                {
+                    delete connection;
+
+                    return;
+                }
+
+                // Accept the connection.
+                err = uv_accept(
+                        reinterpret_cast<uv_stream_t*> (this->uvHandle),
+                        reinterpret_cast<uv_stream_t*> (connection->GetUvHandle()));
+
+                if (err != 0)
+                    LError("uv_accept() failed: %s", uv_strerror(err));
+
+                // Start receiving data.
+                try
+                {
+                    // NOTE: This may throw.
+                    connection->Start();
+                } catch (const std::exception& error)
+                {
+                    delete connection;
+
+                    return;
+                }
+
+                // Notify the subclass and delete the connection if not accepted by the subclass.
+                if (UserOnNewTcpConnection(connection))
+                {
+                       SInfo << "TcpServerBase new connection "  << connection;
+                    this->connections.insert(connection);
+                }
+                else
+                    delete connection;
+                
+            }
+            
+            
+        }
+        
+        
+         void  TcpServerBase::worker_connection( uv_loop_t *loppworker, uv_stream_t *q) 
+        {
+             int err;
+             
+           // Notify the subclass so it provides an allocated derived class of TCPConnection.
             TcpConnectionBase* connection = nullptr;
             UserOnTcpConnectionAlloc(&connection);
 
             ASSERT(connection != nullptr);
-
-            try
+            
+             try
             {
-                connection->Setup(this, listener->loop, &(this->localAddr), this->localIp, this->localPort);
+                connection->Setup(this, loppworker,  &(this->localAddr), this->localIp, this->localPort);
             } catch (const std::exception& error)
             {
                 delete connection;
@@ -290,7 +380,7 @@ namespace base
 
             // Accept the connection.
             err = uv_accept(
-                   listener,
+                    q,
                     reinterpret_cast<uv_stream_t*> (connection->GetUvHandle()));
 
             if (err != 0)
@@ -316,13 +406,7 @@ namespace base
             }
             else
                 delete connection;
-
-      
-            
-            
         }
-        
-
 
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
