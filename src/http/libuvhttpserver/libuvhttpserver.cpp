@@ -44,11 +44,13 @@
 #define LOGF(...)
 #endif
 
+#define MultiThreadedWebServer 1
+
 
 
 static int request_num = 1;
 static uv_loop_t* uv_loop;
-static uv_tcp_t server;
+static uv_tcp_t servertcp;
 static http_parser_settings parser_settings;
 
 struct client_t
@@ -58,6 +60,9 @@ struct client_t
     uv_write_t write_req;
     int request_num;
     std::string path;
+    
+     uv_loop_t *myloop{nullptr};
+     
 };
 
 void on_close(uv_handle_t* handle){
@@ -157,7 +162,7 @@ void render(uv_work_t* req){
     if (/*!has_index &&*/ filepath[filepath.size() - 1] == '/')
     {
         uv_fs_t scandir_req;
-        int r = uv_fs_scandir(uv_loop, &scandir_req, filepath.c_str(), 0, NULL);
+        int r = uv_fs_scandir(req->loop, &scandir_req, filepath.c_str(), 0, NULL);
         uv_dirent_t dent;
         closure->content_type = "text/html";
         closure->result = "<html><body><ul>";
@@ -309,7 +314,7 @@ int on_message_complete(http_parser* parser){
     client_t* client = (client_t*) parser->data;
     LOGF("[ %5d ] on_message_complete\n", client->request_num);
     render_baton *closure = new render_baton(client);
-    int status = uv_queue_work(uv_loop,
+    int status = uv_queue_work(client->myloop,
             &closure->request,
             render,
             (uv_after_work_cb) after_render);
@@ -321,7 +326,7 @@ int on_message_complete(http_parser* parser){
 
 void on_connect(uv_stream_t* server_handle, int status){
     CHECK(status, "connect");
-    assert((uv_tcp_t*) server_handle == &server);
+  //  assert((uv_tcp_t*) server_handle == &servertcp);
 
     client_t* client = new client_t();
     client->request_num = request_num;
@@ -329,11 +334,15 @@ void on_connect(uv_stream_t* server_handle, int status){
 
     LOGF("[ %5d ] new connection\n", request_num);
 
-    uv_tcp_init(uv_loop, &client->handle);
+    client->myloop = server_handle->loop;
+    
+    uv_tcp_init(server_handle->loop, &client->handle);
     http_parser_init(&client->parser, HTTP_REQUEST);
 
     client->parser.data = client;
     client->handle.data = client;
+    
+    
 
     int r = uv_accept(server_handle, (uv_stream_t*) & client->handle);
     CHECK(r, "accept");
@@ -342,6 +351,34 @@ void on_connect(uv_stream_t* server_handle, int status){
 }
 
 #define MAX_WRITE_HANDLES 1000
+
+#if MultiThreadedWebServer
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void server_on_start(void *arg) { // void (*uv_thread_cb)(void* arg)
+    uv_loop_t loop;
+    if (uv_loop_init(&loop)) { LOG_ERROR("uv_loop_init\n"); return; } // int uv_loop_init(uv_loop_t* loop)
+    //server_t *server = server_init(&loop);
+
+    uv_tcp_t tcp;
+    if (uv_tcp_init(&loop, &tcp)) { LOG_ERROR("uv_tcp_init\n");  return; } // int uv_tcp_init(uv_loop_t* loop, uv_tcp_t* handle)
+    uv_os_sock_t client_sock = *((uv_os_sock_t *)arg);
+    if (uv_tcp_open(&tcp, client_sock)) { LOG_ERROR("uv_tcp_open\n");  return; } // int uv_tcp_open(uv_tcp_t* handle, uv_os_sock_t sock)
+    //int name[] = {CTL_NET, NET_CORE, NET_CORE_SOMAXCONN}, nlen = sizeof(name), oldval[nlen]; size_t oldlenp = sizeof(oldval);
+ //   if (sysctl(name, nlen / sizeof(int), (void *)oldval, &oldlenp, NULL, 0)) { LOG_ERROR("sysctl\n");  return; } // int sysctl (int *name, int nlen, void *oldval, size_t *oldlenp, void *newval, size_t newlen)
+    int backlog = SOMAXCONN; 
+    if (uv_listen((uv_stream_t *)&tcp, backlog, on_connect)) { LOG_ERROR("uv_listen\n");  return; } // int uv_listen(uv_stream_t* stream, int backlog, uv_connection_cb cb)
+    if (uv_run(&loop, UV_RUN_DEFAULT)) { LOG_ERROR("uv_run\n");  return; } // int uv_run(uv_loop_t* loop, uv_run_mode mode)
+    if (uv_loop_close(&loop)) { LOG_ERROR("uv_loop_close\n");  return; } // int uv_loop_close(uv_loop_t* loop)
+   // 
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#endif
+
 
 int main(){
     parser_settings.on_url = on_url;
@@ -354,18 +391,42 @@ int main(){
     parser_settings.on_header_value = on_header_value;
     parser_settings.on_body = on_body;
     uv_loop = uv_default_loop();
-    int r = uv_tcp_init(uv_loop, &server);
+    int r = uv_tcp_init(uv_loop, &servertcp);
     CHECK(r, "tcp_init");
-    r = uv_tcp_keepalive(&server, 1, 60);
+    r = uv_tcp_keepalive(&servertcp, 1, 60);
     CHECK(r, "tcp_keepalive");
     struct sockaddr_in address;
     r = uv_ip4_addr("0.0.0.0", 8080, &address);
     CHECK(r, "ip4_addr");
-    r = uv_tcp_bind(&server, (const struct sockaddr*) &address, 0);
+    r = uv_tcp_bind(&servertcp, (const struct sockaddr*) &address, 0);
     CHECK(r, "tcp_bind");
-    r = uv_listen((uv_stream_t*) & server, MAX_WRITE_HANDLES, on_connect);
-    CHECK(r, "uv_listen");
+    
+    
+#if MultiThreadedWebServer
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+     uv_os_sock_t sock;
+    if ((r = uv_fileno((const uv_handle_t*)&servertcp, (uv_os_fd_t *)&sock))) { LOG_ERROR("uv_fileno\n"); return r; } // int uv_fileno(const uv_handle_t* handle, uv_os_fd_t* fd)
+    int cpu_count = 2;
+
+    int thread_count = cpu_count;
+
+    {
+        uv_thread_t tid[thread_count];
+        for (int i = 0; i < thread_count; i++) if ((r = uv_thread_create(&tid[i], server_on_start, (void *)&sock))) { LOG_ERROR("uv_thread_create\n"); return r; } // int uv_thread_create(uv_thread_t* tid, uv_thread_cb entry, void* arg)
+        for (int i = 0; i < thread_count; i++) if ((r = uv_thread_join(&tid[i]))) { LOG_ERROR("uv_thread_join\n"); return r; } // int uv_thread_join(uv_thread_t *tid)
+    }
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+#else
+    
+   r = uv_listen((uv_stream_t*) & servertcp, MAX_WRITE_HANDLES, on_connect);
+   CHECK(r, "uv_listen");
     LOG("listening on port 8080");
+   
+#endif
+    
     uv_run(uv_loop, UV_RUN_DEFAULT);
 }
 
