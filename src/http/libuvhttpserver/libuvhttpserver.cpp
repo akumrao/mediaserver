@@ -5,7 +5,9 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
+ * 
  *
+ * https://dzone.com/articles/parallel-tcpip-socket-server-with-multi-threading
  */
 
 #include <signal.h>
@@ -26,7 +28,7 @@
 #define DEBUG
 #ifdef DEBUG
 #define CHECK(status, msg) \
-  if (status != 0){LOG_CALL; \
+  if (status != 0){ \
     fprintf(stderr, "%s: %s\n", msg, uv_err_name(status)); \
     exit(1); \
   }
@@ -58,17 +60,17 @@ struct client_t
     std::string path;
 };
 
-void on_close(uv_handle_t* handle){LOG_CALL;
+void on_close(uv_handle_t* handle){
     client_t* client = (client_t*) handle->data;
     LOGF("[ %5d ] connection closed\n\n", client->request_num);
     delete client;
 }
 
-void alloc_cb(uv_handle_t * /*handle*/, size_t suggested_size, uv_buf_t* buf){LOG_CALL;
+void alloc_cb(uv_handle_t * /*handle*/, size_t suggested_size, uv_buf_t* buf){
     *buf = uv_buf_init((char*) malloc(suggested_size), suggested_size);
 }
 
-void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t * buf){LOG_CALL;
+void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t * buf){
     ssize_t parsed;
     LOGF("on read: %ld\n", nread);
     client_t* client = (client_t*) tcp->data;
@@ -105,7 +107,7 @@ struct render_baton
     result(),
     response_code("200 OK"),
     content_type("text/plain"),
-    error(false){LOG_CALL;
+    error(false){
         request.data = this;
     }
     client_t* client;
@@ -116,7 +118,7 @@ struct render_baton
     bool error;
 };
 
-void after_write(uv_write_t* req, int status){LOG_CALL;
+void after_write(uv_write_t* req, int status){
     CHECK(status, "write");
     if (!uv_is_closing((uv_handle_t*) req->handle))
     {
@@ -126,7 +128,7 @@ void after_write(uv_write_t* req, int status){LOG_CALL;
     }
 }
 
-bool endswith(std::string const& value, std::string const& search){LOG_CALL;
+bool endswith(std::string const& value, std::string const& search){
     if (value.length() >= search.length())
     {
         return (0 == value.compare(value.length() - search.length(), search.length(), search));
@@ -136,7 +138,7 @@ bool endswith(std::string const& value, std::string const& search){LOG_CALL;
     }
 }
 
-void render(uv_work_t* req){LOG_CALL;
+void render(uv_work_t* req){
     render_baton *closure = static_cast<render_baton *> (req->data);
     client_t* client = (client_t*) closure->client;
     LOGF("[ %5d ] render\n", client->request_num);
@@ -221,7 +223,7 @@ void render(uv_work_t* req){LOG_CALL;
     //#endif
 }
 
-void after_render(uv_work_t* req){LOG_CALL;
+void after_render(uv_work_t* req){
     render_baton *closure = static_cast<render_baton *> (req->data);
     client_t* client = (client_t*) closure->client;
 
@@ -250,17 +252,17 @@ void after_render(uv_work_t* req){LOG_CALL;
     CHECK(r, "write buff");
 }
 
-int on_message_begin(http_parser* /*parser*/){LOG_CALL;
+int on_message_begin(http_parser* /*parser*/){
     LOGF("\n***MESSAGE BEGIN***\n");
     return 0;
 }
 
-int on_headers_complete(http_parser* /*parser*/){LOG_CALL;
+int on_headers_complete(http_parser* /*parser*/){
     LOGF("\n***HEADERS COMPLETE***\n");
     return 0;
 }
 
-int on_url(http_parser* parser, const char* url, size_t length){LOG_CALL;
+int on_url(http_parser* parser, const char* url, size_t length){
     client_t* client = (client_t*) parser->data;
     LOGF("[ %5d ] on_url\n", client->request_num);
     LOGF("Url: %.*s\n", (int) length, url);
@@ -288,22 +290,22 @@ int on_url(http_parser* parser, const char* url, size_t length){LOG_CALL;
     return 0;
 }
 
-int on_header_field(http_parser* /*parser*/, const char* at, size_t length){LOG_CALL;
+int on_header_field(http_parser* /*parser*/, const char* at, size_t length){
     LOGF("Header field: %.*s\n", (int) length, at);
     return 0;
 }
 
-int on_header_value(http_parser* /*parser*/, const char* at, size_t length){LOG_CALL;
+int on_header_value(http_parser* /*parser*/, const char* at, size_t length){
     LOGF("Header value: %.*s\n", (int) length, at);
     return 0;
 }
 
-int on_body(http_parser* /*parser*/, const char* at, size_t length){LOG_CALL;
+int on_body(http_parser* /*parser*/, const char* at, size_t length){
     LOGF("Body: %.*s\n", (int) length, at);
     return 0;
 }
 
-int on_message_complete(http_parser* parser){LOG_CALL;
+int on_message_complete(http_parser* parser){
     client_t* client = (client_t*) parser->data;
     LOGF("[ %5d ] on_message_complete\n", client->request_num);
     render_baton *closure = new render_baton(client);
@@ -317,7 +319,7 @@ int on_message_complete(http_parser* parser){LOG_CALL;
     return 0;
 }
 
-void on_connect(uv_stream_t* server_handle, int status){LOG_CALL;
+void on_connect(uv_stream_t* server_handle, int status){
     CHECK(status, "connect");
     assert((uv_tcp_t*) server_handle == &server);
 
@@ -341,7 +343,7 @@ void on_connect(uv_stream_t* server_handle, int status){LOG_CALL;
 
 #define MAX_WRITE_HANDLES 1000
 
-int main(){LOG_CALL;
+int main(){
     parser_settings.on_url = on_url;
     // notification callbacks
     parser_settings.on_message_begin = on_message_begin;
@@ -357,13 +359,13 @@ int main(){LOG_CALL;
     r = uv_tcp_keepalive(&server, 1, 60);
     CHECK(r, "tcp_keepalive");
     struct sockaddr_in address;
-    r = uv_ip4_addr("0.0.0.0", 1337, &address);
+    r = uv_ip4_addr("0.0.0.0", 8080, &address);
     CHECK(r, "ip4_addr");
     r = uv_tcp_bind(&server, (const struct sockaddr*) &address, 0);
     CHECK(r, "tcp_bind");
     r = uv_listen((uv_stream_t*) & server, MAX_WRITE_HANDLES, on_connect);
     CHECK(r, "uv_listen");
-    LOG("listening on port 1337");
+    LOG("listening on port 8080");
     uv_run(uv_loop, UV_RUN_DEFAULT);
 }
 
