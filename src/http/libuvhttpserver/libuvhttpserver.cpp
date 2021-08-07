@@ -44,8 +44,11 @@
 #define LOGF(...)
 #endif
 
-#define MultiThreadedWebServer 1
+//#define MultiThreadedWebServer 1
 
+//or 
+
+#define MultiThreadedReadWritewithPipe 1
 
 
 static int request_num = 1;
@@ -64,6 +67,33 @@ struct client_t
      uv_loop_t *myloop{nullptr};
      
 };
+
+
+#if MultiThreadedReadWritewithPipe
+
+struct child_worker 
+  {
+            //uv_process_t req;
+          ////  uv_process_options_t options;
+            uv_pipe_t pipe;
+            uv_thread_t thread;
+
+            uv_loop_t *loppworker;
+            uv_pipe_t queue;
+
+            int fds[2];
+            
+           // TcpServerBase *obj;
+
+  } ;//*workers;
+
+void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+      buf->base = (char*) malloc(suggested_size);
+    buf->len = suggested_size;
+}
+
+#endif
+
 
 void on_close(uv_handle_t* handle){
     client_t* client = (client_t*) handle->data;
@@ -324,6 +354,161 @@ int on_message_complete(http_parser* parser){
     return 0;
 }
 
+
+
+#if MultiThreadedReadWritewithPipe
+
+int round_robin_counter = 0;
+ int child_worker_count=0;
+child_worker *workers{nullptr};
+
+
+void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
+  
+    if (nread < 0) {
+
+        if (nread != UV_EOF)
+            fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+        uv_close((uv_handle_t*) q, NULL);
+        return;
+    }
+
+    uv_pipe_t *pipe = (uv_pipe_t*) q;
+    if (!uv_pipe_pending_count(pipe)) {
+        fprintf(stderr, "No pending count\n");
+        return;
+    }
+
+    child_worker *tmp = (child_worker*) pipe->data;
+
+    uv_handle_type pending = uv_pipe_pending_type(pipe);
+    assert(pending == UV_TCP);
+
+    
+    ///////////////////////////////////////////////
+    
+    
+    
+    client_t* client = new client_t();
+    client->request_num = request_num;
+    request_num++;
+
+    LOGF("[ %5d ] new connection\n", request_num);
+
+    client->myloop = tmp->loppworker;
+    
+    uv_tcp_init(tmp->loppworker, &client->handle);
+    http_parser_init(&client->parser, HTTP_REQUEST);
+
+    client->parser.data = client;
+    client->handle.data = client;
+    
+
+    int r = uv_accept(q, (uv_stream_t*) & client->handle);
+    CHECK(r, "accept");
+   
+    if(r==0)
+    {
+        uv_os_fd_t fd;
+        uv_fileno((const uv_handle_t*) &client->handle, &fd);
+        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
+        uv_read_start((uv_stream_t*) &client->handle, alloc_cb, on_read);
+    } else {
+        uv_close((uv_handle_t*) &client->handle, NULL);
+    }
+    
+
+}
+
+static void workermain(void* _worker) {
+
+
+    child_worker *tmp = (child_worker*) _worker;
+    
+    tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
+
+    int e = uv_loop_init(tmp->loppworker);
+
+
+    e = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
+    e = uv_pipe_open(&tmp->queue, tmp->fds[1]);
+
+    tmp->queue.data = tmp;
+
+    e = uv_read_start((uv_stream_t*) & tmp->queue, alloc_buffer_worker, on_new_worker_connection);
+    uv_run(tmp->loppworker, UV_RUN_DEFAULT);
+
+}
+
+  void  setup_workers() 
+  {
+           
+            //size_t path_size = 500;
+            // uv_exepath(worker_path, &path_size);
+            // strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
+            // fprintf(stderr, "Worker path: %s\n", worker_path);
+
+            // char* args[2];
+            //  args[0] = worker_path;
+            //  args[1] = NULL;
+
+            
+            // ...
+
+            // launch same number of workers as number of CPUs
+            uv_cpu_info_t *info;
+            int cpu_count = 2;
+            //uv_cpu_info(&info, &cpu_count);
+            //uv_free_cpu_info(info, cpu_count);
+
+            child_worker_count = cpu_count;
+
+            workers = (child_worker*) calloc(cpu_count, sizeof (struct child_worker));
+            while (cpu_count--) {
+                struct child_worker *worker = &workers[cpu_count];
+                
+                //worker->obj = this;
+                
+                uv_pipe_init(uv_loop, &worker->pipe, 1);
+
+                socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+                uv_pipe_open(&worker->pipe, worker->fds[0]);
+
+                int e = uv_thread_create(&worker->thread, workermain, (void *) worker);
+                if (0 != e)
+                {
+                   // SError << "Error creating thread";
+                }
+
+
+                // fprintf(stderr, "Started worker %d\n", worker->req.pid);
+            }
+}
+
+uv_buf_t dummy_buf;
+void on_new_connection(uv_stream_t *server, int status) {
+
+    if (status == -1) {
+
+        // error!
+        return;
+    }
+
+    uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+    uv_tcp_init(uv_loop, client);
+    if (uv_accept(server, (uv_stream_t*) client) == 0) {
+        uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
+        dummy_buf = uv_buf_init("a", 1);
+        struct child_worker *worker = &workers[round_robin_counter];
+        int e =  uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
+        round_robin_counter = (round_robin_counter + 1) % child_worker_count;
+    } else {
+        uv_close((uv_handle_t*) client, NULL);
+    }
+}
+
+#endif
+
 void on_connect(uv_stream_t* server_handle, int status){
     CHECK(status, "connect");
   //  assert((uv_tcp_t*) server_handle == &servertcp);
@@ -341,7 +526,6 @@ void on_connect(uv_stream_t* server_handle, int status){
 
     client->parser.data = client;
     client->handle.data = client;
-    
     
 
     int r = uv_accept(server_handle, (uv_stream_t*) & client->handle);
@@ -402,6 +586,7 @@ int main(){
     CHECK(r, "tcp_bind");
     
     
+              
 #if MultiThreadedWebServer
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -419,13 +604,17 @@ int main(){
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
+#elif MultiThreadedReadWritewithPipe
+    setup_workers() ;
+       r = uv_listen((uv_stream_t*) & servertcp, MAX_WRITE_HANDLES, on_new_connection); 
 #else
-    
    r = uv_listen((uv_stream_t*) & servertcp, MAX_WRITE_HANDLES, on_connect);
+#endif
+
    CHECK(r, "uv_listen");
     LOG("listening on port 8080");
    
-#endif
+
     
     uv_run(uv_loop, UV_RUN_DEFAULT);
 }
