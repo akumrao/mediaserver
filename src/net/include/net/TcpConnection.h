@@ -29,11 +29,11 @@ namespace base
         class TcpConnectionBase: public Listener
         {
         protected:
-        using onSendCallback =  std::function<void(bool sent)>;
+       
 
         
         public:
-            
+             using onSendCallback =  std::function<void(bool sent)>;
             class ListenerClose
             {
             public:

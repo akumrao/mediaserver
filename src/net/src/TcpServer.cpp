@@ -23,6 +23,16 @@ namespace base
     namespace net
     {
 
+        static void after_pipe_write(uv_write_t* req, int status) {
+
+                free(req->data  );     
+                uv_close((uv_handle_t*) req->handle, nullptr);
+               
+                free(req);
+                return;
+        }
+        
+
         /* Static methods for UV callbacks. */
 
         inline static void onConnection(uv_stream_t* handle, int status) {
@@ -99,8 +109,11 @@ namespace base
 
             tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
             
-
-            int e = uv_loop_init(tmp->loppworker);
+            Application app;
+            
+            tmp->loppworker = Application::uvGetLoop();
+            
+            int e ;//= uv_loop_init(tmp->loppworker);
 
 
             e = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
@@ -134,7 +147,7 @@ namespace base
 
             // launch same number of workers as number of CPUs
             uv_cpu_info_t *info;
-            int cpu_count = 1;
+            int cpu_count = 40;
             //uv_cpu_info(&info, &cpu_count);
             //uv_free_cpu_info(info, cpu_count);
 
@@ -285,7 +298,7 @@ namespace base
 
             if(multithreaded)
             {
-                g_num_mutex2.lock();
+                //g_num_mutex2.lock();
 
                 SInfo << "OnUvConnection " << round_robin_counter;
                 
@@ -295,13 +308,16 @@ namespace base
                     uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
                     dummy_buf = uv_buf_init("a", 1);
                     struct child_worker *worker = &workers[round_robin_counter];
-                    int e = uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
+                    
+                    write_req->data = client;
+                    
+                    int e = uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, after_pipe_write);
                     round_robin_counter = (round_robin_counter + 1) % child_worker_count;
                 } else {
                     uv_close((uv_handle_t*) client, NULL);
                 }
                 
-                g_num_mutex2.unlock();
+              ///  g_num_mutex2.unlock();
 
             }
             else
