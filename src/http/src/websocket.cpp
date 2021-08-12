@@ -139,7 +139,7 @@ namespace base {
 //            
 //            send(tmp,5 , false);
             
-            SInfo << "WebSocketConnection " <<    uv_thread_self();
+          //  SInfo << "WebSocketConnection " <<    uv_thread_self();
             std::string tmp;
             dummy_mutex.lock();
             if(dummy_queue.size())

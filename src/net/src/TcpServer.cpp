@@ -9,7 +9,6 @@
  */
 
 
-
 #include "net/TcpServer.h"
 #include "base/logger.h"
 #include "base/application.h"
@@ -25,8 +24,9 @@ namespace base
 
         static void after_pipe_write(uv_write_t* req, int status) {
 
-                free(req->data  );     
-                uv_close((uv_handle_t*) req->handle, nullptr);
+                free(req->data);
+               // free_write_req(req);
+              //  uv_close((uv_handle_t*) req->handle, nullptr);
                
                 free(req);
                 return;
@@ -52,11 +52,7 @@ namespace base
    
         void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
             
-         
-            
-            SInfo << __func__;
             if (nread < 0) {
-                SInfo << __func__;
                 if (nread != UV_EOF)
                     fprintf(stderr, "Read error %s\n", uv_err_name(nread));
                 uv_close((uv_handle_t*) q, NULL);
@@ -65,7 +61,6 @@ namespace base
 
             uv_pipe_t *pipe = (uv_pipe_t*) q;
             if (!uv_pipe_pending_count(pipe)) {
-                SInfo << __func__;
                 fprintf(stderr, "No pending count\n");
                 return;
             }
@@ -76,7 +71,7 @@ namespace base
             assert(pending == UV_TCP);
             
            
-            SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
+           // SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
                     
            tmp->obj->worker_connection(tmp->loppworker, q);
            
@@ -96,21 +91,15 @@ namespace base
         }
         
         void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-            SInfo << __func__;
             buf->base = (char*) malloc(suggested_size);
             buf->len = suggested_size;
         }
 
 
         static void workermain(void* _worker) {
-            SInfo << __func__;
-
             child_worker *tmp = (child_worker*) _worker;
-
             tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
-            
             Application app;
-            
             tmp->loppworker = Application::uvGetLoop();
             
             int e ;//= uv_loop_init(tmp->loppworker);
@@ -311,7 +300,12 @@ namespace base
                     
                     write_req->data = client;
                     
-                    int e = uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, after_pipe_write);
+                    int err = uv_write2(write_req, (uv_stream_t*) &worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, after_pipe_write);
+                    
+                    if (err != 0)
+                    LError("uv_accept() failed: %s", uv_strerror(err));
+
+                    
                     round_robin_counter = (round_robin_counter + 1) % child_worker_count;
                 } else {
                     uv_close((uv_handle_t*) client, NULL);

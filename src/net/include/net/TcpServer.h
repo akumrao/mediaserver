@@ -30,12 +30,12 @@ namespace base
             uv_pipe_t pipe;
             uv_thread_t thread;
 
-            uv_loop_t *loppworker;
+            uv_loop_t *loppworker{nullptr};
             uv_pipe_t queue;
 
             int fds[2];
             
-            TcpServerBase *obj;
+            TcpServerBase *obj{nullptr};;
 
         } ;//*workers;
 
