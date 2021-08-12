@@ -53,9 +53,12 @@ namespace base {
                 //closure->result = "hello universe";
                 closure->response_code = "200 OK";
 
+                
                 //#if 0
                 std::string filepath(".");
                 filepath += closure->path;
+                
+                
                 std::string index_path = (filepath + "index.html");
 
                 std::cout << "file Path: " << filepath << "index Path " << index_path << std::endl;
@@ -229,14 +232,16 @@ namespace base {
             // connection()->Close();
             std::string file_to_open;
 
-//            if (request1.getURI() == "/") {
-//                file_to_open = "./index.html";
-//            } else {
-//                file_to_open = "." + request1.getURI();
-//            }
-            
+#if 1
+            if (request1.getURI() == "/") {
+                file_to_open = "/index.html";
+            } else {
+                file_to_open =  request1.getURI();
+            }
+#else           
+           // arvind for directory list 
            file_to_open = request1.getURI();
-
+#endif
 
             SInfo << "Response file Path: " << file_to_open << std::endl;
 
