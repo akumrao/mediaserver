@@ -150,7 +150,9 @@ namespace base
                 
                 uv_pipe_init(Application::uvGetLoop(), &worker->pipe, 1);
 
-                socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+               // socketpair(AF_UNIX, SOCK_STREAM, 0, worker->fds);
+                uv_socketpair(SOCK_STREAM, 0, worker->fds, 0, 0);
+                
                 uv_pipe_open(&worker->pipe, worker->fds[0]);
 
                 int e = uv_thread_create(&worker->thread, workermain, (void *) worker);

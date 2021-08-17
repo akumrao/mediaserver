@@ -78,11 +78,13 @@ int numCpuCores()
 
 void sleep(int ms)
 {
-#ifdef base_WIN
-    Sleep(ms);
-#else
-    usleep(ms * 1000);
-#endif
+//#ifdef base_WIN
+//    Sleep(ms);
+//#else
+//    usleep(ms * 1000);
+//#endif
+    
+    uv_sleep(ms);
 }
 
 
