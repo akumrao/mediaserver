@@ -33,7 +33,7 @@ namespace base
             uv_loop_t *loppworker{nullptr};
             uv_pipe_t queue;
 
-            int fds[2];
+            uv_os_sock_t fds[2];
             
             TcpServerBase *obj{nullptr};;
 
