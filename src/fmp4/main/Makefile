@@ -14,7 +14,7 @@ CPPFLAGS   := -I../../fmp4/include/ -I../../json/include/ -I../../crypto/include
               
 LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 #/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
-LDLIBS    := -lpthread -lm -ldl -lavformat -lavfilter -lavcodec -lavutil -lswscale -lavdevice -lswresample -lwebsockets -lssl -lcrypto
+LDLIBS    := -lpthread -lm -ldl -lavformat  -lavcodec -lavutil -lssl -lcrypto
 
 #SLIBS     := /workspace/webrtc_android/src/out/m84_release/obj/libwebrtc.a
 
