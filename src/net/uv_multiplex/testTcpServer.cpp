@@ -502,7 +502,7 @@ int main() {
 
     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
 
-    loppmain = uv_default_loop();
+    loppmain = Application::uvGetLoop();
 
     setup_workers();
 

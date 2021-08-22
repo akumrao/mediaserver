@@ -173,7 +173,7 @@ struct ShutdownCmd
 
 
 inline void onShutdownSignal(std::function<void(void*)> callback = nullptr,
-                             void* opaque = nullptr, uv_loop_t* loop = uv_default_loop())
+                             void* opaque = nullptr, uv_loop_t* loop = Application::uvGetLoop())
 {
     auto cmd = new ShutdownCmd;
     cmd->opaque = opaque;
@@ -193,7 +193,7 @@ inline void onShutdownSignal(std::function<void(void*)> callback = nullptr,
 
 
 inline void waitForShutdown(std::function<void(void*)> callback = nullptr,
-                            void* opaque = nullptr, uv_loop_t* loop = uv_default_loop())
+                            void* opaque = nullptr, uv_loop_t* loop = Application::uvGetLoop())
 {
     onShutdownSignal(callback, opaque, loop);
     uv_run(loop, UV_RUN_DEFAULT);

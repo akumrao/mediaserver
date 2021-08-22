@@ -15,6 +15,7 @@
 
 
 #include "base/base.h"
+#include "base/application.h"
 #include <functional>
 #include <vector>
 #include <initializer_list>
@@ -45,10 +46,10 @@ namespace base {
     class Process {
     public:
         /// Default constructor.
-        Process(uv_loop_t* loop = uv_default_loop());
+        Process(uv_loop_t* loop = Application::uvGetLoop());
 
         /// Constructor with command line arguments.
-        Process(std::initializer_list<std::string> args, uv_loop_t* loop = uv_default_loop());
+        Process(std::initializer_list<std::string> args, uv_loop_t* loop = Application::uvGetLoop());
 
         /// Destructor.
         ~Process();

@@ -84,7 +84,7 @@ public:
             LTrace( "onexit", status);
         };
         proc.spawn();
-        uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+        uv_run(Application::uvGetLoop(), UV_RUN_DEFAULT);
 
     }
 

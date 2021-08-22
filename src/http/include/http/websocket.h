@@ -141,7 +141,7 @@ namespace base {
         /// This class implements a WebSocket parser according
         /// to the WebSocket protocol described in RFC 6455.
 
-        class HTTP_API WebSocketFramer {
+        class  WebSocketFramer {
         public:
             /// Creates a Socket using the given Socket.
             WebSocketFramer(Mode mode);

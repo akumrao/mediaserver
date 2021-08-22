@@ -202,6 +202,48 @@ static void close_pipe(uv_pipe_t* pipe) {
 }
 
 
+
+
+static int uv__pipe_server(
+    HANDLE* pipeHandle_ptr, DWORD access,
+    char* name, size_t nameSize, char* random) {
+  HANDLE pipeHandle;
+  int err;
+
+  for (;;) {
+    uv_unique_pipe_name(random, name, nameSize);
+
+    pipeHandle = CreateNamedPipeA(name,
+      access | FILE_FLAG_FIRST_PIPE_INSTANCE,
+      PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 65536, 65536, 0,
+      NULL);
+
+    if (pipeHandle != INVALID_HANDLE_VALUE) {
+      /* No name collisions.  We're done. */
+      break;
+    }
+
+    err = GetLastError();
+    if (err != ERROR_PIPE_BUSY && err != ERROR_ACCESS_DENIED) {
+      goto error;
+    }
+
+    /* Pipe name collision.  Increment the random number and try again. */
+    random++;
+  }
+
+  *pipeHandle_ptr = pipeHandle;
+
+  return 0;
+
+ error:
+  if (pipeHandle != INVALID_HANDLE_VALUE)
+    CloseHandle(pipeHandle);
+
+  return err;
+}
+
+
 int uv_stdio_pipe_server(uv_loop_t* loop, uv_pipe_t* handle, DWORD access,
     char* name, size_t nameSize) {
   HANDLE pipeHandle;

@@ -27,15 +27,25 @@ namespace base
         struct child_worker {
             //uv_process_t req;
           ////  uv_process_options_t options;
+          
+            uv_connect_t connect_req;
+
             uv_pipe_t pipe;
             uv_thread_t thread;
 
             uv_loop_t *loppworker{nullptr};
-            uv_pipe_t queue;
-
-            uv_os_sock_t fds[2];
+           
             
-            TcpServerBase *obj{nullptr};;
+            uv_pipe_t queue;
+            uv_pipe_t channelqueue;
+
+            //uv_os_sock_t fds[2];
+
+            uv_file fds[2];
+            
+            TcpServerBase *obj{nullptr};
+
+            int id;
 
         } ;//*workers;
 

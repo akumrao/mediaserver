@@ -52,9 +52,11 @@ namespace base {
 
             LTrace(" On acccept-> UserOnTcpConnectionAlloc"  )
             // Allocate a new RTC::HttpConnection for the HttpServerBase to handle it.
+#if HTTPSSL
             if(ssl)
             *connection = new HttpsConnection(listener, HTTP_REQUEST);
             else
+#endif
             *connection = new HttpConnection(listener, HTTP_REQUEST);
                
             
@@ -267,7 +269,7 @@ static int on_body_end(multipartparser* )
 
 /***********************************************************************************************/
         
-
+#if HTTPSSL
         HttpsServer::HttpsServer( std::string ip, int port, ServerConnectionFactory *factory) 
         : HttpServerBase( this,  ip, port , true)
         ,ip(ip), port(port), _factory(factory)
@@ -326,6 +328,7 @@ static int on_body_end(multipartparser* )
          
                LTrace("HttpsServer::on_header" )
         }
+#endif
 
     } // namespace net
 } // base

@@ -12,7 +12,7 @@
 
 #include "base/random.h"
 #include "base/error.h"
-
+#include <sstream>
 #include <assert.h>
 #include <stdexcept>
 

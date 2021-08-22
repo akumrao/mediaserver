@@ -15,6 +15,7 @@
 #include "base/logger.h"
 #include "base/util.h"
 #include "base/util.h"
+#include "base/application.h"
 #include <algorithm>
 #include <fstream>
 #include <memory>
@@ -154,7 +155,7 @@ struct FSReq
 #define FSapi(func, ...)                                                       \
     FSReq wrap;                                                                \
     int err =                                                                  \
-        uv_fs_##func(uv_default_loop(), &wrap.req, __VA_ARGS__, nullptr);      \
+        uv_fs_##func(Application::uvGetLoop(), &wrap.req, __VA_ARGS__, nullptr);      \
     if (err < 0)                                                               \
         uv::throwError(std::string("Filesystem error: ") + #func +             \
                        std::string(" failed"), err);

@@ -211,7 +211,7 @@ namespace base {
         bool Test::stop() {
             // TBD
 
-            true;
+            return true;
         }
 
         bool Test::passed() {

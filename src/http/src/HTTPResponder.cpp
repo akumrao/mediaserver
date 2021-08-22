@@ -6,13 +6,13 @@
 
 #include "http/HTTPResponder.h"
 #include "base/application.h"
-
+#include "base/filesystem.h"
 
 namespace base {
     namespace net {
         
         
-              struct render_baton
+            struct render_baton
             {
 
                 render_baton() :
@@ -63,7 +63,7 @@ namespace base {
 
                 std::cout << "file Path: " << filepath << "index Path " << index_path << std::endl;
 
-                bool has_index = (access(index_path.c_str(), R_OK) != -1);
+                bool has_index = base::fs::exists(index_path);               /// (access(index_path.c_str(), R_OK) != -1);
                 if (/*!has_index &&*/ filepath[filepath.size() - 1] == '/')
                 {
                     uv_fs_t scandir_req;
@@ -95,7 +95,7 @@ namespace base {
                         file_to_open = index_path;
                     }
                     std::cout << "file Path: " << file_to_open << std::endl;
-                    bool exists = (access(file_to_open.c_str(), R_OK) != -1);
+                    bool exists =  base::fs::exists(file_to_open); //(access(file_to_open.c_str(), R_OK) != -1);
                     if (!exists)
                     {
                         closure->result = "no access";

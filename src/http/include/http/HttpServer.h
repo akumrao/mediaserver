@@ -14,7 +14,9 @@
 #include "net/netInterface.h"
 #include "http/HttpServer.h"
 #include "http/HttpConn.h"
+#if HTTPSSL
 #include "http/HttpsConn.h"
+#endif
 #include "net/TcpServer.h"
 #include "http/parser.h"
 #include "http/responder.h"

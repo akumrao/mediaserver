@@ -15,7 +15,6 @@
 
 
 #include "base/base.h"
-
 #include <string>
 #include <cstdint>
 
