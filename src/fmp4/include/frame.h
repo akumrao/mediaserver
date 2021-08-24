@@ -347,7 +347,7 @@ public:                     // helper objects : values should correspond to memb
     AVCodecID codec_id;     ///< helper object: codec id
 
 public:                // managed objects
-    AVFrame *av_frame; ///< The decoded frame
+    //AVFrame *av_frame; ///< The decoded frame
 };
 
 /** Decoded YUV/RGB frame in FFMpeg format

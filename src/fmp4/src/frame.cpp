@@ -370,13 +370,13 @@ void SetupFrame::reset() {
 
 
 AVMediaFrame::AVMediaFrame() : media_type(AVMEDIA_TYPE_UNKNOWN), codec_id(AV_CODEC_ID_NONE) { // , mediatype(MediaType::none) {
-  av_frame =av_frame_alloc();
+  //av_frame =av_frame_alloc();
 }
 
 
 AVMediaFrame::~AVMediaFrame() {
-  av_frame_free(&av_frame);
-  av_free(av_frame); // needs this as well?
+ // av_frame_free(&av_frame);
+ // av_free(av_frame); // needs this as well?
 }
 
 
