@@ -6,8 +6,8 @@
 
 #include "fmp4.h"
 
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
+//#include "ff/ff.h"
+//#include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
@@ -16,7 +16,7 @@
 extern "C"
 {
 //#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
+#include <avformat.h>
 }
 
 

@@ -27,7 +27,7 @@
 extern "C" {
  
 // #include <libavutil/avassert.h>    
- #include <libavcodec/avcodec.h>
+ #include <avcodec.h>
 // #include <libavutil/opt.h>
 // #include <libswscale/swscale.h>
 // #ifdef HAVE_FFMPEG_SWRESAMPLE

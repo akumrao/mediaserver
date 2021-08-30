@@ -24,8 +24,8 @@
 extern "C"
 {
 //#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
+#include <avformat.h>
+#include <avcodec.h>
 }
 
 #define MAX_CHUNK_SIZE 10240*8
@@ -466,7 +466,7 @@ namespace base {
            // av_init_packet(pkt);
 
             const int in_buffer_size=fileSize;
-            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + AV_INPUT_BUFFER_PADDING_SIZE);
             unsigned char *cur_ptr;
             int cur_size;
             
@@ -569,7 +569,7 @@ namespace base {
             // av_init_packet(pkt);
 
             const int in_videobuffer_size = videofileSize;
-            unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + FF_INPUT_BUFFER_PADDING_SIZE);
+            unsigned char *in_videobuffer = (unsigned char*) malloc(in_videobuffer_size + AV_INPUT_BUFFER_PADDING_SIZE);
             unsigned char *cur_videoptr = nullptr;
             int cur_videosize=0;
 

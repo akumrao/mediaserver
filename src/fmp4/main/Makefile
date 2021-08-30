@@ -9,12 +9,11 @@ SOURCES=$(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized -Wno-attributes -Wno-fpermissive -Wno-deprecated-declarations
  
 
-CPPFLAGS   := -I../../fmp4/include/ -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../net/uv_multiplex/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ -I../../ffmpeg/include
-
+CPPFLAGS   := -I../../fmp4/include/ -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../net/uv_multiplex/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/  
               
 LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 #/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
-LDLIBS    := -lpthread -lm -ldl -lavformat  -lavcodec -lssl -lcrypto
+LDLIBS    := -lpthread -lm -ldl -lavformat -lssl -lcrypto
 
 #SLIBS     := /workspace/webrtc_android/src/out/m84_release/obj/libwebrtc.a
 

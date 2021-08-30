@@ -8,8 +8,10 @@
 extern "C"
 {
 //#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
+#include "avformat.h"
+#include "avcodec.h"
+#include "channel_layout.h"
+    
 }
  /*
 
@@ -104,7 +106,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
 MuxFrameFilter::~MuxFrameFilter() {
  //   deActivate();
     av_free(avio_ctx_buffer);
-    av_free_packet(avpkt);
+    av_packet_unref(avpkt);
     delete avpkt;
     av_dict_free(&av_dict);
 }
@@ -175,7 +177,7 @@ void MuxFrameFilter::initMux() {
 
 
 
-                av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+                av_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
                 ///*
                 av_codec_context->extradata = extradata_videoframe.payload.data();
                 av_codec_context->extradata_size = extradata_videoframe.payload.size();
@@ -227,7 +229,7 @@ void MuxFrameFilter::initMux() {
                 
                 av_codec_context->bit_rate = 64000;
                 
-                av_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+                av_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
                 av_codec_context->sample_rate = SAMPLINGRATE;
                 av_codec_context->profile = FF_PROFILE_AAC_LOW;
 

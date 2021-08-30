@@ -9,12 +9,12 @@
 //#include <iterator>
 //#include  <vector>
 
- #include "ff/ff.h"
- #include "ff/mediacapture.h"
+// #include "ff/ff.h"
+ //#include "ff/mediacapture.h"
 extern "C"
 {
 //#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
+#include "avformat.h"
 }
 
 //#include "micro.h"
@@ -204,7 +204,7 @@ public:                  // codec-dependent functions
 public:
     void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
     void copyFromAVPacket(AVPacket *avpkt);                                                                ///< Copy data from AVPacket structure
-    void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure
+   // void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure  //arvind
 
 public:                                                  // frame serialization
     std::size_t calcSize();                              ///< How much this frame occupies in bytes when serialized

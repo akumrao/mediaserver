@@ -11,6 +11,7 @@
 
 #include "frame.h"
 
+#include <sstream>
 
 
 Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
@@ -92,7 +93,7 @@ std::string BasicFrame::dumpPayload() {
 
 
 void BasicFrame::dumpPayloadToFile(std::ofstream& fout) {
-  std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
+//  std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
 }
 
 
@@ -188,27 +189,27 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
 }
 
 
-void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
-  int out_size;
-  uint8_t *out;
-  
-  av_bitstream_filter_filter(
-    filter,
-    codec_ctx,
-    NULL,
-    &out,
-    &out_size,
-    pkt->data,
-    pkt->size,
-    pkt->flags & AV_PKT_FLAG_KEY
-  );
-  
-  payload.resize(out_size);
-  // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
-  memcpy(payload.data(),out,out_size);
-  stream_index=pkt->stream_index;
-  mstimestamp=(long int)pkt->pts;
-}
+//void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
+//  int out_size;
+//  uint8_t *out;
+//  
+//  av_bitstream_filter_filter(
+//    filter,
+//    codec_ctx,
+//    NULL,
+//    &out,
+//    &out_size,
+//    pkt->data,
+//    pkt->size,
+//    pkt->flags & AV_PKT_FLAG_KEY
+//  );
+//  
+//  payload.resize(out_size);
+//  // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
+//  memcpy(payload.data(),out,out_size);
+//  stream_index=pkt->stream_index;
+//  mstimestamp=(long int)pkt->pts;
+//}
 
 
 std::size_t BasicFrame::calcSize() {
@@ -316,7 +317,7 @@ std::string MuxFrame::dumpPayload() {
 
 
 void MuxFrame::dumpPayloadToFile(std::ofstream& fout) {
-    std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
+//    std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
 }
 
 

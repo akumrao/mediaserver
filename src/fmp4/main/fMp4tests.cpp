@@ -14,11 +14,11 @@
 #include "http/HTTPResponder.h"
 
 #include "fmp4.h"
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
+//#include "ff/ff.h"
+//#include "ff/mediacapture.h"
 
-#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
+//#include <libavutil/timestamp.h>
+#include "avformat.h"
 
 using namespace base;
 
