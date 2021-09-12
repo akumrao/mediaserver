@@ -10,6 +10,7 @@ git clone git@github.com:FFmpeg/FFmpeg.git ffmpeg git checkout release/3.3
 make -j8
 
 
+apt install libfdk-aac-dev -y
 
 
 play pcm
