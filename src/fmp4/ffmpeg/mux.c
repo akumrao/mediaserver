@@ -44,6 +44,9 @@
 #include "network.h"
 #endif
 
+
+#define LIBAVFORMAT_IDENT       "Lavf" AV_STRINGIFY(1)
+
 /**
  * @file
  * muxing functions for use within libavformat
@@ -401,7 +404,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
     /* set muxer identification string */
     if (!(s->flags & AVFMT_FLAG_BITEXACT)) {
-        av_dict_set(&s->metadata, "encoder", 1, 0);
+        av_dict_set(&s->metadata, "encoder", LIBAVFORMAT_IDENT, 0);
     } else {
         av_dict_set(&s->metadata, "encoder", NULL, 0);
     }
