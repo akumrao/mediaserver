@@ -3,7 +3,7 @@
 #include "tools.h"
 #include "base/logger.h"
 
-#include "mem.h"
+//#include "mem.h"
 
 extern "C"
 {
@@ -251,7 +251,7 @@ void MuxFrameFilter::initMux() {
                 //memcpy( av_codec_context->extradata, &aacspec , 2);
                         
                  av_codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
-                 //av_codec_context->channels        = av_get_channel_layout_nb_channels(av_codec_context->channel_layout);
+                 av_codec_context->channels        = av_get_channel_layout_nb_channels(av_codec_context->channel_layout);
 
                 // ost->st->time_base = (AVRational){ 1, c->sample_rate };
                 // std::cout << "avformat_new_stream" << std::endl;
