@@ -23,8 +23,8 @@ extern "C"
 #define SERVER_HOST  "127.0.0.1"               
 #define SERVER_PORT 8000
 
-#define AUDIOFILE  "/var/tmp/songs/hindi.pcm"               
-#define VIDEOFILE  "/experiment/live/testProgs/test.264"
+#define AUDIOFILE  "./hindi.pcm"               
+#define VIDEOFILE  "./test.264"
 //#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
 
 
