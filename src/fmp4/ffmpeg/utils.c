@@ -34,7 +34,7 @@
 #include "channel_layout.h"
 //#include "libavutil/crc.h"
 #include "frame.h"
-//#include "libavutil/hwcontext.h"
+#include "hwcontext.h"
 #include "internal_codec.h"
 #include "mathematics.h"
 #include "macros.h"
@@ -76,7 +76,8 @@
 //#include "libavutil/ffversion.h"
 
     
-    
+#define HWACCEL_CODEC_CAP_EXPERIMENTAL     0x0200
+
 const char av_codec_ffversion[] = "FFmpeg version";
 
 #if HAVE_PTHREADS || HAVE_W32THREADS || HAVE_OS2THREADS
@@ -176,8 +177,8 @@ static av_cold void avcodec_init(void)
         return;
     initialized = 1;
 
-    //if (CONFIG_ME_CMP)
-      //  ff_me_cmp_init_static();  // arvind
+    //if (CONFIG_ME_CMP)      // arvind motion estimate not supported
+        //ff_me_cmp_init_static();  
 }
 
 int av_codec_is_encoder(const AVCodec *codec)
@@ -272,200 +273,200 @@ int ff_side_data_update_matrix_encoding(AVFrame *frame,
     return 0;
 }
 
-//void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
- //                              int linesize_align[AV_NUM_DATA_POINTERS])
-//{
-//    int i;
-//    int w_align = 1;
-//    int h_align = 1;
-//    AVPixFmtDescriptor const *desc = av_pix_fmt_desc_get(s->pix_fmt);
-//
-//    if (desc) {
-//        w_align = 1 << desc->log2_chroma_w;
-//        h_align = 1 << desc->log2_chroma_h;
-//    }
-//
-//    switch (s->pix_fmt) {
-//    case AV_PIX_FMT_YUV420P:
-//    case AV_PIX_FMT_YUYV422:
-//    case AV_PIX_FMT_YVYU422:
-//    case AV_PIX_FMT_UYVY422:
-//    case AV_PIX_FMT_YUV422P:
-//    case AV_PIX_FMT_YUV440P:
-//    case AV_PIX_FMT_YUV444P:
-//    case AV_PIX_FMT_GBRP:
-//    case AV_PIX_FMT_GBRAP:
-//    case AV_PIX_FMT_GRAY8:
-//    case AV_PIX_FMT_GRAY16BE:
-//    case AV_PIX_FMT_GRAY16LE:
-//    case AV_PIX_FMT_YUVJ420P:
-//    case AV_PIX_FMT_YUVJ422P:
-//    case AV_PIX_FMT_YUVJ440P:
-//    case AV_PIX_FMT_YUVJ444P:
-//    case AV_PIX_FMT_YUVA420P:
-//    case AV_PIX_FMT_YUVA422P:
-//    case AV_PIX_FMT_YUVA444P:
-//    case AV_PIX_FMT_YUV420P9LE:
-//    case AV_PIX_FMT_YUV420P9BE:
-//    case AV_PIX_FMT_YUV420P10LE:
-//    case AV_PIX_FMT_YUV420P10BE:
-//    case AV_PIX_FMT_YUV420P12LE:
-//    case AV_PIX_FMT_YUV420P12BE:
-//    case AV_PIX_FMT_YUV420P14LE:
-//    case AV_PIX_FMT_YUV420P14BE:
-//    case AV_PIX_FMT_YUV420P16LE:
-//    case AV_PIX_FMT_YUV420P16BE:
-//    case AV_PIX_FMT_YUVA420P9LE:
-//    case AV_PIX_FMT_YUVA420P9BE:
-//    case AV_PIX_FMT_YUVA420P10LE:
-//    case AV_PIX_FMT_YUVA420P10BE:
-//    case AV_PIX_FMT_YUVA420P16LE:
-//    case AV_PIX_FMT_YUVA420P16BE:
-//    case AV_PIX_FMT_YUV422P9LE:
-//    case AV_PIX_FMT_YUV422P9BE:
-//    case AV_PIX_FMT_YUV422P10LE:
-//    case AV_PIX_FMT_YUV422P10BE:
-//    case AV_PIX_FMT_YUV422P12LE:
-//    case AV_PIX_FMT_YUV422P12BE:
-//    case AV_PIX_FMT_YUV422P14LE:
-//    case AV_PIX_FMT_YUV422P14BE:
-//    case AV_PIX_FMT_YUV422P16LE:
-//    case AV_PIX_FMT_YUV422P16BE:
-//    case AV_PIX_FMT_YUVA422P9LE:
-//    case AV_PIX_FMT_YUVA422P9BE:
-//    case AV_PIX_FMT_YUVA422P10LE:
-//    case AV_PIX_FMT_YUVA422P10BE:
-//    case AV_PIX_FMT_YUVA422P16LE:
-//    case AV_PIX_FMT_YUVA422P16BE:
-//    case AV_PIX_FMT_YUV440P10LE:
-//    case AV_PIX_FMT_YUV440P10BE:
-//    case AV_PIX_FMT_YUV440P12LE:
-//    case AV_PIX_FMT_YUV440P12BE:
-//    case AV_PIX_FMT_YUV444P9LE:
-//    case AV_PIX_FMT_YUV444P9BE:
-//    case AV_PIX_FMT_YUV444P10LE:
-//    case AV_PIX_FMT_YUV444P10BE:
-//    case AV_PIX_FMT_YUV444P12LE:
-//    case AV_PIX_FMT_YUV444P12BE:
-//    case AV_PIX_FMT_YUV444P14LE:
-//    case AV_PIX_FMT_YUV444P14BE:
-//    case AV_PIX_FMT_YUV444P16LE:
-//    case AV_PIX_FMT_YUV444P16BE:
-//    case AV_PIX_FMT_YUVA444P9LE:
-//    case AV_PIX_FMT_YUVA444P9BE:
-//    case AV_PIX_FMT_YUVA444P10LE:
-//    case AV_PIX_FMT_YUVA444P10BE:
-//    case AV_PIX_FMT_YUVA444P16LE:
-//    case AV_PIX_FMT_YUVA444P16BE:
-//    case AV_PIX_FMT_GBRP9LE:
-//    case AV_PIX_FMT_GBRP9BE:
-//    case AV_PIX_FMT_GBRP10LE:
-//    case AV_PIX_FMT_GBRP10BE:
-//    case AV_PIX_FMT_GBRP12LE:
-//    case AV_PIX_FMT_GBRP12BE:
-//    case AV_PIX_FMT_GBRP14LE:
-//    case AV_PIX_FMT_GBRP14BE:
-//    case AV_PIX_FMT_GBRP16LE:
-//    case AV_PIX_FMT_GBRP16BE:
-//    case AV_PIX_FMT_GBRAP12LE:
-//    case AV_PIX_FMT_GBRAP12BE:
-//    case AV_PIX_FMT_GBRAP16LE:
-//    case AV_PIX_FMT_GBRAP16BE:
-//        w_align = 16; //FIXME assume 16 pixel per macroblock
-//        h_align = 16 * 2; // interlaced needs 2 macroblocks height
-//        break;
-//    case AV_PIX_FMT_YUV411P:
-//    case AV_PIX_FMT_YUVJ411P:
-//    case AV_PIX_FMT_UYYVYY411:
-//        w_align = 32;
-//        h_align = 16 * 2;
-//        break;
-//    case AV_PIX_FMT_YUV410P:
-//        if (s->codec_id == AV_CODEC_ID_SVQ1) {
-//            w_align = 64;
-//            h_align = 64;
-//        }
-//        break;
-//    case AV_PIX_FMT_RGB555:
-//        if (s->codec_id == AV_CODEC_ID_RPZA) {
-//            w_align = 4;
-//            h_align = 4;
-//        }
-//        if (s->codec_id == AV_CODEC_ID_INTERPLAY_VIDEO) {
-//            w_align = 8;
-//            h_align = 8;
-//        }
-//        break;
-//    case AV_PIX_FMT_PAL8:
-//    case AV_PIX_FMT_BGR8:
-//    case AV_PIX_FMT_RGB8:
-//        if (s->codec_id == AV_CODEC_ID_SMC ||
-//            s->codec_id == AV_CODEC_ID_CINEPAK) {
-//            w_align = 4;
-//            h_align = 4;
-//        }
-//        if (s->codec_id == AV_CODEC_ID_JV ||
-//            s->codec_id == AV_CODEC_ID_INTERPLAY_VIDEO) {
-//            w_align = 8;
-//            h_align = 8;
-//        }
-//        break;
-//    case AV_PIX_FMT_BGR24:
-//        if ((s->codec_id == AV_CODEC_ID_MSZH) ||
-//            (s->codec_id == AV_CODEC_ID_ZLIB)) {
-//            w_align = 4;
-//            h_align = 4;
-//        }
-//        break;
-//    case AV_PIX_FMT_RGB24:
-//        if (s->codec_id == AV_CODEC_ID_CINEPAK) {
-//            w_align = 4;
-//            h_align = 4;
-//        }
-//        break;
-//    default:
-//        break;
-//    }
-//
-//    if (s->codec_id == AV_CODEC_ID_IFF_ILBM) {
-//        w_align = FFMAX(w_align, 8);
-//    }
-//
-//    *width  = FFALIGN(*width, w_align);
-//    *height = FFALIGN(*height, h_align);
-//    if (s->codec_id == AV_CODEC_ID_H264 || s->lowres ||
-//        s->codec_id == AV_CODEC_ID_VP5  || s->codec_id == AV_CODEC_ID_VP6 ||
-//        s->codec_id == AV_CODEC_ID_VP6F || s->codec_id == AV_CODEC_ID_VP6A
-//    ) {
-//        // some of the optimized chroma MC reads one line too much
-//        // which is also done in mpeg decoders with lowres > 0
-//        *height += 2;
-//
-//        // H.264 uses edge emulation for out of frame motion vectors, for this
-//        // it requires a temporary area large enough to hold a 21x21 block,
-//        // increasing witdth ensure that the temporary area is large enough,
-//        // the next rounded up width is 32
-//        *width = FFMAX(*width, 32);
-//    }
-//
-//    for (i = 0; i < 4; i++)
-//        linesize_align[i] = STRIDE_ALIGN;
-//}
-//
-//void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height)
-//{
-//    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(s->pix_fmt);
-//    int chroma_shift = desc->log2_chroma_w;
-//    int linesize_align[AV_NUM_DATA_POINTERS];
-//    int align;
-//
-//    avcodec_align_dimensions2(s, width, height, linesize_align);
-//    align               = FFMAX(linesize_align[0], linesize_align[3]);
-//    linesize_align[1] <<= chroma_shift;
-//    linesize_align[2] <<= chroma_shift;
-//    align               = FFMAX3(align, linesize_align[1], linesize_align[2]);
-//    *width              = FFALIGN(*width, align);
-//}
+void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
+                              int linesize_align[AV_NUM_DATA_POINTERS])
+{
+   int i;
+   int w_align = 1;
+   int h_align = 1;
+   AVPixFmtDescriptor const *desc = av_pix_fmt_desc_get(s->pix_fmt);
+
+   if (desc) {
+       w_align = 1 << desc->log2_chroma_w;
+       h_align = 1 << desc->log2_chroma_h;
+   }
+
+   switch (s->pix_fmt) {
+   case AV_PIX_FMT_YUV420P:
+   case AV_PIX_FMT_YUYV422:
+   case AV_PIX_FMT_YVYU422:
+   case AV_PIX_FMT_UYVY422:
+   case AV_PIX_FMT_YUV422P:
+   case AV_PIX_FMT_YUV440P:
+   case AV_PIX_FMT_YUV444P:
+   case AV_PIX_FMT_GBRP:
+   case AV_PIX_FMT_GBRAP:
+   case AV_PIX_FMT_GRAY8:
+   case AV_PIX_FMT_GRAY16BE:
+   case AV_PIX_FMT_GRAY16LE:
+   case AV_PIX_FMT_YUVJ420P:
+   case AV_PIX_FMT_YUVJ422P:
+   case AV_PIX_FMT_YUVJ440P:
+   case AV_PIX_FMT_YUVJ444P:
+   case AV_PIX_FMT_YUVA420P:
+   case AV_PIX_FMT_YUVA422P:
+   case AV_PIX_FMT_YUVA444P:
+   case AV_PIX_FMT_YUV420P9LE:
+   case AV_PIX_FMT_YUV420P9BE:
+   case AV_PIX_FMT_YUV420P10LE:
+   case AV_PIX_FMT_YUV420P10BE:
+   case AV_PIX_FMT_YUV420P12LE:
+   case AV_PIX_FMT_YUV420P12BE:
+   case AV_PIX_FMT_YUV420P14LE:
+   case AV_PIX_FMT_YUV420P14BE:
+   case AV_PIX_FMT_YUV420P16LE:
+   case AV_PIX_FMT_YUV420P16BE:
+   case AV_PIX_FMT_YUVA420P9LE:
+   case AV_PIX_FMT_YUVA420P9BE:
+   case AV_PIX_FMT_YUVA420P10LE:
+   case AV_PIX_FMT_YUVA420P10BE:
+   case AV_PIX_FMT_YUVA420P16LE:
+   case AV_PIX_FMT_YUVA420P16BE:
+   case AV_PIX_FMT_YUV422P9LE:
+   case AV_PIX_FMT_YUV422P9BE:
+   case AV_PIX_FMT_YUV422P10LE:
+   case AV_PIX_FMT_YUV422P10BE:
+   case AV_PIX_FMT_YUV422P12LE:
+   case AV_PIX_FMT_YUV422P12BE:
+   case AV_PIX_FMT_YUV422P14LE:
+   case AV_PIX_FMT_YUV422P14BE:
+   case AV_PIX_FMT_YUV422P16LE:
+   case AV_PIX_FMT_YUV422P16BE:
+   case AV_PIX_FMT_YUVA422P9LE:
+   case AV_PIX_FMT_YUVA422P9BE:
+   case AV_PIX_FMT_YUVA422P10LE:
+   case AV_PIX_FMT_YUVA422P10BE:
+   case AV_PIX_FMT_YUVA422P16LE:
+   case AV_PIX_FMT_YUVA422P16BE:
+   case AV_PIX_FMT_YUV440P10LE:
+   case AV_PIX_FMT_YUV440P10BE:
+   case AV_PIX_FMT_YUV440P12LE:
+   case AV_PIX_FMT_YUV440P12BE:
+   case AV_PIX_FMT_YUV444P9LE:
+   case AV_PIX_FMT_YUV444P9BE:
+   case AV_PIX_FMT_YUV444P10LE:
+   case AV_PIX_FMT_YUV444P10BE:
+   case AV_PIX_FMT_YUV444P12LE:
+   case AV_PIX_FMT_YUV444P12BE:
+   case AV_PIX_FMT_YUV444P14LE:
+   case AV_PIX_FMT_YUV444P14BE:
+   case AV_PIX_FMT_YUV444P16LE:
+   case AV_PIX_FMT_YUV444P16BE:
+   case AV_PIX_FMT_YUVA444P9LE:
+   case AV_PIX_FMT_YUVA444P9BE:
+   case AV_PIX_FMT_YUVA444P10LE:
+   case AV_PIX_FMT_YUVA444P10BE:
+   case AV_PIX_FMT_YUVA444P16LE:
+   case AV_PIX_FMT_YUVA444P16BE:
+   case AV_PIX_FMT_GBRP9LE:
+   case AV_PIX_FMT_GBRP9BE:
+   case AV_PIX_FMT_GBRP10LE:
+   case AV_PIX_FMT_GBRP10BE:
+   case AV_PIX_FMT_GBRP12LE:
+   case AV_PIX_FMT_GBRP12BE:
+   case AV_PIX_FMT_GBRP14LE:
+   case AV_PIX_FMT_GBRP14BE:
+   case AV_PIX_FMT_GBRP16LE:
+   case AV_PIX_FMT_GBRP16BE:
+   case AV_PIX_FMT_GBRAP12LE:
+   case AV_PIX_FMT_GBRAP12BE:
+   case AV_PIX_FMT_GBRAP16LE:
+   case AV_PIX_FMT_GBRAP16BE:
+       w_align = 16; //FIXME assume 16 pixel per macroblock
+       h_align = 16 * 2; // interlaced needs 2 macroblocks height
+       break;
+   case AV_PIX_FMT_YUV411P:
+   case AV_PIX_FMT_YUVJ411P:
+   case AV_PIX_FMT_UYYVYY411:
+       w_align = 32;
+       h_align = 16 * 2;
+       break;
+   case AV_PIX_FMT_YUV410P:
+       if (s->codec_id == AV_CODEC_ID_SVQ1) {
+           w_align = 64;
+           h_align = 64;
+       }
+       break;
+   case AV_PIX_FMT_RGB555:
+       if (s->codec_id == AV_CODEC_ID_RPZA) {
+           w_align = 4;
+           h_align = 4;
+       }
+       if (s->codec_id == AV_CODEC_ID_INTERPLAY_VIDEO) {
+           w_align = 8;
+           h_align = 8;
+       }
+       break;
+   case AV_PIX_FMT_PAL8:
+   case AV_PIX_FMT_BGR8:
+   case AV_PIX_FMT_RGB8:
+       if (s->codec_id == AV_CODEC_ID_SMC ||
+           s->codec_id == AV_CODEC_ID_CINEPAK) {
+           w_align = 4;
+           h_align = 4;
+       }
+       if (s->codec_id == AV_CODEC_ID_JV ||
+           s->codec_id == AV_CODEC_ID_INTERPLAY_VIDEO) {
+           w_align = 8;
+           h_align = 8;
+       }
+       break;
+   case AV_PIX_FMT_BGR24:
+       if ((s->codec_id == AV_CODEC_ID_MSZH) ||
+           (s->codec_id == AV_CODEC_ID_ZLIB)) {
+           w_align = 4;
+           h_align = 4;
+       }
+       break;
+   case AV_PIX_FMT_RGB24:
+       if (s->codec_id == AV_CODEC_ID_CINEPAK) {
+           w_align = 4;
+           h_align = 4;
+       }
+       break;
+   default:
+       break;
+   }
+
+   if (s->codec_id == AV_CODEC_ID_IFF_ILBM) {
+       w_align = FFMAX(w_align, 8);
+   }
+
+   *width  = FFALIGN(*width, w_align);
+   *height = FFALIGN(*height, h_align);
+   if (s->codec_id == AV_CODEC_ID_H264 || s->lowres ||
+       s->codec_id == AV_CODEC_ID_VP5  || s->codec_id == AV_CODEC_ID_VP6 ||
+       s->codec_id == AV_CODEC_ID_VP6F || s->codec_id == AV_CODEC_ID_VP6A
+   ) {
+       // some of the optimized chroma MC reads one line too much
+       // which is also done in mpeg decoders with lowres > 0
+       *height += 2;
+
+       // H.264 uses edge emulation for out of frame motion vectors, for this
+       // it requires a temporary area large enough to hold a 21x21 block,
+       // increasing witdth ensure that the temporary area is large enough,
+       // the next rounded up width is 32
+       *width = FFMAX(*width, 32);
+   }
+
+   for (i = 0; i < 4; i++)
+       linesize_align[i] = STRIDE_ALIGN;
+}
+
+void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height)
+{
+   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(s->pix_fmt);
+   int chroma_shift = desc->log2_chroma_w;
+   int linesize_align[AV_NUM_DATA_POINTERS];
+   int align;
+
+   avcodec_align_dimensions2(s, width, height, linesize_align);
+   align               = FFMAX(linesize_align[0], linesize_align[3]);
+   linesize_align[1] <<= chroma_shift;
+   linesize_align[2] <<= chroma_shift;
+   align               = FFMAX3(align, linesize_align[1], linesize_align[2]);
+   *width              = FFALIGN(*width, align);
+}
 
 int avcodec_enum_to_chroma_pos(int *xpos, int *ypos, enum AVChromaLocation pos1)
 {
@@ -527,107 +528,107 @@ int avcodec_fill_audio_frame(AVFrame *frame, int nb_channels,
     return ret;
 }
 
-//static int update_frame_pool(AVCodecContext *avctx, AVFrame *frame)
-//{
-//    FramePool *pool = avctx->internal->pool;
-//    int i, ret;
-//
-//    switch (avctx->codec_type) {
-//    case AVMEDIA_TYPE_VIDEO: {
-//        uint8_t *data[4];
-//        int linesize[4];
-//        int size[4] = { 0 };
-//        int w = frame->width;
-//        int h = frame->height;
-//        int tmpsize, unaligned;
-//
-//        if (pool->format == frame->format &&
-//            pool->width == frame->width && pool->height == frame->height)
-//            return 0;
-//
-//        avcodec_align_dimensions2(avctx, &w, &h, pool->stride_align);
-//
-//        do {
-//            // NOTE: do not align linesizes individually, this breaks e.g. assumptions
-//            // that linesize[0] == 2*linesize[1] in the MPEG-encoder for 4:2:2
-//            ret = av_image_fill_linesizes(linesize, avctx->pix_fmt, w);
-//            if (ret < 0)
-//                return ret;
-//            // increase alignment of w for next try (rhs gives the lowest bit set in w)
-//            w += w & ~(w - 1);
-//
-//            unaligned = 0;
-//            for (i = 0; i < 4; i++)
-//                unaligned |= linesize[i] % pool->stride_align[i];
-//        } while (unaligned);
-//
-//        tmpsize = av_image_fill_pointers(data, avctx->pix_fmt, h,
-//                                         NULL, linesize);
-//        if (tmpsize < 0)
-//            return -1;
-//
-//        for (i = 0; i < 3 && data[i + 1]; i++)
-//            size[i] = data[i + 1] - data[i];
-//        size[i] = tmpsize - (data[i] - data[0]);
-//
-//        for (i = 0; i < 4; i++) {
-//            av_buffer_pool_uninit(&pool->pools[i]);
-//            pool->linesize[i] = linesize[i];
-//            if (size[i]) {
-//                pool->pools[i] = av_buffer_pool_init(size[i] + 16 + STRIDE_ALIGN - 1,
-//                                                     CONFIG_MEMORY_POISONING ?
-//                                                        NULL :
-//                                                        av_buffer_allocz);
-//                if (!pool->pools[i]) {
-//                    ret = AVERROR(ENOMEM);
-//                    goto fail;
-//                }
-//            }
-//        }
-//        pool->format = frame->format;
-//        pool->width  = frame->width;
-//        pool->height = frame->height;
-//
-//        break;
-//        }
-//    case AVMEDIA_TYPE_AUDIO: {
-//        int ch     = av_frame_get_channels(frame); //av_get_channel_layout_nb_channels(frame->channel_layout);
-//        int planar = av_sample_fmt_is_planar(frame->format);
-//        int planes = planar ? ch : 1;
-//
-//        if (pool->format == frame->format && pool->planes == planes &&
-//            pool->channels == ch && frame->nb_samples == pool->samples)
-//            return 0;
-//
-//        av_buffer_pool_uninit(&pool->pools[0]);
-//        ret = av_samples_get_buffer_size(&pool->linesize[0], ch,
-//                                         frame->nb_samples, frame->format, 0);
-//        if (ret < 0)
-//            goto fail;
-//
-//        pool->pools[0] = av_buffer_pool_init(pool->linesize[0], NULL);
-//        if (!pool->pools[0]) {
-//            ret = AVERROR(ENOMEM);
-//            goto fail;
-//        }
-//
-//        pool->format     = frame->format;
-//        pool->planes     = planes;
-//        pool->channels   = ch;
-//        pool->samples = frame->nb_samples;
-//        break;
-//        }
-//    default: av_assert0(0);
-//    }
-//    return 0;
-//fail:
-//    for (i = 0; i < 4; i++)
-//        av_buffer_pool_uninit(&pool->pools[i]);
-//    pool->format = -1;
-//    pool->planes = pool->channels = pool->samples = 0;
-//    pool->width  = pool->height = 0;
-//    return ret;
-//}
+static int update_frame_pool(AVCodecContext *avctx, AVFrame *frame)
+{
+   FramePool *pool = avctx->internal->pool;
+   int i, ret;
+
+   switch (avctx->codec_type) {
+   case AVMEDIA_TYPE_VIDEO: {
+       uint8_t *data[4];
+       int linesize[4];
+       int size[4] = { 0 };
+       int w = frame->width;
+       int h = frame->height;
+       int tmpsize, unaligned;
+
+       if (pool->format == frame->format &&
+           pool->width == frame->width && pool->height == frame->height)
+           return 0;
+
+       avcodec_align_dimensions2(avctx, &w, &h, pool->stride_align);
+
+       do {
+           // NOTE: do not align linesizes individually, this breaks e.g. assumptions
+           // that linesize[0] == 2*linesize[1] in the MPEG-encoder for 4:2:2
+           ret = av_image_fill_linesizes(linesize, avctx->pix_fmt, w);
+           if (ret < 0)
+               return ret;
+           // increase alignment of w for next try (rhs gives the lowest bit set in w)
+           w += w & ~(w - 1);
+
+           unaligned = 0;
+           for (i = 0; i < 4; i++)
+               unaligned |= linesize[i] % pool->stride_align[i];
+       } while (unaligned);
+
+       tmpsize = av_image_fill_pointers(data, avctx->pix_fmt, h,
+                                        NULL, linesize);
+       if (tmpsize < 0)
+           return -1;
+
+       for (i = 0; i < 3 && data[i + 1]; i++)
+           size[i] = data[i + 1] - data[i];
+       size[i] = tmpsize - (data[i] - data[0]);
+
+       for (i = 0; i < 4; i++) {
+           av_buffer_pool_uninit(&pool->pools[i]);
+           pool->linesize[i] = linesize[i];
+           if (size[i]) {
+               pool->pools[i] = av_buffer_pool_init(size[i] + 16 + STRIDE_ALIGN - 1,
+                                                    CONFIG_MEMORY_POISONING ?
+                                                       NULL :
+                                                       av_buffer_allocz);
+               if (!pool->pools[i]) {
+                   ret = AVERROR(ENOMEM);
+                   goto fail;
+               }
+           }
+       }
+       pool->format = frame->format;
+       pool->width  = frame->width;
+       pool->height = frame->height;
+
+       break;
+       }
+   case AVMEDIA_TYPE_AUDIO: {
+       int ch     = av_frame_get_channels(frame); //av_get_channel_layout_nb_channels(frame->channel_layout);
+       int planar = av_sample_fmt_is_planar(frame->format);
+       int planes = planar ? ch : 1;
+
+       if (pool->format == frame->format && pool->planes == planes &&
+           pool->channels == ch && frame->nb_samples == pool->samples)
+           return 0;
+
+       av_buffer_pool_uninit(&pool->pools[0]);
+       ret = av_samples_get_buffer_size(&pool->linesize[0], ch,
+                                        frame->nb_samples, frame->format, 0);
+       if (ret < 0)
+           goto fail;
+
+       pool->pools[0] = av_buffer_pool_init(pool->linesize[0], NULL);
+       if (!pool->pools[0]) {
+           ret = AVERROR(ENOMEM);
+           goto fail;
+       }
+
+       pool->format     = frame->format;
+       pool->planes     = planes;
+       pool->channels   = ch;
+       pool->samples = frame->nb_samples;
+       break;
+       }
+   default: av_assert0(0);
+   }
+   return 0;
+fail:
+   for (i = 0; i < 4; i++)
+       av_buffer_pool_uninit(&pool->pools[i]);
+   pool->format = -1;
+   pool->planes = pool->channels = pool->samples = 0;
+   pool->width  = pool->height = 0;
+   return ret;
+}
 
 static int audio_get_buffer(AVCodecContext *avctx, AVFrame *frame)
 {
@@ -674,85 +675,83 @@ fail:
     return AVERROR(ENOMEM);
 }
 
-//static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
-//{
-//    FramePool *pool = s->internal->pool;
-//    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pic->format);
-//    int i;
-//
-//    if (pic->data[0] || pic->data[1] || pic->data[2] || pic->data[3]) {
-//        av_log(s, AV_LOG_ERROR, "pic->data[*]!=NULL in avcodec_default_get_buffer\n");
-//        return -1;
-//    }
-//
-//    if (!desc) {
-//        av_log(s, AV_LOG_ERROR,
-//            "Unable to get pixel format descriptor for format %s\n",
-//            av_get_pix_fmt_name(pic->format));
-//        return AVERROR(EINVAL);
-//    }
-//
-//    memset(pic->data, 0, sizeof(pic->data));
-//    pic->extended_data = pic->data;
-//
-//    for (i = 0; i < 4 && pool->pools[i]; i++) {
-//        pic->linesize[i] = pool->linesize[i];
-//
-//        pic->buf[i] = av_buffer_pool_get(pool->pools[i]);
-//        if (!pic->buf[i])
-//            goto fail;
-//
-//        pic->data[i] = pic->buf[i]->data;
-//    }
-//    for (; i < AV_NUM_DATA_POINTERS; i++) {
-//        pic->data[i] = NULL;
-//        pic->linesize[i] = 0;
-//    }
-//    if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
-//        desc->flags & AV_PIX_FMT_FLAG_PSEUDOPAL)
-//        avpriv_set_systematic_pal2((uint32_t *)pic->data[1], pic->format);
-//
-//    if (s->debug & FF_DEBUG_BUFFERS)
-//        av_log(s, AV_LOG_DEBUG, "default_get_buffer called on pic %p\n", pic);
-//
-//    return 0;
-//fail:
-//    av_frame_unref(pic);
-//    return AVERROR(ENOMEM);
-//}
-//
-//void ff_color_frame(AVFrame *frame, const int c[4])
-//{
-//    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
-//    int p, y, x;
-//
-//    av_assert0(desc->flags & AV_PIX_FMT_FLAG_PLANAR);
-//
-//    for (p = 0; p<desc->nb_components; p++) {
-//        uint8_t *dst = frame->data[p];
-//        int is_chroma = p == 1 || p == 2;
-//        int bytes  = is_chroma ? AV_CEIL_RSHIFT(frame->width,  desc->log2_chroma_w) : frame->width;
-//        int height = is_chroma ? AV_CEIL_RSHIFT(frame->height, desc->log2_chroma_h) : frame->height;
-//        for (y = 0; y < height; y++) {
-//            if (desc->comp[0].depth >= 9) {
-//                for (x = 0; x<bytes; x++)
-//                    ((uint16_t*)dst)[x] = c[p];
-//            }else
-//                memset(dst, c[p], bytes);
-//            dst += frame->linesize[p];
-//        }
-//    }
-//}
-//
+static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
+{
+   FramePool *pool = s->internal->pool;
+   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pic->format);
+   int i;
+
+   if (pic->data[0] || pic->data[1] || pic->data[2] || pic->data[3]) {
+       av_log(s, AV_LOG_ERROR, "pic->data[*]!=NULL in avcodec_default_get_buffer\n");
+       return -1;
+   }
+
+   if (!desc) {
+       av_log(s, AV_LOG_ERROR,
+           "Unable to get pixel format descriptor for format %s\n",
+           av_get_pix_fmt_name(pic->format));
+       return AVERROR(EINVAL);
+   }
+
+   memset(pic->data, 0, sizeof(pic->data));
+   pic->extended_data = pic->data;
+
+   for (i = 0; i < 4 && pool->pools[i]; i++) {
+       pic->linesize[i] = pool->linesize[i];
+
+       pic->buf[i] = av_buffer_pool_get(pool->pools[i]);
+       if (!pic->buf[i])
+           goto fail;
+
+       pic->data[i] = pic->buf[i]->data;
+   }
+   for (; i < AV_NUM_DATA_POINTERS; i++) {
+       pic->data[i] = NULL;
+       pic->linesize[i] = 0;
+   }
+   if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
+       desc->flags & AV_PIX_FMT_FLAG_PSEUDOPAL)
+       avpriv_set_systematic_pal2((uint32_t *)pic->data[1], pic->format);
+
+   if (s->debug & FF_DEBUG_BUFFERS)
+       av_log(s, AV_LOG_DEBUG, "default_get_buffer called on pic %p\n", pic);
+
+   return 0;
+fail:
+   av_frame_unref(pic);
+   return AVERROR(ENOMEM);
+}
+
+void ff_color_frame(AVFrame *frame, const int c[4])
+{
+   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
+   int p, y, x;
+
+   av_assert0(desc->flags & AV_PIX_FMT_FLAG_PLANAR);
+
+   for (p = 0; p<desc->nb_components; p++) {
+       uint8_t *dst = frame->data[p];
+       int is_chroma = p == 1 || p == 2;
+       int bytes  = is_chroma ? AV_CEIL_RSHIFT(frame->width,  desc->log2_chroma_w) : frame->width;
+       int height = is_chroma ? AV_CEIL_RSHIFT(frame->height, desc->log2_chroma_h) : frame->height;
+       for (y = 0; y < height; y++) {
+           if (desc->comp[0].depth >= 9) {
+               for (x = 0; x<bytes; x++)
+                   ((uint16_t*)dst)[x] = c[p];
+           }else
+               memset(dst, c[p], bytes);
+           dst += frame->linesize[p];
+       }
+   }
+}
+
 int avcodec_default_get_buffer2(AVCodecContext *avctx, AVFrame *frame, int flags)
 {
    int ret;
 
- // arvind
-   exit(0);
    
-   // if (avctx->hw_frames_ctx)
-   //     return av_hwframe_get_buffer(avctx->hw_frames_ctx, frame, 0);
+   if (avctx->hw_frames_ctx)
+        return av_hwframe_get_buffer(avctx->hw_frames_ctx, frame, 0);
 
    if ((ret = update_frame_pool(avctx, frame)) < 0)
        return ret;
@@ -1065,18 +1064,18 @@ enum AVPixelFormat avpriv_find_pix_fmt(const PixelFormatTag *tags,
    }
    return AV_PIX_FMT_NONE;
 }
-//
-//static int is_hwaccel_pix_fmt(enum AVPixelFormat pix_fmt)
-//{
-//    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pix_fmt);
-//    return desc->flags & AV_PIX_FMT_FLAG_HWACCEL;
-//}
-//
+
+static int is_hwaccel_pix_fmt(enum AVPixelFormat pix_fmt)
+{
+    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pix_fmt);
+    return desc->flags & AV_PIX_FMT_FLAG_HWACCEL;
+}
+
 enum AVPixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum AVPixelFormat *fmt)
 {
-    exit -1;
-//   while (*fmt != AV_PIX_FMT_NONE && is_hwaccel_pix_fmt(*fmt))   // arvind
-//       ++fmt;
+ 
+   while (*fmt != AV_PIX_FMT_NONE && is_hwaccel_pix_fmt(*fmt)) 
+       ++fmt;
    return fmt[0];
 }
 
@@ -1092,45 +1091,45 @@ static AVHWAccel *find_hwaccel(enum AVCodecID codec_id,
     return NULL;
 }
 
-//static int setup_hwaccel(AVCodecContext *avctx,
-//                         const enum AVPixelFormat fmt,
-//                         const char *name)
-//{
-//    AVHWAccel *hwa = find_hwaccel(avctx->codec_id, fmt);
-//    int ret        = 0;
-//
-//    if (!hwa) {
-//        av_log(avctx, AV_LOG_ERROR,
-//               "Could not find an AVHWAccel for the pixel format: %s",
-//               name);
-//        return AVERROR(ENOENT);
-//    }
-//
-//    if (hwa->capabilities & HWACCEL_CODEC_CAP_EXPERIMENTAL &&
-//        avctx->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL) {
-//        av_log(avctx, AV_LOG_WARNING, "Ignoring experimental hwaccel: %s\n",
-//               hwa->name);
-//        return AVERROR_PATCHWELCOME;
-//    }
-//
-//    if (hwa->priv_data_size) {
-//        avctx->internal->hwaccel_priv_data = av_mallocz(hwa->priv_data_size);
-//        if (!avctx->internal->hwaccel_priv_data)
-//            return AVERROR(ENOMEM);
-//    }
-//
-//    if (hwa->init) {
-//        ret = hwa->init(avctx);
-//        if (ret < 0) {
-//            av_freep(&avctx->internal->hwaccel_priv_data);
-//            return ret;
-//        }
-//    }
-//
-//    avctx->hwaccel = hwa;
-//
-//    return 0;
-//}
+static int setup_hwaccel(AVCodecContext *avctx,
+                        const enum AVPixelFormat fmt,
+                        const char *name)
+{
+   AVHWAccel *hwa = find_hwaccel(avctx->codec_id, fmt);
+   int ret        = 0;
+
+   if (!hwa) {
+       av_log(avctx, AV_LOG_ERROR,
+              "Could not find an AVHWAccel for the pixel format: %s",
+              name);
+       return AVERROR(ENOENT);
+   }
+
+   if (hwa->capabilities & HWACCEL_CODEC_CAP_EXPERIMENTAL &&
+       avctx->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL) {
+       av_log(avctx, AV_LOG_WARNING, "Ignoring experimental hwaccel: %s\n",
+              hwa->name);
+       return AVERROR_PATCHWELCOME;
+   }
+
+   if (hwa->priv_data_size) {
+       avctx->internal->hwaccel_priv_data = av_mallocz(hwa->priv_data_size);
+       if (!avctx->internal->hwaccel_priv_data)
+           return AVERROR(ENOMEM);
+   }
+
+   if (hwa->init) {
+       ret = hwa->init(avctx);
+       if (ret < 0) {
+           av_freep(&avctx->internal->hwaccel_priv_data);
+           return ret;
+       }
+   }
+
+   avctx->hwaccel = hwa;
+
+   return 0;
+}
 
 int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt)
 {
@@ -1176,17 +1175,16 @@ int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt)
 #endif
 
         
-        //arvind 
-        exit(0);
-//        if (avctx->hw_frames_ctx) {
-//            AVHWFramesContext *hw_frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
-//            if (hw_frames_ctx->format != ret) {
-//                av_log(avctx, AV_LOG_ERROR, "Format returned from get_buffer() "
-//                       "does not match the format of provided AVHWFramesContext\n");
-//                ret = AV_PIX_FMT_NONE;
-//                break;
-//            }
-//        }
+       
+       if (avctx->hw_frames_ctx) {
+           AVHWFramesContext *hw_frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
+           if (hw_frames_ctx->format != ret) {
+               av_log(avctx, AV_LOG_ERROR, "Format returned from get_buffer() "
+                      "does not match the format of provided AVHWFramesContext\n");
+               ret = AV_PIX_FMT_NONE;
+               break;
+           }
+       }
 
         if (!setup_hwaccel(avctx, ret, desc->name))
             break;
@@ -1606,28 +1604,26 @@ FF_ENABLE_DEPRECATION_WARNINGS
             goto free_and_end;
         }
 
-//arvind
-exit(0);
-//        if (avctx->hw_frames_ctx) {
-//            AVHWFramesContext *frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
-//            if (frames_ctx->format != avctx->pix_fmt) {
-//                av_log(avctx, AV_LOG_ERROR,
-//                       "Mismatching AVCodecContext.pix_fmt and AVHWFramesContext.format\n");
-//                ret = AVERROR(EINVAL);
-//                goto free_and_end;
-//            }
-//            if (avctx->sw_pix_fmt != AV_PIX_FMT_NONE &&
-//                avctx->sw_pix_fmt != frames_ctx->sw_format) {
-//                av_log(avctx, AV_LOG_ERROR,
-//                       "Mismatching AVCodecContext.sw_pix_fmt (%s) "
-//                       "and AVHWFramesContext.sw_format (%s)\n",
-//                       av_get_pix_fmt_name(avctx->sw_pix_fmt),
-//                       av_get_pix_fmt_name(frames_ctx->sw_format));
-//                ret = AVERROR(EINVAL);
-//                goto free_and_end;
-//            }
-//            avctx->sw_pix_fmt = frames_ctx->sw_format;
-//        }
+       if (avctx->hw_frames_ctx) {
+           AVHWFramesContext *frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
+           if (frames_ctx->format != avctx->pix_fmt) {
+               av_log(avctx, AV_LOG_ERROR,
+                      "Mismatching AVCodecContext.pix_fmt and AVHWFramesContext.format\n");
+               ret = AVERROR(EINVAL);
+               goto free_and_end;
+           }
+           if (avctx->sw_pix_fmt != AV_PIX_FMT_NONE &&
+               avctx->sw_pix_fmt != frames_ctx->sw_format) {
+               av_log(avctx, AV_LOG_ERROR,
+                      "Mismatching AVCodecContext.sw_pix_fmt (%s) "
+                      "and AVHWFramesContext.sw_format (%s)\n",
+                      av_get_pix_fmt_name(avctx->sw_pix_fmt),
+                      av_get_pix_fmt_name(frames_ctx->sw_format));
+               ret = AVERROR(EINVAL);
+               goto free_and_end;
+           }
+           avctx->sw_pix_fmt = frames_ctx->sw_format;
+       }
     }
 
     avctx->pts_correction_num_faulty_pts =

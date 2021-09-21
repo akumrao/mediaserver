@@ -34,7 +34,7 @@
 #include <string.h>
 
 // FF_DISABLE_DEPRECATION_WARNINGS
-// #include "options_table.h"
+#include "options_table.h"
 // FF_ENABLE_DEPRECATION_WARNINGS
 
 
@@ -81,8 +81,8 @@ static AVClassCategory get_category(void *ptr)
 static const AVClass av_codec_context_class = {
     .class_name              = "AVCodecContext",
     .item_name               = context_to_name,
-//    .option                  = avcodec_options,
-  //  .version                 = LIBAVUTIL_VERSION_INT,
+    .option                  = avcodec_options,
+    .version                = 1,
     .log_level_offset_offset = offsetof(AVCodecContext, log_level_offset),
     .child_next              = codec_child_next,
     .child_class_next        = codec_child_class_next,
