@@ -150,13 +150,17 @@ namespace base {
 //            return;
 
             //Vidoe and Audio mux
-            if (parseH264Header()) {
-                ++stream_index;
-                if (parseAACHeader()) {
+
+            while( keeprunning && !stopped())
+            { 
+                if (parseH264Header()) {
                     ++stream_index;
-                    parseMuxContent();
+                    if (parseAACHeader()) {
+                        ++stream_index;
+                        parseMuxContent();
+                    }
+                   
                 }
-               
             }
 ////            
            // startAudio();
@@ -422,6 +426,13 @@ namespace base {
         
             resetParser = true;
         }
+
+
+        void FFParse::mute() {
+        
+            mute = true;
+        }
+
         
         bool FFParse::parseH264Header() {
             int ret = 0;

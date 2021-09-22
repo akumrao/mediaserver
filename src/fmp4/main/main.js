@@ -246,7 +246,14 @@
                 // set mediasource as source of video
                 stream_live.src = window.URL.createObjectURL(ms);
             }
-            
+
+
+            function muteit() {
+
+                 ws.send("mute");
+            }
+
+                     
             
             window.onload = function() {
                 startup();
@@ -277,3 +284,5 @@
           window.addEventListener('unload', function(event) {
             console.log('I am the 4th and last one…');
           });
+
+

@@ -125,6 +125,7 @@ typedef struct OutputStream {
  private:
      
     std::atomic< bool > resetParser { false };
+    std::atomic< bool > mute { false };
     DummyFrameFilter fragmp4_filter;
     FragMP4MuxFrameFilter fragmp4_muxer;
     InfoFrameFilter info;
