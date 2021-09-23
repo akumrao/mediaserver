@@ -107,7 +107,7 @@ typedef struct OutputStream {
      AVCodecContext *audioContext= NULL;
     
     void reset();
-    
+    void restart();
     int startAudio( );
       
     long get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size);
@@ -126,6 +126,9 @@ typedef struct OutputStream {
      
     std::atomic< bool > resetParser { false };
     std::atomic< bool > mute { false };
+
+    std::atomic< bool > keeprunning { true };
+
     DummyFrameFilter fragmp4_filter;
     FragMP4MuxFrameFilter fragmp4_muxer;
     InfoFrameFilter info;

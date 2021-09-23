@@ -14,7 +14,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpConnection::TcpConnection(Listener* listener)
-	  : TcpConnectionBase(false), listener(listener)
+	  : TcpConnectionBase(nullptr, false), listener(listener)
 	{
             LInfo("RTC::TcpConnection()");
 	}

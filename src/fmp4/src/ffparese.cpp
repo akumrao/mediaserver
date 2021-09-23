@@ -151,16 +151,31 @@ namespace base {
 
             //Vidoe and Audio mux
 
-            while( keeprunning && !stopped())
+            while(  !stopped())
             { 
-                if (parseH264Header()) {
-                    ++stream_index;
-                    if (parseAACHeader()) {
+                keeprunning = true;
+                stream_index = 0;
+                if(!mute )
+                {
+                    if (parseH264Header()) {
                         ++stream_index;
-                        parseMuxContent();
+                        if (parseAACHeader()) {
+                            ++stream_index;
+                            parseMuxContent();
+                        }
+                       
                     }
-                   
-                }
+               }
+               else
+               {
+                    if (parseH264Header()) {
+                    ++stream_index;
+                    parseH264Content();
+                    }
+
+               }
+                
+
             }
 ////            
            // startAudio();
@@ -270,7 +285,7 @@ namespace base {
              c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             
                
-    /* open it */
+            /* open it */
             if (avcodec_open2(c, codec, &opt) < 0) {
                 fprintf(stderr, "Could not open codec\n");
                return false;
@@ -392,7 +407,7 @@ namespace base {
            // fclose(fout);
             
            // av_dict_free(&opt);
-
+            av_free(frame_audobuf);
             av_frame_free(&frame);
             avcodec_free_context(&audioContext);
         }
@@ -428,8 +443,10 @@ namespace base {
         }
 
 
-        void FFParse::mute() {
+        void FFParse::restart()
+        {
         
+            keeprunning = false;
             mute = true;
         }
 
@@ -588,7 +605,7 @@ namespace base {
 
             long framecount =0;
 
-            while (!stopped()) {
+            while (!stopped() && keeprunning) {
 
                 if (cur_videosize > 0) {
 
@@ -660,6 +677,10 @@ namespace base {
                     }
             }
 
+             av_packet_free(&videopkt);
+
+             free(in_videobuffer);
+
         }
         
        void FFParse::parseMuxContent() 
@@ -721,7 +742,7 @@ namespace base {
            }
    
            int audiosize = av_samples_get_buffer_size(NULL, audioContext->channels,audioContext->frame_size,audioContext->sample_fmt, 1);
-           uint8_t* frame_audobuf = (uint8_t *)malloc(audiosize);
+           uint8_t* frame_audobuf = (uint8_t *)av_malloc(audiosize);
            ///////////////////////////////
            
            
@@ -737,7 +758,7 @@ namespace base {
            audiotimebase.den = SAMPLINGRATE;
                             
                    
-           while (!stopped())
+           while (!stopped() && keeprunning)
            {
                
                uint64_t currentTime =  CurrentTime_microseconds();
@@ -871,7 +892,7 @@ namespace base {
 
                        basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
 
-                     //  av_packet_unref(&audiopkt);
+                       av_packet_unref(&audiopkt);
 
                    //     std::this_thread::sleep_for(std::chrono::microseconds(21000));
 
@@ -880,7 +901,14 @@ namespace base {
            
                uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
                std::this_thread::sleep_for(std::chrono::microseconds(14500 - deltaTimeMillis));
-           }
+           } //end while
+
+
+           av_free(frame_audobuf);
+           av_packet_free(&videopkt);
+
+           av_frame_free(&frame);
+           avcodec_free_context(&audioContext);
 
        }
        
