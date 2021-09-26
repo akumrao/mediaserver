@@ -127,7 +127,7 @@ typedef struct OutputStream {
  private:
      
     std::atomic< bool > resetParser { false };
-    std::atomic< bool > mute { true };
+    std::atomic< bool > mute { false };
 
     std::atomic< bool > keeprunning { true };
 

@@ -69,7 +69,7 @@ protected: //frames
     std::vector<SetupFrame>     setupframes;        ///< deep copies of the arrived setup frames
     
 public:
-    BasicFrame                  internal_basicframe; ///< 
+    //BasicFrame                  internal_basicframe; ///< 
     MuxFrame                    internal_frame;      ///< outgoing muxed frame
     BasicFrame                  extradata_videoframe;     ///< capture decoder extradata here
     BasicFrame                  extradata_audioframe;     ///< capture decoder extradata here

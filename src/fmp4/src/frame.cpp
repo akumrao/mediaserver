@@ -101,6 +101,8 @@ void BasicFrame::reset() {
   Frame::reset();
   codec_id   =AV_CODEC_ID_NONE;
   media_type =AVMEDIA_TYPE_UNKNOWN;
+  
+  payload.clear();
 }
 
 

@@ -342,26 +342,27 @@ void MuxFrameFilter::closeMux() {
         // std::cout << "MuxFrameFilter: closeMux: freeing ctx" << std::endl;
         // avio_closep(&avio_ctx);        
         avformat_free_context(av_format_context);
-        // avformat_close_input(&av_format_context); // nopes
+       // avformat_close_input(&av_format_context); // nopes
         for (auto it = codec_contexes.begin(); it != codec_contexes.end(); ++it) {
             if (*it != NULL) {
                 // avcodec_free_context should not try to free this!
-                (*it)->extradata = NULL;
-                (*it)->extradata_size = 0;
+                //(*it)->extradata = NULL;
+                //(*it)->extradata_size = 0;
                 // std::cout << "MuxFrameFilter: closeMux: context " << (long unsigned)(*it) << std::endl;
                 avcodec_close(*it);
-                avcodec_free_context(&(*it));
+              //  avcodec_free_context(&(*it));
                 *it = NULL;
             }
         }
-        for (auto it = streams.begin(); it != streams.end(); ++it) {
-            if (*it != NULL) {
-                // std::cout << "MuxFrameFilter: closeMux: stream" << std::endl;
-                // eh.. nothing needed here.. enough to call close on the context
-                *it = NULL;
-            }
-        }
-        av_free(avio_ctx);
+//        for (auto it = streams.begin(); it != streams.end(); ++it) {
+//            if (*it != NULL) {
+//                // std::cout << "MuxFrameFilter: closeMux: stream" << std::endl;
+//                // eh.. nothing needed here.. enough to call close on the context
+//                *it = NULL;
+//            }
+//        }
+        if(avio_ctx)
+        av_freep(avio_ctx);
     }
     initialized = false;
     has_extraVideodata = false;
@@ -376,10 +377,25 @@ void MuxFrameFilter::deActivate() {
     if (initialized) {
         av_write_trailer(av_format_context);
         closeMux();
-        
-
         av_dict_free(&av_dict);
-    
+
+
+
+         streams.clear();
+         codec_contexes.clear();
+         prevpts.clear();
+
+         setupframes.clear();
+         internal_frame.reset();
+         extradata_videoframe.reset();
+         extradata_audioframe.reset();
+
+         codec_contexes.resize(2, NULL);
+         streams.resize(2, NULL);
+         prevpts.resize(2, 0);
+
+         setupframes.resize(2);
+
     }
 //    active = false;
 }
