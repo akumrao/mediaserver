@@ -29,10 +29,10 @@ using namespace base;
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
     //test::init();
     
-   Application app;
+    Application app;
    
     av_register_all();
     // init network

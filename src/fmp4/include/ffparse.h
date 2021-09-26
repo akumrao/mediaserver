@@ -107,7 +107,7 @@ typedef struct OutputStream {
      AVCodecContext *audioContext= NULL;
     
     void reset();
-    void restart();
+    void restart(bool mute);
     int startAudio( );
       
     long get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size);
@@ -121,18 +121,20 @@ typedef struct OutputStream {
     long int startTime{0};
     int stream_index{0};
     void parseMuxContent();
+    
+    void mediaContent(std::string mediaContent);
        
  private:
      
     std::atomic< bool > resetParser { false };
-    std::atomic< bool > mute { false };
+    std::atomic< bool > mute { true };
 
     std::atomic< bool > keeprunning { true };
 
     DummyFrameFilter fragmp4_filter;
     FragMP4MuxFrameFilter fragmp4_muxer;
     InfoFrameFilter info;
-    
+    TextFrameFilter txt;
     
     //std::string fileName;
     

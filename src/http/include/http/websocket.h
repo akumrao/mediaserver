@@ -279,8 +279,7 @@ namespace base {
             
             Timer dummy_timer{ nullptr};
             std::mutex dummy_mutex;
-            
-            std::queue<std::string> dummy_queue;
+            std::queue< std::pair< bool, std::string >> dummy_queue;
         };
 
 

@@ -125,7 +125,7 @@ namespace base {
         { 
             dummy_mutex.lock();
             
-            dummy_queue.push(std::string(data, len ));
+            dummy_queue.push(std::make_pair(binary,  std::string(data, len )));
             
             dummy_mutex.unlock();
         }
@@ -140,7 +140,7 @@ namespace base {
 //            send(tmp,5 , false);
             
           //  SInfo << "WebSocketConnection " <<    uv_thread_self();
-            std::string tmp;
+            std::pair< bool, std::string > tmp;
             dummy_mutex.lock();
             if(dummy_queue.size())
             {
@@ -148,8 +148,8 @@ namespace base {
                 dummy_queue.pop();
             }
              dummy_mutex.unlock();
-            if(tmp.length())
-            send(&tmp[0],tmp.length() , true);
+            if(tmp.second.length())
+            send(&tmp.second[0],tmp.second.length() , tmp.first);
             
            
            

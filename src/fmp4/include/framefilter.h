@@ -77,6 +77,21 @@ protected:
     long  tolalMp4Size;
 }; 
 
+
+class TextFrameFilter  { 
+
+public:                                                                                
+    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn ); 
+     ~TextFrameFilter();
+
+     base::fmp4::ReadMp4 *conn; 
+  
+public:
+    void go(std::string cmd);
+
+    std::string name;
+}; 
+
 /** Dump the beginning of Frame's payload into stdout
  * @ingroup filters_tag
  */

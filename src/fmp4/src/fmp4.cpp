@@ -81,7 +81,9 @@ namespace base {
                 if( got == "reset")
                     ffparser->reset();    
                 else if( got == "mute")
-                    ffparser->restart();    
+                    ffparser->restart(true);
+                else if( got == "unmute")
+                    ffparser->restart(false);   
      
             //con->send( msg, len );
 

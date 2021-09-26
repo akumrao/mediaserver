@@ -41,7 +41,7 @@ DummyFrameFilter::~DummyFrameFilter()
 }
 
 void DummyFrameFilter::go(Frame *frame) {
-    if (verbose) {
+   
         // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
         STrace << "DummyFrameFilter : " << this->name << " : got frame : " << *(frame) ;
 
@@ -70,8 +70,43 @@ void DummyFrameFilter::go(Frame *frame) {
         
         STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
-    }
+ 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+TextFrameFilter::TextFrameFilter(const char *nm,  ReadMp4 *conn) : name(nm),conn(conn) 
+{
+}
+
+TextFrameFilter::~TextFrameFilter()
+{
+    
+}
+
+void TextFrameFilter::go(std::string cmd) {
+
+        // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
+        SDebug << "TextFrameFilter : " << this->name << " : got frame : " << cmd ;
+
+        
+        if(conn)
+         conn->broadcast((const char*)cmd.c_str(), cmd.size(), false );
+   
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 InfoFrameFilter::InfoFrameFilter(const char *name, FrameFilter *next) : FrameFilter(name, next)

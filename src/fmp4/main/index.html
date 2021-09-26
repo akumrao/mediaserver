@@ -9,14 +9,19 @@
     
     <body>
         <!-- muted attribute required for chrome autoplay-->
+        <div>
         <video id="stream_live" 
             controls="false" autoplay="true"
             muted="muted" 
             preload="auto">
             Your browser does not support the video tag.
         </video> 
+        </div>
 
-        <input type="checkbox" id="muteit" onclick="muteit()">
+        <div>
+        <input type="checkbox" name="muteme" id="muteit" onclick="muteit()" checked>
+        <label for="muteme"> Mute it</label><br><br>
+        </div>
 
     </body>
     </html>

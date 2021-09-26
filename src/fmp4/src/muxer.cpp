@@ -70,14 +70,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
     this->streams.resize(2, NULL);
     this->prevpts.resize(2, 0);
 
-    /* some sekoilu..
-    this->internal_basicframe2.payload.reserve(1024*500);
-    this->internal_basicframe2.payload.resize(0);
-
-    this->avbuffer = av_buffer_allocz(1024*500);
-    this->sps_ok = false;
-    this->pps_ok = false;
-     */
+ 
 
     this->setupframes.resize(2);
     //this->timebase = av_make_q(1, 1000); // we're using milliseconds
@@ -105,11 +98,12 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
 }
 
 MuxFrameFilter::~MuxFrameFilter() {
- //   deActivate();
+    deActivate();
+    
     av_free(avio_ctx_buffer);
     av_packet_unref(avpkt);
     delete avpkt;
-    av_dict_free(&av_dict);
+        
 }
 
 void MuxFrameFilter::initMux() {
@@ -378,10 +372,14 @@ void MuxFrameFilter::closeMux() {
     ccf = 0;
 }
 
-void MuxFrameFilter::deActivate_() {
+void MuxFrameFilter::deActivate() {
     if (initialized) {
         av_write_trailer(av_format_context);
         closeMux();
+        
+
+        av_dict_free(&av_dict);
+    
     }
 //    active = false;
 }
@@ -454,8 +452,6 @@ void MuxFrameFilter::go(Frame* frame) {
                 }
                 
             }
-           
-             
             
         }//end Audio read
         
@@ -511,7 +507,7 @@ void MuxFrameFilter::go(Frame* frame) {
         #endif
                     initMux(); // modifies member initialized
                     if (!initialized) { // can't init this file.. de-activate
-                        deActivate_();
+                        deActivate();
                     } else {
                         // set zero time
                         // mstimestamp0 = extradata_videoframe.mstimestamp;
@@ -672,12 +668,16 @@ MuxFrameFilter(name, next), got_ftyp(false), got_moov(false) {
 FragMP4MuxFrameFilter::~FragMP4MuxFrameFilter() {
 }
 
+
+
 void FragMP4MuxFrameFilter::sendMeta() {
     std::unique_lock<std::mutex> lk(this->mutex);
     if (!next) {
         return;
     }
     if (got_ftyp && got_moov) {
+        
+        SDebug<< " sendMeta "<<  "send ftyp & moov";
         std::cout << "FragMP4MuxFrameFilter: sending metadata!" << std::endl;
         next->run(&ftyp_frame);
         next->run(&moov_frame);

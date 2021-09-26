@@ -49,7 +49,7 @@ namespace base {
         // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
 
-        FFParse::FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr) {
+        FFParse::FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr), txt("txt",conn) {
 
           //  fragmp4_muxer.activate();
             
@@ -155,8 +155,10 @@ namespace base {
             { 
                 keeprunning = true;
                 stream_index = 0;
+                
+                fragmp4_muxer.deActivate();
                 if(!mute )
-                {
+                {   mediaContent("av");
                     if (parseH264Header()) {
                         ++stream_index;
                         if (parseAACHeader()) {
@@ -167,7 +169,7 @@ namespace base {
                     }
                }
                else
-               {
+               {    mediaContent("v");
                     if (parseH264Header()) {
                     ++stream_index;
                     parseH264Content();
@@ -439,15 +441,29 @@ namespace base {
         
         void FFParse::reset() {
         
+            if(mute)
+            {
+                mediaContent("v");
+                
+                SDebug<< " FFParse::reset()"<<  "Stream only Video";
+            }
+            else
+            {
+               mediaContent("av");  
+                
+               SDebug<< " FFParse::reset()"<<  "Stream both Video & Audio";
+            }
+              
             resetParser = true;
+            
         }
 
 
-        void FFParse::restart()
+        void FFParse::restart(bool muteme)
         {
-        
+            
             keeprunning = false;
-            mute = true;
+            mute = muteme;
         }
 
         
@@ -668,8 +684,7 @@ namespace base {
 
                     cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
 
-
-                    SInfo << "Read H264 filee " << cur_videosize;
+                    STrace << "Read H264 filee " << cur_videosize;
 
                     if (cur_videosize == 0)
                         break;
@@ -912,25 +927,15 @@ namespace base {
 
        }
        
-       
-       
-        
-        
-        
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void FFParse::mediaContent(std::string mediaContent) {
+            txt.go(mediaContent);
+       }
 
-     
+      }// ns mp4
 
-        
-        
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-        
-
-    }
-
-}
+}// nsbase
 
 
                     /*Only input video data*/

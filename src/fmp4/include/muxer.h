@@ -80,13 +80,12 @@ protected:
     
     void initMux();           ///< Open file, reserve codec_contexes, streams, write preamble, set initialized=true if success
     void closeMux();          ///< Close file, dealloc codec_contexes, streams
-    void deActivate_();
     void writeFrame(BasicFrame* frame);
   
 public: // API calls                                                                           
     // setFileName(const char* fname); ///< Sets the output filename                           
 //    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
-//    void deActivate();                                           ///< Stop streaming           
+     void deActivate();                                           ///< Stop streaming           
 //    
 //    
 protected:
@@ -110,8 +109,8 @@ protected:
     virtual void defineMux();
 
 public: // API calls    
-    void sendMeta();    
-
+    void sendMeta();
+   
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size_);
     static int read_packet(void *opaque, uint8_t *buf, int buf_size) {return 0;} // {std::cout << "muxer: dummy read packet" << std::endl; return 0;} // dummy function

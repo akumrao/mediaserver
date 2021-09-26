@@ -12,10 +12,10 @@
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            //var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
-            var codecs = "avc1.4D401F,mp4a.40.2";
+            //var codecs = "avc1.4D401F,mp4a.40.2";
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
             var stream_started = false; // is the source_buffer updateend callback active nor not
@@ -187,7 +187,12 @@
                 // source_buffer.mode = 'segments';
                 
                 source_buffer.addEventListener("updateend",loadPacket);
-           
+       
+            }
+
+            function startws()
+            {
+
                 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
                 if (!window.WebSocket) {
@@ -198,8 +203,6 @@
                 var pth = window.location.href.replace('http://', 'ws://').replace('https://', 'wss://') ;
 
                 ws = new WebSocket(pth);
-
-
 
 
                 //ws = new WebSocket("ws://localhost:1111/ws/");
@@ -217,6 +220,10 @@
                     } else {
                         // text frame
                         console.log(event.data);
+                        if(event.data == "v")
+                         startup(true);
+                        else if(event.data == "av")
+                         startup(false);
                     }
 
                     
@@ -237,7 +244,21 @@
                 };
             }
 
-            function startup() {
+            function startup(videoonly) {
+
+
+                // var mimeType = "video/mp4";
+                //var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+                // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
+
+                if(videoonly)
+                  codecs = "avc1.4D401F";
+                else
+                  codecs = "avc1.4D401F,mp4a.40.2";
+            
+                codecPars = mimeType+';codecs="'+codecs+'"';
+
+
                 ms.addEventListener('sourceopen',opened,false);
                 
                 // get reference to video
@@ -249,14 +270,16 @@
 
 
             function muteit() {
-
-                 ws.send("mute");
+                if(document.getElementById("muteit").checked)
+                  ws.send("mute");
+                else
+                  ws.send("unmute");    
             }
 
                      
             
             window.onload = function() {
-                startup();
+               startws();
             };
 
             //window.addEventListener("unload", function () {
