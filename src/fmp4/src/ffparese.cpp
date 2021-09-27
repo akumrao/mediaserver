@@ -277,7 +277,7 @@ namespace base {
 
             /* select other audio parameters supported by the encoder */
 
-			c->sample_rate = SAMPLINGRATE;//  
+            c->sample_rate = SAMPLINGRATE;//  
 
             c->channel_layout = AV_CH_LAYOUT_STEREO;//select_channel_layout(codec);
             c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
@@ -775,9 +775,7 @@ namespace base {
                    
            while (!stopped() && keeprunning)
            {
-               
                uint64_t currentTime =  CurrentTime_microseconds();
-
 
                if ( av_compare_ts(videoframecount, videotimebase,  audioframecount, audiotimebase) <= 0)
                {
@@ -918,7 +916,8 @@ namespace base {
                std::this_thread::sleep_for(std::chrono::microseconds(14500 - deltaTimeMillis));
            } //end while
 
-
+           free(in_videobuffer);
+           
            av_free(frame_audobuf);
            av_packet_free(&videopkt);
 

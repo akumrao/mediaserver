@@ -215,3 +215,30 @@ Restart=on-failure
 WantedBy=multi-user.target
 
 
+https://sipjs.com/api/0.8.0/sessionDescriptionHandler/
+https://github.com/webrtc/samples/blob/gh-pages/src/content/getusermedia/resolution/js/main.js
+
+for lower resolution from camera check
+getUserMedia 
+
+Modifiers
+
+One of the most requested features that we are asked for, is how can I modify SDP before setting it on the PeerConnection or sending it to a peer. With the MediaHandler you would have to create an entire custom media handler. Now you can just pass a modifier function to the SessionDescriptionHandler.
+
+    Construction
+    Instance Variables
+    Application Methods
+        getDescription(options, modifiers)
+        setDescription(sessionDescription, options, modifiers)
+        hasDescription(contentType)
+        close()
+        holdModifier(description)
+    Modifiers
+        [Modifiers]
+    Default Options
+        constraints
+        iceCheckingTimeout
+        modifiers
+        rtcConfiguration
+        RTCOfferOptions
+  

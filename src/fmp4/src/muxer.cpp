@@ -80,7 +80,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
 
 
     this->avio_ctx_buffer = (uint8_t*) av_malloc(this->avio_ctx_buffer_size);
-    this->avio_ctx = NULL;
+    //this->avio_ctx = NULL;
     // this->avio_ctx = avio_alloc_context(this->avio_ctx_buffer, this->avio_ctx_buffer_size, 1, this, this->read_packet, this->write_packet, this->seek); // no read, nor seek
 
     /*
@@ -174,9 +174,13 @@ void MuxFrameFilter::initMux() {
 
                 av_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
                 ///*
-                av_codec_context->extradata = extradata_videoframe.payload.data();
+                //av_codec_context->extradata = extradata_videoframe.payload.data();
                 av_codec_context->extradata_size = extradata_videoframe.payload.size();
-                //*/
+                
+                
+                av_codec_context->extradata = ( uint8_t *)av_malloc(extradata_videoframe.payload.size() + AV_INPUT_BUFFER_PADDING_SIZE);
+                memcpy(av_codec_context->extradata, extradata_videoframe.payload.data(), extradata_videoframe.payload.size());
+                
 
 
                 // std::cout << "avformat_new_stream" << std::endl;
@@ -236,7 +240,9 @@ void MuxFrameFilter::initMux() {
               
                 av_codec_context->time_base = tb; //(AVRational){ 1, };//timebase; // 1/1000
               
-                av_codec_context->extradata = extradata_audioframe.payload.data();
+                av_codec_context->extradata = ( uint8_t *)av_malloc(extradata_audioframe.payload.size() + AV_INPUT_BUFFER_PADDING_SIZE);
+               // av_codec_context->extradata = extradata_audioframe.payload.data();
+                memcpy(av_codec_context->extradata, extradata_audioframe.payload.data(), extradata_audioframe.payload.size());
                 av_codec_context->extradata_size = extradata_audioframe.payload.size();
                 
                 //unsigned short int aacspec = 5136;  //0001010000010000 hex 1410 https://kxcblog.com/post/avcodec/aac-audio-specific-config/#:~:text=AAC%20Audio%20AudioSpecificConfig
@@ -249,7 +255,7 @@ void MuxFrameFilter::initMux() {
 
                 // ost->st->time_base = (AVRational){ 1, c->sample_rate };
                 // std::cout << "avformat_new_stream" << std::endl;
-                av_stream = avformat_new_stream(av_format_context, av_codec_context->codec); // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
+                av_stream = avformat_new_stream(av_format_context, av_codec_context->codec);   // this line does not cause memory leaks // av_codec_context->codec == AVCodec (i.e. we create a stream having a certain codec)
 
                 // av_stream->time_base = av_codec_context->time_base;
                 // av_stream->codec->codec_tag = 0;
@@ -269,9 +275,9 @@ void MuxFrameFilter::initMux() {
                 i = avcodec_parameters_from_context(av_stream->codecpar, av_codec_context);
                 
 
-                av_stream->codecpar->extradata = extradata_audioframe.payload.data();//( uint8_t *)av_malloc(av_codec_context->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
-                av_stream->codecpar->extradata_size =  av_codec_context->extradata_size ;
-                memcpy(av_stream->codecpar->extradata, av_codec_context->extradata, av_codec_context->extradata_size);
+                av_stream->codecpar->extradata = ( uint8_t *)av_malloc(extradata_audioframe.payload.size() + AV_INPUT_BUFFER_PADDING_SIZE);
+                av_stream->codecpar->extradata_size =  extradata_audioframe.payload.size() ;
+                memcpy(av_stream->codecpar->extradata, av_codec_context->extradata, extradata_audioframe.payload.size());
                 
 
                 // std::cout << "MuxFrameFilter : initMux : context and stream " << std::endl;
@@ -341,19 +347,20 @@ void MuxFrameFilter::closeMux() {
     if (initialized) {
         // std::cout << "MuxFrameFilter: closeMux: freeing ctx" << std::endl;
         // avio_closep(&avio_ctx);        
-        avformat_free_context(av_format_context);
+       
        // avformat_close_input(&av_format_context); // nopes
         for (auto it = codec_contexes.begin(); it != codec_contexes.end(); ++it) {
             if (*it != NULL) {
                 // avcodec_free_context should not try to free this!
-                //(*it)->extradata = NULL;
-                //(*it)->extradata_size = 0;
+                 //(*it)->extradata = NULL;
+                 //(*it)->extradata_size = 0;
                 // std::cout << "MuxFrameFilter: closeMux: context " << (long unsigned)(*it) << std::endl;
-                avcodec_close(*it);
-              //  avcodec_free_context(&(*it));
+                 avcodec_close(*it);
+                 avcodec_free_context(&(*it));
                 *it = NULL;
             }
         }
+        avformat_free_context(av_format_context);
 //        for (auto it = streams.begin(); it != streams.end(); ++it) {
 //            if (*it != NULL) {
 //                // std::cout << "MuxFrameFilter: closeMux: stream" << std::endl;
@@ -381,20 +388,20 @@ void MuxFrameFilter::deActivate() {
 
 
 
-         streams.clear();
-         codec_contexes.clear();
-         prevpts.clear();
+        streams.clear();
+        codec_contexes.clear();
+        prevpts.clear();
 
-         setupframes.clear();
-         internal_frame.reset();
-         extradata_videoframe.reset();
-         extradata_audioframe.reset();
+        setupframes.clear();
+         //internal_frame.reset();
+        extradata_videoframe.reset();
+        extradata_audioframe.reset();
 
-         codec_contexes.resize(2, NULL);
-         streams.resize(2, NULL);
-         prevpts.resize(2, 0);
+        codec_contexes.resize(2, NULL);
+        streams.resize(2, NULL);
+        prevpts.resize(2, 0);
 
-         setupframes.resize(2);
+        setupframes.resize(2);
 
     }
 //    active = false;

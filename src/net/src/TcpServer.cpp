@@ -79,7 +79,7 @@ namespace base
             uv_handle_type pending = uv_pipe_pending_type(pipe);
             assert(pending == UV_TCP);
             
-           
+            free(buf->base);
            // SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
                     
            tmp->obj->worker_connection(tmp->loppworker, q);
@@ -297,6 +297,15 @@ namespace base
 
             if (!this->closed)
                 Close();
+            
+            for( int x =0; x < child_worker_count ; ++x )
+            {
+                 struct child_worker *worker = &workers[x];
+                 free(worker->loppworker);
+                 
+            }
+            
+                
         }
 
         void TcpServerBase::Close() {

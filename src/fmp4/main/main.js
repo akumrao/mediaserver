@@ -12,16 +12,16 @@
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs;//  = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
             //var codecs = "avc1.4D401F,mp4a.40.2";
-            var codecPars = mimeType+';codecs="'+codecs+'"';
+            var codecPars;//  = mimeType+';codecs="'+codecs+'"';
             
             var stream_started = false; // is the source_buffer updateend callback active nor not
             
             // create media source instance
-            var ms = new MediaSource();
+            var ms;
             
             // queue for incoming media packets
             var queue = [];
@@ -34,6 +34,23 @@
             var source_buffer; // source_buffer instance
             
             var pass = 0;
+
+            var contentType="none";
+
+
+            function resetms() {
+
+                 stream_started=false;
+                 cc = 0;
+                 pass = 0;
+                 seeked = false;
+                 ms = null;
+                 ms = new MediaSource();
+                 source_buffer = null;
+                 queue = [];
+                 codecs = "";
+                 codecPars="";
+            }
             
             // *** MP4 Box manipulation functions ***
             // taken from here: https://stackoverflow.com/questions/54186634/sending-periodic-metadata-in-fragmented-live-mp4-stream/
@@ -178,6 +195,9 @@
             
             function opened() { // MediaSource object is ready to go
                 // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
+
+                console.log(codecPars);
+
                 ms.duration = buffering_sec;
                 source_buffer = ms.addSourceBuffer(codecPars);
                 
@@ -214,16 +234,26 @@
                         // binary frame
                        // const view = new DataView(event.data);
                        // console.log(view.getInt32(0));
+                       if( ms && ms.readyState === 'open')
                        putPacket(event.data);
                      //source_buffer.appendBuffer(event.data);
 
                     } else {
                         // text frame
                         console.log(event.data);
-                        if(event.data == "v")
-                         startup(true);
-                        else if(event.data == "av")
-                         startup(false);
+
+                        if(  event.data != contentType )
+                        {   
+                            if( ms && ms.readyState === 'open')
+                                ms.endOfStream();
+
+                            contentType = event.data;
+
+                            if(event.data == "v")
+                             startup(true);
+                            else if(event.data == "av")
+                             startup(false);
+                       }
                     }
 
                     
@@ -251,29 +281,52 @@
                 //var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
                 // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
+                resetms();
+
                 if(videoonly)
                   codecs = "avc1.4D401F";
                 else
                   codecs = "avc1.4D401F,mp4a.40.2";
             
                 codecPars = mimeType+';codecs="'+codecs+'"';
-
+                
 
                 ms.addEventListener('sourceopen',opened,false);
                 
                 // get reference to video
                 stream_live = document.getElementById('stream_live');
+
+                if (stream_live)
+                {
+                    stream_live.play();
+                    stream_live.muted =true;
+
+                    // set mediasource as source of video
+                    stream_live.src = window.URL.createObjectURL(ms);
+                }
             
-                // set mediasource as source of video
-                stream_live.src = window.URL.createObjectURL(ms);
+                
             }
 
 
-            function muteit() {
+            function muteit() 
+            {
+
+                stream_live = document.getElementById('stream_live');
+                if (stream_live)
+                {
+                    stream_live.pause();
+                    stream_live.muted =true;
+                }
+
                 if(document.getElementById("muteit").checked)
+                {
                   ws.send("mute");
+                }
                 else
+                {
                   ws.send("unmute");    
+                }
             }
 
                      
