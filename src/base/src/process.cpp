@@ -78,9 +78,9 @@ namespace base {
     }
 
     static void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* rdbuf) {
-        uv_write_t* req;
-        uv_buf_t wrbuf;
-        int r;
+       // uv_write_t* req;
+        //uv_buf_t wrbuf;
+       // int r;
 
         Process *ptr = ( Process*) tcp->data;
         

@@ -92,7 +92,7 @@ namespace base {
         
         if( it != m_mapLoop.end())
          {
-            int result = uv_loop_close(m_mapLoop[x]);
+            uv_loop_close(m_mapLoop[x]);
             delete m_mapLoop[x];
             m_mapLoop.erase (x);    //
          }

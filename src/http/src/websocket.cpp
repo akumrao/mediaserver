@@ -236,7 +236,7 @@ namespace base {
                 
                 unsigned char msg_opcode = buffer[0] & 0x0F;
                 unsigned char msg_fin = (buffer[0] >> 7) & 0x01;
-                unsigned char msg_masked = (buffer[1] >> 7) & 0x01;
+                //unsigned char msg_masked = (buffer[1] >> 7) & 0x01;
                 
                 switch(msg_opcode)
                         

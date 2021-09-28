@@ -123,7 +123,7 @@ namespace base {
             
              if (shouldSendHeader())
             {
-                long res = sendHeader();
+                sendHeader();
 
                 // The initial packet may be empty to push the headers through
                 if (len == 0)

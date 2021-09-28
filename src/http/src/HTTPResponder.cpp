@@ -67,7 +67,7 @@ namespace base {
                 if (/*!has_index &&*/ filepath[filepath.size() - 1] == '/')
                 {
                     uv_fs_t scandir_req;
-                    int r = uv_fs_scandir(req->loop, &scandir_req, filepath.c_str(), 0, NULL);
+                    uv_fs_scandir(req->loop, &scandir_req, filepath.c_str(), 0, NULL);
                     uv_dirent_t dent;
                     closure->content_type = "text/html";
                     closure->result = "<html><body><ul>";
