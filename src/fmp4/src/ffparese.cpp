@@ -576,7 +576,7 @@ namespace base {
             long framecount =0;
 
             while (!stopped()) {
-
+                uint64_t currentTime =  CurrentTime_microseconds();
                 if (cur_videosize > 0) {
 
                     ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
@@ -627,8 +627,9 @@ namespace base {
 
                     basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
 
-                    std::this_thread::sleep_for(std::chrono::microseconds(10000));
-                    //
+                    
+                    uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                    std::this_thread::sleep_for(std::chrono::microseconds(100000 - deltaTimeMillis));
 
                 }
                 else
