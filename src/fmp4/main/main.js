@@ -281,6 +281,9 @@
                 //var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
                 // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
+                var checkBox = document.getElementById("muteit");
+                checkBox.checked = videoonly;
+
                 resetms();
 
                 if(videoonly)

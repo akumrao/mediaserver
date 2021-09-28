@@ -368,8 +368,17 @@ void MuxFrameFilter::closeMux() {
 //                *it = NULL;
 //            }
 //        }
-        if(avio_ctx)
-        av_freep(avio_ctx);
+       // if(avio_ctx)
+      //  av_freep(avio_ctx);
+        
+         /* arvind note: the internal buffer could have changed, and be != avio_ctx_buffer */
+          /* do not delete only avio_ctx_buffer other wise memory leaks*/
+          if (avio_ctx) {
+                av_freep(&avio_ctx->buffer);
+                av_freep(&avio_ctx);
+          }
+        
+        
     }
     initialized = false;
     has_extraVideodata = false;
@@ -402,7 +411,8 @@ void MuxFrameFilter::deActivate() {
         prevpts.resize(2, 0);
 
         setupframes.resize(2);
-
+        
+       this->avio_ctx_buffer = (uint8_t*) av_malloc(this->avio_ctx_buffer_size);
     }
 //    active = false;
 }
