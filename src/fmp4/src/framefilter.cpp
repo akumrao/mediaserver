@@ -6,8 +6,9 @@
 namespace base {
 namespace fmp4 {
 
+//#define DUMPFMP4 1
 
- #define TIMESTAMPFILTER_DEBUG // keep this commented
+// #define TIMESTAMPFILTER_DEBUG // keep this commented
 
 FrameFilter::FrameFilter(const char *name, FrameFilter *next) : name(name), next(next){};
 
@@ -37,7 +38,9 @@ DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbos
 }
 DummyFrameFilter::~DummyFrameFilter()
 {
+    #if DUMPFMP4 
     fclose(fp_out);
+    #endif
 }
 
 void DummyFrameFilter::go(Frame *frame) {
@@ -62,8 +65,10 @@ void DummyFrameFilter::go(Frame *frame) {
         FragMP4Meta* meta = (FragMP4Meta*) (muxframe->meta_blob.data());
        // *meta = *meta_;
        
+        #if DUMPFMP4 
         int ret = fwrite(muxframe->payload.data(), meta->size, 1, fp_out);
         tolalMp4Size +=ret;
+        #endif
         
         if(conn)
          conn->broadcast((const char*)muxframe->payload.data(), meta->size, true );

@@ -1,27 +1,115 @@
-
+<!-- Copyright Epic Games, Inc. All Rights Reserved. -->
+<!DOCTYPE HTML>
 <html>
-    <head>
-        <title>WebSocket MSE demo</title>
-        <title>Youtube like Streaming with DataChannel</title>
-        <link rel="stylesheet" type="text/css" href="demo.css">
-        <script src="main.js"></script>
-    </head>
-    
-    <body>
-        <!-- muted attribute required for chrome autoplay-->
-        <div>
-        <video id="stream_live" 
-            controls="false" autoplay="true"
-            muted="muted" 
-            preload="auto">
-            Your browser does not support the video tag.
-        </video> 
-        </div>
+<head>
+	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+	<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+	<link type="text/css" rel="stylesheet" href="player.css">
+<!--     <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+    <script type="text/javascript" src="app.js"></script>
+</head>
 
-        <div>
-        <input type="checkbox" name="muteme" id="muteit" onclick="muteit()" >
-        <label for="muteme"> Mute it</label><br><br>
-        </div>
+<body onload="load()">
+	<div id="playerUI">
+		<div id="player"></div>
+		<div id="overlay" class="overlay">
+			<div>
+				<div id="qualityStatus" class="greyStatus">&#9679</div>
+				<div id="overlayButton">+</div>
+			</div>
+			<div id="overlaySettings">
+				<div id="settings">
+					<div class="settings-text">
 
-    </body>
-    </html>
+					<fieldset>
+					<label>Quality/Performance
+					<select id="quality">
+						<option value=0> Performance </option> 
+						<option value=1> Quality </option> 
+					</select>
+					</label>
+					</fieldset>
+
+					<fieldset>
+					<label for="minBitrate">minBitrate[0-20000000]:
+					<input  type="range" id="minBitrate" min="0" max="20000000" step="1000" value="0">
+					</label>
+					</fieldset>
+
+					<fieldset>
+					<label for="maxBitrate">maxBitrate[20000000-50000000]:
+					<input type="range" id="maxBitrate" min="20000000" max="50000000" step="1000" value="50000000">
+					</label>
+					</fieldset>
+
+					<fieldset>
+					<label>Resolution
+					<select id="resolution">
+						<option value="hd"> 1280x720 </option> 
+						<option value="cif"> 800x640 </option> 
+					</select>
+					</label>
+					</fieldset>
+			
+
+				
+					<!-- <fieldset>
+					<label for="minFPS">minFPS[1-60]:
+					<input type="number" id="minFPS" value="5">
+					</label>
+					</fieldset> -->
+
+<!-- 					<fieldset>
+					<label for="backbuffersize">backbuffersize[0-1]:
+					<input type="number" id="backbuffersize" min="0" max="1" value="1" >
+					</label>
+					</fieldset> -->
+
+
+					</div>
+					<input type="button" id="settings-button"  value="Click to Apply">
+					
+				</div>
+				<div id="KickOthers">
+					<div class="settings-text">Kick all other players</div>
+					<label class="btn-overlay">
+						<input type="button" id="kick-other-players-button" class="overlay-button btn-flat" value="Kick">
+					</label>
+				</div>
+                <div id="FillWindow">
+                    <div class="settings-text">Enlarge Display to Fill Window</div>
+                    <label class="tgl-switch">
+                        <input type="checkbox" id="enlarge-display-to-fill-window-tgl" class="tgl tgl-flat" checked>
+                        <div class="tgl-slider"></div>
+                    </label>
+                </div>
+                <div id="muteaudiodiv">
+                    <div class="settings-text">Mute</div>
+                    <label class="tgl-switch">
+                        <input type="checkbox" id="muteaudio" onclick="muteit()">
+                        <div class="tgl-slider"></div>
+                    </label>
+
+                </div>
+                <div id="dControlKeyboard">
+                    <div class="settings-text">Control Keyboard and Mouse</div>
+                    <label class="tgl-switch">
+                         <input type="checkbox" id="ControlKeyboard">
+                        <div class="tgl-slider"></div>
+                    </label>
+                </div>
+<!-- 				<div id="statsSetting"> 
+					<div class="settings-text">Show Stats</div>
+					<label class="tgl-switch">
+						<input type="checkbox" id="show-stats-tgl" class="tgl tgl-flat" checked>
+						<div class="tgl-slider"></div>
+					</label>
+					
+				</div> -->
+			</div>
+		</div>
+	</div>
+</body>
+</html>
