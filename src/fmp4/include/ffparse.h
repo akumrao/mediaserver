@@ -108,7 +108,10 @@ typedef struct OutputStream {
     
     void reset();
     void restart(bool mute);
-    int startAudio( );
+
+    void resHD(bool hd);
+    void reopen();
+
       
     long get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size);
       
@@ -127,8 +130,8 @@ typedef struct OutputStream {
  private:
      
     std::atomic< bool > resetParser { false };
-    std::atomic< bool > mute { true };
-
+    std::atomic< bool > mute { false };
+      std::atomic< bool > hd { false };
     std::atomic< bool > keeprunning { true };
 
     DummyFrameFilter fragmp4_filter;

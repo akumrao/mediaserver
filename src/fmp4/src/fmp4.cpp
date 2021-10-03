@@ -23,8 +23,8 @@ extern "C"
 #define SERVER_HOST  "127.0.0.1"               
 #define SERVER_PORT 8000
 
-#define AUDIOFILE  "./hindi.pcm"               
-#define VIDEOFILE  "./test.264"
+
+
 //#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
 
 
@@ -84,7 +84,10 @@ namespace base {
                     ffparser->restart(true);
                 else if( got == "unmute")
                     ffparser->restart(false);   
-     
+                else if( got  == "hd")
+		    ffparser->resHD(true);
+	        else if (got == "cif")
+		   ffparser->resHD(false);
             //con->send( msg, len );
 
            // sendAll(msg, len);

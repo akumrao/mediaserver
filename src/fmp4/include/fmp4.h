@@ -26,7 +26,11 @@
 #include "http/HttpServer.h" 
 
 
- 
+#define AUDIOFILE  "./hindi.pcm"               
+#define VIDEOFILE  "/var/tmp/videos/test1.264"  
+
+#define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
+#define VIDEOFILE1  "./test.264"
 
 namespace base {
 namespace fmp4 {

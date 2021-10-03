@@ -59,7 +59,7 @@ namespace base {
             if(fileAudio){
                 av_log(NULL,AV_LOG_INFO,"open file success \n");
             }else{
-                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                 SError << "can't open file! " <<  audioFile;
                 return;
             }
            
@@ -68,7 +68,7 @@ namespace base {
             if(fileVideo){
                 av_log(NULL,AV_LOG_INFO,"open file success \n");
             }else{
-                av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                SError << "can't open file! " <<  videofile;
             }
                 
           
@@ -153,12 +153,17 @@ namespace base {
 
             while(  !stopped())
             { 
+                reopen();
                 keeprunning = true;
                 stream_index = 0;
                 
                 fragmp4_muxer.deActivate();
                 if(!mute )
-                {   mediaContent("av");
+                {   
+                    if(hd)
+                        mediaContent("avhd");
+                    else
+                         mediaContent("avsd"); 
                     if (parseH264Header()) {
                         ++stream_index;
                         if (parseAACHeader()) {
@@ -169,7 +174,12 @@ namespace base {
                     }
                }
                else
-               {    mediaContent("v");
+               {   
+                    if(hd)
+                        mediaContent("vhd");
+                    else
+                         mediaContent("vsd"); 
+                            
                     if (parseH264Header()) {
                     ++stream_index;
                     parseH264Content();
@@ -312,8 +322,6 @@ namespace base {
         {
             
             AVPacket audiopkt;
-             
-           
             
             int ret, got_output;
              
@@ -445,13 +453,19 @@ namespace base {
         
             if(mute)
             {
-                mediaContent("v");
+                 if(hd)
+                        mediaContent("vhd");
+                    else
+                         mediaContent("vsd"); 
                 
                 SDebug<< " FFParse::reset()"<<  "Stream only Video";
             }
             else
             {
-               mediaContent("av");  
+               if(hd)
+                        mediaContent("avhd");
+                    else
+                         mediaContent("avsd"); 
                 
                SDebug<< " FFParse::reset()"<<  "Stream both Video & Audio";
             }
@@ -466,6 +480,74 @@ namespace base {
             
             keeprunning = false;
             mute = muteme;
+        }
+        
+        
+        
+        void FFParse::reopen()
+        {
+            fclose(fileAudio);
+            fileAudio = nullptr;
+            
+            fclose(fileVideo);
+            fileVideo = nullptr;
+
+            if (hd)
+            {
+                hd= true;
+                SInfo << "Open HD";
+                
+                const char* audioFile = AUDIOFILE1;
+                const char* videofile = VIDEOFILE1;
+                
+                fileAudio = fopen(audioFile,"rb");
+                if(fileAudio){
+                    av_log(NULL,AV_LOG_INFO,"open file success \n");
+                }else{
+                   // av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                    SError << "can't open file! " <<  audioFile;
+                    return;
+                }
+
+
+                fileVideo = fopen(videofile,"rb");
+                if(fileVideo){
+                    av_log(NULL,AV_LOG_INFO,"open file success \n");
+                }else{
+                    SError << "can't open file! " <<  videofile;
+                }
+            }
+            else
+            {
+                hd= false;
+                const char* audioFile = AUDIOFILE;
+                const char* videofile =VIDEOFILE;
+                
+            
+                SInfo << "Open SD";
+                fileAudio = fopen(audioFile,"rb");
+                if(fileAudio){
+                    av_log(NULL,AV_LOG_INFO,"open file success \n");
+                }else{
+                    av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                    return;
+                }
+
+
+                fileVideo = fopen(videofile,"rb");
+                if(fileVideo){
+                    av_log(NULL,AV_LOG_INFO,"open file success \n");
+                }else{
+                    av_log(NULL,AV_LOG_ERROR,"can't open file! \n");
+                }
+            }
+            
+        }
+
+        void FFParse::resHD(bool _hd)
+        {
+            hd =_hd;
+           restart(mute);
         }
 
         
@@ -829,8 +911,6 @@ namespace base {
                       // info.run(&basicvideoframe);
 
                        fragmp4_muxer.run(&basicvideoframe);
-
-
                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
 
                     
@@ -844,8 +924,7 @@ namespace base {
 
                        cur_videosize = fread(in_videobuffer, 1, in_videobuffer_size, fileVideo);
 
-
-                       SInfo << "Read H264 filee " << cur_videosize;
+                       STrace << "Read H264 filee " << cur_videosize;
 
                        if (cur_videosize == 0)
                            break;

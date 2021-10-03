@@ -329,9 +329,9 @@ var hiddenInput = undefined;
 
                             contentType = event.data;
 
-                            if(event.data == "v")
+                            if(event.data == "vhd" || event.data == "vsd")
                              startup(true);
-                            else if(event.data == "av")
+                            else if(event.data == "avhd" || event.data == "avsd")
                              startup(false);
                        }
                     }
@@ -385,7 +385,7 @@ var hiddenInput = undefined;
 	            let playerDiv = document.getElementById('player');
                 //onConfig({} );
                 
-		        if (videoObj)
+		if (videoObj)
                 {
                   // get reference to video
                    stream_live = document.getElementById('streamingVideo');
@@ -607,7 +607,7 @@ function setupHtmlEvents() {
 			//let backbuffersize = document.getElementById('backbuffersize').value;
 
 			//ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
-            ws.send(resolution );
+                        ws.send(resolution );
 		};
 	}
 
