@@ -329,10 +329,14 @@ var hiddenInput = undefined;
 
                             contentType = event.data;
 
-                            if(event.data == "vhd" || event.data == "vsd")
-                             startup(true);
-                            else if(event.data == "avhd" || event.data == "avsd")
-                             startup(false);
+                            if(event.data == "vhd")
+                                startup(true , true);
+                            else if( event.data == "vsd")
+                                startup(true , false);
+                            else if(event.data == "avhd")
+                                 startup(false, true);
+                            else if(event.data == "avsd")
+                                startup(false, false);
                        }
                     }
 
@@ -363,12 +367,18 @@ var hiddenInput = undefined;
                 };
             }
 
-            function startup(videoonly) {
+            function startup(videoonly , hd) {
 
 
         
                 var checkBox = document.getElementById("muteaudio");
                 checkBox.checked = videoonly;
+
+                if(hd)
+                   document.getElementById('resolution').value = 'hd';
+                else
+                  document.getElementById('resolution').value = 'sd';
+
 
                 resetms();
 
