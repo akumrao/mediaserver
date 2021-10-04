@@ -52,11 +52,11 @@
 #endif
 #endif
 
-//#if AV_GCC_VERSION_AT_LEAST(3,4)
-//#    define av_warn_unused_result __attribute__((warn_unused_result))
-//#else
-//#    define av_warn_unused_result
-//#endif
+#if AV_GCC_VERSION_AT_LEAST(3,4)
+#    define av_warn_unused_result __attribute__((warn_unused_result))
+#else
+#    define av_warn_unused_result
+#endif
 
 #if AV_GCC_VERSION_AT_LEAST(3,1)
 #    define av_noinline __attribute__((noinline))
@@ -72,11 +72,11 @@
 #    define av_pure
 #endif
 
-//#if AV_GCC_VERSION_AT_LEAST(2,6)
-//#    define av_const __attribute__((const))
-//#else
-//#    define av_const
-//#endif
+#if AV_GCC_VERSION_AT_LEAST(2,6)
+#    define av_const __attribute__((const))
+#else
+#    define av_const
+#endif
 
 #if AV_GCC_VERSION_AT_LEAST(4,3)
 #    define av_cold __attribute__((cold))
