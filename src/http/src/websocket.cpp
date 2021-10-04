@@ -507,7 +507,8 @@ namespace base {
             } else {
                 lenByte |= 127;
                 frame.putU8(lenByte);
-                frame.putU64(static_cast<uint16_t> (len));
+                  //frame.putU64(static_cast<uint16_t> (len));// websocket lager number > 65536 writeFrame bug
+                frame.putU64(static_cast<uint64_t>(len));
             }
 
             if (_maskPayload) {
