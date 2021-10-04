@@ -52,7 +52,7 @@
 #endif
 #endif
 
-#if AV_GCC_VERSION_AT_LEAST(3,4)
+#if AV_GCC_VERSION_AT_LEAST(3,4) && !defined(av_warn_unused_result)
 #    define av_warn_unused_result __attribute__((warn_unused_result))
 #else
 #    define av_warn_unused_result
@@ -72,7 +72,7 @@
 #    define av_pure
 #endif
 
-#if AV_GCC_VERSION_AT_LEAST(2,6)
+#if AV_GCC_VERSION_AT_LEAST(2,6) && !defined(av_const)
 #    define av_const __attribute__((const))
 #else
 #    define av_const

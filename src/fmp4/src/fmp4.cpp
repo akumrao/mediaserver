@@ -85,9 +85,9 @@ namespace base {
                 else if( got == "unmute")
                     ffparser->restart(false);   
                 else if( got  == "hd")
-		    ffparser->resHD(true);
-	        else if (got == "cif")
-		   ffparser->resHD(false);
+		         ffparser->resHD(true);
+	            else if (got == "sd")
+		          ffparser->resHD(false);
             //con->send( msg, len );
 
            // sendAll(msg, len);
