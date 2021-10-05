@@ -202,6 +202,15 @@ void SslConnection::send(const char* data, size_t len)
     return ;
 }
 
+
+void SslConnection::tcpsend(const char* data, size_t len, onSendCallback _cb)
+{
+     assert(_sslAdapter._ssl);
+    _sslAdapter.cb = _cb;
+    _sslAdapter.addOutgoingData(data, len);
+    _sslAdapter.flush();
+    return ;
+}
 //
 // Callbacks
 

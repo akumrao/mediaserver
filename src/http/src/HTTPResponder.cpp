@@ -174,7 +174,7 @@ namespace base {
               //  resbuf.base = (char *) res.c_str();
                // resbuf.len = res.size();
              
-                auto cb =  TcpConnectionBase::onSendCallback([closure ](bool sent)
+                auto cb =  onSendCallback([closure ](bool sent)
                 {
                     if (sent)
                     {

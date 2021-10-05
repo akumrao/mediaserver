@@ -25,8 +25,12 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
+#include <functional>
 
 namespace base {
+    
+using onSendCallback =  std::function<void(bool sent)>;
+    
 namespace net {
 
 
@@ -69,6 +73,8 @@ public:
     void addIncomingData(const char* data, size_t len);
     void addOutgoingData(const std::string& data);
     void addOutgoingData(const char* data, size_t len);
+    
+    onSendCallback  cb{nullptr};
 
 protected:
     void handleError(int rc);
@@ -80,8 +86,6 @@ protected:
     friend class SslConnection;
 
     SslConnection* _socket;
-    
-   
      
     SSL* _ssl;
     BIO* _readBIO;  ///< The incoming buffer we write encrypted SSL data into

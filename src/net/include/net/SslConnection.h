@@ -60,6 +60,7 @@ public:
 
     void send(const char* data, size_t len) override;
  
+    void tcpsend(const char* data, size_t len, onSendCallback _cb);
 
     /// Use the given SSL context for this socket.
 //    void useContext(SSLContext::Ptr context);

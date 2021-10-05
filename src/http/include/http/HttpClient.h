@@ -37,7 +37,7 @@ namespace base {
             void connect();
 
         public:
-            void tcpsend(const char* data, size_t len,TcpConnectionBase::onSendCallback cb) override;
+            void tcpsend(const char* data, size_t len,onSendCallback cb) override;
             void send(const char* data, size_t len, bool binary=false) override;
             void send() override;
             void send(Request& req) override;

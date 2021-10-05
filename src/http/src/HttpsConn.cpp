@@ -110,9 +110,9 @@ namespace base {
         }
         
         
-        void  HttpsConnection::tcpsend(const char* data, size_t len, TcpConnectionBase::onSendCallback cb)
+        void  HttpsConnection::tcpsend(const char* data, size_t len, onSendCallback cb)
         {
-               SslConnection::send(data, len); // arvind
+               SslConnection::tcpsend(data, len, cb); // arvind
         }
         
         void HttpsConnection::send(const char* data, size_t len, bool binary) {

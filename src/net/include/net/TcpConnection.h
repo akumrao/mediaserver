@@ -19,6 +19,7 @@
 
 namespace base
 {
+     using onSendCallback =  std::function<void(bool sent)>;
     namespace net
     {
 
@@ -33,7 +34,7 @@ namespace base
 
         
         public:
-             using onSendCallback =  std::function<void(bool sent)>;
+            
             class ListenerClose
             {
             public:
@@ -61,7 +62,7 @@ namespace base
 
                 uv_write_t req;
                 uint8_t* store{ nullptr };
-                TcpConnectionBase::onSendCallback cb{ nullptr };
+                onSendCallback cb{ nullptr };
             };
 
 
@@ -90,8 +91,8 @@ namespace base
             bool IsClosed() const;
             uv_tcp_t* GetUvHandle() const;
             void Start();
-            int Write(const char* data, size_t len,TcpConnectionBase::onSendCallback cb);
-            int Write(const char* data1, size_t len1, const char* data2, size_t len2,TcpConnectionBase::onSendCallback cb);
+            int Write(const char* data, size_t len,onSendCallback cb);
+            int Write(const char* data1, size_t len1, const char* data2, size_t len2,onSendCallback cb);
             int Write(const std::string& data);
             void ErrorReceiving();
             const struct sockaddr* GetLocalAddress() const;

@@ -121,7 +121,7 @@ namespace base {
             TcpConnectionBase::Close();
         }
 
-         void HttpClient::tcpsend(const char* data, size_t len, TcpConnectionBase::onSendCallback cb) {
+         void HttpClient::tcpsend(const char* data, size_t len, onSendCallback cb) {
     
              TcpConnectionBase::Write(data, len ,cb);
          }

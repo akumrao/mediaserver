@@ -112,7 +112,7 @@ namespace base {
         }
           
         
-        void HttpConnection::tcpsend(const char* data, size_t len, TcpConnectionBase::onSendCallback cb)
+        void HttpConnection::tcpsend(const char* data, size_t len, onSendCallback cb)
         {
               Write(data, len, cb);
         }

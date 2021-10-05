@@ -305,7 +305,7 @@ namespace base {
                 LError("error setting peer IP and port");
         }
 
-        int TcpConnectionBase::Write(const char* data, size_t len, TcpConnectionBase::onSendCallback cb) {
+        int TcpConnectionBase::Write(const char* data, size_t len, onSendCallback cb) {
 
             if (this->closed)
             {
@@ -393,7 +393,7 @@ namespace base {
             return pendingLen;
         }
 
-        int TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2, TcpConnection::onSendCallback cb) {
+        int TcpConnectionBase::Write(const char* data1, size_t len1, const char* data2, size_t len2, onSendCallback cb) {
 
             if (this->closed)
             {
