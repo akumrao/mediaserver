@@ -19,11 +19,11 @@ using namespace base::test;
 
 
 
-class testwebscoket: public net::HttpServer 
+class testwebscoket: public net::HttpsServer 
 {
 public:
     
-     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr,  bool multithreaded =false) : net::HttpServer(  ip, port,  factory, multithreaded)
+     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr,  bool multithreaded =false) : net::HttpsServer(  ip, port,  factory, multithreaded)
      {
          
      }
@@ -50,6 +50,12 @@ public:
              WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
              if(con)
              con->send(msg ,len );
+             else
+             {
+                WebSocketConnection *con = ((HttpsConnection*)connection)->getWebSocketCon();
+                if(con)
+                con->send(msg ,len );
+             }
         }
          
     }
@@ -58,7 +64,7 @@ public:
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     //test::init();
   
     Application app;
