@@ -27,7 +27,7 @@ namespace base {
     namespace net {
 
         HttpsConnection::HttpsConnection(Listener* listener, http_parser_type type)
-        : SslConnection(),
+        : SslConnection(true),
            listener(listener),HttpBase(type),wsAdapter(nullptr){
 
 
@@ -112,7 +112,7 @@ namespace base {
         
         void  HttpsConnection::tcpsend(const char* data, size_t len)
         {
-              Write(data, len,nullptr);
+              SslConnection::send(data, len);
         }
         
         void HttpsConnection::send(const char* data, size_t len, bool binary) {
