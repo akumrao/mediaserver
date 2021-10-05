@@ -108,7 +108,11 @@ namespace base {
 
             for (auto* connection :  this->GetConnections())
             {
-                 net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
+#if HTTPSSL
+                 net::WebSocketConnection *con = ((net::HttpsConnection*)connection)->getWebSocketCon();
+#else
+                 net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon(); 
+#endif               
                  if(con)
                  con->push(data ,size, binary );
             }

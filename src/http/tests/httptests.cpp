@@ -47,7 +47,13 @@ public:
         
         for (auto* connection :  this->GetConnections())
         {
+            
+#if HTTPSSL
+                    
              WebSocketConnection *con = ((HttpsConnection*)connection)->getWebSocketCon();
+#else
+             WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
+#endif
              if(con)
              con->send(msg ,len );
 //             else
