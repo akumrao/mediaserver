@@ -101,7 +101,7 @@ namespace base {
         class HttpsServer : public HttpServerBase {
         public:
 
-            HttpsServer( std::string ip, int port, ServerConnectionFactory *factory = nullptr);
+            HttpsServer( std::string ip, int port, ServerConnectionFactory *factory = nullptr, bool multithreaded =false);
 
             ServerResponder* createResponder(HttpBase* conn);
 

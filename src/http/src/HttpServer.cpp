@@ -138,86 +138,7 @@ namespace base {
 
              // assert(multipartparser_execute(&parser, &callbacks, BODY, len) == len);
         }
-/*
-        typedef struct part {
-    std::map<std::string,std::string> headers;
-    std::string body;
-} part;
 
-//static multipartparser_callbacks g_callbacks;
-
-static bool             g_body_begin_called;
-static std::string      g_header_name;
-static std::string      g_header_value;
-static std::list<part>  g_parts;
-static bool             g_body_end_called;
-
-static void init_globals()
-{
-    g_body_begin_called = false;
-    g_header_name.clear();
-    g_header_value.clear();
-    g_parts.clear();
-    g_body_end_called = false;
-}
-
-static int on_body_begin(multipartparser* )
-{
-    g_body_begin_called = true;
-    return 0;
-}
-
-static int on_part_begin(multipartparser* )
-{
-    g_parts.push_back(part());
-    return 0;
-}
-
-static void on_header_done()
-{
-    g_parts.back().headers[g_header_name] = g_header_value;
-    g_header_name.clear();
-    g_header_value.clear();
-}
-
-static int on_header_field(multipartparser* , const char* data, size_t size)
-{
-    if (g_header_value.size() > 0)
-        on_header_done();
-    g_header_name.append(data, size);
-    return 0;
-}
-
-static int on_header_value(multipartparser* , const char* data, size_t size)
-{
-    g_header_value.append(data, size);
-    return 0;
-}
-
-static int on_headers_complete(multipartparser* )
-{
-    if (g_header_value.size() > 0)
-        on_header_done();
-    return 0;
-}
-
-static int on_data(multipartparser* , const char* data, size_t size)
-{
-    g_parts.back().body.append(data, size);
-    return 0;
-}
-
-static int on_part_end(multipartparser* )
-{
-    return 0;
-}
-
-static int on_body_end(multipartparser* )
-{
-    g_body_end_called = true;
-    return 0;
-}
-  */      
         
         void HttpServer::on_header(Listener* connection) {
               HttpConnection *con = (HttpConnection*)connection;
@@ -270,8 +191,8 @@ static int on_body_end(multipartparser* )
 /***********************************************************************************************/
         
 #if HTTPSSL
-        HttpsServer::HttpsServer( std::string ip, int port, ServerConnectionFactory *factory) 
-        : HttpServerBase( this,  ip, port , true)
+        HttpsServer::HttpsServer( std::string ip, int port, ServerConnectionFactory *factory,bool multithreaded  ) 
+        : HttpServerBase( this,  ip, port ,multithreaded, true)
         ,ip(ip), port(port), _factory(factory)
         {
  

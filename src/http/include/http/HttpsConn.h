@@ -40,7 +40,7 @@ namespace base {
 
         public:
             void send(const char* data, size_t len, bool binary=false) override;
-            void tcpsend(const char* data, size_t len) override;
+            void tcpsend(const char* data, size_t len,TcpConnectionBase::onSendCallback cb) override;
             
             void Close() override;
 

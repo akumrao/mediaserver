@@ -119,7 +119,7 @@ namespace base {
             SslConnection::Close();
         }
 
-         void HttpsClient::tcpsend(const char* data, size_t len) {
+         void HttpsClient::tcpsend(const char* data, size_t len , TcpConnectionBase::onSendCallback cb) {
     
              SslConnection::send(data, len);
          }

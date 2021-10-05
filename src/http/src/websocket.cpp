@@ -89,7 +89,7 @@ namespace base {
             framer.writeFrame(data, len, flags, writer);
 
             assert(socket);
-            _connection->tcpsend((const char*) writer.begin(), writer.position());
+            _connection->tcpsend((const char*) writer.begin(), writer.position(), nullptr);
             
             
         }
@@ -102,7 +102,7 @@ namespace base {
             LTrace("Client request: ", oss.str())
 
             assert(socket);
-            _connection->tcpsend((const char*) oss.str().c_str(), oss.str().length());
+            _connection->tcpsend((const char*) oss.str().c_str(), oss.str().length(),  nullptr);
         }
 
     
