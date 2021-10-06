@@ -70,21 +70,28 @@ namespace base {
 //        // sleep_for(1s);
 //
 //        std::cout << name << "playing stream !" << std::endl;
-//        livethread.playStreamCall(ctx)
-                
+//        
            // ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
             ffparser = new LiveThread("live");
             
+            ffparser->start();    
+            
            LiveConnectionContext *ctx = new LiveConnectionContext(LiveConnectionType::rtsp, std::string("stream_1"), 2, nullptr); // Request livethread to write into filter info
            ffparser->registerStreamCall(*ctx);
+           
+           ffparser->playStreamCall(*ctx);
+                
+
             
-            //ffparser->startCall();
-            ffparser->start();    
 
         }
 
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
+            
+            
+           
+             
             ffparser->stop();
             ffparser->join();
             delete ffparser;

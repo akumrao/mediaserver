@@ -467,10 +467,11 @@ public: // live555 events and tasks
   static void gotFramesEvent(void* clientData);    ///< Triggered when an empty fifo gets a frame.  Schedules readFrameFifoTask.  See \ref live_streaming_page
   static void readFrameFifoTask(void* clientData); ///< This task registers itself if there are frames in the fifo
 
+  std::mutex m;
 public:  
   void testTrigger();         ///< See \ref live_streaming_page
   void triggerGotFrames();    ///< See \ref live_streaming_page
-}; // <pyapi>
+}; 
 
 
 

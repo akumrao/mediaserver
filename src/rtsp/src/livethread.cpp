@@ -843,7 +843,7 @@ void LiveThread::postRun() {
 }
 
 void LiveThread::sendSignal(LiveSignalContext signal_ctx) {
-   // std::unique_lock<std::mutex> lk(this->mutex);
+    std::unique_lock<std::mutex> lk(this->m);
     this->signal_fifo.push_back(signal_ctx);
 }
 
@@ -893,7 +893,7 @@ void LiveThread::closePending() { // call only after handlePending
 
 
 void LiveThread::handleSignals() {
-//    std::unique_lock<std::mutex> lk(this->mutex);
+    std::unique_lock<std::mutex> lk(this->m);
     unsigned short int i;
     LiveConnectionContext connection_ctx;
     LiveOutboundContext   out_ctx;
@@ -917,7 +917,7 @@ void LiveThread::handleSignals() {
 //                    deregisterOutbound(out_ctx);
 //                }
                 
-                // this->eventLoopWatchVariable=1;
+                 this->eventLoopWatchVariable=1;
                 exit_requested=true;
                 break;
                 // inbound streams
@@ -973,8 +973,9 @@ void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
 
 
 void LiveThread::run() {
+    SInfo << " run : live555 loop start " << std::endl;
     env->taskScheduler().doEventLoop(&eventLoopWatchVariable);
-    SDebug << " run : live555 loop exit " << std::endl;
+   SInfo << " run : live555 loop exit " << std::endl;
 }
 
 
