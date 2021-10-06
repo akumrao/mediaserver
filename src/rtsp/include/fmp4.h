@@ -35,7 +35,7 @@
 namespace base {
 namespace fmp4 {
     
-class FFParse;
+class LiveThread;
  class ReadMp4: public Thread, public net::HttpServer 
  {
      
@@ -59,7 +59,7 @@ class FFParse;
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-     FFParse  *ffparser;
+     LiveThread  *ffparser;
  private:
      
     // net::ClientConnecton *conn{nullptr};

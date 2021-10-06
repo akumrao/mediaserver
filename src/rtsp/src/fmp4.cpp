@@ -11,8 +11,8 @@
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
-#include "ffparse.h"
-
+//#include "ffparse.h"
+#include "livethread.h"
 extern "C"
 {
 //#include <libavutil/timestamp.h>
@@ -55,7 +55,30 @@ namespace base {
             
          self = this;
          
-            ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
+         
+           
+//
+//        fragmp4_muxer.activate(); // don't forget!
+//
+//        std::cout << name << "starting threads" << std::endl;
+//        livethread.startCall();
+//
+//        std::cout << name << "registering stream" << std::endl;
+//        LiveConnectionContext ctx = LiveConnectionContext(LiveConnectionType::rtsp, std::string(stream_1), 2, &info); // Request livethread to write into filter info
+//        livethread.registerStreamCall(ctx);
+//
+//        // sleep_for(1s);
+//
+//        std::cout << name << "playing stream !" << std::endl;
+//        livethread.playStreamCall(ctx)
+                
+           // ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
+            ffparser = new LiveThread("live");
+            
+           LiveConnectionContext *ctx = new LiveConnectionContext(LiveConnectionType::rtsp, std::string("stream_1"), 2, nullptr); // Request livethread to write into filter info
+           ffparser->registerStreamCall(*ctx);
+            
+            //ffparser->startCall();
             ffparser->start();    
 
         }
@@ -78,16 +101,16 @@ namespace base {
                 
                 //  m_ping_timeout_timer.Reset();
                 //  m_packet_mgr.put_payload(std::string(data,sz));
-                if( got == "reset")
-                    ffparser->reset();    
-                else if( got == "mute")
-                    ffparser->restart(true);
-                else if( got == "unmute")
-                    ffparser->restart(false);   
-                else if( got  == "hd")
-		    ffparser->resHD(true);
-	        else if (got == "cif")
-		   ffparser->resHD(false);
+//                if( got == "reset")
+//                    ffparser->reset();    
+//                else if( got == "mute")
+//                    ffparser->restart(true);
+//                else if( got == "unmute")
+//                    ffparser->restart(false);   
+//                else if( got  == "hd")
+//		    ffparser->resHD(true);
+//	        else if (got == "cif")
+//		   ffparser->resHD(false);
             //con->send( msg, len );
 
            // sendAll(msg, len);

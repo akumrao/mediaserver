@@ -229,7 +229,126 @@ void RepeatH264ParsFrameFilter::run(Frame *frame)
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+FrameFifo::FrameFifo(const char *name, FrameFifoContext ctx) : name(name), ctx(ctx)
+{
+
+}
+
+FrameFifo::~FrameFifo()
+{
+    recycleAll();
 
 
+}
+
+bool FrameFifo::writeCopy(Frame *f, bool wait)
+{
+ 
+    return true;
+}
+
+Frame *FrameFifo::read(unsigned short int mstimeout)
+{
+ return NULL;
+}
+
+void FrameFifo::recycle_(Frame *f)
+{
+//    f->reset();
+//    Stack &stack = stacks.at(f->getFrameClass());
+//    stack.push_back(f); // take: from the front.  recycle: to the back
+}
+
+void FrameFifo::recycle(Frame *f)
+{
+//    std::unique_lock<std::mutex> lk(this->mutex); // this acquires the lock and releases it once we get out of context
+//    recycle_(f);
+//    ready_condition.notify_one();
+}
+
+void FrameFifo::recycleAll_()
+{ // move all frames from fifo to stack
+//    auto it = fifo.begin();
+//    while (it != fifo.end())
+//    {
+//        recycle_(*it);       // return to stack
+//        it = fifo.erase(it); // and erase from the fifo
+//    }
+}
+
+void FrameFifo::recycleAll()
+{                                                 // move all frames from fifo to stack
+//    std::unique_lock<std::mutex> lk(this->mutex); // this acquires the lock and releases it once we get out of context
+//    recycleAll_();
+}
+
+void FrameFifo::dumpStacks()
+{
+//    std::unique_lock<std::mutex> lk(this->mutex); // this acquires the lock and releases it once we get out of context
+//    Stack stack;
+//
+//    std::cout << "FrameFifo : dumpStacks : " << std::endl;
+//    for (auto it = stacks.begin(); it != stacks.end(); ++it)
+//    {
+//        std::cout << "FrameFifo : dumpStacks : Stack=" << int(it->first) << std::endl;
+//        stack = it->second;
+//        for (auto its = stack.begin(); its != stack.end(); ++its)
+//        {
+//            std::cout << "FrameFifo : dumpStacks :  " << *(*its) << std::endl;
+//        }
+//    }
+//    std::cout << "FrameFifo : dumpStacks : " << std::endl;
+}
+
+void FrameFifo::dumpFifo()
+{
+//    std::unique_lock<std::mutex> lk(this->mutex); // this acquires the lock and releases it once we get out of context
+//
+//    std::cout << "FrameFifo : dumpFifo : " << std::endl;
+//    for (auto it = fifo.begin(); it != fifo.end(); ++it)
+//    {
+//        std::cout << "FrameFifo : dumpFifo : " << *(*it) << std::endl;
+//    }
+//    std::cout << "FrameFifo : dumpFifo : " << std::endl;
+}
+
+void FrameFifo::diagnosis()
+{
+//    std::unique_lock<std::mutex> lk(this->mutex); // this acquires the lock and releases it once we get out of context
+//    Stack stack;
+//
+//    std::cout << "FrameFifo : diagnosis : " << std::endl;
+//    std::cout << "FrameFifo : diagnosis : fifo  : " << fifo.size() << std::endl;
+//    std::cout << "FrameFifo : diagnosis : stack : ";
+//    for (auto it = stacks.begin(); it != stacks.end(); ++it)
+//    {
+//        std::cout << int(it->first) << ":" << (it->second).size() << ", ";
+//    }
+//    std::cout << std::endl;
+//    std::cout << "FrameFifo : diagnosis : " << std::endl;
+}
+
+bool FrameFifo::isEmpty()
+{
+    return fifo.empty();
+}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+FifoFrameFilter::FifoFrameFilter(const char *name, FrameFifo *framefifo) : FrameFilter(name), framefifo(framefifo){};
+
+void FifoFrameFilter::go(Frame *frame)
+{
+    framefifo->writeCopy(frame);
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 }
 }

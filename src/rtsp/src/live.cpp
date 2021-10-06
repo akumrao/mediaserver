@@ -180,10 +180,10 @@ void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
     if (ok_subsession_type) { // a decent subsession
     
       if (!scs.subsession->initiate()) {
-        SInfo << "ValkkaRTSPClient: "  << "Failed to initiate the \"" << *scs.subsession << "\" subsession: " << env.getResultMsg() << "\n";
+        SInfo << "ValkkaRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() << "\n";
         setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
       } else { // subsession ok
-       SDebug << "ValkkaRTSPClient: "  << " Initiated the \"" << *scs.subsession << "\" subsession (";
+       SDebug << "ValkkaRTSPClient: "  << " Initiated the \""  << "\" subsession (";
         if (scs.subsession->rtcpIsMuxed()) {
          SDebug << "client port " << scs.subsession->clientPortNum();
         } else {
@@ -246,12 +246,12 @@ void ValkkaRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode
     FrameFilter& framefilter = ((ValkkaRTSPClient*)rtspClient)->framefilter;
 
     if (resultCode != 0) {
-      SInfo << "ValkkaRTSPClient: "  << "Failed to set up the \"" << *scs.subsession << "\" subsession: " << resultString << "\n";
+      SInfo << "ValkkaRTSPClient: "  << "Failed to set up the \""  << "\" subsession: " << resultString << "\n";
       break;
     }
 
-    // SInfo  << "Set up the \"" << *scs.subsession << "\" subsession (";
-   SDebug << "ValkkaRTSPClient: "  << "Set up the \"" << *scs.subsession << "\" subsession (";
+    // SInfo  << "Set up the \""  << "\" subsession (";
+   SDebug << "ValkkaRTSPClient: "  << "Set up the \""  << "\" subsession (";
     if (scs.subsession->rtcpIsMuxed()) {
       // SInfo << "client port " << scs.subsession->clientPortNum();
      SDebug << "client port " << scs.subsession->clientPortNum();
@@ -270,12 +270,12 @@ void ValkkaRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode
     scs.subsession->sink = FrameSink::createNew(env, scs, framefilter, rtspClient->url());
       // perhaps use your own custom "MediaSink" subclass instead
     if (scs.subsession->sink == NULL) {
-      SInfo << "ValkkaRTSPClient: " << "Failed to create a data sink for the \"" << *scs.subsession
+      SInfo << "ValkkaRTSPClient: " << "Failed to create a data sink for the \"" 
 	  << "\" subsession: " << env.getResultMsg() << "\n";
       break;
     }
 
-   SDebug << "ValkkaRTSPClient: " << "Created a data sink for the \"" << *scs.subsession << "\" subsession\n";
+   SDebug << "ValkkaRTSPClient: " << "Created a data sink for the \""  << "\" subsession\n";
     scs.subsession->miscPtr = rtspClient; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
     scs.subsession->sink->startPlaying(*(scs.subsession->readSource()),
 				       subsessionAfterPlaying, scs.subsession);
@@ -390,7 +390,7 @@ void ValkkaRTSPClient::subsessionByeHandler(void* clientData) {
   RTSPClient* rtspClient = (RTSPClient*)subsession->miscPtr;
   UsageEnvironment& env = rtspClient->envir(); // alias
 
- SDebug << "ValkkaRTSPClient: " << "Received RTCP \"BYE\" on \"" << *subsession << "\" subsession\n";
+ SDebug << "ValkkaRTSPClient: " << "Received RTCP \"BYE\" on \""  << "\" subsession\n";
 
   // Now act as if the subsession had closed:
   subsessionAfterPlaying(subsession);

@@ -135,7 +135,7 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
     }
     else if  (ctx.time_correction==TimeCorrectionType::dummy) {
         // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
-        timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
+        //timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
         repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
       //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
     }
