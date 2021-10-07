@@ -11,7 +11,7 @@
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
-//#include "ffparse.h"
+#include "ffparse.h"
 #include "livethread.h"
 extern "C"
 {
@@ -51,36 +51,30 @@ namespace base {
 
     namespace fmp4 {
 
-        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true){
+        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
+
+            self = this;
+
+            fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+
+            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+            info = new InfoFrameFilter("info", nullptr);
+
+            txt = new TextFrameFilter("txt", this);
+
+
+
+            ffparser = new FFParse(AUDIOFILE, VIDEOFILE, fragmp4_filter, fragmp4_muxer, info, txt );
+          //  ffparser = new LiveThread("live");
+
+            ffparser->start();
+
+           // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, fragmp4_muxer); // Request livethread to write into filter info
+           // ffparser->registerStreamCall(*ctx);
+
+           // ffparser->playStreamCall(*ctx);
             
-         self = this;
-         
-         
-           
-//
-//        fragmp4_muxer.activate(); // don't forget!
-//
-//        std::cout << name << "starting threads" << std::endl;
-//        livethread.startCall();
-//
-//        std::cout << name << "registering stream" << std::endl;
-//        LiveConnectionContext ctx = LiveConnectionContext(LiveConnectionType::rtsp, std::string(stream_1), 2, &info); // Request livethread to write into filter info
-//        livethread.registerStreamCall(ctx);
-//
-//        // sleep_for(1s);
-//
-//        std::cout << name << "playing stream !" << std::endl;
-//        
-           // ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
-            ffparser = new LiveThread("live");
-            
-            ffparser->start();    
-            
-           LiveConnectionContext *ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, nullptr); // Request livethread to write into filter info
-           ffparser->registerStreamCall(*ctx);
-           
-           ffparser->playStreamCall(*ctx);
-                
 
             
 
@@ -106,21 +100,17 @@ namespace base {
              std::string got = std::string(msg, len);
              STrace << "on_read " << got;
                 
-                //  m_ping_timeout_timer.Reset();
-                //  m_packet_mgr.put_payload(std::string(data,sz));
-//                if( got == "reset")
-//                    ffparser->reset();    
-//                else if( got == "mute")
-//                    ffparser->restart(true);
-//                else if( got == "unmute")
-//                    ffparser->restart(false);   
-//                else if( got  == "hd")
-//		    ffparser->resHD(true);
-//	        else if (got == "cif")
-//		   ffparser->resHD(false);
-            //con->send( msg, len );
 
-           // sendAll(msg, len);
+                if( got == "reset")
+                    ffparser->reset();    
+                else if( got == "mute")
+                    ffparser->restart(true);
+                else if( got == "unmute")
+                    ffparser->restart(false);   
+                else if( got  == "hd")
+		    ffparser->resHD(true);
+	        else if (got == "cif")
+		   ffparser->resHD(false);
 
         }
     

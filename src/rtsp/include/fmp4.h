@@ -24,7 +24,7 @@
 #include "net/netInterface.h"
 #include "http/HttpClient.h"
 #include "http/HttpServer.h" 
-
+#include "muxer.h"
 
 #define AUDIOFILE  "./hindi.pcm"               
 #define VIDEOFILE  "/var/tmp/videos/test1.264"  
@@ -36,6 +36,14 @@ namespace base {
 namespace fmp4 {
     
 class LiveThread;
+class DummyFrameFilter;
+class FragMP4MuxFrameFilter;
+class InfoFrameFilter;
+class TextFrameFilter;
+class ReadMp4;  
+class LiveConnectionContext;
+class FFParse;
+
  class ReadMp4: public Thread, public net::HttpServer 
  {
      
@@ -59,11 +67,16 @@ class LiveThread;
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-     LiveThread  *ffparser;
+    // LiveThread  *ffparser;
+     FFParse  *ffparser;
  private:
      
-    // net::ClientConnecton *conn{nullptr};
-     
+     DummyFrameFilter *fragmp4_filter;
+     FragMP4MuxFrameFilter *fragmp4_muxer;
+     InfoFrameFilter *info;
+     TextFrameFilter *txt;
+     LiveConnectionContext *ctx;
+             
      std::string fileName;
      
  public:

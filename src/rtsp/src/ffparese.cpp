@@ -49,11 +49,9 @@ namespace base {
         // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
 
-        FFParse::FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char* videofile) :  fragmp4_filter("fragmp4",conn ), fragmp4_muxer("fragmp4muxer", &fragmp4_filter), info("info", nullptr), txt("txt",conn) {
+        FFParse::FFParse(  const char* audioFile, const char* videofile, DummyFrameFilter *fragmp4_filter , FragMP4MuxFrameFilter *fragmp4_muxer , InfoFrameFilter *info , TextFrameFilter *txt ): fragmp4_filter(fragmp4_filter) , fragmp4_muxer(fragmp4_muxer) , info(info) , txt(txt)  {
 
-          //  fragmp4_muxer.activate();
-            
-            
+     
             
             fileAudio = fopen(audioFile,"rb");
             if(fileAudio){
@@ -157,7 +155,7 @@ namespace base {
                 keeprunning = true;
                 stream_index = 0;
                 
-                fragmp4_muxer.deActivate();
+                fragmp4_muxer->deActivate();
                 if(!mute )
                 {   
                     if(hd)
@@ -249,8 +247,8 @@ namespace base {
             setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
-            info.run(&setupframe);
-            fragmp4_muxer.run(&setupframe);
+            info->run(&setupframe);
+            fragmp4_muxer->run(&setupframe);
             
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
@@ -310,7 +308,7 @@ namespace base {
              memcpy( basicaudioframe.payload.data(),  c->extradata, extrasize) ;
              basicaudioframe.codec_id = codec->id;
              basicaudioframe.mstimestamp = startTime ;
-             fragmp4_muxer.run(&basicaudioframe);
+             fragmp4_muxer->run(&basicaudioframe);
              basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
              audioContext = c;
              
@@ -397,11 +395,11 @@ namespace base {
                    
                     if( resetParser ) 
                     {
-                          fragmp4_muxer.sendMeta();
+                          fragmp4_muxer->sendMeta();
                           resetParser =false;
                     }
                     framecount = framecount + AUDIOSAMPLE ;
-                    fragmp4_muxer.run(&basicaudioframe);
+                    fragmp4_muxer->run(&basicaudioframe);
 
                     basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
                                        
@@ -571,8 +569,8 @@ namespace base {
             setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
-            info.run(&setupframe);
-            fragmp4_muxer.run(&setupframe);
+            info->run(&setupframe);
+            fragmp4_muxer->run(&setupframe);
 
   
             if ((pkt = av_packet_alloc()) == NULL) {
@@ -651,9 +649,9 @@ namespace base {
                     continue;
                 }
 
-                //info.run(&basicframe);
+                //info->run(&basicframe);
 
-                fragmp4_muxer.run(&basicvideoframe);
+                fragmp4_muxer->run(&basicvideoframe);
 
 
                 basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
@@ -735,7 +733,7 @@ namespace base {
 
                     if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                     {
-                        fragmp4_muxer.sendMeta();
+                        fragmp4_muxer->sendMeta();
                         resetParser = false;
                     }
                     
@@ -750,9 +748,9 @@ namespace base {
 
                     framecount++;
 
-                   // info.run(&basicvideoframe);
+                   // info->run(&basicvideoframe);
 
-                    fragmp4_muxer.run(&basicvideoframe);
+                    fragmp4_muxer->run(&basicvideoframe);
 
 
                     basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
@@ -893,7 +891,7 @@ namespace base {
 
                        if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                        {
-                           fragmp4_muxer.sendMeta();
+                           fragmp4_muxer->sendMeta();
                            resetParser = false;
                        }
 
@@ -908,9 +906,9 @@ namespace base {
 
                        videoframecount++;
 
-                      // info.run(&basicvideoframe);
+                      // info->run(&basicvideoframe);
 
-                       fragmp4_muxer.run(&basicvideoframe);
+                       fragmp4_muxer->run(&basicvideoframe);
                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
 
                     
@@ -979,11 +977,11 @@ namespace base {
 
 //                        if( resetParser ) 
 //                        {
-//                              fragmp4_muxer.sendMeta();
+//                              fragmp4_muxer->sendMeta();
 //                              resetParser =false;
 //                        }
                        audioframecount = audioframecount + AUDIOSAMPLE;
-                       fragmp4_muxer.run(&basicaudioframe);
+                       fragmp4_muxer->run(&basicaudioframe);
 
                        basicaudioframe.payload.resize(basicaudioframe.payload.capacity());
 
@@ -1013,7 +1011,7 @@ namespace base {
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         void FFParse::mediaContent(std::string mediaContent) {
-            txt.go(mediaContent);
+            txt->go(mediaContent);
        }
 
       }// ns mp4

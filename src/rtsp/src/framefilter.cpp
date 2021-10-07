@@ -1,7 +1,8 @@
 
 #include "framefilter.h"
 #include "tools.h"
-
+#include "base/logger.h"
+#include "fmp4.h"
 
 namespace base {
 namespace fmp4 {

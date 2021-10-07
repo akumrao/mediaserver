@@ -38,6 +38,8 @@
 #include <chrono>
 #include <thread>
 #include <iterator>
+#include "base/logger.h"
+
 // #define RECONNECT_VERBOSE   // by default, disable
 // #define LIVE_SIGNAL_FRAMES // experimental
 
@@ -992,7 +994,7 @@ void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
 void LiveThread::run() {
     SInfo << " run : live555 loop start " << std::endl;
     env->taskScheduler().doEventLoop(&eventLoopWatchVariable);
-   SInfo << " run : live555 loop exit " << std::endl;
+    SInfo << " run : live555 loop exit " << std::endl;
 }
 
 

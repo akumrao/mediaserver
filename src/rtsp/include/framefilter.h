@@ -1,10 +1,11 @@
 #ifndef framefilter_HEADER_GUARD
 #define framefilter_HEADER_GUARD
-#include "fmp4.h"
+
 
 #include "frame.h"
 
 #include <map>
+#include <deque>
 #include <condition_variable>
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
@@ -20,9 +21,9 @@
 namespace base {
 namespace fmp4 {
 
+class ReadMp4;    
     
-    
-    struct FrameFifoContext {                                                                                                                                       // <pyapi>
+struct FrameFifoContext {                                                                                                                                       // <pyapi>
                                                                                                                    // <pyapi>
   int n_basic;     ///< data at payload                                                                                                                         // <pyapi>
   int n_avpkt;     ///< data at ffmpeg avpkt                                                                                                                    // <pyapi>

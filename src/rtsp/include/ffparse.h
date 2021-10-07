@@ -17,8 +17,7 @@
 #include "base/thread.h"
 #include <string>
 #include <vector>
-#include "muxer.h"
-
+#include "frame.h"
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
 
@@ -69,15 +68,18 @@ typedef struct OutputStream {
 #endif
 
 
-
+class DummyFrameFilter;
+class FragMP4MuxFrameFilter;
+class InfoFrameFilter;
+class TextFrameFilter;
+class ReadMp4;    
  class FFParse: public Thread
  {
-     
-     
+
  public:
   
     
-     FFParse( base::fmp4::ReadMp4 *conn, const char* audioFile, const char*  videofile );
+     FFParse(  const char* audioFile, const char*  videofile, DummyFrameFilter *fragmp4_filter , FragMP4MuxFrameFilter *fragmp4_muxer , InfoFrameFilter *info , TextFrameFilter *txt  );
      
      ~FFParse( );
      
@@ -134,10 +136,10 @@ typedef struct OutputStream {
       std::atomic< bool > hd { false };
     std::atomic< bool > keeprunning { true };
 
-    DummyFrameFilter fragmp4_filter;
-    FragMP4MuxFrameFilter fragmp4_muxer;
-    InfoFrameFilter info;
-    TextFrameFilter txt;
+    DummyFrameFilter *fragmp4_filter;
+    FragMP4MuxFrameFilter *fragmp4_muxer;
+    InfoFrameFilter *info;
+    TextFrameFilter *txt;
     
     //std::string fileName;
     

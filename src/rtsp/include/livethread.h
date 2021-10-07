@@ -36,8 +36,10 @@
 
 #include "live.h"
 //#include "liveserver.h"
-//#include "thread.h"
+#include "base/thread.h"
 #include "framefilter.h"
+#include <list>
+
 //#include "framefifo.h"
 
 
@@ -45,7 +47,7 @@
 namespace base {
 namespace fmp4 {
 
-void setLiveOutPacketBuffermaxSize(unsigned i); // <pyapi>
+void setLiveOutPacketBuffermaxSize(unsigned i); 
 
 
 /** This is a special FrameFifo class for feeding frames *into* live555, i.e. for sending them to the network.
@@ -84,11 +86,11 @@ public:
  * 
  * @ingroup livethread_tag
  */
-enum class LiveConnectionType { // <pyapi>
-  none,                         // <pyapi>
-  rtsp,                         // <pyapi>
-  sdp                           // <pyapi>
-};                              // <pyapi>
+enum class LiveConnectionType { 
+  none,                         
+  rtsp,                         
+  sdp                           
+};                              
 
 
 /** Identifies a stream and encapsulates information about the type of connection the user is requesting to LiveThread.  LiveConnectionContext is also included in LiveThread::SignalContext, i.e. it carries the signal information to LiveThread (for the thread signaling system, see \ref threading_tag).
@@ -101,50 +103,50 @@ enum class LiveConnectionType { // <pyapi>
   * 
   * @ingroup livethread_tag
   */  
-struct LiveConnectionContext {                                                                        // <pyapi>
+struct LiveConnectionContext {                                                                        
   /** Default constructor */
-  LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  // <pyapi>
-                        FrameFilter* framefilter) :                                                   // <pyapi>
-  connection_type(ct), address(address), slot(slot), framefilter(framefilter), msreconnect(10000),       // <pyapi>
-  request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0),              // <pyapi>
-  time_correction(TimeCorrectionType::smart)                                                          // <pyapi>
-  {}                                                                                                  // <pyapi>
+  LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  
+                        FrameFilter* framefilter) :                                                   
+  connection_type(ct), address(address), slot(slot), framefilter(framefilter), msreconnect(10000),       
+  request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0),              
+  time_correction(TimeCorrectionType::smart)                                                          
+  {}                                                                                                  
   /** Dummy constructor : remember to set member values by hand */
-  LiveConnectionContext() :                                                                           // <pyapi>
-  connection_type(LiveConnectionType::none), address(""), slot(0), framefilter(NULL), msreconnect(10000), // <pyapi>
-  request_multicast(false), request_tcp(false),time_correction(TimeCorrectionType::smart)             // <pyapi>
-  {}                                                                                                  // <pyapi>
-  LiveConnectionType connection_type;   ///< Identifies the connection type                           // <pyapi>
-  std::string        address;           ///< Stream address                                           // <pyapi>
-  SlotNumber         slot;              ///< A unique stream slot that identifies this stream         // <pyapi>
-  FrameFilter*       framefilter;       ///< The frames are feeded into this FrameFilter              // <pyapi>
-  long unsigned int  msreconnect;       ///< If stream has delivered nothing during this many milliseconds, reconnect // <pyapi>
-  bool               request_multicast; ///< Request multicast in the rtsp negotiation or not         // <pyapi>
-  bool               request_tcp;       ///< Request interleaved rtsp streaming or not                // <pyapi>
-  unsigned           recv_buffer_size;  ///< Operating system ringbuffer size for incoming socket     // <pyapi>
-  unsigned           reordering_time;   ///< Live555 packet reordering treshold time (microsecs)      // <pyapi>
-  TimeCorrectionType time_correction;   ///< How to perform frame timestamp correction                // <pyapi>
-};                                                                                                    // <pyapi>
+  LiveConnectionContext() :                                                                           
+  connection_type(LiveConnectionType::none), address(""), slot(0), framefilter(NULL), msreconnect(10000), 
+  request_multicast(false), request_tcp(false),time_correction(TimeCorrectionType::smart)             
+  {}                                                                                                  
+  LiveConnectionType connection_type;   ///< Identifies the connection type                           
+  std::string        address;           ///< Stream address                                           
+  SlotNumber         slot;              ///< A unique stream slot that identifies this stream         
+  FrameFilter*       framefilter;       ///< The frames are feeded into this FrameFilter              
+  long unsigned int  msreconnect;       ///< If stream has delivered nothing during this many milliseconds, reconnect 
+  bool               request_multicast; ///< Request multicast in the rtsp negotiation or not         
+  bool               request_tcp;       ///< Request interleaved rtsp streaming or not                
+  unsigned           recv_buffer_size;  ///< Operating system ringbuffer size for incoming socket     
+  unsigned           reordering_time;   ///< Live555 packet reordering treshold time (microsecs)      
+  TimeCorrectionType time_correction;   ///< How to perform frame timestamp correction                
+};                                                                                                    
 
 
 /** Same as LiveConnectionContext, but for outbound streams (i.e. streams sent over the net by live555)
  * 
  * @ingroup livethread_tag
  */
-struct LiveOutboundContext {                                                                     // <pyapi>
-  LiveOutboundContext(LiveConnectionType ct, std::string address, SlotNumber slot,               // <pyapi>
-                      unsigned short int portnum) :                                              // <pyapi>
-  connection_type(ct), address(address), slot(slot), portnum(portnum), ttl(225)                  // <pyapi>
-  {}                                                                                             // <pyapi>
-  LiveOutboundContext() :                                                                        // <pyapi>
-  connection_type(LiveConnectionType::none), address(""), slot(0), portnum(0), ttl(255)          // <pyapi>
-  {}                                                                                             // <pyapi>
-  LiveConnectionType  connection_type; ///< Identifies the connection type                       // <pyapi>
-  std::string         address;         ///< Stream address                                       // <pyapi>
-  SlotNumber          slot;            ///< A unique stream slot that identifies this stream     // <pyapi>
-  unsigned short int  portnum;         ///< Start port number (for sdp)                          // <pyapi>
-  unsigned char       ttl;             ///< Packet time-to-live                                  // <pyapi>
-};                                                                                               // <pyapi>
+struct LiveOutboundContext {                                                                     
+  LiveOutboundContext(LiveConnectionType ct, std::string address, SlotNumber slot,               
+                      unsigned short int portnum) :                                              
+  connection_type(ct), address(address), slot(slot), portnum(portnum), ttl(225)                  
+  {}                                                                                             
+  LiveOutboundContext() :                                                                        
+  connection_type(LiveConnectionType::none), address(""), slot(0), portnum(0), ttl(255)          
+  {}                                                                                             
+  LiveConnectionType  connection_type; ///< Identifies the connection type                       
+  std::string         address;         ///< Stream address                                       
+  SlotNumber          slot;            ///< A unique stream slot that identifies this stream     
+  unsigned short int  portnum;         ///< Start port number (for sdp)                          
+  unsigned char       ttl;             ///< Packet time-to-live                                  
+};                                                                                               
 
 
 
@@ -377,23 +379,23 @@ public:
  */
 
 
-                                                                                                                                                           // <pyapi>
+                                                                                                                                                           
 
 
-class LiveThread : public Thread { // <pyapi>
+class LiveThread : public Thread { 
   
 public:                           
   static void periodicTask(void* cdata); ///< Used to (re)schedule LiveThread methods into the live555 event loop
 
-public:                                                // <pyapi>
+public:                                                
   /** Default constructor
    * 
    * @param name          Thread name
    * @param n_max_slots   Maximum number of connections (each Connection instance is placed in a slot)
    * 
    */
-  LiveThread(const char* name, FrameFifoContext fifo_ctx=FrameFifoContext());  // <pyapi>
-  ~LiveThread();                                                               // <pyapi>
+  LiveThread(const char* name, FrameFifoContext fifo_ctx=FrameFifoContext());  
+  ~LiveThread();                                                               
   
 protected: // frame input
   LiveFifo          infifo;     ///< A FrameFifo for incoming frames
@@ -446,20 +448,20 @@ private: // internal
   // thread control
   void stopStream       (LiveConnectionContext &connection_ctx);
   
-public: // *** C & Python API *** .. these routines go through the condvar/mutex locking                                                // <pyapi>
+public: // *** C & Python API *** .. these routines go through the condvar/mutex locking                                                
   // inbound streams
-  void registerStreamCall   (LiveConnectionContext &connection_ctx); ///< API method: registers a stream                                // <pyapi> 
-  void deregisterStreamCall (LiveConnectionContext &connection_ctx); ///< API method: de-registers a stream                             // <pyapi>
-  void playStreamCall       (LiveConnectionContext &connection_ctx); ///< API method: starts playing the stream and feeding frames      // <pyapi>
-  void stopStreamCall       (LiveConnectionContext &connection_ctx); ///< API method: stops playing the stream and feeding frames       // <pyapi>
+  void registerStreamCall   (LiveConnectionContext &connection_ctx); ///< API method: registers a stream                                 
+  void deregisterStreamCall (LiveConnectionContext &connection_ctx); ///< API method: de-registers a stream                             
+  void playStreamCall       (LiveConnectionContext &connection_ctx); ///< API method: starts playing the stream and feeding frames      
+  void stopStreamCall       (LiveConnectionContext &connection_ctx); ///< API method: stops playing the stream and feeding frames       
   // outbound streams
-  void registerOutboundCall   (LiveOutboundContext &outbound_ctx);   ///< API method: register outbound stream                          // <pyapi>
-  void deregisterOutboundCall (LiveOutboundContext &outbound_ctx);   ///< API method: deregister outbound stream                        // <pyapi>
+  void registerOutboundCall   (LiveOutboundContext &outbound_ctx);   ///< API method: register outbound stream                          
+  void deregisterOutboundCall (LiveOutboundContext &outbound_ctx);   ///< API method: deregister outbound stream                        
   // thread control
-  void requestStopCall();                                            ///< API method: Like Thread::stopCall() but does not block        // <pyapi>
-  // LiveFifo &getFifo();                                            ///< API method: get fifo for sending frames with live555          // <pyapi>
-  FifoFrameFilter &getFrameFilter();                                 ///< API method: get filter for sending frames with live555        // <pyapi>
-  void setRTSPServer(int portnum=8554);                              ///< API method: activate the RTSP server at port portnum          // <pyapi>
+  void requestStopCall();                                            ///< API method: Like Thread::stopCall() but does not block        
+  // LiveFifo &getFifo();                                            ///< API method: get fifo for sending frames with live555          
+  FifoFrameFilter &getFrameFilter();                                 ///< API method: get filter for sending frames with live555        
+  void setRTSPServer(int portnum=8554);                              ///< API method: activate the RTSP server at port portnum          
   
 public: // live555 events and tasks
   static void helloWorldEvent(void* clientData);   ///< For testing/debugging  
