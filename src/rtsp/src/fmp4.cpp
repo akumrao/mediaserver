@@ -43,7 +43,7 @@ extern "C"
 
 
 #include "http/websocket.h"
-
+std::string rtsp  = "rtsp://10.170.4.89:8554/testStream";
 
 namespace base {
     
@@ -76,7 +76,7 @@ namespace base {
             
             ffparser->start();    
             
-           LiveConnectionContext *ctx = new LiveConnectionContext(LiveConnectionType::rtsp, std::string("stream_1"), 2, nullptr); // Request livethread to write into filter info
+           LiveConnectionContext *ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, nullptr); // Request livethread to write into filter info
            ffparser->registerStreamCall(*ctx);
            
            ffparser->playStreamCall(*ctx);

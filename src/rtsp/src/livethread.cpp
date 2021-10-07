@@ -47,7 +47,24 @@ using std::this_thread::sleep_for;
 namespace base {
 namespace fmp4 {
     
+    
+    namespace Timeout { ///< Various thread timeouts in milliseconds
+  const static long unsigned thread       =250; // Timeout::thread
+  const static long unsigned livethread   =250; // Timeout::livethread
+  const static long unsigned avthread     =250; // Timeout::avthread
+  const static long unsigned openglthread =250; // Timeout::openglthread
+  const static long unsigned valkkafswriterthread = 250; // Timeout::valkkafswriterthread
+  const static long unsigned valkkafsreaderthread = 250; // Timeout::valkkafswriterthread
+  const static long unsigned filecachethread = 1000; // Timeout::valkkacachethread
+  // const static long unsigned filecachethread = 500; // Timeout::valkkacachethread
+  const static long unsigned usbthread    =250; // Timeout::usbthread
+  const static long int filethread        =2000; // Timeout::filethread
+  const static long int fdwritethread        =250; // Timeout::filethread
+}
 
+    
+    static const SlotNumber I_MAX_SLOTS = 255;
+    
 void setLiveOutPacketBuffermaxSize(unsigned i) {
   OutPacketBuffer::maxSize = i;  
 }                                               
@@ -780,10 +797,10 @@ LiveThread::LiveThread(const char* name, FrameFifoContext fifo_ctx) :  infifo(na
     env       = BasicUsageEnvironment::createNew(*scheduler);
     eventLoopWatchVariable = 0;
     // this->slots_.resize(n_max_slots,NULL); // Reserve 256 slots!
-//    this->slots_.resize    (I_MAX_SLOTS+1,NULL);
-//    this->out_slots_.resize(I_MAX_SLOTS+1,NULL);
+    this->slots_.resize    (I_MAX_SLOTS+1,NULL);
+    this->out_slots_.resize(I_MAX_SLOTS+1,NULL);
     
-  //  scheduler->scheduleDelayedTask(Timeout::livethread*1000,(TaskFunc*)(LiveThread::periodicTask),(void*)this); //arvind this migth be enabled
+    scheduler->scheduleDelayedTask(Timeout::livethread*1000,(TaskFunc*)(LiveThread::periodicTask),(void*)this); //arvind this migth be enabled
     
     // testing event triggers..
     event_trigger_id_hello_world   = env->taskScheduler().createEventTrigger(this->helloWorldEvent);
@@ -907,15 +924,15 @@ void LiveThread::handleSignals() {
         switch (it->signal) {
             case LiveSignal::exit:
                 
-//                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
-//                    connection_ctx.slot=i;
-//                    deregisterStream(connection_ctx);
-//                }
-//                
-//                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
-//                    out_ctx.slot=i;
-//                    deregisterOutbound(out_ctx);
-//                }
+                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
+                    connection_ctx.slot=i;
+                    deregisterStream(connection_ctx);
+                }
+                
+                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
+                    out_ctx.slot=i;
+                    deregisterOutbound(out_ctx);
+                }
                 
                  this->eventLoopWatchVariable=1;
                 exit_requested=true;
@@ -992,10 +1009,10 @@ int LiveThread::safeGetSlot(SlotNumber slot, Connection*& con) { // -1 = out of 
     Connection* connection;
     SInfo<< "LiveThread: safeGetSlot" << std::endl;
     
-//    if (slot>I_MAX_SLOTS) {
-//       SError << "LiveThread: safeGetSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" << std::endl;
-//        return -1;
-//    }
+    if (slot>I_MAX_SLOTS) {
+       SError << "LiveThread: safeGetSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" << std::endl;
+        return -1;
+    }
     
     try {
         connection=this->slots_[slot];
@@ -1022,10 +1039,10 @@ int LiveThread::safeGetOutboundSlot(SlotNumber slot, Outbound*& outbound) { // -
     Outbound* out_;
     SInfo<< "LiveThread: safeGetOutboundSlot" << std::endl;
     
-//    if (slot>I_MAX_SLOTS) {
-//       SError << "LiveThread: safeGetOutboundSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" << std::endl;
-//        return -1;
-//    }
+    if (slot>I_MAX_SLOTS) {
+       SError << "LiveThread: safeGetOutboundSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" << std::endl;
+        return -1;
+    }
     
     try {
         out_=this->out_slots_[slot];
@@ -1232,7 +1249,7 @@ void LiveThread::periodicTask(void* cdata) {
     if (!livethread->exit_requested) {
         livethread->checkAlive();
         livethread->handleSignals(); // WARNING: sending commands to live555 must be done within the event loop
-        //livethread->scheduler->scheduleDelayedTask(Timeout::livethread*1000,(TaskFunc*)(LiveThread::periodicTask),(void*)livethread); // re-schedule itself
+        livethread->scheduler->scheduleDelayedTask(Timeout::livethread*1000,(TaskFunc*)(LiveThread::periodicTask),(void*)livethread); // re-schedule itself
     }
 }
 
