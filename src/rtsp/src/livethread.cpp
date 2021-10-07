@@ -149,20 +149,22 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
     if       (ctx.time_correction==TimeCorrectionType::none) {
         // no timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> ctx.framefilter
 //        timestampfilter    = new TimestampFrameFilter2("timestampfilter", NULL); // dummy
-        repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", ctx.framefilter);
-       // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
+
+          inputfilter        = ctx.framefilterar;
     }
     else if  (ctx.time_correction==TimeCorrectionType::dummy) {
         // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
         //timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
         repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
       //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
+         inputfilter        = ctx.framefilterar;
     }
     else { // smart corrector
         // brute-force timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> {DummyTimestampFrameFilter: timestampfilter} --> ctx.framefilter
       //  timestampfilter    = new TimestampFrameFilter2("smart_timestamp_filter", ctx.framefilter);
-        repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
+      //  repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
        // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
+        inputfilter        = ctx.framefilterar;
     }
 }
 
@@ -1232,7 +1234,7 @@ void LiveThread::deregisterOutbound(LiveOutboundContext &outbound_ctx) {
 
 void LiveThread::periodicTask(void* cdata) {
     LiveThread* livethread = (LiveThread*)cdata;
-    SInfo<< "LiveThread: periodicTask" << std::endl;
+    STrace<< "LiveThread: periodicTask" << std::endl;
     livethread->handlePending(); // remove connections that were pending closing, but are ok now
     // std::cout << "LiveThread: periodicTask: pending streams " << livethread->pending.size() << std::endl;
     // stopCall => handleSignals => loop over deregisterStream => stopStream
@@ -1251,7 +1253,7 @@ void LiveThread::periodicTask(void* cdata) {
     if (!livethread->exit_requested) {
         livethread->checkAlive();
         livethread->handleSignals(); // WARNING: sending commands to live555 must be done within the event loop
-        livethread->scheduler->scheduleDelayedTask(Timeout::livethread*1000,(TaskFunc*)(LiveThread::periodicTask),(void*)livethread); // re-schedule itself
+        livethread->scheduler->scheduleDelayedTask(Timeout::livethread*2000,(TaskFunc*)(LiveThread::periodicTask),(void*)livethread); // re-schedule itself
     }
 }
 

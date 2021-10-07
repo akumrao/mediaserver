@@ -67,8 +67,12 @@ class FFParse;
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-    // LiveThread  *ffparser;
-     FFParse  *ffparser;
+      #if FILEPARSER
+         FFParse  *ffparser;
+      #else
+        LiveThread  *ffparser;
+      #endif
+     
  private:
      
      DummyFrameFilter *fragmp4_filter;

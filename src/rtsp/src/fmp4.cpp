@@ -55,6 +55,16 @@ namespace base {
 
             self = this;
 
+            
+
+            #if FILEPARSER
+            ffparser = new FFParse(AUDIOFILE, VIDEOFILE, fragmp4_filter, fragmp4_muxer, info, txt );
+
+            ffparser->start();
+            #else
+            ffparser = new LiveThread("live");
+            
+            ffparser->start();
             fragmp4_filter = new DummyFrameFilter("fragmp4", this);
 
             fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
@@ -62,18 +72,17 @@ namespace base {
             info = new InfoFrameFilter("info", nullptr);
 
             txt = new TextFrameFilter("txt", this);
+            
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, fragmp4_muxer); // Request livethread to write into filter info
+            ffparser->registerStreamCall(*ctx);
+
+            ffparser->playStreamCall(*ctx);
+            
+            
+
+           #endif
 
 
-
-            ffparser = new FFParse(AUDIOFILE, VIDEOFILE, fragmp4_filter, fragmp4_muxer, info, txt );
-          //  ffparser = new LiveThread("live");
-
-            ffparser->start();
-
-           // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, fragmp4_muxer); // Request livethread to write into filter info
-           // ffparser->registerStreamCall(*ctx);
-
-           // ffparser->playStreamCall(*ctx);
             
 
             
@@ -100,7 +109,7 @@ namespace base {
              std::string got = std::string(msg, len);
              STrace << "on_read " << got;
                 
-
+#if FILEPARSER
                 if( got == "reset")
                     ffparser->reset();    
                 else if( got == "mute")
@@ -111,6 +120,7 @@ namespace base {
 		    ffparser->resHD(true);
 	        else if (got == "cif")
 		   ffparser->resHD(false);
+#endif
 
         }
     

@@ -5,14 +5,11 @@ var print_stats = false;
 var print_inputs = false;
 var connect_on_load = false;
 
-let playerElement  = null;
-
 var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
 
 var qualityControlOwnershipCheckBox;
-var ControlKeyboard;
 var matchViewportResolution;
 // TODO: Remove this - workaround because of bug causing UE to crash when switching resolutions too quickly
 var lastTimeResized = new Date().getTime();
@@ -74,21 +71,21 @@ var hiddenInput = undefined;
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs;//  = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
-            //var codecs = "avc1.4D401F,mp4a.40.2";
-            var codecPars;//  = mimeType+';codecs="'+codecs+'"';
+            // var codecs = "mp4a.40.2";
+
+           // var codecs = "avc1.4D401F,mp4a.40.2";
+            var codecPars = mimeType+';codecs="'+codecs+'"';
             
             var stream_started = false; // is the source_buffer updateend callback active nor not
             
             // create media source instance
-            var ms;
+            var ms = new MediaSource();
             
             // queue for incoming media packets
             var queue = [];
-
-            var ms_queue=[];
             
             var stream_live; // the HTMLMediaElement (i.e. <video> element)
             var ws; // websocket
@@ -98,24 +95,6 @@ var hiddenInput = undefined;
             var source_buffer; // source_buffer instance
             
             var pass = 0;
-
-            var contentType="none";
-
-
-            function resetms() {
-
-                 stream_started=false;
-                 cc = 0;
-                 pass = 0;
-                 seeked = false;
-                 ms = null;
-                 ms = new MediaSource();
-                 source_buffer = null;
-                 queue = [];
-                 ms_queue = [];
-                 codecs = "";
-                 codecPars="";
-            }
             
             // *** MP4 Box manipulation functions ***
             // taken from here: https://stackoverflow.com/questions/54186634/sending-periodic-metadata-in-fragmented-live-mp4-stream/
@@ -260,9 +239,6 @@ var hiddenInput = undefined;
             
             function opened() { // MediaSource object is ready to go
                 // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
-
-                console.log(codecPars);
-
                 ms.duration = buffering_sec;
                 source_buffer = ms.addSourceBuffer(codecPars);
                 
@@ -272,12 +248,7 @@ var hiddenInput = undefined;
                 // source_buffer.mode = 'segments';
                 
                 source_buffer.addEventListener("updateend",loadPacket);
-       
-            }
-
-            function startws()
-            {
-
+           
                 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
                 if (!window.WebSocket) {
@@ -290,6 +261,8 @@ var hiddenInput = undefined;
                 ws = new WebSocket(pth);
 
 
+
+
                 //ws = new WebSocket("ws://localhost:1111/ws/");
                 ws.binaryType = "arraybuffer";
                 ws.onmessage = function (event) {
@@ -299,45 +272,17 @@ var hiddenInput = undefined;
                         // binary frame
                        // const view = new DataView(event.data);
                        // console.log(view.getInt32(0));
-
-                        if( ms && ms.readyState === 'open')
-                        {
-                            while (ms_queue.length>0)
-                            {
-                                var tmpItm = ms_queue.shift(); // pop from the beginning
-                                putPacket(tmpItm); 
-                            }
-                    
-                           
-                            putPacket(event.data); 
-                        } 
-                       else
-                       {
-                          ms_queue.push(event.data);
-                          console.log("Mediasoure not started yet");
-                       }
-                     
+                       putPacket(event.data);
+                     //source_buffer.appendBuffer(event.data);
 
                     } else {
                         // text frame
                         console.log(event.data);
-
-                        if(  event.data != contentType )
-                        {   
-                             // if( ms && ms.readyState === 'open')
-                             //   ms.endOfStream();
-
-                            contentType = event.data;
-
-                            if(event.data == "vhd" || event.data == "vsd")
-                             startup(true);
-                            else if(event.data == "avhd" || event.data == "avsd")
-                             startup(false);
-                       }
                     }
 
                     
                 };
+                
                 ws.onopen = function() 
                 {
                     console.log('WebSocket Client Connected');
@@ -345,7 +290,6 @@ var hiddenInput = undefined;
 
                        if (shouldShowPlayOverlay)
                        {
-                          onConfig({} );
                           showPlayOverlay();
                           resizePlayerStyle();
                           //ws.send(JSON.stringify({ type: 'gettings' }));
@@ -363,34 +307,22 @@ var hiddenInput = undefined;
                 };
             }
 
-            function startup(videoonly) {
-
-
-        
-                var checkBox = document.getElementById("muteaudio");
-                checkBox.checked = videoonly;
-
-                resetms();
-
-                if(videoonly)
-                  codecs = "avc1.4D401F";
-                else
-                  codecs = "avc1.4D401F,mp4a.40.2";
-            
-                codecPars = mimeType+';codecs="'+codecs+'"';
-                
-
+            function startup() {
                 ms.addEventListener('sourceopen',opened,false);
 
-	            let playerDiv = document.getElementById('player');
-                //onConfig({} );
+
+                let playerDiv = document.getElementById('player');
+                onConfig({} );
+
                 
-		if (videoObj)
+
+                if (videoObj)
                 {
-                  // get reference to video
+                    
+                // get reference to video
                    stream_live = document.getElementById('streamingVideo');
             
-                   // set mediasource as source of video
+                // set mediasource as source of video
                     stream_live.src = window.URL.createObjectURL(ms);
                 }
 
@@ -398,28 +330,8 @@ var hiddenInput = undefined;
             }
 
 
-            function muteit() 
-            {
 
-                // stream_live = document.getElementById('stream_live');
-                // if (stream_live)
-                // {
-                //     stream_live.pause();
-                //     stream_live.muted =true;
-                // }
-                //if( ms && ms.readyState === 'open')
-                 // ms.endOfStream();
 
-                 ms = null;
-                if(document.getElementById("muteaudio").checked)
-                {
-                  ws.send("mute");
-                }
-                else
-                {
-                  ws.send("unmute");    
-                }
-            }
 
 
 
@@ -464,110 +376,66 @@ function setupHtmlEvents() {
 	}
 
 
-   ControlKeyboard = document.getElementById('ControlKeyboard');
-    if (ControlKeyboard !== null) {
-        ControlKeyboard.onchange = function (event) {
-           // onConfig({} );
-           if(ControlKeyboard.checked)
-           {
-              if(playerElement)
-              {
-                  if(videoObj)
-                    registerInputs(videoObj);
-                  registerLockedMouseEvents(playerElement);
-               }
-               
-               registerKeyboardEvents();
-           }
-           else
-           {
 
-                document.onkeydown = null;
-                document.onkeyup = null;
-                document.onkeypress = null;
+	let prioritiseQualityCheckbox = document.getElementById('prioritise-quality-tgl');
+	let qualityParamsSubmit = document.getElementById('quality-params-submit');
 
+	if (prioritiseQualityCheckbox !== null) {
+		prioritiseQualityCheckbox.onchange = function (event) {
+			if (prioritiseQualityCheckbox.checked) {
+				// TODO: This state should be read from the UE Application rather than from the initial values in the HTML
+				let lowBitrate = document.getElementById('low-bitrate-text').value;
+				let highBitrate = document.getElementById('high-bitrate-text').value;
+				let minFPS = document.getElementById('min-fps-text').value;
 
-                /////////////////////////////////////////
+				let initialDescriptor = {
+					PrioritiseQuality: 1,
+					LowBitrate: lowBitrate,
+					HighBitrate: highBitrate,
+					MinFPS: minFPS
+				};
+				// TODO: The descriptor should be sent as is to a generic handler on the UE side
+				// but for now we're just sending it as separate console commands
+				//emitUIInteraction(initialDescriptor); 
+				sendQualityConsoleCommands(initialDescriptor);
+				console.log(initialDescriptor);
 
-                playerElement.onclick = null;
-                playerElement.onmousedown = null;
-                playerElement.onmouseup = null;
-                playerElement.onmousewheel = null;
-                playerElement.pressMouseButtons= null;
-                playerElement.releaseMouseButtons= null;
+				qualityParamsSubmit.onclick = function (event) {
+					let lowBitrate = document.getElementById('low-bitrate-text').value;
+					let highBitrate = document.getElementById('high-bitrate-text').value;
+					let minFPS = document.getElementById('min-fps-text').value;
+					let descriptor = {
+						PrioritiseQuality: 1,
+						LowBitrate: lowBitrate,
+						HighBitrate: highBitrate,
+						MinFPS: minFPS
+					};
+					//emitUIInteraction(descriptor);
+					sendQualityConsoleCommands(descriptor);
+					console.log(descriptor);
+				};
+			} else { // Prioritise Quality unchecked
+				let initialDescriptor = {
+					PrioritiseQuality: 0
+				};
+				//emitUIInteraction(initialDescriptor);
+				sendQualityConsoleCommands(initialDescriptor);
+				console.log(initialDescriptor);
 
-                playerElement.onmouseenter = null;
-                playerElement.onmouseleave= null;
+				qualityParamsSubmit.onclick = null;
+			}
+		};
+	}
 
-                ///////////////////////////////////////////////////////////////
-
-           }
-
-        };
-    }
-
-
-
-
-	// let prioritiseQualityCheckbox = document.getElementById('prioritise-quality-tgl');
-	// let qualityParamsSubmit = document.getElementById('quality-params-submit');
-
-	// if (prioritiseQualityCheckbox !== null) {
-	// 	prioritiseQualityCheckbox.onchange = function (event) {
-	// 		if (prioritiseQualityCheckbox.checked) {
-	// 			// TODO: This state should be read from the UE Application rather than from the initial values in the HTML
-	// 			let lowBitrate = document.getElementById('low-bitrate-text').value;
-	// 			let highBitrate = document.getElementById('high-bitrate-text').value;
-	// 			let minFPS = document.getElementById('min-fps-text').value;
-
-	// 			let initialDescriptor = {
-	// 				PrioritiseQuality: 1,
-	// 				LowBitrate: lowBitrate,
-	// 				HighBitrate: highBitrate,
-	// 				MinFPS: minFPS
-	// 			};
-	// 			// TODO: The descriptor should be sent as is to a generic handler on the UE side
-	// 			// but for now we're just sending it as separate console commands
-	// 			//emitUIInteraction(initialDescriptor); 
-	// 			sendQualityConsoleCommands(initialDescriptor);
-	// 			console.log(initialDescriptor);
-
-	// 			qualityParamsSubmit.onclick = function (event) {
-	// 				let lowBitrate = document.getElementById('low-bitrate-text').value;
-	// 				let highBitrate = document.getElementById('high-bitrate-text').value;
-	// 				let minFPS = document.getElementById('min-fps-text').value;
-	// 				let descriptor = {
-	// 					PrioritiseQuality: 1,
-	// 					LowBitrate: lowBitrate,
-	// 					HighBitrate: highBitrate,
-	// 					MinFPS: minFPS
-	// 				};
-	// 				//emitUIInteraction(descriptor);
-	// 				sendQualityConsoleCommands(descriptor);
-	// 				console.log(descriptor);
-	// 			};
-	// 		} else { // Prioritise Quality unchecked
-	// 			let initialDescriptor = {
-	// 				PrioritiseQuality: 0
-	// 			};
-	// 			//emitUIInteraction(initialDescriptor);
-	// 			sendQualityConsoleCommands(initialDescriptor);
-	// 			console.log(initialDescriptor);
-
-	// 			qualityParamsSubmit.onclick = null;
-	// 		}
-	// 	};
-	// }
-
-	// let showFPSButton = document.getElementById('show-fps-button');
-	// if (showFPSButton !== null) {
-	// 	showFPSButton.onclick = function (event) {
-	// 		let consoleDescriptor = {
-	// 			Console: 'stat fps'
-	// 		};
-	// 		emitUIInteraction(consoleDescriptor);
-	// 	};
-	// }
+	let showFPSButton = document.getElementById('show-fps-button');
+	if (showFPSButton !== null) {
+		showFPSButton.onclick = function (event) {
+			let consoleDescriptor = {
+				Console: 'stat fps'
+			};
+			emitUIInteraction(consoleDescriptor);
+		};
+	}
 
 	let matchViewportResolutionCheckBox = document.getElementById('match-viewport-res-tgl');
 	if (matchViewportResolutionCheckBox !== null) {
@@ -576,51 +444,50 @@ function setupHtmlEvents() {
 		};
 	}
 
-	// let statsCheckBox = document.getElementById('show-stats-tgl');
-	// if (statsCheckBox !== null) {
-	// 	statsCheckBox.onchange = function (event) {
-	// 		let stats = document.getElementById('statsContainer');
-	// 		stats.style.display = event.target.checked ? "block" : "none";
-	// 	};
-	// }
+	let statsCheckBox = document.getElementById('show-stats-tgl');
+	if (statsCheckBox !== null) {
+		statsCheckBox.onchange = function (event) {
+			let stats = document.getElementById('statsContainer');
+			stats.style.display = event.target.checked ? "block" : "none";
+		};
+	}
 
-	// var kickButton = document.getElementById('kick-other-players-button');
-	// if (kickButton) {
-	// 	kickButton.onclick = function (event) {
-	// 		console.log(`-> SS: kick`);
-	// 		ws.send(JSON.stringify({ type: 'kick' }));
-	// 	};
-	// }
+	var kickButton = document.getElementById('kick-other-players-button');
+	if (kickButton) {
+		kickButton.onclick = function (event) {
+			console.log(`-> SS: kick`);
+			ws.send(JSON.stringify({ type: 'kick' }));
+		};
+	}
 
 	var settingsButton = document.getElementById('settings-button');
 	if (settingsButton) {
 		settingsButton.onclick = function (event) {
 			console.log(`-> SS: settings`);
 
-			//let quality = document.getElementById('quality').value;
-			//let minBitrate = document.getElementById('minBitrate').value;
-			//let maxBitrate = document.getElementById('maxBitrate').value;
+			let quality = document.getElementById('quality').value;
+			let minBitrate = document.getElementById('minBitrate').value;
+			let maxBitrate = document.getElementById('maxBitrate').value;
 			let resolution = document.getElementById('resolution').value;
-			//let minQP = document.getElementById('minQP').value;
-			//let rateCtrl = document.getElementById('rateCtrl').value;
+			let minQP = document.getElementById('minQP').value;
+			let rateCtrl = document.getElementById('rateCtrl').value;
 			////let minFPS = document.getElementById('minFPS').value;
 			//let backbuffersize = document.getElementById('backbuffersize').value;
 
-			//ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
-                        ws.send(resolution );
+			ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
 		};
 	}
 
 }
-// function setServerWebrtcValues(data)
-// {
-// 	document.getElementById('minBitrate').value=data.minBitrate;
-// 	document.getElementById('maxBitrate').value=data.maxBitrate;
-// 	document.getElementById('resolution').value=data.resolution;
-// 	document.getElementById('minQP').value=data.minQP;
-// 	document.getElementById('rateCtrl').value=data.rateCtrl;
-// 	document.getElementById('quality').value=data.quality;
-// }
+function setServerWebrtcValues(data)
+{
+	document.getElementById('minBitrate').value=data.minBitrate;
+	document.getElementById('maxBitrate').value=data.maxBitrate;
+	document.getElementById('resolution').value=data.resolution;
+	document.getElementById('minQP').value=data.minQP;
+	document.getElementById('rateCtrl').value=data.rateCtrl;
+	document.getElementById('quality').value=data.quality;
+}
 
 function sendQualityConsoleCommands(descriptor) {
 	if (descriptor.PrioritiseQuality !== null) {
@@ -790,7 +657,6 @@ function resetAfkWarningTimer() {
 
 function sendInputData(data) {
     if (videoObj) {
-        //console.log("input data send.");
         ws.send(data);
     }
 }
@@ -822,7 +688,7 @@ function setupWebRtcPlayer(htmlElement, config) {
      videoObj.playsInline = true;
      videoObj.autoplay = true;
      videoObj.muted = true;
-    // videoObj.controls = true;
+     //videoObj.controls = true;
             
 
 
@@ -957,7 +823,7 @@ function setupWebRtcPlayer(htmlElement, config) {
 	// 	}
 	// };
 
-	//playerElementregisterInputs(videoObj);
+	registerInputs(videoObj);
 
 	// On a touch device we will need special ways to show the on-screen keyboard.
 	if ('ontouchstart' in document.documentElement) {
@@ -1908,9 +1774,7 @@ function updateKickButton(playersCount) {
 
 function connect() {
 
-	//startup();
-
-    startws();
+	startup();
 
 	// "use strict";
 
@@ -1976,7 +1840,7 @@ function connect() {
 // Config data received from WebRTC sender via the Cirrus web server
 function onConfig(config) {
 	let playerDiv = document.getElementById('player');
-	playerElement = setupWebRtcPlayer(playerDiv, config);
+	let playerElement = setupWebRtcPlayer(playerDiv, config);
 	resizePlayerStyle();
 
 	switch (inputOptions.controlScheme) {
@@ -1984,7 +1848,7 @@ function onConfig(config) {
 			registerHoveringMouseEvents(playerElement);
 			break;
 		case ControlSchemeType.LockedMouse:
-			//registerLockedMouseEvents(playerElement);
+			registerLockedMouseEvents(playerElement);
 			break;
 		default:
 			console.log(`ERROR: Unknown control scheme ${inputOptions.controlScheme}`);
@@ -1996,6 +1860,6 @@ function onConfig(config) {
 function load() {
 	setupHtmlEvents();
 	setupFreezeFrameOverlay();
-	//registerKeyboardEvents();
+	registerKeyboardEvents();
 	start();
 }

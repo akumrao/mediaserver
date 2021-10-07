@@ -107,19 +107,19 @@ struct LiveConnectionContext {
   /** Default constructor */
   LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  
                         FrameFilter* framefilter) :                                                   
-  connection_type(ct), address(address), slot(slot), framefilter(framefilter), msreconnect(10000),       
+  connection_type(ct), address(address), slot(slot), framefilterar(framefilter), msreconnect(10000),       
   request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0),              
   time_correction(TimeCorrectionType::smart)                                                          
   {}                                                                                                  
   /** Dummy constructor : remember to set member values by hand */
   LiveConnectionContext() :                                                                           
-  connection_type(LiveConnectionType::none), address(""), slot(0), framefilter(NULL), msreconnect(10000), 
+  connection_type(LiveConnectionType::none), address(""), slot(0), framefilterar(NULL), msreconnect(10000), 
   request_multicast(false), request_tcp(false),time_correction(TimeCorrectionType::smart)             
   {}                                                                                                  
   LiveConnectionType connection_type;   ///< Identifies the connection type                           
   std::string        address;           ///< Stream address                                           
   SlotNumber         slot;              ///< A unique stream slot that identifies this stream         
-  FrameFilter*       framefilter;       ///< The frames are feeded into this FrameFilter              
+  FrameFilter*       framefilterar;       ///< The frames are feeded into this FrameFilter              
   long unsigned int  msreconnect;       ///< If stream has delivered nothing during this many milliseconds, reconnect 
   bool               request_multicast; ///< Request multicast in the rtsp negotiation or not         
   bool               request_tcp;       ///< Request interleaved rtsp streaming or not                
