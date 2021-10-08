@@ -5,11 +5,14 @@ var print_stats = false;
 var print_inputs = false;
 var connect_on_load = false;
 
+let playerElement  = null;
+
 var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
 
 var qualityControlOwnershipCheckBox;
+var ControlKeyboard;
 var matchViewportResolution;
 // TODO: Remove this - workaround because of bug causing UE to crash when switching resolutions too quickly
 var lastTimeResized = new Date().getTime();
@@ -376,66 +379,110 @@ function setupHtmlEvents() {
 	}
 
 
+   ControlKeyboard = document.getElementById('ControlKeyboard');
+    if (ControlKeyboard !== null) {
+        ControlKeyboard.onchange = function (event) {
+           // onConfig({} );
+           if(ControlKeyboard.checked)
+           {
+              if(playerElement)
+              {
+                  if(videoObj)
+                    registerInputs(videoObj);
+                  registerLockedMouseEvents(playerElement);
+               }
+               
+               registerKeyboardEvents();
+           }
+           else
+           {
 
-	let prioritiseQualityCheckbox = document.getElementById('prioritise-quality-tgl');
-	let qualityParamsSubmit = document.getElementById('quality-params-submit');
+                document.onkeydown = null;
+                document.onkeyup = null;
+                document.onkeypress = null;
 
-	if (prioritiseQualityCheckbox !== null) {
-		prioritiseQualityCheckbox.onchange = function (event) {
-			if (prioritiseQualityCheckbox.checked) {
-				// TODO: This state should be read from the UE Application rather than from the initial values in the HTML
-				let lowBitrate = document.getElementById('low-bitrate-text').value;
-				let highBitrate = document.getElementById('high-bitrate-text').value;
-				let minFPS = document.getElementById('min-fps-text').value;
 
-				let initialDescriptor = {
-					PrioritiseQuality: 1,
-					LowBitrate: lowBitrate,
-					HighBitrate: highBitrate,
-					MinFPS: minFPS
-				};
-				// TODO: The descriptor should be sent as is to a generic handler on the UE side
-				// but for now we're just sending it as separate console commands
-				//emitUIInteraction(initialDescriptor); 
-				sendQualityConsoleCommands(initialDescriptor);
-				console.log(initialDescriptor);
+                /////////////////////////////////////////
 
-				qualityParamsSubmit.onclick = function (event) {
-					let lowBitrate = document.getElementById('low-bitrate-text').value;
-					let highBitrate = document.getElementById('high-bitrate-text').value;
-					let minFPS = document.getElementById('min-fps-text').value;
-					let descriptor = {
-						PrioritiseQuality: 1,
-						LowBitrate: lowBitrate,
-						HighBitrate: highBitrate,
-						MinFPS: minFPS
-					};
-					//emitUIInteraction(descriptor);
-					sendQualityConsoleCommands(descriptor);
-					console.log(descriptor);
-				};
-			} else { // Prioritise Quality unchecked
-				let initialDescriptor = {
-					PrioritiseQuality: 0
-				};
-				//emitUIInteraction(initialDescriptor);
-				sendQualityConsoleCommands(initialDescriptor);
-				console.log(initialDescriptor);
+                playerElement.onclick = null;
+                playerElement.onmousedown = null;
+                playerElement.onmouseup = null;
+                playerElement.onmousewheel = null;
+                playerElement.pressMouseButtons= null;
+                playerElement.releaseMouseButtons= null;
 
-				qualityParamsSubmit.onclick = null;
-			}
-		};
-	}
+                playerElement.onmouseenter = null;
+                playerElement.onmouseleave= null;
 
-	let showFPSButton = document.getElementById('show-fps-button');
-	if (showFPSButton !== null) {
-		showFPSButton.onclick = function (event) {
-			let consoleDescriptor = {
-				Console: 'stat fps'
-			};
-			emitUIInteraction(consoleDescriptor);
-		};
-	}
+                ///////////////////////////////////////////////////////////////
+
+           }
+
+        };
+    }
+
+
+
+
+	// let prioritiseQualityCheckbox = document.getElementById('prioritise-quality-tgl');
+	// let qualityParamsSubmit = document.getElementById('quality-params-submit');
+
+	// if (prioritiseQualityCheckbox !== null) {
+	// 	prioritiseQualityCheckbox.onchange = function (event) {
+	// 		if (prioritiseQualityCheckbox.checked) {
+	// 			// TODO: This state should be read from the UE Application rather than from the initial values in the HTML
+	// 			let lowBitrate = document.getElementById('low-bitrate-text').value;
+	// 			let highBitrate = document.getElementById('high-bitrate-text').value;
+	// 			let minFPS = document.getElementById('min-fps-text').value;
+
+	// 			let initialDescriptor = {
+	// 				PrioritiseQuality: 1,
+	// 				LowBitrate: lowBitrate,
+	// 				HighBitrate: highBitrate,
+	// 				MinFPS: minFPS
+	// 			};
+	// 			// TODO: The descriptor should be sent as is to a generic handler on the UE side
+	// 			// but for now we're just sending it as separate console commands
+	// 			//emitUIInteraction(initialDescriptor); 
+	// 			sendQualityConsoleCommands(initialDescriptor);
+	// 			console.log(initialDescriptor);
+
+	// 			qualityParamsSubmit.onclick = function (event) {
+	// 				let lowBitrate = document.getElementById('low-bitrate-text').value;
+	// 				let highBitrate = document.getElementById('high-bitrate-text').value;
+	// 				let minFPS = document.getElementById('min-fps-text').value;
+	// 				let descriptor = {
+	// 					PrioritiseQuality: 1,
+	// 					LowBitrate: lowBitrate,
+	// 					HighBitrate: highBitrate,
+	// 					MinFPS: minFPS
+	// 				};
+	// 				//emitUIInteraction(descriptor);
+	// 				sendQualityConsoleCommands(descriptor);
+	// 				console.log(descriptor);
+	// 			};
+	// 		} else { // Prioritise Quality unchecked
+	// 			let initialDescriptor = {
+	// 				PrioritiseQuality: 0
+	// 			};
+	// 			//emitUIInteraction(initialDescriptor);
+	// 			sendQualityConsoleCommands(initialDescriptor);
+	// 			console.log(initialDescriptor);
+
+	// 			qualityParamsSubmit.onclick = null;
+	// 		}
+	// 	};
+	// }
+
+	// let showFPSButton = document.getElementById('show-fps-button');
+	// if (showFPSButton !== null) {
+	// 	showFPSButton.onclick = function (event) {
+	// 		let consoleDescriptor = {
+	// 			Console: 'stat fps'
+	// 		};
+	// 		emitUIInteraction(consoleDescriptor);
+	// 	};
+	// }
 
 	let matchViewportResolutionCheckBox = document.getElementById('match-viewport-res-tgl');
 	if (matchViewportResolutionCheckBox !== null) {
@@ -444,50 +491,51 @@ function setupHtmlEvents() {
 		};
 	}
 
-	let statsCheckBox = document.getElementById('show-stats-tgl');
-	if (statsCheckBox !== null) {
-		statsCheckBox.onchange = function (event) {
-			let stats = document.getElementById('statsContainer');
-			stats.style.display = event.target.checked ? "block" : "none";
-		};
-	}
+	// let statsCheckBox = document.getElementById('show-stats-tgl');
+	// if (statsCheckBox !== null) {
+	// 	statsCheckBox.onchange = function (event) {
+	// 		let stats = document.getElementById('statsContainer');
+	// 		stats.style.display = event.target.checked ? "block" : "none";
+	// 	};
+	// }
 
-	var kickButton = document.getElementById('kick-other-players-button');
-	if (kickButton) {
-		kickButton.onclick = function (event) {
-			console.log(`-> SS: kick`);
-			ws.send(JSON.stringify({ type: 'kick' }));
-		};
-	}
+	// var kickButton = document.getElementById('kick-other-players-button');
+	// if (kickButton) {
+	// 	kickButton.onclick = function (event) {
+	// 		console.log(`-> SS: kick`);
+	// 		ws.send(JSON.stringify({ type: 'kick' }));
+	// 	};
+	// }
 
 	var settingsButton = document.getElementById('settings-button');
 	if (settingsButton) {
 		settingsButton.onclick = function (event) {
 			console.log(`-> SS: settings`);
 
-			let quality = document.getElementById('quality').value;
-			let minBitrate = document.getElementById('minBitrate').value;
-			let maxBitrate = document.getElementById('maxBitrate').value;
+			//let quality = document.getElementById('quality').value;
+			//let minBitrate = document.getElementById('minBitrate').value;
+			//let maxBitrate = document.getElementById('maxBitrate').value;
 			let resolution = document.getElementById('resolution').value;
-			let minQP = document.getElementById('minQP').value;
-			let rateCtrl = document.getElementById('rateCtrl').value;
+			//let minQP = document.getElementById('minQP').value;
+			//let rateCtrl = document.getElementById('rateCtrl').value;
 			////let minFPS = document.getElementById('minFPS').value;
 			//let backbuffersize = document.getElementById('backbuffersize').value;
 
-			ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
+			//ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
+                        ws.send(resolution );
 		};
 	}
 
 }
-function setServerWebrtcValues(data)
-{
-	document.getElementById('minBitrate').value=data.minBitrate;
-	document.getElementById('maxBitrate').value=data.maxBitrate;
-	document.getElementById('resolution').value=data.resolution;
-	document.getElementById('minQP').value=data.minQP;
-	document.getElementById('rateCtrl').value=data.rateCtrl;
-	document.getElementById('quality').value=data.quality;
-}
+// function setServerWebrtcValues(data)
+// {
+// 	document.getElementById('minBitrate').value=data.minBitrate;
+// 	document.getElementById('maxBitrate').value=data.maxBitrate;
+// 	document.getElementById('resolution').value=data.resolution;
+// 	document.getElementById('minQP').value=data.minQP;
+// 	document.getElementById('rateCtrl').value=data.rateCtrl;
+// 	document.getElementById('quality').value=data.quality;
+// }
 
 function sendQualityConsoleCommands(descriptor) {
 	if (descriptor.PrioritiseQuality !== null) {
@@ -657,6 +705,7 @@ function resetAfkWarningTimer() {
 
 function sendInputData(data) {
     if (videoObj) {
+        //console.log("input data send.");
         ws.send(data);
     }
 }
@@ -823,7 +872,7 @@ function setupWebRtcPlayer(htmlElement, config) {
 	// 	}
 	// };
 
-	registerInputs(videoObj);
+	//playerElementregisterInputs(videoObj);
 
 	// On a touch device we will need special ways to show the on-screen keyboard.
 	if ('ontouchstart' in document.documentElement) {
@@ -1840,7 +1889,7 @@ function connect() {
 // Config data received from WebRTC sender via the Cirrus web server
 function onConfig(config) {
 	let playerDiv = document.getElementById('player');
-	let playerElement = setupWebRtcPlayer(playerDiv, config);
+	playerElement = setupWebRtcPlayer(playerDiv, config);
 	resizePlayerStyle();
 
 	switch (inputOptions.controlScheme) {
@@ -1848,7 +1897,7 @@ function onConfig(config) {
 			registerHoveringMouseEvents(playerElement);
 			break;
 		case ControlSchemeType.LockedMouse:
-			registerLockedMouseEvents(playerElement);
+			//registerLockedMouseEvents(playerElement);
 			break;
 		default:
 			console.log(`ERROR: Unknown control scheme ${inputOptions.controlScheme}`);
@@ -1860,6 +1909,6 @@ function onConfig(config) {
 function load() {
 	setupHtmlEvents();
 	setupFreezeFrameOverlay();
-	registerKeyboardEvents();
+	//registerKeyboardEvents();
 	start();
 }

@@ -26,7 +26,7 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "libavutil/opt.h"
+//#include "libavutil/opt.h"
 #include "avcodec.h"
 //#include "version.h"
 #define FF_DEBUG_VIS_QP      0x00002000

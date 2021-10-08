@@ -151,17 +151,17 @@ namespace base {
 
             while(  !stopped())
             { 
-                reopen();
+               // reopen();
                 keeprunning = true;
                 stream_index = 0;
                 
                 fragmp4_muxer->deActivate();
                 if(!mute )
                 {   
-                    if(hd)
-                        mediaContent("avhd");
-                    else
-                         mediaContent("avsd"); 
+//                    if(hd)
+//                        mediaContent("avhd");
+//                    else
+//                         mediaContent("avsd"); 
                     if (parseH264Header()) {
                         ++stream_index;
                         if (parseAACHeader()) {
@@ -173,10 +173,10 @@ namespace base {
                }
                else
                {   
-                    if(hd)
-                        mediaContent("vhd");
-                    else
-                         mediaContent("vsd"); 
+//                    if(hd)
+//                        mediaContent("vhd");
+//                    else
+//                         mediaContent("vsd"); 
                             
                     if (parseH264Header()) {
                     ++stream_index;
@@ -449,24 +449,24 @@ namespace base {
         
         void FFParse::reset() {
         
-            if(mute)
-            {
-                 if(hd)
-                        mediaContent("vhd");
-                    else
-                         mediaContent("vsd"); 
-                
-                SDebug<< " FFParse::reset()"<<  "Stream only Video";
-            }
-            else
-            {
-               if(hd)
-                        mediaContent("avhd");
-                    else
-                         mediaContent("avsd"); 
-                
-               SDebug<< " FFParse::reset()"<<  "Stream both Video & Audio";
-            }
+//            if(mute)
+//            {
+//                 if(hd)
+//                        mediaContent("vhd");
+//                    else
+//                         mediaContent("vsd"); 
+//                
+//                SDebug<< " FFParse::reset()"<<  "Stream only Video";
+//            }
+//            else
+//            {
+//               if(hd)
+//                        mediaContent("avhd");
+//                    else
+//                         mediaContent("avsd"); 
+//                
+//               SDebug<< " FFParse::reset()"<<  "Stream both Video & Audio";
+//            }
               
             resetParser = true;
             

@@ -27,10 +27,12 @@
 #include "muxer.h"
 
 #define AUDIOFILE  "./hindi.pcm"               
-#define VIDEOFILE  "/var/tmp/videos/test1.264"  
+#define VIDEOFILE   "./test.264"
 
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
-#define VIDEOFILE1  "./test.264"
+#define VIDEOFILE1  "/var/tmp/videos/test1.264"  
+
+#define FILEPARSER 1
 
 namespace base {
 namespace fmp4 {

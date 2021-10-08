@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     avcodec_register_all();
 
       
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 1111, new net::StreamingResponderFactory()  );
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 80, new net::StreamingResponderFactory()  );
     
     //readmp4.websocketConnect();
 

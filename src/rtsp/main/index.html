@@ -43,30 +43,16 @@
 					<input type="range" id="maxBitrate" min="20000000" max="50000000" step="1000" value="50000000">
 					</label>
 					</fieldset>
+
 					<fieldset>
 					<label>Resolution
 					<select id="resolution">
-						<option value="1920x1080"> 1920x1080 </option> 
-						<option value="1280x720"> 1280x720 </option> 
-						<option value="800x640"> 800x640 </option> 
+						<option value="hd"> 1280x720 </option> 
+						<option value="sd"> 800x640 </option> 
 					</select>
 					</label>
 					</fieldset>
-
-					<fieldset>
-					<label for="minQP">minQP[12-50]:
-					<input type="range" id="minQP"  min="12" max="15" step="1" value="12">
-					</label>
-					</fieldset>
-
-					<fieldset>
-					<label>RateCtrl
-					<select id="rateCtrl">
-						<option value="VBR"> VBR </option> 
-						<option value="CBR"> CBR </option> 
-					</select>
-					</label>
-					</fieldset>
+			
 
 				
 					<!-- <fieldset>
@@ -99,30 +85,29 @@
                         <div class="tgl-slider"></div>
                     </label>
                 </div>
-                <div id="QualityControlOwnership">
-                    <div class="settings-text">Quality control ownership</div>
+                <div id="muteaudiodiv">
+                    <div class="settings-text">Mute Audio</div>
                     <label class="tgl-switch">
-                        <input type="checkbox" id="quality-control-ownership-tgl" class="tgl tgl-flat">
+                        <input type="checkbox" id="muteaudio" onclick="muteit()">
                         <div class="tgl-slider"></div>
                     </label>
 
                 </div>
-                <div id="dmuteaudio">
-                    <div class="settings-text">Mute Audio</div>
+                <div id="dControlKeyboard">
+                    <div class="settings-text">Control Keyboard and Mouse</div>
                     <label class="tgl-switch">
-                        <!--  <input type="checkbox" id="muteaudio" class="tgl tgl-flat"> -->
-                         <input type="checkbox" id="muteaudio">
+                         <input type="checkbox" id="ControlKeyboard">
                         <div class="tgl-slider"></div>
                     </label>
                 </div>
-				<div id="statsSetting"> 
+<!-- 				<div id="statsSetting"> 
 					<div class="settings-text">Show Stats</div>
 					<label class="tgl-switch">
 						<input type="checkbox" id="show-stats-tgl" class="tgl tgl-flat" checked>
 						<div class="tgl-slider"></div>
 					</label>
 					
-				</div>
+				</div> -->
 			</div>
 		</div>
 	</div>

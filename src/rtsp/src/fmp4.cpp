@@ -55,6 +55,12 @@ namespace base {
 
             self = this;
 
+	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+            info = new InfoFrameFilter("info", nullptr);
+
+            txt = new TextFrameFilter("txt", this);
             
 
             #if FILEPARSER
@@ -65,13 +71,8 @@ namespace base {
             ffparser = new LiveThread("live");
             
             ffparser->start();
-            fragmp4_filter = new DummyFrameFilter("fragmp4", this);
-
-            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
-
-            info = new InfoFrameFilter("info", nullptr);
-
-            txt = new TextFrameFilter("txt", this);
+            
+          
             
             ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, fragmp4_muxer); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
@@ -112,14 +113,14 @@ namespace base {
 #if FILEPARSER
                 if( got == "reset")
                     ffparser->reset();    
-                else if( got == "mute")
-                    ffparser->restart(true);
-                else if( got == "unmute")
-                    ffparser->restart(false);   
-                else if( got  == "hd")
-		    ffparser->resHD(true);
-	        else if (got == "cif")
-		   ffparser->resHD(false);
+//                else if( got == "mute")
+//                    ffparser->restart(true);
+//                else if( got == "unmute")
+//                    ffparser->restart(false);   
+//                else if( got  == "hd")
+//		    ffparser->resHD(true);
+//	        else if (got == "cif")
+//		   ffparser->resHD(false);
 #endif
 
         }
