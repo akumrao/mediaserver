@@ -45,7 +45,7 @@ clean:
 
 rebuild: clean buil
 
-LIVE555_ROOT = /experiment/mse/valkka-core/ext/live
+LIVE555_ROOT = /workspace/live
 CXX     = g++
 TARGET=mediaserver # define the name of the executable
 SOURCES    = $(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp  ../../http_parser/*.cpp )
