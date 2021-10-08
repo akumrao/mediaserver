@@ -1,5 +1,5 @@
 
-CC = cc
+CC = gcc
 OUT_FILE_NAME = ffmpeg.a
 
 CFLAGS=  -g -Wall -c 
