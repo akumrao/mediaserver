@@ -55,7 +55,8 @@ namespace base {
 
                 
                 //#if 0
-                std::string filepath(".");
+                //std::string filepath(".");
+                 std::string filepath("/workspace/mediaserver/src/rtsp/main");
                 filepath += closure->path;
                 
                 

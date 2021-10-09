@@ -26,11 +26,48 @@ extern "C"
 
 using namespace base;
 
+void IgnoreSignals() {
+#ifndef _WIN32
+
+    int err;
+    struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+    // clang-format off
+    std::map<std::string, int> ignoredSignals ={
+        { "PIPE", SIGPIPE},
+        { "HUP", SIGHUP},
+        { "ALRM", SIGALRM},
+        { "USR1", SIGUSR1},
+        { "USR2", SIGUSR2}
+    };
+    // clang-format on
+
+    act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+    act.sa_flags = 0;
+    err = sigfillset(&act.sa_mask);
+
+    if (err != 0)
+        base::uv::throwError("sigfillset() failed: ", errno);
+
+    for (auto& kv : ignoredSignals) {
+        auto& sigName = kv.first;
+        int sigId = kv.second;
+
+        err = sigaction(sigId, &act, nullptr);
+
+        if (err != 0)
+            base::uv::throwError("sigaction() failed for signal " + sigName, errno);
+    }
+#endif
+}
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
+    //Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
     //test::init();
+    
+    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Trace));
+    Logger::instance().setWriter(new AsyncLogWriter);
     
     Application app;
    
@@ -44,7 +81,9 @@ int main(int argc, char** argv) {
     
     //readmp4.websocketConnect();
 
-
+    // Ignore some signals.
+    IgnoreSignals();
+        
     app.waitForShutdown([&](void*) {
 
     readmp4->stop();

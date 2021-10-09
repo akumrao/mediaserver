@@ -26,8 +26,8 @@
 #include "http/HttpServer.h" 
 #include "muxer.h"
 
-#define AUDIOFILE  "./hindi.pcm"               
-#define VIDEOFILE   "./test.264"
+#define AUDIOFILE  "/workspace/mediaserver/src/rtsp/main/hindi.pcm"               
+#define VIDEOFILE   "/workspace/mediaserver/src/rtsp/main/test.264"
 
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
