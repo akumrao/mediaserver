@@ -1,39 +1,5 @@
 #ifndef live_HEADER_GUARD
 #define live_HEADER_GUARD
-/*
- * live.h : Interface to live555
- * 
- * Copyright 2017-2020 Valkka Security Ltd. and Sampsa Riikonen
- * 
- * Authors: Sampsa Riikonen <sampsa.riikonen@iki.fi>
- * 
- * This file is part of the Valkka library.
- * 
- * Valkka is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>
- *
- */
-
-/** 
- *  @file    live.h
- *  @author  Sampsa Riikonen
- *  @date    2017
- *  @version 1.2.1 
- *  @brief Interface to live555
- * 
- *  Acknowledgements: Ross Finlayson for his advice
- * 
- */
 
 #include "livedep.h"
 #include "frame.h"
@@ -53,11 +19,11 @@ void usage(UsageEnvironment& env, char const* progName);
 
 
 
-/** Status for the ValkkaRTSPClient
+/** Status for the MSRTSPClient
  * 
  * The problem:
  * 
- * When shutdownStream is called, the ValkkaRTSPClient will be reclaimed/annihilated (within the event loop).  If that has happened, we shouldn't touch it anymore..
+ * When shutdownStream is called, the MSRTSPClient will be reclaimed/annihilated (within the event loop).  If that has happened, we shouldn't touch it anymore..
  * 
  * If we have called shutdownStream outside the sendDESCRIBECommand etc. callback cascade that's registered in the live555 event loop, then the live555 event loop might try to access an annihilated client
  * 
@@ -65,17 +31,17 @@ void usage(UsageEnvironment& env, char const* progName);
  */
 enum class LiveStatus {
   none,          ///< Client has not been initialized
-  pending,       ///< Client's been requested to send the describe command.  This might hang for several reasons: camera offline, internet connection lost, etc.  If we annihilate ValkkaRTSPClient, the callbacks in the event loop might still try to use it..  "pending" connections should be closed only at event loop exit
+  pending,       ///< Client's been requested to send the describe command.  This might hang for several reasons: camera offline, internet connection lost, etc.  If we annihilate MSRTSPClient, the callbacks in the event loop might still try to use it..  "pending" connections should be closed only at event loop exit
   alive,         ///< Client has succesfully started playing
-  closed         ///< Client has been closed and Medium::close has been called on the MediaSession, etc.  This is done by shutdownStream (which sets livestatus to LiveStatus::closed).  ValkkaRTSPClient has been annihilated!
+  closed         ///< Client has been closed and Medium::close has been called on the MediaSession, etc.  This is done by shutdownStream (which sets livestatus to LiveStatus::closed).  MSRTSPClient has been annihilated!
 };
 
 
 /** Class to hold per-stream state that we maintain throughout each stream's lifetime.
  * 
- * An instance of this class is included in the ValkkaRTSPClient and used in the response handlers / callback chain.
+ * An instance of this class is included in the MSRTSPClient and used in the response handlers / callback chain.
  * 
- * This is a bit cumbersome .. Some of the members are created/managed by the ValkkaRTSPClient instance.  When ValkkaRTSPClient destructs itself (by calling Medium::close on its sinks and MediaSession) in the response-handler callback chain, we need to know that in LiveThread.
+ * This is a bit cumbersome .. Some of the members are created/managed by the MSRTSPClient instance.  When MSRTSPClient destructs itself (by calling Medium::close on its sinks and MediaSession) in the response-handler callback chain, we need to know that in LiveThread.
  *
  * @ingroup live_tag
  */
@@ -112,7 +78,7 @@ public: // setters & getters
  * 
  * @ingroup live_tag
  */
-class ValkkaRTSPClient: public RTSPClient {
+class MSRTSPClient: public RTSPClient {
   
 public:
   /** Default constructor
@@ -124,16 +90,19 @@ public:
    * @param applicationName       (optional)
    * @param tunnelOverHTTPPortNum (optional)
    */
-  static ValkkaRTSPClient* createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter& framefilter, LiveStatus* livestatus, int verbosityLevel = 0, char const* applicationName = NULL, portNumBits tunnelOverHTTPPortNum = 0);
+  static MSRTSPClient* createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel = 0, char const* applicationName = NULL, portNumBits tunnelOverHTTPPortNum = 0);
   
 protected:
-  ValkkaRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter& framefilter, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
+  MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info,  LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
   /** Default virtual destructor */
-  virtual ~ValkkaRTSPClient();
+  virtual ~MSRTSPClient();
   
 public:
   StreamClientState scs;
-  FrameFilter& framefilter;     ///< Target frame filter where frames are being fed
+  //FrameFilter& framefilter;     ///< Target frame filter where frames are being fed
+    FrameFilter *fragmp4_muxer;
+    FrameFilter *info;
+  
   LiveStatus* livestatus;       ///< This points to a variable that is being used by LiveThread to inform about the stream state
   
 public: // some extra parameters and their setters
@@ -181,10 +150,10 @@ public:
    * @param streamId     (optional) identifies the stream itself
    * 
    */
-  static FrameSink* createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter& framefilter, char const* streamId = NULL);
+  static FrameSink* createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId = NULL);
 
 private:
-  FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter& framefilter, char const* streamId);
+  FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId);
   /** Default virtual destructor */
   virtual ~FrameSink();
 
@@ -205,7 +174,11 @@ private:
   long unsigned     nbuf;       ///< Size of bytebuffer
   MediaSubsession&  fSubsession;
   char*             fStreamId;
-  FrameFilter&      framefilter;
+  //FrameFilter&      framefilter;
+  
+  FrameFilter *fragmp4_muxer;
+  FrameFilter *info;
+    
   SetupFrame        setupframe;  ///< This frame is used to send subsession information
   BasicFrame        basicframe;  ///< Data is being copied into this frame
   int               subsession_index;

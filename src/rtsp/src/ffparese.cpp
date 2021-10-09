@@ -49,7 +49,7 @@ namespace base {
         // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
 
 
-        FFParse::FFParse(  const char* audioFile, const char* videofile, DummyFrameFilter *fragmp4_filter , FragMP4MuxFrameFilter *fragmp4_muxer , InfoFrameFilter *info , TextFrameFilter *txt ): fragmp4_filter(fragmp4_filter) , fragmp4_muxer(fragmp4_muxer) , info(info) , txt(txt)  {
+        FFParse::FFParse(  const char* audioFile, const char* videofile,  FrameFilter *fragmp4_muxer , FrameFilter *info , FrameFilter *txt ):  fragmp4_muxer(fragmp4_muxer) , info(info) , txt(txt)  {
 
      
             
@@ -1011,7 +1011,7 @@ namespace base {
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         void FFParse::mediaContent(std::string mediaContent) {
-            txt->go(mediaContent);
+         //   txt->go(mediaContent);
        }
 
       }// ns mp4

@@ -1,36 +1,3 @@
-/*
- * livethread.cpp : A live555 thread
- * 
- * Copyright 2017-2020 Valkka Security Ltd. and Sampsa Riikonen
- * 
- * Authors: Sampsa Riikonen <sampsa.riikonen@iki.fi>
- * 
- * This file is part of the Valkka library.
- * 
- * Valkka is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>
- *
- */
-
-/** 
- *  @file    livethread.cpp
- *  @author  Sampsa Riikonen
- *  @date    2017
- *  @version 1.2.1 
- *  
- *  @brief A live555 thread
- *
- */ 
 
 #include "livethread.h"
 //#include "logging.h"
@@ -150,29 +117,33 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
         // no timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> ctx.framefilter
 //        timestampfilter    = new TimestampFrameFilter2("timestampfilter", NULL); // dummy
 
-          inputfilter        = ctx.framefilterar;
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
+          
     }
     else if  (ctx.time_correction==TimeCorrectionType::dummy) {
         // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
         //timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
-        repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
+        //repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
       //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
-         inputfilter        = ctx.framefilterar;
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
     }
     else { // smart corrector
         // brute-force timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> {DummyTimestampFrameFilter: timestampfilter} --> ctx.framefilter
       //  timestampfilter    = new TimestampFrameFilter2("smart_timestamp_filter", ctx.framefilter);
       //  repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
        // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
-        inputfilter        = ctx.framefilterar;
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
     }
 }
 
 
 Connection::~Connection() {
-    delete timestampfilter;
-    delete inputfilter;
-    delete repeat_sps_filter;
+//    delete timestampfilter;
+//    delete inputfilter;
+//    delete repeat_sps_filter;
 };
 
 void Connection::reStartStream() {
@@ -304,13 +275,13 @@ void RTSPConnection::playStream() {
         livestatus=LiveStatus::pending;
         frametimer=0;
         SInfo<< "RTSPConnection : playStream" << std::endl;
-        client = ValkkaRTSPClient::createNew(env, ctx.address, *inputfilter, &livestatus);
+        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, &livestatus);
         if (ctx.request_multicast)   { client->requestMulticast(); }
         if (ctx.request_tcp)         { client->requestTCP(); }
         if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
         if (ctx.reordering_time>0)   { client->setReorderingTime(ctx.reordering_time); } // WARNING: in microseconds!
         SDebug << "RTSPConnection : playStream : name " << client->name() << std::endl;
-        client->sendDescribeCommand(ValkkaRTSPClient::continueAfterDESCRIBE);
+        client->sendDescribeCommand(MSRTSPClient::continueAfterDESCRIBE);
     }
     is_playing=true; // in the sense that we have requested a play .. and that the event handlers will try to restart the play infinitely..
 }
@@ -338,7 +309,7 @@ void RTSPConnection::stopStream() {
             // possible to wait until handleSignals has been called
         }
         else {
-            ValkkaRTSPClient::shutdownStream(client, 1); // sets LiveStatus to closed
+            MSRTSPClient::shutdownStream(client, 1); // sets LiveStatus to closed
             SDebug << "RTSPConnection : stopStream: shut down" << std::endl;
         }
     }
@@ -425,7 +396,7 @@ bool RTSPConnection::isClosed() { // not pending or playing
 }
 
 void RTSPConnection::forceClose() {
-    ValkkaRTSPClient::shutdownStream(client, 1);
+    MSRTSPClient::shutdownStream(client, 1);
 }
 
 
@@ -494,7 +465,7 @@ void SDPConnection :: playStream() {
             // subsession->sink = DummySink::createNew(*env, *subsession, filename);
             env << "SDPConnection: Creating data sink for subsession \"" << *scs->subsession << "\" \n";
             // subsession->sink= FrameSink::createNew(env, *subsession, inputfilter, cc, ctx.address.c_str());
-            scs->subsession->sink= FrameSink::createNew(env, *scs, *inputfilter, ctx.address.c_str());
+            scs->subsession->sink= FrameSink::createNew(env, *scs, fragmp4_muxer, info , ctx.address.c_str());
             if (scs->subsession->sink == NULL)
             {
                 env << "SDPConnection: Failed to create a data sink for the \"" << *scs->subsession << "\" subsession: " << env.getResultMsg() << "\n";
@@ -1246,7 +1217,7 @@ void LiveThread::periodicTask(void* cdata) {
     }
     else if (livethread->exit_requested) { // tried really hard to close everything in a clean way .. but sockets etc. might still be hanging 
         SInfo<< "LiveThread: periodicTask: exit: closePending" << std::endl;
-        livethread->closePending(); // eh.. we really hope the eventloop just exits and does nothing else: some ValkkaRTSPClient pointers have been nulled and these might be used in the callbacks
+        livethread->closePending(); // eh.. we really hope the eventloop just exits and does nothing else: some MSRTSPClient pointers have been nulled and these might be used in the callbacks
         livethread->eventLoopWatchVariable=1; 
     }
     

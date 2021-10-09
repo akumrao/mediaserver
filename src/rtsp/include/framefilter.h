@@ -117,6 +117,9 @@ public: // API
     /** Calls this->go(Frame* frame) and then calls the this->next->run(Frame* frame) (if this->next != NULL)
    */
     virtual void run(Frame *frame);
+    
+    virtual void deActivate();
+    virtual void sendMeta();
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.

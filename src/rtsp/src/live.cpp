@@ -1,40 +1,3 @@
-/*
- * live.cpp : Interface to live555
- * 
- * Copyright 2017-2020 Valkka Security Ltd. and Sampsa Riikonen
- * 
- * Authors: Sampsa Riikonen <sampsa.riikonen@iki.fi>
- * 
- * This file is part of the Valkka library.
- * 
- * Valkka is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>
- *
- */
-
-/** 
- *  @file    live.cpp
- *  @author  Sampsa Riikonen
- *  @date    2017
- *  @version 1.2.1 
- *  
- *  @brief Interface to live555
- *
- *  @section DESCRIPTION
- *  
- *  Yes, the description
- *
- */
  
 #include "live.h"
 #include "constant.h"
@@ -85,47 +48,47 @@ void usage(UsageEnvironment& env, char const* progName) {
   SInfo << "\t(where each <rtsp-url-i> is a \"rtsp://\" URL)\n";
 }
 
-// Implementation of "ValkkaRTSPClient":
+// Implementation of "MSRTSPClient":
 
-ValkkaRTSPClient* ValkkaRTSPClient::createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter& framefilter, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
-  return new ValkkaRTSPClient(env, rtspURL, framefilter, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
+MSRTSPClient* MSRTSPClient::createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
+  return new MSRTSPClient(env, rtspURL, fragmp4_muxer, info, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
 }
 
-ValkkaRTSPClient::ValkkaRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter& framefilter, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), framefilter(framefilter), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
-}
-
-
-ValkkaRTSPClient::~ValkkaRTSPClient() {
+MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
 }
 
 
-void ValkkaRTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString) {
-  LiveStatus* livestatus = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+MSRTSPClient::~MSRTSPClient() {
+}
+
+
+void MSRTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString) {
+  LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   
   do {
     UsageEnvironment& env = rtspClient->envir(); // alias
-    StreamClientState& scs = ((ValkkaRTSPClient*)rtspClient)->scs; // alias
+    StreamClientState& scs = ((MSRTSPClient*)rtspClient)->scs; // alias
 
     if (resultCode != 0) {
-      SInfo << "ValkkaRTSPClient: "  << "Failed to get a SDP description: " << resultString << "\n";
+      SInfo << "MSRTSPClient: "  << "Failed to get a SDP description: " << resultString << "\n";
       delete[] resultString;
       break;
     }
 
     char* const sdpDescription = resultString;
     // SInfo << "Got a SDP description:\n" << sdpDescription << "\n";
-   SDebug << "ValkkaRTSPClient: Got a SDP description:\n" << sdpDescription << "\n";
+   SDebug << "MSRTSPClient: Got a SDP description:\n" << sdpDescription << "\n";
 
     // Create a media session object from this SDP description:
     scs.session = MediaSession::createNew(env, sdpDescription);
     delete[] sdpDescription; // because we don't need it anymore
     if (scs.session == NULL) {
       // SInfo  << "Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
-      SInfo << "ValkkaRTSPClient: Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
+      SInfo << "MSRTSPClient: Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
       break;
     } else if (!scs.session->hasSubsessions()) {
       // SInfo  << "This session has no media subsessions (i.e., no \"m=\" lines)\n";
-      SInfo << "ValkkaRTSPClient: This session has no media subsessions (i.e., no \"m=\" lines)\n";
+      SInfo << "MSRTSPClient: This session has no media subsessions (i.e., no \"m=\" lines)\n";
       break;
     }
 
@@ -141,27 +104,27 @@ void ValkkaRTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultC
   shutdownStream(rtspClient); // sets *livestatus=LiveStatus::closed;
 }
 
-void ValkkaRTSPClient::continueAfterGET_PARAMETER(RTSPClient* rtspClient, int resultCode, char* resultString) {
+void MSRTSPClient::continueAfterGET_PARAMETER(RTSPClient* rtspClient, int resultCode, char* resultString) {
     // do nothing! (or maybe something)
-    std::cout << "ValkkaRTSPClient::continueAfterGET_PARAMETER\n";
+    std::cout << "MSRTSPClient::continueAfterGET_PARAMETER\n";
     if (resultCode != 0) {
-      SInfo << "ValkkaRTSPClient: " << "Failed to get GET_PARAMETER description: " << resultString << "\n";
+      SInfo << "MSRTSPClient: " << "Failed to get GET_PARAMETER description: " << resultString << "\n";
       delete[] resultString;
       return;
     }
 
     char* const sdpDescription = resultString;
     // SInfo  << "Got a SDP description:\n" << sdpDescription << "\n";
-   SDebug << "ValkkaRTSPClient: Got GET_PARAMETER description:\n" << sdpDescription << "\n";
+   SDebug << "MSRTSPClient: Got GET_PARAMETER description:\n" << sdpDescription << "\n";
 }
 
 
-void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
+void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
   // aliases:
   UsageEnvironment& env    = rtspClient->envir();
-  StreamClientState& scs   = ((ValkkaRTSPClient*)rtspClient)->scs;
-  ValkkaRTSPClient* client = (ValkkaRTSPClient*)rtspClient;
-  LiveStatus* livestatus   = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+  StreamClientState& scs   = ((MSRTSPClient*)rtspClient)->scs;
+  MSRTSPClient* client = (MSRTSPClient*)rtspClient;
+  LiveStatus* livestatus   = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   bool ok_subsession_type = false;
   
   scs.subsession = scs.iter->next();
@@ -174,16 +137,16 @@ void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
   
   if (scs.subsession != NULL) { // has subsession
     
-   SDebug << "ValkkaRTSPClient: handling subsession " << scs.subsession->mediumName() << std::endl;
+   SDebug << "MSRTSPClient: handling subsession " << scs.subsession->mediumName() << std::endl;
     ok_subsession_type = (strcmp(scs.subsession->mediumName(),"video")==0 or strcmp(scs.subsession->mediumName(),"audio")==0); // CAM_EXCEPTION : UNV-1
     
     if (ok_subsession_type) { // a decent subsession
     
       if (!scs.subsession->initiate()) {
-        SInfo << "ValkkaRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() << "\n";
+        SInfo << "MSRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() << "\n";
         setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
       } else { // subsession ok
-       SDebug << "ValkkaRTSPClient: "  << " Initiated the \""  << "\" subsession (";
+       SDebug << "MSRTSPClient: "  << " Initiated the \""  << "\" subsession (";
         if (scs.subsession->rtcpIsMuxed()) {
          SDebug << "client port " << scs.subsession->clientPortNum();
         } else {
@@ -195,13 +158,13 @@ void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
         if (scs.subsession->rtpSource() != NULL) {
           if (client->reordering_time>0) {
             scs.subsession->rtpSource()->setPacketReorderingThresholdTime(client->reordering_time);
-            SInfo << "ValkkaRTSPClient: packet reordering time now " << client->reordering_time << " microseconds " << std::endl;
+            SInfo << "MSRTSPClient: packet reordering time now " << client->reordering_time << " microseconds " << std::endl;
           }
           if (client->recv_buffer_size>0) {
             int socketNum = scs.subsession->rtpSource()->RTPgs()->socketNum();
             unsigned curBufferSize = getReceiveBufferSize(env, socketNum);
             unsigned newBufferSize = setReceiveBufferTo  (env, socketNum, client->recv_buffer_size);
-            SInfo << "ValkkaRTSPClient: receiving socket size changed from " << curBufferSize << " to " << newBufferSize << std::endl;
+            SInfo << "MSRTSPClient: receiving socket size changed from " << curBufferSize << " to " << newBufferSize << std::endl;
           }
         }
         
@@ -221,7 +184,7 @@ void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
       } // subsession ok
     }
     else { // decent subsession
-     SDebug << "ValkkaRTSPClient: discarded subsession " << scs.subsession->mediumName() << std::endl;
+     SDebug << "MSRTSPClient: discarded subsession " << scs.subsession->mediumName() << std::endl;
       setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
     } // decent subsession
     return; // we have either called this routine again with another subsession or sent a setup command
@@ -237,21 +200,22 @@ void ValkkaRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
   }
 }
 
-void ValkkaRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
-  LiveStatus* livestatus = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+void MSRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
+  LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   
   do {
     UsageEnvironment& env    = rtspClient->envir(); // alias
-    StreamClientState& scs   = ((ValkkaRTSPClient*)rtspClient)->scs; // alias
-    FrameFilter& framefilter = ((ValkkaRTSPClient*)rtspClient)->framefilter;
+    StreamClientState& scs   = ((MSRTSPClient*)rtspClient)->scs; // alias
+    FrameFilter *fragmp4_muxer = ((MSRTSPClient*)rtspClient)->fragmp4_muxer;
+    FrameFilter *info = ((MSRTSPClient*)rtspClient)->info;
 
     if (resultCode != 0) {
-      SInfo << "ValkkaRTSPClient: "  << "Failed to set up the \""  << "\" subsession: " << resultString << "\n";
+      SInfo << "MSRTSPClient: "  << "Failed to set up the \""  << "\" subsession: " << resultString << "\n";
       break;
     }
 
     // SInfo  << "Set up the \""  << "\" subsession (";
-   SDebug << "ValkkaRTSPClient: "  << "Set up the \""  << "\" subsession (";
+   SDebug << "MSRTSPClient: "  << "Set up the \""  << "\" subsession (";
     if (scs.subsession->rtcpIsMuxed()) {
       // SInfo << "client port " << scs.subsession->clientPortNum();
      SDebug << "client port " << scs.subsession->clientPortNum();
@@ -267,15 +231,15 @@ void ValkkaRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode
     // after we've sent a RTSP "PLAY" command.)
 
     // scs.subsession->sink = FrameSink::createNew(env, *scs.subsession, framefilter, scs.subsession_index, rtspClient->url());
-    scs.subsession->sink = FrameSink::createNew(env, scs, framefilter, rtspClient->url());
+    scs.subsession->sink = FrameSink::createNew(env, scs, fragmp4_muxer, info, rtspClient->url());
       // perhaps use your own custom "MediaSink" subclass instead
     if (scs.subsession->sink == NULL) {
-      SInfo << "ValkkaRTSPClient: " << "Failed to create a data sink for the \"" 
+      SInfo << "MSRTSPClient: " << "Failed to create a data sink for the \"" 
 	  << "\" subsession: " << env.getResultMsg() << "\n";
       break;
     }
 
-   SDebug << "ValkkaRTSPClient: " << "Created a data sink for the \""  << "\" subsession\n";
+   SDebug << "MSRTSPClient: " << "Created a data sink for the \""  << "\" subsession\n";
     scs.subsession->miscPtr = rtspClient; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
     scs.subsession->sink->startPlaying(*(scs.subsession->readSource()),
 				       subsessionAfterPlaying, scs.subsession);
@@ -291,16 +255,16 @@ void ValkkaRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode
 }
 
 
-void ValkkaRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString) {
+void MSRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString) {
   Boolean success = False;
-  LiveStatus* livestatus = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+  LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   UsageEnvironment& env = rtspClient->envir(); // alias
-  StreamClientState& scs = ((ValkkaRTSPClient*)rtspClient)->scs; // alias
+  StreamClientState& scs = ((MSRTSPClient*)rtspClient)->scs; // alias
 
   do {
 
     if (resultCode != 0) {
-      SInfo << "ValkkaRTSPClient: " << " Failed to start playing session: " << resultString << "\n";
+      SInfo << "MSRTSPClient: " << " Failed to start playing session: " << resultString << "\n";
       break;
     }
 
@@ -315,7 +279,7 @@ void ValkkaRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode,
       scs.streamTimerTask = env.taskScheduler().scheduleDelayedTask(uSecsToDelay, (TaskFunc*)streamTimerHandler, rtspClient);
     }
 
-   SDebug << "ValkkaRTSPClient: "  << "Started playing session";
+   SDebug << "MSRTSPClient: "  << "Started playing session";
     if (scs.duration > 0) {
      SDebug << " (for up to " << scs.duration << " seconds)";
     }
@@ -332,7 +296,7 @@ void ValkkaRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode,
   else {
     *livestatus=LiveStatus::alive;
     // start periodic GET_PARAMETER pinging of the camera.  Required for buggy 3-tier cameras, like AXIS
-     SError << "ValkkaRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" << std::endl;
+     SError << "MSRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" << std::endl;
     // ..Sampsa, I commented that stupid pun since it only creates confusion (Petri)
     scs.pingGetParameterTask = env.taskScheduler().scheduleDelayedTask(1000000*LIVE_GET_PARAMETER_PING, (TaskFunc*)pingGetParameter, rtspClient);  // arvind ping imp
   }
@@ -340,19 +304,19 @@ void ValkkaRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode,
 
 
 // Implementation of the other event handlers:
-void ValkkaRTSPClient::pingGetParameter(void* clientData) {
+void MSRTSPClient::pingGetParameter(void* clientData) {
     // clientData is an instance of RTSPClient
-    ValkkaRTSPClient* client = (ValkkaRTSPClient*)(clientData);
+    MSRTSPClient* client = (MSRTSPClient*)(clientData);
     StreamClientState& scs = client->scs;
     LiveStatus* livestatus = client->livestatus;
     UsageEnvironment& env = client->envir();
     
-    SInfo << "ValkkaRTSPClient: sending GET_PARAMETER ping \n";
+    SInfo << "MSRTSPClient: sending GET_PARAMETER ping \n";
     
-    // client->sendGetParameterCommand(*scs.session, ValkkaRTSPClient::continueAfterGET_PARAMETER, "");
+    // client->sendGetParameterCommand(*scs.session, MSRTSPClient::continueAfterGET_PARAMETER, "");
     client->sendGetParameterCommand(*scs.session, NULL, ""); // just use this : no callback
     // unsigned sendGetParameterCommand (MediaSession &session, responseHandler *responseHandler, char const *parameterName, Authenticator *authenticator=NULL)
-   SDebug << "ValkkaRTSPClient: sent GET_PARAMETER ping \n";
+   SDebug << "MSRTSPClient: sent GET_PARAMETER ping \n";
     
     if (scs.pingGetParameterTask != NULL and *livestatus == LiveStatus::alive) {
         scs.pingGetParameterTask = env.taskScheduler().scheduleDelayedTask(1000000*LIVE_GET_PARAMETER_PING, (TaskFunc*)pingGetParameter, clientData);
@@ -364,10 +328,10 @@ void ValkkaRTSPClient::pingGetParameter(void* clientData) {
 
 
 
-void ValkkaRTSPClient::subsessionAfterPlaying(void* clientData) {
+void MSRTSPClient::subsessionAfterPlaying(void* clientData) {
   MediaSubsession* subsession = (MediaSubsession*)clientData;
   RTSPClient* rtspClient = (RTSPClient*)(subsession->miscPtr);
-  LiveStatus* livestatus = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+  LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
 
   // Begin by closing this subsession's stream:
   Medium::close(subsession->sink);
@@ -385,19 +349,19 @@ void ValkkaRTSPClient::subsessionAfterPlaying(void* clientData) {
 }
 
 
-void ValkkaRTSPClient::subsessionByeHandler(void* clientData) {
+void MSRTSPClient::subsessionByeHandler(void* clientData) {
   MediaSubsession* subsession = (MediaSubsession*)clientData;
   RTSPClient* rtspClient = (RTSPClient*)subsession->miscPtr;
   UsageEnvironment& env = rtspClient->envir(); // alias
 
- SDebug << "ValkkaRTSPClient: " << "Received RTCP \"BYE\" on \""  << "\" subsession\n";
+ SDebug << "MSRTSPClient: " << "Received RTCP \"BYE\" on \""  << "\" subsession\n";
 
   // Now act as if the subsession had closed:
   subsessionAfterPlaying(subsession);
 }
 
-void ValkkaRTSPClient::streamTimerHandler(void* clientData) {
-  ValkkaRTSPClient* rtspClient = (ValkkaRTSPClient*)clientData;
+void MSRTSPClient::streamTimerHandler(void* clientData) {
+  MSRTSPClient* rtspClient = (MSRTSPClient*)clientData;
   StreamClientState& scs = rtspClient->scs; // alias
 
   scs.streamTimerTask = NULL;
@@ -406,12 +370,12 @@ void ValkkaRTSPClient::streamTimerHandler(void* clientData) {
   shutdownStream(rtspClient);
 }
 
-void ValkkaRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
+void MSRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
   UsageEnvironment& env  =rtspClient->envir(); // alias
-  StreamClientState& scs =((ValkkaRTSPClient*)rtspClient)->scs; // alias
-  LiveStatus* livestatus = ((ValkkaRTSPClient*)rtspClient)->livestatus; // alias
+  StreamClientState& scs =((MSRTSPClient*)rtspClient)->scs; // alias
+  LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   
- SDebug << "ValkkaRTSPClient: shutdownStream :" <<std::endl;
+ SDebug << "MSRTSPClient: shutdownStream :" <<std::endl;
   
   // First, check whether any subsessions have still to be closed:
   if (scs.session != NULL) { 
@@ -421,9 +385,9 @@ void ValkkaRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
 
     while ((subsession = iter.next()) != NULL) {
       if (subsession->sink != NULL) {
-       SDebug << "ValkkaRTSPClient: shutdownStream : closing subsession" <<std::endl;
+       SDebug << "MSRTSPClient: shutdownStream : closing subsession" <<std::endl;
 	Medium::close(subsession->sink);
-       SDebug << "ValkkaRTSPClient: shutdownStream : closed subsession" <<std::endl;
+       SDebug << "MSRTSPClient: shutdownStream : closed subsession" <<std::endl;
 	subsession->sink = NULL;
 
 	if (subsession->rtcpInstance() != NULL) {
@@ -437,12 +401,12 @@ void ValkkaRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
     if (someSubsessionsWereActive) {
       // Send a RTSP "TEARDOWN" command, to tell the server to shutdown the stream.
       // Don't bother handling the response to the "TEARDOWN".
-     SDebug << "ValkkaRTSPClient: shutdownStream : sending teardown" <<std::endl;
+     SDebug << "MSRTSPClient: shutdownStream : sending teardown" <<std::endl;
       rtspClient->sendTeardownCommand(*scs.session, NULL);
     }
   }
 
- SDebug << "ValkkaRTSPClient: "  << " closing the stream.\n";
+ SDebug << "MSRTSPClient: "  << " closing the stream.\n";
   *livestatus=LiveStatus::closed;
   
   
@@ -510,11 +474,11 @@ FrameSink* FrameSink::createNew(UsageEnvironment& env, MediaSubsession& subsessi
 FrameSink::FrameSink(UsageEnvironment& env, MediaSubsession& subsession, FrameFilter& framefilter, int subsession_index, char const* streamId) : MediaSink(env), fSubsession(subsession), framefilter(framefilter), subsession_index(subsession_index), on(true), nbuf(0) 
 */
 
-FrameSink* FrameSink::createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter& framefilter, char const* streamId) {
-  return new FrameSink(env, scs, framefilter, streamId);
+FrameSink* FrameSink::createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) {
+  return new FrameSink(env, scs, fragmp4_muxer,info, streamId);
 }
 
-FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter& framefilter, char const* streamId) : MediaSink(env), scs(scs), framefilter(framefilter), on(true), nbuf(0), fSubsession(*(scs.subsession))
+FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) : MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info), on(true), nbuf(0), fSubsession(*(scs.subsession))
 
 {
   // some aliases:
@@ -546,7 +510,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter&
     setupframe.stream_index     = subsession_index;
     setupframe.mstimestamp      = CurrentTime_milliseconds();
     // send setup frame
-    framefilter.run(&setupframe);
+    fragmp4_muxer->run(&setupframe);
     setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
   else {
@@ -634,7 +598,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   
   // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
   
-  framefilter.run(&basicframe); // starts the frame filter chain
+  fragmp4_muxer->run(&basicframe); // starts the frame filter chain
   
   if (numTruncatedBytes>0) {// time to grow the buffer..
    SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;

@@ -63,11 +63,11 @@ void IgnoreSignals() {
 
 int main(int argc, char** argv) {
 
-    //Logger::instance().add(new ConsoleChannel("debug", Level::Debug));
+     Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
     //test::init();
     
-    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Trace));
-    Logger::instance().setWriter(new AsyncLogWriter);
+    //Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Trace));
+    //Logger::instance().setWriter(new AsyncLogWriter);
     
     Application app;
    

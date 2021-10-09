@@ -17,7 +17,8 @@
 #include "base/thread.h"
 #include <string>
 #include <vector>
-#include "frame.h"
+//#include "frame.h"
+#include "framefilter.h"
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
 
@@ -79,7 +80,7 @@ class ReadMp4;
  public:
   
     
-     FFParse(  const char* audioFile, const char*  videofile, DummyFrameFilter *fragmp4_filter , FragMP4MuxFrameFilter *fragmp4_muxer , InfoFrameFilter *info , TextFrameFilter *txt  );
+     FFParse(  const char* audioFile, const char*  videofile, FrameFilter *fragmp4_muxer , FrameFilter *info , FrameFilter *txt  );
      
      ~FFParse( );
      
@@ -133,13 +134,13 @@ class ReadMp4;
      
     std::atomic< bool > resetParser { false };
     std::atomic< bool > mute { true };
-      std::atomic< bool > hd { false };
+    std::atomic< bool > hd { false };
     std::atomic< bool > keeprunning { true };
 
-    DummyFrameFilter *fragmp4_filter;
-    FragMP4MuxFrameFilter *fragmp4_muxer;
-    InfoFrameFilter *info;
-    TextFrameFilter *txt;
+   // DummyFrameFilter *fragmp4_filter;
+    FrameFilter *fragmp4_muxer;
+    FrameFilter *info;
+    FrameFilter *txt;
     
     //std::string fileName;
     

@@ -22,7 +22,7 @@ extern "C"
 
 #include "constant.h"
 
-/** Enumeration of Frame classes used by Valkka
+/** Enumeration of Frame classes 
  * 
  * @ingroup frames_tag
  */

@@ -1,38 +1,7 @@
 #ifndef LIVETHREAD_HEADER_GUARD 
 #define LIVETHREAD_HEADER_GUARD
-/*
- * livethread.h : A live555 thread
- * 
- * Copyright 2017-2020 Valkka Security Ltd. and Sampsa Riikonen
- * 
- * Authors: Sampsa Riikonen <sampsa.riikonen@iki.fi>
- * 
- * This file is part of the Valkka library.
- * 
- * Valkka is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>
- *
- */
 
-/** 
- *  @file    livethread.h
- *  @author  Sampsa Riikonen
- *  @date    2017
- *  @version 1.2.1 
- *  
- *  @brief A live555 thread
- *
- */
+
 
 #include "live.h"
 //#include "liveserver.h"
@@ -106,20 +75,21 @@ enum class LiveConnectionType {
 struct LiveConnectionContext {                                                                        
   /** Default constructor */
   LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  
-                        FrameFilter* framefilter) :                                                   
-  connection_type(ct), address(address), slot(slot), framefilterar(framefilter), msreconnect(10000),       
+                        FrameFilter* framefilter, FrameFilter* info) :                                                   
+  connection_type(ct), address(address), slot(slot), framefilter(framefilter),info(info), msreconnect(10000),       
   request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0),              
   time_correction(TimeCorrectionType::smart)                                                          
   {}                                                                                                  
   /** Dummy constructor : remember to set member values by hand */
   LiveConnectionContext() :                                                                           
-  connection_type(LiveConnectionType::none), address(""), slot(0), framefilterar(NULL), msreconnect(10000), 
+  connection_type(LiveConnectionType::none), address(""), slot(0), framefilter(NULL),info(NULL), msreconnect(10000), 
   request_multicast(false), request_tcp(false),time_correction(TimeCorrectionType::smart)             
   {}                                                                                                  
   LiveConnectionType connection_type;   ///< Identifies the connection type                           
   std::string        address;           ///< Stream address                                           
   SlotNumber         slot;              ///< A unique stream slot that identifies this stream         
-  FrameFilter*       framefilterar;       ///< The frames are feeded into this FrameFilter              
+  FrameFilter*       framefilter;       ///< The frames are feeded into this FrameFilter      
+  FrameFilter* info;
   long unsigned int  msreconnect;       ///< If stream has delivered nothing during this many milliseconds, reconnect 
   bool               request_multicast; ///< Request multicast in the rtsp negotiation or not         
   bool               request_tcp;       ///< Request interleaved rtsp streaming or not                
@@ -213,9 +183,13 @@ protected:
   // TimestampFrameFilter2   timestampfilter; ///< Internal framefilter: correct timestamp
   // SlotFrameFilter         inputfilter;     ///< Internal framefilter: set slot number
   
-  FrameFilter*            timestampfilter;
-  FrameFilter*            inputfilter;
-  FrameFilter*            repeat_sps_filter;        ///< Repeat sps & pps packets before i-frame (if they were not there before the i-frame)
+ // FrameFilter*            timestampfilter;
+    //FrameFilter*            inputfilter;
+  //FrameFilter*            repeat_sps_filter;        ///< Repeat sps & pps packets before i-frame (if they were not there before the i-frame)
+  
+    FrameFilter *fragmp4_muxer;
+    FrameFilter *info;
+    
   
   long int                frametimer;      ///< Measures time when the last frame was received
   long int                pendingtimer;    ///< Measures how long stream has been pending
@@ -265,7 +239,7 @@ public:
 
 /** A negotiated RTSP connection
  * 
- * Uses the internal ValkkaRTSPClient instance which defines the RTSP client behaviour, i. e. the events and callbacks that are registered into the Live555 event loop (see \ref live_tag)
+ * Uses the internal MSRTSPClient instance which defines the RTSP client behaviour, i. e. the events and callbacks that are registered into the Live555 event loop (see \ref live_tag)
  * 
  * @ingroup livethread_tag
  */
@@ -279,12 +253,12 @@ public:
   
   
 private:
-  ValkkaRTSPClient* client; ///< ValkkaRTSPClient defines the behaviour (i.e. event registration and callbacks) of the RTSP client (see \ref live_tag)
-  LiveStatus livestatus;    ///< Reference of this variable is passed to ValkkaRTSPClient.  We can see outside of the live555 callback chains if RTSPConnection::client has deallocated itself
+  MSRTSPClient* client; ///< MSRTSPClient defines the behaviour (i.e. event registration and callbacks) of the RTSP client (see \ref live_tag)
+  LiveStatus livestatus;    ///< Reference of this variable is passed to MSRTSPClient.  We can see outside of the live555 callback chains if RTSPConnection::client has deallocated itself
   
 public:
-  void playStream();      ///< Uses ValkkaRTSPClient instance to initiate the RTSP negotiation
-  void stopStream();      ///< Uses ValkkaRTSPClient instance to shut down the stream
+  void playStream();      ///< Uses MSRTSPClient instance to initiate the RTSP negotiation
+  void stopStream();      ///< Uses MSRTSPClient instance to shut down the stream
   void reStartStreamIf(); ///< Restarts the stream if no frames have been received for a while
   bool isClosed();        ///< Have the streams resources been reclaimed?
   void forceClose();
