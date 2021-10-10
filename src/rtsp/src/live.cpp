@@ -478,7 +478,7 @@ FrameSink* FrameSink::createNew(UsageEnvironment& env, StreamClientState& scs, F
   return new FrameSink(env, scs, fragmp4_muxer,info, streamId);
 }
 
-FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) : MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info), on(true), nbuf(0), fSubsession(*(scs.subsession))
+FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) : MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info), on(true), fSubsession(*(scs.subsession))
 
 {
   // some aliases:
@@ -486,7 +486,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   int subsession_index        = scs.subsession_index;
   
   fStreamId = strDup(streamId);
-  // fReceiveBuffer = new u_int8_t[DUMMY_SINK_RECEIVE_BUFFER_SIZE];
+   fReceiveBuffer = new u_int8_t[DUMMY_SINK_RECEIVE_BUFFER_SIZE];
   
   const char* codec_name=fSubsession.codecName();
   
@@ -512,7 +512,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
     // send setup frame
     //info->run(&setupframe);
     fragmp4_muxer->run(&setupframe);
-    setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
+    //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
   else {
     // return; // no return here!  You won't do sendParameteSets() ..!
@@ -555,7 +555,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
 
 FrameSink::~FrameSink() {
   SInfo << "FrameSink: destructor :"<<std::endl;
-  // delete[] fReceiveBuffer;
+   delete[] fReceiveBuffer;
   delete[] fStreamId;
   SInfo << "FrameSink: destructor : bye!"<<std::endl;
 }
@@ -586,27 +586,53 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
   
-  unsigned target_size=frameSize+numTruncatedBytes;
+   basicframe.copyBuf(fReceiveBuffer, frameSize );
+   
+ // unsigned target_size=frameSize+numTruncatedBytes;
   // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
   basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
   basicframe.fillPars();
   // std::cout << "afterGettingFrame: " << basicframe << std::endl;
   
-  basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
+ // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
   
-  scs.setFrame(); // flag that indicates that we got a frame
+    scs.setFrame();
+   if (fragmp4_muxer->resetParser && basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+    {
+        fragmp4_muxer->sendMeta();
+        fragmp4_muxer->resetParser = false;
+    }
+
+    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+    {
+       //info->run(&basicframe);
+       basicframe.payload.resize(basicframe.payload.capacity());
+    }
+    else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
+        //info->run(&basicframe);
+        basicframe.payload.resize(basicframe.payload.capacity());
+    }
+    else
+    {
+        //info->run(&basicframe);
+        fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+        basicframe.payload.resize(basicframe.payload.capacity());
+        
+    }
+                    
+  
+  // flag that indicates that we got a frame
   
   // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
-  info->run(&basicframe);
-  fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+
   
-  if (numTruncatedBytes>0) {// time to grow the buffer..
-   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;
-    setReceiveBuffer(target_size);
-  }
+//  if (numTruncatedBytes>0) {// time to grow the buffer..
+//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;
+//    setReceiveBuffer(target_size);
+//  }
   
-  basicframe.payload.resize(basicframe.payload.capacity()); // recovers maximum size .. must set maximum size before letting live555 to write into the memory area
+   // recovers maximum size .. must set maximum size before letting live555 to write into the memory area
   
   // Then continue, to request the next frame of data:
   if (on) {continuePlaying();}
@@ -646,7 +672,7 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
   scs.setFrame(); // flag that indicates that we got a frame
   
   // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
-  info->run(&basicframe);
+  //info->run(&basicframe);
   fragmp4_muxer->run(&basicframe); // starts the frame filter chain
   
 //  if (numTruncatedBytes>0) {// time to grow the buffer..
@@ -664,7 +690,7 @@ Boolean FrameSink::continuePlaying() {
   if (fSource == NULL) return False; // sanity check (should not happen)
   // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
   // fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
-  fSource->getNextFrame(fReceiveBuffer, nbuf, afterGettingFrame, this, onSourceClosure, this);
+  fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
   return True;
 }
 
@@ -678,20 +704,20 @@ unsigned FrameSink::checkBufferSize(unsigned target_size) {// add something to t
 }
 
 
-void FrameSink::setReceiveBuffer(unsigned target_size) {
-  target_size=checkBufferSize(target_size); // correct buffer size to include nalstamp
-  basicframe.payload.resize(target_size);
-  if (basicframe.codec_id==AV_CODEC_ID_H264) {
-    fReceiveBuffer=basicframe.payload.data()+nalstamp.size(); // pointer for the beginning of the payload (after the nalstamp)
-    nbuf=basicframe.payload.size()-nalstamp.size();           // size left for actual payload (without the prepending 0001)
-    std::copy(nalstamp.begin(),nalstamp.end(),basicframe.payload.begin());
-  }
-  else {
-    fReceiveBuffer=basicframe.payload.data();
-    nbuf=basicframe.payload.size();
-  }
+//void FrameSink::setReceiveBuffer(unsigned target_size) {
+//  target_size=checkBufferSize(target_size); // correct buffer size to include nalstamp
+//  basicframe.payload.resize(target_size);
+//  if (basicframe.codec_id==AV_CODEC_ID_H264) {
+//    fReceiveBuffer=basicframe.payload.data()+nalstamp.size(); // pointer for the beginning of the payload (after the nalstamp)
+//    nbuf=basicframe.payload.size()-nalstamp.size();           // size left for actual payload (without the prepending 0001)
+//    std::copy(nalstamp.begin(),nalstamp.end(),basicframe.payload.begin());
+//  }
+//  else {
+//    fReceiveBuffer=basicframe.payload.data();
+//    nbuf=basicframe.payload.size();
+//  }
   // std::cout << ">>re-setting receive buffer "<<nbuf<<std::endl;
-}
+//}
 
 
 void FrameSink::sendParameterSets() {
@@ -713,6 +739,7 @@ void FrameSink::sendParameterSets() {
   }
   delete[] pars;
 }
+
 
 
 }

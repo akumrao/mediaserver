@@ -6,6 +6,7 @@
 
 #include <map>
 #include <deque>
+#include <atomic>
 #include <condition_variable>
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
@@ -120,6 +121,7 @@ public: // API
     
     virtual void deActivate(){};
     virtual void sendMeta(){};
+    std::atomic< bool > resetParser { false };
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.

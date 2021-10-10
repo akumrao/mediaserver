@@ -111,9 +111,9 @@ namespace base {
              std::string got = std::string(msg, len);
              STrace << "on_read " << got;
                 
-#if FILEPARSER
+
                 if( got == "reset")
-                    ffparser->reset();    
+                    fragmp4_muxer->resetParser = true ;// ffparser->reset();    
 //                else if( got == "mute")
 //                    ffparser->restart(true);
 //                else if( got == "unmute")
@@ -122,7 +122,7 @@ namespace base {
 //		    ffparser->resHD(true);
 //	        else if (got == "cif")
 //		   ffparser->resHD(false);
-#endif
+
 
         }
     

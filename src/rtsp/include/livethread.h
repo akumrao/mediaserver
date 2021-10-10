@@ -447,6 +447,8 @@ public: // live555 events and tasks
 public:  
   void testTrigger();         ///< See \ref live_streaming_page
   void triggerGotFrames();    ///< See \ref live_streaming_page
+ 
+  
 }; 
 
 

@@ -5,7 +5,7 @@
 #include "frame.h"
 //#include "framefifo.h"
 #include "framefilter.h"
-#include <atomic>
+
 //#include "logging.h"
 
 
@@ -175,11 +175,11 @@ private: // redefined virtual functions:
 private:
   StreamClientState &scs;
   u_int8_t*         fReceiveBuffer;
-  long unsigned     nbuf;       ///< Size of bytebuffer
+  //long unsigned     nbuf;       ///< Size of bytebuffer
   MediaSubsession&  fSubsession;
   char*             fStreamId;
   //FrameFilter&      framefilter;
-  std::atomic< bool > resetParser { false };
+  
   FrameFilter *fragmp4_muxer;
   FrameFilter *info;
     
@@ -189,7 +189,7 @@ private:
 
 public: // getters & setters
   uint8_t* getReceiveBuffer() {return fReceiveBuffer;}
-  
+ 
 public:
   bool on;
 };

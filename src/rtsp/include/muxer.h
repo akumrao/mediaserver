@@ -87,7 +87,8 @@ public: // API calls
 //    void activate(long int zerotime=0);       ///< Request streaming to asap (when config frames have arrived) 
      void deActivate();                                           ///< Stop streaming           
 //    
-//    
+// 
+    
 protected:
     static int write_packet(void *opaque, uint8_t *buf, int buf_size); // define separately in child classes
     static int read_packet(void *opaque, uint8_t *buf, int buf_size) {return 0;} // dummy function
