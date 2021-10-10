@@ -19,11 +19,11 @@ using namespace base::test;
 
 
 
-class testwebscoket: public net::HttpsServer 
+class testwebscoket: public net::HttpServer 
 {
 public:
     
-     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr,  bool multithreaded =false) : net::HttpsServer(  ip, port,  factory, multithreaded)
+     testwebscoket( std::string ip, int port, ServerConnectionFactory *factory = nullptr,  bool multithreaded =false) : net::HttpServer(  ip, port,  factory, multithreaded)
      {
          
      }
@@ -70,33 +70,64 @@ public:
 
 int main(int argc, char** argv) {
 
-    Logger::instance().add(new ConsoleChannel("debug", Level::Trace));
+   ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Trace);
+            
+    Logger::instance().add(ch);
     //test::init();
   
+    
+  StreamingResponderFactory *stream =   new StreamingResponderFactory();
+            
     Application app;
-    testwebscoket socket("0.0.0.0", 8000, new StreamingResponderFactory(), true );
-    socket.start();
+    testwebscoket  *socket = new testwebscoket("0.0.0.0", 8000, stream , true  );
+    //socket.start();
 
-    app.waitForShutdown([&](void*) {
+    app.waitForShutdown([&](void*)
+    
+    {
+        
+     
+        SInfo << "Main shutdwon1";
+        socket->Close();
+        socket->shutdown();
+        delete socket;
 
-    socket.shutdown();
+        SInfo << "Main shutdwon";
 
-    });
+        delete stream;
 
+        SInfo << "Main shutdwon2";
+
+        delete ch;
+
+    }
+    
+    );
+
+    
+
+/*Leak test  without multithreaded server
+pmap -x 18321
+    Total kB          322044    6112    1084
+  
+    Total kB          322044    6112    1084   RSS /nerver goes above 6112
+ 
+ 
+ 
+ ==19630== LEAK SUMMARY:
+==19630==    definitely lost: 0 bytes in 0 blocks
+==19630==    indirectly lost: 0 bytes in 0 blocks
+==19630==      possibly lost: 1,152 bytes in 4 blocks
+==19630==    still reachable: 5,138 bytes in 31 blocks
+==19630==         suppressed: 0 bytes in 0 blocks
+
+  
+ */  
     
     /*
      
-  
-    /// for websocket we do not need responder
-        Application app;
-        net::HttpServer websocket("0.0.0.0", 8000  );
-        websocket.start();
+  total kB          469284    6244    1216
 
-        app.waitForShutdown([&](void*) {
-
-            websocket.shutdown();
-
-        });
      */
 
 

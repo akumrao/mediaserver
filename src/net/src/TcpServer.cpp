@@ -131,7 +131,7 @@ namespace base
 
         static void workermain(void* _worker) {
             child_worker *tmp = (child_worker*) _worker;
-            tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
+            //tmp->loppworker = (uv_loop_t*) malloc(sizeof (uv_loop_t));
             Application app;
             tmp->loppworker = Application::uvGetLoop();
             
@@ -203,7 +203,7 @@ namespace base
 
             // launch same number of workers as number of CPUs
             uv_cpu_info_t *info;
-            int cpu_count = 20;
+            int cpu_count = 2;
             //uv_cpu_info(&info, &cpu_count);
             //uv_free_cpu_info(info, cpu_count);
 
@@ -295,16 +295,27 @@ namespace base
         TcpServerBase::~TcpServerBase() {
 
 
-            if (!this->closed)
-                Close();
+            SInfo << "~TcpServerBase()";
             
-            for( int x =0; x < child_worker_count ; ++x )
+            if(workers)
             {
-                 struct child_worker *worker = &workers[x];
-                 free(worker->loppworker);
+                 SInfo << "delete worker";
                  
+                for( int x =0; x < child_worker_count ; ++x )
+                {
+                     struct child_worker *worker = &workers[x];
+                     worker->obj->Close();
+                      SInfo << "delete worker1";
+                     uv_close((uv_handle_t*) &worker->queue, NULL);
+                      SInfo << "delete worker2";
+                     uv_close((uv_handle_t*) &worker->pipe, NULL);
+                }
+
+               free( workers);
             }
             
+            if (!this->closed)
+                Close();
                 
         }
 
@@ -323,8 +334,11 @@ namespace base
 
             for (auto* connection : this->connections)
             {
+                connection->Close();
+                SInfo << " TcpServerBase::Close,  delete"  <<  connection;
                 delete connection;
             }
+            connections.clear();
 
             uv_close(reinterpret_cast<uv_handle_t*> (this->uvHandle), static_cast<uv_close_cb> (onClose));
         }
