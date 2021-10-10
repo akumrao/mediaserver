@@ -118,8 +118,8 @@ public: // API
    */
     virtual void run(Frame *frame);
     
-    virtual void deActivate();
-    virtual void sendMeta();
+    virtual void deActivate(){};
+    virtual void sendMeta(){};
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.
@@ -152,18 +152,21 @@ protected:
 }; 
 
 
-class TextFrameFilter  { 
+class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn ); 
+    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn,  FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
      base::fmp4::ReadMp4 *conn; 
+     
   
 public:
     void go(std::string cmd);
+    protected:
+    void go(Frame *frame){};
 
-    std::string name;
+    //std::string name;
 }; 
 
 /** Dump the beginning of Frame's payload into stdout

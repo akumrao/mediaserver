@@ -510,6 +510,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
     setupframe.stream_index     = subsession_index;
     setupframe.mstimestamp      = CurrentTime_milliseconds();
     // send setup frame
+    //info->run(&setupframe);
     fragmp4_muxer->run(&setupframe);
     setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
@@ -597,7 +598,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   scs.setFrame(); // flag that indicates that we got a frame
   
   // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
-  
+  info->run(&basicframe);
   fragmp4_muxer->run(&basicframe); // starts the frame filter chain
   
   if (numTruncatedBytes>0) {// time to grow the buffer..
@@ -611,6 +612,53 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   if (on) {continuePlaying();}
 }
 
+
+void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
+  // We've just received a frame of data.  (Optionally) print out information about it:
+#ifdef DEBUG_PRINT_EACH_RECEIVED_FRAME
+  if (fStreamId != NULL) envir() << "Stream \"" << fStreamId << "\"; ";
+  envir() << fSubsession.mediumName() << "/" << fSubsession.codecName() << ":\tReceived " << frameSize << " bytes";
+  if (numTruncatedBytes > 0) envir() << " (with " << numTruncatedBytes << " bytes truncated)";
+  char uSecsStr[6+1]; // used to output the 'microseconds' part of the presentation time
+  sprintf(uSecsStr, "%06u", (unsigned)presentationTime.tv_usec);
+  envir() << ".\tPresentation time: " << (int)presentationTime.tv_sec << "." << uSecsStr;
+  if (fSubsession.rtpSource() != NULL && !fSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP()) {
+    envir() << " !"; // mark the debugging output to indicate that this presentation time is not RTCP-synchronized
+  }
+#ifdef DEBUG_PRINT_NPT
+  envir() << "\tNPT: " << fSubsession.getNormalPlayTime(presentationTime);
+#endif
+  envir() << "\n";
+#endif
+  
+  
+   basicframe.copyBuf(fReceiveBuffer, frameSize );
+  // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+  // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
+  basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+  basicframe.fillPars();
+  // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+  
+ // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
+  
+                    
+  
+  scs.setFrame(); // flag that indicates that we got a frame
+  
+  // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
+  info->run(&basicframe);
+  fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+  
+//  if (numTruncatedBytes>0) {// time to grow the buffer..
+//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;
+//    setReceiveBuffer(target_size);
+//  }
+  
+  basicframe.payload.resize(basicframe.payload.capacity()); // recovers maximum size .. must set maximum size before letting live555 to write into the memory area
+  
+  // Then continue, to request the next frame of data:
+  if (on) {continuePlaying();}
+}
 
 Boolean FrameSink::continuePlaying() {
   if (fSource == NULL) return False; // sanity check (should not happen)
@@ -659,7 +707,8 @@ void FrameSink::sendParameterSets() {
     if (pars[i].sPropLength>0) {
       SInfo << "Sending parameter set " << i << " " << pars[i].sPropLength << "\n";
       memcpy(fReceiveBuffer, pars[i].sPropBytes, pars[i].sPropLength);
-      afterGettingFrame(pars[i].sPropLength, 0, frametime, 0);
+      
+      afterGettingHeader(pars[i].sPropLength, 0, frametime, 0);
     }
   }
   delete[] pars;

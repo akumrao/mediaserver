@@ -65,7 +65,7 @@ namespace base {
             
 
             #if FILEPARSER
-            ffparser = new FFParse(AUDIOFILE, VIDEOFILE, fragmp4_filter, fragmp4_muxer, info, txt );
+            ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
 
             ffparser->start();
             #else

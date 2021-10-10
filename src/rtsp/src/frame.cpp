@@ -191,6 +191,12 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
 }
 
 
+void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )
+{
+  payload.resize(size);
+  memcpy(payload.data(), buf, size);
+}
+
 //void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
 //  int out_size;
 //  uint8_t *out;

@@ -84,7 +84,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *nm,  ReadMp4 *conn) : name(nm),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *name,  ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
 {
 }
 
@@ -121,14 +121,14 @@ InfoFrameFilter::InfoFrameFilter(const char *name, FrameFilter *next) : FrameFil
 
 void InfoFrameFilter::go(Frame *frame)
 {
-    std::cout << "InfoFrameFilter: " << name << " start dump>> " << std::endl;
-    std::cout << "InfoFrameFilter: FRAME   : " << *(frame) << std::endl;
-    std::cout << "InfoFrameFilter: PAYLOAD : [";
-    std::cout << frame->dumpPayload();
-    std::cout << "]" << std::endl;
+    SInfo << "InfoFrameFilter: " << name << " start dump>> " ;
+    SInfo << "InfoFrameFilter: FRAME   : " << *(frame) ;
+    SInfo << "InfoFrameFilter: PAYLOAD : [";
+    SInfo << frame->dumpPayload();
+    SInfo << "]" << std::endl;
     // std::cout << "InfoFrameFilter:<" << frame->dumpAVFrame() << ">" << std::endl;
    // std::cout << "InfoFrameFilter: timediff: " << frame->mstimestamp - getCurrentMsTimestamp() << std::endl;
-    std::cout << "InfoFrameFilter: " << name << " <<end dump   " << std::endl;
+    SInfo<< "InfoFrameFilter: " << name << " <<end dump   " ;
 }
 
 

@@ -649,7 +649,7 @@ namespace base {
                     continue;
                 }
 
-                //info->run(&basicframe);
+                info->run(&basicvideoframe);
 
                 fragmp4_muxer->run(&basicvideoframe);
 
@@ -748,7 +748,7 @@ namespace base {
 
                     framecount++;
 
-                   // info->run(&basicvideoframe);
+                    info->run(&basicvideoframe);
 
                     fragmp4_muxer->run(&basicvideoframe);
 

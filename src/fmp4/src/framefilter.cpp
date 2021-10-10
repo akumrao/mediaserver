@@ -83,7 +83,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *nm,  ReadMp4 *conn) : name(nm),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *nm,  ReadMp4 *conn, FrameFilter *next) : name(nm),conn(conn) 
 {
 }
 

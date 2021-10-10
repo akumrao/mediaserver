@@ -32,7 +32,7 @@
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
 
-//#define FILEPARSER 1
+#define FILEPARSER 1
 
 namespace base {
 namespace fmp4 {
@@ -78,9 +78,9 @@ class FFParse;
  private:
      
      DummyFrameFilter *fragmp4_filter;
-     FragMP4MuxFrameFilter *fragmp4_muxer;
-     InfoFrameFilter *info;
-     TextFrameFilter *txt;
+     FrameFilter *fragmp4_muxer;
+     FrameFilter *info;
+     FrameFilter *txt;
      LiveConnectionContext *ctx;
              
      std::string fileName;
