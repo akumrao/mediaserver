@@ -247,7 +247,7 @@ namespace base {
             setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
-            info->run(&setupframe);
+            //info->run(&setupframe);
             fragmp4_muxer->run(&setupframe);
             
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ namespace base {
             setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
-            info->run(&setupframe);
+            //info->run(&setupframe);
             fragmp4_muxer->run(&setupframe);
 
   
@@ -649,7 +649,7 @@ namespace base {
                     continue;
                 }
 
-                info->run(&basicvideoframe);
+                //info->run(&basicvideoframe);
 
                 fragmp4_muxer->run(&basicvideoframe);
 
@@ -748,7 +748,7 @@ namespace base {
 
                     framecount++;
 
-                    info->run(&basicvideoframe);
+                   // info->run(&basicvideoframe);
 
                     fragmp4_muxer->run(&basicvideoframe);
 

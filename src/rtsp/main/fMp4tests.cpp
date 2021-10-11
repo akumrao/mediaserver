@@ -63,7 +63,12 @@ void IgnoreSignals() {
 
 int main(int argc, char** argv) {
 
-     Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+     //Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+    
+    ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Info);
+            
+   Logger::instance().add(ch);
+   
     //test::init();
     
     //Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Trace));
@@ -86,9 +91,18 @@ int main(int argc, char** argv) {
         
     app.waitForShutdown([&](void*) {
 
+    SInfo << "Main shutdwon1";
+    
     readmp4->stop();
         
     readmp4->shutdown();
+    
+     SInfo << "Main shutdwon2";
+
+        app.stop();
+        //app.uvDestroy();
+        delete ch;
+        
     });
     
    // app.run();

@@ -123,11 +123,11 @@ namespace base {
         
         void WebSocketConnection::push( const char* data, size_t len, bool binary)
         { 
-            dummy_mutex.lock();
-            
-            dummy_queue.push(std::make_pair(binary,  std::string(data, len )));
-            
-            dummy_mutex.unlock();
+//            dummy_mutex.lock();
+//            
+//            dummy_queue.push(std::make_pair(binary,  std::string(data, len )));
+//            
+//            dummy_mutex.unlock();
         }
 
         void WebSocketConnection::dummy_timer_cb() {
@@ -140,16 +140,18 @@ namespace base {
 //            send(tmp,5 , false);
             
           //  SInfo << "WebSocketConnection " <<    uv_thread_self();
-            std::pair< bool, std::string > tmp;
-            dummy_mutex.lock();
-            if(dummy_queue.size())
-            {
+            
+            while(dummy_queue.size())
+            {   std::pair< bool, std::string > tmp;
+                dummy_mutex.lock();
+            
                 tmp = dummy_queue.front();
                 dummy_queue.pop();
+                 dummy_mutex.unlock();
+                if(tmp.second.length())
+                send(&tmp.second[0],tmp.second.length() , tmp.first);
             }
-             dummy_mutex.unlock();
-            if(tmp.second.length())
-            send(&tmp.second[0],tmp.second.length() , tmp.first);
+            
             
            
            

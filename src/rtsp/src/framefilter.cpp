@@ -7,7 +7,7 @@
 namespace base {
 namespace fmp4 {
 
-#define DUMPFMP4 1
+//#define DUMPFMP4 1
 
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
@@ -28,6 +28,7 @@ void FrameFilter::run(Frame *frame)
 // subclass like this:
 DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
 {
+    #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
     const char *input_file = "/tmp/test.mp4"; 
     if ((fp_out = fopen(input_file, "wb")) == NULL) {
@@ -35,7 +36,7 @@ DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbos
         // goto ret7;
         return;
     }
-    
+     #endif
 }
 DummyFrameFilter::~DummyFrameFilter()
 {

@@ -50,7 +50,7 @@ public:
             
 #if HTTPSSL
                     
-             WebSocketConnection *con = ((HttpsConnection*)connection)->getWebSocketCon();
+             WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
 #else
              WebSocketConnection *con = ((HttpConnection*)connection)->getWebSocketCon();
 #endif
@@ -70,22 +70,20 @@ public:
 
 int main(int argc, char** argv) {
 
-   ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Trace);
+   ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Info);
             
-    Logger::instance().add(ch);
+   Logger::instance().add(ch);
     //test::init();
   
     
-  StreamingResponderFactory *stream =   new StreamingResponderFactory();
+   StreamingResponderFactory *stream =   new StreamingResponderFactory();
             
-    Application app;
-    testwebscoket  *socket = new testwebscoket("0.0.0.0", 8000, stream , true  );
+   Application app;
+   testwebscoket  *socket = new testwebscoket("0.0.0.0", 8000, stream , true  );
     //socket.start();
 
-    app.waitForShutdown([&](void*)
-    
-    {
-        
+   app.waitForShutdown([&](void*)
+   {
      
         SInfo << "Main shutdwon1";
         socket->Close();
@@ -98,6 +96,8 @@ int main(int argc, char** argv) {
 
         SInfo << "Main shutdwon2";
 
+        app.stop();
+        //app.uvDestroy();
         delete ch;
 
     }
@@ -124,11 +124,19 @@ pmap -x 18321
   
  */  
     
-    /*
-     
-  total kB          469284    6244    1216
+/*
+valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes   ./runHttp      
+valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes  --verbose 
 
-     */
+  total kB          469284    6244    1216
+EAK SUMMARY:
+==25134==    definitely lost: 0 bytes in 0 blocks
+==25134==    indirectly lost: 0 bytes in 0 blocks
+==25134==      possibly lost: 1,728 bytes in 6 blocks
+==25134==    still reachable: 11,326 bytes in 49 blocks
+==25134==         suppressed: 0 bytes in 0 blocks
+
+*/
 
 
 
