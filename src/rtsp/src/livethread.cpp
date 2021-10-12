@@ -274,13 +274,13 @@ void RTSPConnection::playStream() {
         // Here we are a part of the live555 event loop (this is called from periodicTask => handleSignals => stopStream => this method)
         livestatus=LiveStatus::pending;
         frametimer=0;
-        SInfo<< "RTSPConnection : playStream" << std::endl;
+        SInfo<< "RTSPConnection : playStream " << ctx.address << std::endl;
         client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, &livestatus);
         if (ctx.request_multicast)   { client->requestMulticast(); }
         if (ctx.request_tcp)         { client->requestTCP(); }
         if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
         if (ctx.reordering_time>0)   { client->setReorderingTime(ctx.reordering_time); } // WARNING: in microseconds!
-        SDebug << "RTSPConnection : playStream : name " << client->name() << std::endl;
+        SInfo << "RTSPConnection : playStream : name " << client->name() << std::endl;
         client->sendDescribeCommand(MSRTSPClient::continueAfterDESCRIBE);
     }
     is_playing=true; // in the sense that we have requested a play .. and that the event handlers will try to restart the play infinitely..
@@ -433,7 +433,7 @@ void SDPConnection :: playStream() {
         infile >> std::noskipws;
         sdp.assign( std::istream_iterator<char>(infile),std::istream_iterator<char>() );
         infile.close();
-        SDebug << "SDPConnection: reading sdp file: " << sdp << std::endl;
+        SInfo << "SDPConnection: reading sdp file: " << sdp << std::endl;
     }
     else {
        SError << "SDPConnection: FATAL! Unable to open file " << ctx.address << std::endl;
@@ -1094,7 +1094,7 @@ void LiveThread::deregisterStream(LiveConnectionContext &connection_ctx) {
             SInfo<< "LiveThread: deregisterStream : nothing at slot " << connection_ctx.slot << std::endl;
             break;
         case 1: // slot is reserved
-            SDebug << "LiveThread: deregisterStream : de-registering " << connection_ctx.slot << std::endl;
+            SInfo << "LiveThread: deregisterStream : de-registering " << connection_ctx.slot << std::endl;
             if (connection->is_playing) {
                 connection->stopStream();
             }
@@ -1121,7 +1121,7 @@ void LiveThread::playStream(LiveConnectionContext &connection_ctx) {
             SInfo << "LiveThread: playStream : nothing at slot " << connection_ctx.slot << std::endl;
             break;
         case 1: // slot is reserved
-            SDebug << "LiveThread: playStream : playing.. " << connection_ctx.slot << std::endl;
+            SInfo << "LiveThread: playStream : playing.. " << connection_ctx.slot << std::endl;
             connection->playStream();
             break;
     }

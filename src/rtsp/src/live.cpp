@@ -77,7 +77,7 @@ void MSRTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode,
 
     char* const sdpDescription = resultString;
     // SInfo << "Got a SDP description:\n" << sdpDescription << "\n";
-   SDebug << "MSRTSPClient: Got a SDP description:\n" << sdpDescription << "\n";
+   SInfo << "MSRTSPClient: Got a SDP description:\n" << sdpDescription << "\n";
 
     // Create a media session object from this SDP description:
     scs.session = MediaSession::createNew(env, sdpDescription);
@@ -137,7 +137,7 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
   
   if (scs.subsession != NULL) { // has subsession
     
-   SDebug << "MSRTSPClient: handling subsession " << scs.subsession->mediumName() << std::endl;
+   SInfo << "MSRTSPClient: handling subsession " << scs.subsession->mediumName() << std::endl;
     ok_subsession_type = (strcmp(scs.subsession->mediumName(),"video")==0 or strcmp(scs.subsession->mediumName(),"audio")==0); // CAM_EXCEPTION : UNV-1
     
     if (ok_subsession_type) { // a decent subsession
@@ -146,13 +146,13 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
         SInfo << "MSRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() << "\n";
         setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
       } else { // subsession ok
-       SDebug << "MSRTSPClient: "  << " Initiated the \""  << "\" subsession (";
+       SInfo << "MSRTSPClient: "  << " Initiated the \""  << "\" subsession (";
         if (scs.subsession->rtcpIsMuxed()) {
-         SDebug << "client port " << scs.subsession->clientPortNum();
+         SInfo << "client port " << scs.subsession->clientPortNum();
         } else {
-         SDebug << "client ports " << scs.subsession->clientPortNum() << "-" << scs.subsession->clientPortNum()+1;
+         SInfo << "client ports " << scs.subsession->clientPortNum() << "-" << scs.subsession->clientPortNum()+1;
         }
-       SDebug << ")\n";
+       SInfo << ")\n";
 
         // adjust receive buffer size and reordering treshold time if requested
         if (scs.subsession->rtpSource() != NULL) {
@@ -184,7 +184,7 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
       } // subsession ok
     }
     else { // decent subsession
-     SDebug << "MSRTSPClient: discarded subsession " << scs.subsession->mediumName() << std::endl;
+     SInfo << "MSRTSPClient: discarded subsession " << scs.subsession->mediumName() << std::endl;
       setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
     } // decent subsession
     return; // we have either called this routine again with another subsession or sent a setup command
@@ -375,7 +375,7 @@ void MSRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
   StreamClientState& scs =((MSRTSPClient*)rtspClient)->scs; // alias
   LiveStatus* livestatus = ((MSRTSPClient*)rtspClient)->livestatus; // alias
   
- SDebug << "MSRTSPClient: shutdownStream :" <<std::endl;
+ SInfo << "MSRTSPClient: shutdownStream :" <<std::endl;
   
   // First, check whether any subsessions have still to be closed:
   if (scs.session != NULL) { 
@@ -385,9 +385,9 @@ void MSRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
 
     while ((subsession = iter.next()) != NULL) {
       if (subsession->sink != NULL) {
-       SDebug << "MSRTSPClient: shutdownStream : closing subsession" <<std::endl;
+       SInfo << "MSRTSPClient: shutdownStream : closing subsession" <<std::endl;
 	Medium::close(subsession->sink);
-       SDebug << "MSRTSPClient: shutdownStream : closed subsession" <<std::endl;
+       SInfo << "MSRTSPClient: shutdownStream : closed subsession" <<std::endl;
 	subsession->sink = NULL;
 
 	if (subsession->rtcpInstance() != NULL) {
@@ -401,12 +401,12 @@ void MSRTSPClient::shutdownStream(RTSPClient* rtspClient, int exitCode) {
     if (someSubsessionsWereActive) {
       // Send a RTSP "TEARDOWN" command, to tell the server to shutdown the stream.
       // Don't bother handling the response to the "TEARDOWN".
-     SDebug << "MSRTSPClient: shutdownStream : sending teardown" <<std::endl;
+     SInfo << "MSRTSPClient: shutdownStream : sending teardown" <<std::endl;
       rtspClient->sendTeardownCommand(*scs.session, NULL);
     }
   }
 
- SDebug << "MSRTSPClient: "  << " closing the stream.\n";
+  SInfo << "MSRTSPClient: "  << " closing the stream.\n";
   *livestatus=LiveStatus::closed;
   
   
@@ -435,9 +435,9 @@ void StreamClientState::close() {
   MediaSubsessionIterator iter2(*session);
   while ((subsession = iter2.next()) != NULL) {
     if (subsession->sink != NULL) {
-     SDebug << "StreamClientState : closing subsession" <<std::endl;
+     SInfo << "StreamClientState : closing subsession" <<std::endl;
       Medium::close(subsession->sink);
-     SDebug << "StreamClientState : closed subsession" <<std::endl;
+     SInfo << "StreamClientState : closed subsession" <<std::endl;
       subsession->sink = NULL;
     }
   }

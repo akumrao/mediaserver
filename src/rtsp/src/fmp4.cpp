@@ -13,6 +13,8 @@
 #include <thread>
 #include "ffparse.h"
 #include "livethread.h"
+ #include "Settings.h"
+
 extern "C"
 {
 //#include <libavutil/timestamp.h>
@@ -44,7 +46,7 @@ extern "C"
 
 #include "http/websocket.h"
 //std::string rtsp  = "rtsp://10.170.4.89:8554/testStream";
-std::string rtsp  = "rtsp://192.168.0.19:8554/testStream";
+//std::string rtsp  = "rtsp://192.168.0.19:8554/testStream";
 
 namespace base {
     
@@ -75,7 +77,7 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, rtsp, 2, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 2, fragmp4_muxer, info); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
 
             ffparser->playStreamCall(*ctx);

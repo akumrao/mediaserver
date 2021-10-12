@@ -1,4 +1,4 @@
-/* This file is part of mediaserver. A webrtc sfu server.
+/* This file is part of mediaserver. A webrtc RTSP server.
  * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -8,10 +8,12 @@
  *
  */
 
-#include "base/test.h"
+
 #include "base/logger.h"
 #include "base/application.h"
 #include "http/HTTPResponder.h"
+#include "Settings.h"
+#include "json/configuration.h"
 
 #include "fmp4.h"
 //#include "ff/ff.h"
@@ -69,9 +71,29 @@ int main(int argc, char** argv) {
             
     //Logger::instance().add(ch);
    
+    
        
-    Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Info));
-    Logger::instance().setWriter(new AsyncLogWriter);
+    //Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Info));
+   // Logger::instance().setWriter(new AsyncLogWriter);
+    
+    base::cnfg::Configuration config;
+
+    config.load("/workspace/mediaserver/src/rtsp/main/config.js");
+  
+    json cnfg;
+   
+    if( !config.getRaw("webrtc", cnfg))
+    {
+        std::cout << "Could not parse config file";
+    }
+            
+
+    try {
+        Settings::SetConfiguration(cnfg);
+    } catch (const std::exception& error) {
+
+        std::_Exit(-1);
+    } 
     
     Application app;
    
