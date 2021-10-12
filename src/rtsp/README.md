@@ -12,6 +12,26 @@ same for
 ./genMakefiles linux-64bit
 
 
+leaks
+
+to fix 
+
+ffmpeg -i myVideo.mp4 -y -c:v libx264 -profile:v high -prese6t:v fast -deinterlace -x264opts min-keyint=15:keyint=1000:scenecut=20 -b:v 2000k -c:a aac -b:a 128k -f segment -segment_format mp4 -segment_format_options movflags=empty_moov+frag_keyframe+default_base_moof+skip_trailer+faststart /home/1/output%%05d.mp4
+
+
+ffmpeg -i myVideo.mp4 -y -c:v libx264 -profile:v high -prese6t:v fast -deinterlace -x264opts min-keyint=15:keyint=1000:scenecut=20 -b:v 2000k -c:a aac -b:a 128k -f segment -segment_format mp4 -segment_format_options movflags=empty_moov+frag_keyframe+default_base_moof+skip_trailer+faststart /home/1/output%%05d.mp4
+
+
+dashenc.c
+View File
+@ -1507,12 +1507,12 @@ static int dash_init(AVFormatContext *s)
+            if (c->streaming)
+                // skip_sidx : Reduce bitrate overhead
+                // skip_trailer : Avoids growing memory usage with time
+                av_dict_set(&opts, "movflags", "dash+delay_moov+skip_sidx+skip_trailer", 0);
+                av_dict_set(&opts, "movflags", "+dash+delay_moov+skip_sidx+skip_trailer", AV_DICT_APPEND);
+
+
 
 **fMP4's are structured in boxes as described in the ISOBMFF spec.**
 

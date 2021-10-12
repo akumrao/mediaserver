@@ -724,12 +724,17 @@ void FragMP4MuxFrameFilter::defineMux() {
             this, this->read_packet, this->write_packet, this->seek); // no read, nor seek
     // .. must be done here, so that read/write_packet points to the correct static function
     format_name = std::string("mp4");
+//ffmpeg -i myVideo.mp4 -y -c:v libx264 -profile:v high -prese6t:v fast -deinterlace -x264opts min-keyint=15:keyint=1000:scenecut=20 -b:v 2000k -c:a aac -b:a 128k -f segment -segment_format mp4 -segment_format_options movflags=empty_moov+frag_keyframe+default_base_moof+skip_trailer+faststart /home/1/output%%05d.mp4
+//> -                av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx", 0);
+//               av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx+skip_trailer", 0);
 
     // -movflags empty_moov+omit_tfhd_offset+frag_keyframe+separate_moof -frag_size
     // av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+separate_moof", 0);
     // av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+frag_keyframe+separate_moof+frag_custom", 0);
     // av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+separate_moof", 0);
-    av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+separate_moof+frag_custom", 0);
+   // av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+separate_moof+frag_custom", 0); // will cause slow memory leaks
+
+    av_dict_set(&av_dict, "movflags", "empty_moov+omit_tfhd_offset+separate_moof+frag_custom+skip_trailer", 0);
 
     // no need for any of this, really.. the latency is small anyway
     // av_dict_set(&av_dict, "frag_size", "500", 500); // nopes
