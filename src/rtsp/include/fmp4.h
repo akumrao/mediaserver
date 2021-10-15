@@ -32,7 +32,7 @@
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
 
-#define FILEPARSER 1
+//#define FILEPARSER 1
 
 namespace base {
 namespace fmp4 {
@@ -46,7 +46,7 @@ class ReadMp4;
 class LiveConnectionContext;
 class FFParse;
 
- class ReadMp4: public Thread, public net::HttpsServer 
+ class ReadMp4: public Thread, public net::HttpServer 
  {
      
      

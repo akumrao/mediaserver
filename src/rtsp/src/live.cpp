@@ -54,7 +54,7 @@ MSRTSPClient* MSRTSPClient::createNew(UsageEnvironment& env, const std::string r
   return new MSRTSPClient(env, rtspURL, fragmp4_muxer, info, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
 }
 
-MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
+MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(true), recv_buffer_size(0), reordering_time(0) {
 }
 
 

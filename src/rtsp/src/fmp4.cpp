@@ -54,7 +54,7 @@ namespace base {
 
     namespace fmp4 {
 
-        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpsServer(  ip, port,  factory, true) {
+        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
 
             self = this;
 
@@ -77,7 +77,7 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 2, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, 2, fragmp4_muxer, info); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
 
             ffparser->playStreamCall(*ctx);
@@ -153,7 +153,7 @@ namespace base {
 
             for (auto* connection :  this->GetConnections())
             {
-                 net::WebSocketConnection *con = ((net::HttpsConnection*)connection)->getWebSocketCon();
+                 net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
                  if(con)
                  con->push(data ,size, binary );
             }
