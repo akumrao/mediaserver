@@ -274,10 +274,10 @@ void RTSPConnection::playStream() {
         // Here we are a part of the live555 event loop (this is called from periodicTask => handleSignals => stopStream => this method)
         livestatus=LiveStatus::pending;
         frametimer=0;
-        SInfo<< "RTSPConnection : playStream " << ctx.address << std::endl;
+        SInfo<< "RTSPConnection : playStream " << ctx.address;
         client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, &livestatus);
-        if (ctx.request_multicast)   { client->requestMulticast(); }
-        if (ctx.request_tcp)         { client->requestTCP(); }
+        if (ctx.request_multicast)   { client->requestMulticast();      }
+        if (ctx.request_tcp)         { client->requestTCP(); SInfo<< " TCP RTP "; }
         if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
         if (ctx.reordering_time>0)   { client->setReorderingTime(ctx.reordering_time); } // WARNING: in microseconds!
         SInfo << "RTSPConnection : playStream : name " << client->name() << std::endl;

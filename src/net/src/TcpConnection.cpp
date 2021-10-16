@@ -34,7 +34,7 @@ namespace base {
         inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
             auto* connection = static_cast<TcpConnectionBase*> (handle->data);
 
-           // SInfo << "onRead "  << connection;
+           // SDebug << "onRead "  << connection;
             if (connection)
             	connection->OnUvRead(nread, buf);
         }
@@ -57,7 +57,7 @@ namespace base {
             
             TcpConnectionBase *obj = (TcpConnectionBase *) handle->data;
             
-            SInfo << "onClose ";
+            SDebug << "onClose ";
             
            
             if (obj)
@@ -93,7 +93,7 @@ namespace base {
             this->uvHandle = new uv_tcp_t;
             this->uvHandle->data = (void*) this;
            
-            SInfo << "TcpConnectionBase new handle " <<  this->uvHandle;
+            SDebug << "TcpConnectionBase new handle " <<  this->uvHandle;
              
             // NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
         }
@@ -106,7 +106,7 @@ namespace base {
 
             delete[] this->buffer;
             
-            SInfo << "~TcpConnectionBase delete handle " <<  this->uvHandle;
+            SDebug << "~TcpConnectionBase delete handle " <<  this->uvHandle;
             delete   this->uvHandle;
             this->uvHandle = nullptr;        
             

@@ -82,7 +82,7 @@ class FFParse;
      FrameFilter *info;
      FrameFilter *txt;
      LiveConnectionContext *ctx;
-             
+     int slot{1};        
      std::string fileName;
      
  public:

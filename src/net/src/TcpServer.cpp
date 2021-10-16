@@ -54,7 +54,7 @@ namespace base
         }
 
         inline static void onClose(uv_handle_t* handle) {
-            SInfo << " TcpServerBase::onClose"  ;
+            SDebug << " TcpServerBase::onClose"  ;
             delete handle;
         }
         
@@ -80,7 +80,7 @@ namespace base
             assert(pending == UV_TCP);
             
             free(buf->base);
-           // SInfo <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
+           // SDebug <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
                     
            tmp->obj->worker_connection(tmp->loppworker, q);
            
@@ -89,7 +89,7 @@ namespace base
 //            uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
 //            uv_tcp_init(tmp->loppworker, client); //arvind
 //            if (uv_accept(q, (uv_stream_t*) client) == 0) {
-//                SInfo << __func__;
+//                SDebug << __func__;
 //                uv_os_fd_t fd;
 //                uv_fileno((const uv_handle_t*) client, &fd);
 //                fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
@@ -173,14 +173,14 @@ namespace base
 #endif
             uv_run(tmp->loppworker, UV_RUN_DEFAULT);
             
-            SInfo << "close workermain ";
+            SDebug << "close workermain ";
 
         }
 
    #ifdef _WIN32     
         static void connect_cb(uv_connect_t* req, int status) {
   
-            SInfo << "Pipe Connected ";
+            SDebug << "Pipe Connected ";
 
              ASSERT(status == 0);
 
@@ -188,7 +188,7 @@ namespace base
     #endif   
         
         void  TcpServerBase::setup_workers() {
-            SInfo << __func__;
+            SDebug << __func__;
             //size_t path_size = 500;
             // uv_exepath(worker_path, &path_size);
             // strcpy(worker_path + (strlen(worker_path) - strlen("multi-echo-server")), "worker");
@@ -203,7 +203,7 @@ namespace base
 
             // launch same number of workers as number of CPUs
             uv_cpu_info_t *info;
-            int cpu_count = 20;
+            int cpu_count = 3;
             //uv_cpu_info(&info, &cpu_count);
             //uv_free_cpu_info(info, cpu_count);
 
@@ -295,19 +295,19 @@ namespace base
         TcpServerBase::~TcpServerBase() {
 
 
-            SInfo << "~TcpServerBase()";
+            SDebug << "~TcpServerBase()";
             
             if(workers)
             {
-                 SInfo << "delete worker";
+                 SDebug << "delete worker";
                  
                 for( int x =0; x < child_worker_count ; ++x )
                 {
                      struct child_worker *worker = &workers[x];
                      worker->obj->Close();
-                      SInfo << "delete worker1";
+                      SDebug << "delete worker1";
                      uv_close((uv_handle_t*) &worker->queue, NULL);
-                      SInfo << "delete worker2";
+                      SDebug << "delete worker2";
                      uv_close((uv_handle_t*) &worker->pipe, NULL);
                 }
 
@@ -330,12 +330,12 @@ namespace base
             // Tell the UV handle that the TcpServerBase has been closed.
             this->uvHandle->data = nullptr;
 
-            SInfo << " TcpServerBase::Close,  closing all active connections"  <<  this->connections.size();
+            SDebug << " TcpServerBase::Close,  closing all active connections"  <<  this->connections.size();
 
             for (auto* connection : this->connections)
             {
                 connection->Close();
-                SInfo << " TcpServerBase::Close,  delete"  <<  connection;
+                SDebug << " TcpServerBase::Close,  delete"  <<  connection;
                 delete connection;
             }
             connections.clear();
@@ -400,7 +400,7 @@ namespace base
             {
                 //g_num_mutex2.lock();
 
-                SInfo << "OnUvConnection " << round_robin_counter;
+                SDebug << "OnUvConnection " << round_robin_counter;
                 
                 uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
                 uv_tcp_init(Application::uvGetLoop(), client);
@@ -467,7 +467,7 @@ namespace base
                 // Notify the subclass and delete the connection if not accepted by the subclass.
                 if (UserOnNewTcpConnection(connection))
                 {
-                       SInfo << "TcpServerBase new connection "  << connection;
+                       SDebug << "TcpServerBase new connection "  << connection;
                     this->connections.insert(connection);
                 }
                 else
@@ -522,7 +522,7 @@ namespace base
             // Notify the subclass and delete the connection if not accepted by the subclass.
             if (UserOnNewTcpConnection(connection))
             {
-                   SInfo << "TcpServerBase new connection "  << connection;
+                   SDebug << "TcpServerBase new connection "  << connection;
                 this->connections.insert(connection);
             }
             else
@@ -532,7 +532,7 @@ namespace base
         void TcpServerBase::OnTcpConnectionClosed(TcpConnectionBase* connection) {
 
             
-            SInfo << " TcpConnectionBase close "  << connection;
+            SDebug << " TcpConnectionBase close "  << connection;
               
 
             // Remove the TcpConnectionBase from the set.
@@ -612,7 +612,7 @@ namespace base
 	 #endif
             *connection = new TcpConnectionBase(listener);
             
-            //SInfo << "TcpServer::UserOnTcpConnectionAlloc new connection "  << *connection;
+            //SDebug << "TcpServer::UserOnTcpConnectionAlloc new connection "  << *connection;
         }
 
         bool TcpServer::UserOnNewTcpConnection(TcpConnectionBase* connection) {

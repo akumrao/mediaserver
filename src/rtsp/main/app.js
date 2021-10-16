@@ -510,19 +510,21 @@ function setupHtmlEvents() {
 	var settingsButton = document.getElementById('settings-button');
 	if (settingsButton) {
 		settingsButton.onclick = function (event) {
-			console.log(`-> SS: settings`);
+			console.log(`-> SS: Camera Change`);
 
-			//let quality = document.getElementById('quality').value;
-			//let minBitrate = document.getElementById('minBitrate').value;
-			//let maxBitrate = document.getElementById('maxBitrate').value;
-			let resolution = document.getElementById('resolution').value;
-			//let minQP = document.getElementById('minQP').value;
-			//let rateCtrl = document.getElementById('rateCtrl').value;
-			////let minFPS = document.getElementById('minFPS').value;
-			//let backbuffersize = document.getElementById('backbuffersize').value;
 
-			//ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
-                        ws.send(resolution );
+            //let quality = document.getElementById('quality').value;
+            //let minBitrate = document.getElementById('minBitrate').value;
+            //let maxBitrate = document.getElementById('maxBitrate').value;
+            let camera = document.getElementById('camera').value;
+            //let minQP = document.getElementById('minQP').value;
+            //let rateCtrl = document.getElementById('rateCtrl').value;
+            ////let minFPS = document.getElementById('minFPS').value;
+            //let backbuffersize = document.getElementById('backbuffersize').value;
+
+            //ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
+            ws.send(camera);
+
 		};
 	}
 
@@ -706,7 +708,7 @@ function resetAfkWarningTimer() {
 function sendInputData(data) {
     if (videoObj) {
         //console.log("input data send.");
-        ws.send(data);
+        //ws.send(data);
     }
 }
 

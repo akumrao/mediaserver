@@ -54,7 +54,7 @@ MSRTSPClient* MSRTSPClient::createNew(UsageEnvironment& env, const std::string r
   return new MSRTSPClient(env, rtspURL, fragmp4_muxer, info, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
 }
 
-MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(true), recv_buffer_size(0), reordering_time(0) {
+MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
 }
 
 
@@ -510,7 +510,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
     setupframe.stream_index     = subsession_index;
     setupframe.mstimestamp      = CurrentTime_milliseconds();
     // send setup frame
-    //info->run(&setupframe);
+    info->run(&setupframe);
     fragmp4_muxer->run(&setupframe);
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
@@ -615,7 +615,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     }
     else
     {
-        //info->run(&basicframe);
+        info->run(&basicframe);
         fragmp4_muxer->run(&basicframe); // starts the frame filter chain
         basicframe.payload.resize(basicframe.payload.capacity());
         
@@ -672,7 +672,7 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
   scs.setFrame(); // flag that indicates that we got a frame
   
   // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
-  //info->run(&basicframe);
+  info->run(&basicframe);
   fragmp4_muxer->run(&basicframe); // starts the frame filter chain
   
 //  if (numTruncatedBytes>0) {// time to grow the buffer..

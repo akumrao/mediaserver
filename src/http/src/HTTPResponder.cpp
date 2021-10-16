@@ -169,7 +169,7 @@ namespace base {
                 rep << closure->result;
                 std::string res = rep.str();
 
-               // SInfo << res;
+               // SDebug << res;
 
                 //uv_buf_t resbuf;
               //  resbuf.base = (char *) res.c_str();
@@ -224,7 +224,7 @@ namespace base {
             auto& request1 = connection()->_request;
 
             // Log incoming requests
-            SInfo << ": response:\n" << response << std::endl;
+            SDebug << ": response:\n" << response << std::endl;
 
 
             //  response.setContentLength(14); // headers will be auto flushed
@@ -244,7 +244,7 @@ namespace base {
            file_to_open = request1.getURI();
 #endif
 
-            SInfo << "Response file Path: " << file_to_open << std::endl;
+            SDebug << "Response file Path: " << file_to_open << std::endl;
 
             render_baton *closure = new render_baton();
             

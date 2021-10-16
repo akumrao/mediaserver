@@ -75,15 +75,15 @@ enum class LiveConnectionType {
 struct LiveConnectionContext {                                                                        
   /** Default constructor */
   LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  
-                        FrameFilter* framefilter, FrameFilter* info) :                                                   
+                        bool request_tcp, FrameFilter* framefilter, FrameFilter* info) :                                                   
   connection_type(ct), address(address), slot(slot), framefilter(framefilter),info(info), msreconnect(10000),       
-  request_multicast(false), request_tcp(true), recv_buffer_size(0), reordering_time(0),              
+  request_multicast(false), request_tcp(request_tcp), recv_buffer_size(0), reordering_time(0),              
   time_correction(TimeCorrectionType::smart)                                                          
   {}                                                                                                  
   /** Dummy constructor : remember to set member values by hand */
   LiveConnectionContext() :                                                                           
   connection_type(LiveConnectionType::none), address(""), slot(0), framefilter(NULL),info(NULL), msreconnect(10000), 
-  request_multicast(false), request_tcp(true),time_correction(TimeCorrectionType::smart)             
+  request_multicast(false), request_tcp(request_tcp),time_correction(TimeCorrectionType::smart)             
   {}                                                                                                  
   LiveConnectionType connection_type;   ///< Identifies the connection type                           
   std::string        address;           ///< Stream address                                           

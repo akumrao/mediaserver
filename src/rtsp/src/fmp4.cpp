@@ -77,12 +77,10 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, 2, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, false, fragmp4_muxer, info); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
-
             ffparser->playStreamCall(*ctx);
-            
-            
+          
 
            #endif
 
@@ -121,7 +119,22 @@ namespace base {
               #else
 
                if( got == "reset")
+               {
+                    SInfo  << "reset";
                     fragmp4_muxer->resetParser = true ;//  
+               }
+               else
+               {
+                   ffparser->stopStreamCall(*ctx);
+                   
+                   
+                   SInfo <<  "slot " <<  ++slot ;
+                   ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, false, fragmp4_muxer, info); // Request livethread to write into filter info
+                   ffparser->registerStreamCall(*ctx);
+                   ffparser->playStreamCall(*ctx);
+            
+                   fragmp4_muxer->resetParser = true ;//  
+               }
              
              
               #endif

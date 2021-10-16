@@ -69,7 +69,7 @@ namespace base {
                 // Log incoming requests
                 STrace << "Incoming connection from " << ": Request:\n" << request << std::endl;
 
-                SInfo << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+                SDebug << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
 
                 // Handle websocket connections
                 if (request.getMethod() == "GET") { // || request.has("Sec-WebSocket-Key")) {
