@@ -137,7 +137,7 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
   
   if (scs.subsession != NULL) { // has subsession
     
-   SInfo << "MSRTSPClient: handling subsession " << scs.subsession->mediumName() << std::endl;
+   SInfo << "MSRTSPClient: handling subsession " << scs.subsession->mediumName() ;
     ok_subsession_type = (strcmp(scs.subsession->mediumName(),"video")==0 or strcmp(scs.subsession->mediumName(),"audio")==0); // CAM_EXCEPTION : UNV-1
     
     if (ok_subsession_type) { // a decent subsession
@@ -158,13 +158,13 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
         if (scs.subsession->rtpSource() != NULL) {
           if (client->reordering_time>0) {
             scs.subsession->rtpSource()->setPacketReorderingThresholdTime(client->reordering_time);
-            SInfo << "MSRTSPClient: packet reordering time now " << client->reordering_time << " microseconds " << std::endl;
+            SInfo << "MSRTSPClient: packet reordering time now " << client->reordering_time << " microseconds " ;
           }
           if (client->recv_buffer_size>0) {
             int socketNum = scs.subsession->rtpSource()->RTPgs()->socketNum();
             unsigned curBufferSize = getReceiveBufferSize(env, socketNum);
             unsigned newBufferSize = setReceiveBufferTo  (env, socketNum, client->recv_buffer_size);
-            SInfo << "MSRTSPClient: receiving socket size changed from " << curBufferSize << " to " << newBufferSize << std::endl;
+            SInfo << "MSRTSPClient: receiving socket size changed from " << curBufferSize << " to " << newBufferSize ;
           }
         }
         
@@ -184,7 +184,7 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
       } // subsession ok
     }
     else { // decent subsession
-     SInfo << "MSRTSPClient: discarded subsession " << scs.subsession->mediumName() << std::endl;
+     SInfo << "MSRTSPClient: discarded subsession " << scs.subsession->mediumName() ;
       setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
     } // decent subsession
     return; // we have either called this routine again with another subsession or sent a setup command
@@ -296,7 +296,7 @@ void MSRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, cha
   else {
     *livestatus=LiveStatus::alive;
     // start periodic GET_PARAMETER pinging of the camera.  Required for buggy 3-tier cameras, like AXIS
-     SError << "MSRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" << std::endl;
+     SError << "MSRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" ;
     // ..Sampsa, I commented that stupid pun since it only creates confusion (Petri)
     scs.pingGetParameterTask = env.taskScheduler().scheduleDelayedTask(1000000*LIVE_GET_PARAMETER_PING, (TaskFunc*)pingGetParameter, rtspClient);  // arvind ping imp
   }
@@ -510,7 +510,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
     setupframe.stream_index     = subsession_index;
     setupframe.mstimestamp      = CurrentTime_milliseconds();
     // send setup frame
-    info->run(&setupframe);
+    //info->run(&setupframe);
     fragmp4_muxer->run(&setupframe);
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
@@ -593,42 +593,43 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
   basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
   basicframe.fillPars();
-  // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+  
+  //SInfo << "afterGettingFrame: " << fragmp4_muxer->resetParser ;
   
  // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
   
-    scs.setFrame();
-   if (fragmp4_muxer->resetParser && basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
-    {
+   scs.setFrame();
+   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+   {
         fragmp4_muxer->sendMeta();
         fragmp4_muxer->resetParser = false;
-    }
+   }
 
-    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
-    {
+   if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+   {
        //info->run(&basicframe);
        basicframe.payload.resize(basicframe.payload.capacity());
-    }
-    else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
+   }
+   else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
         //info->run(&basicframe);
         basicframe.payload.resize(basicframe.payload.capacity());
-    }
-    else
-    {
-        info->run(&basicframe);
+   }
+   else
+   {
+        //info->run(&basicframe);
         fragmp4_muxer->run(&basicframe); // starts the frame filter chain
         basicframe.payload.resize(basicframe.payload.capacity());
         
-    }
+   }
                     
   
   // flag that indicates that we got a frame
   
-  // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
+  // std::cerr << "BufferSource: IN0: " << basicframe ;
 
   
 //  if (numTruncatedBytes>0) {// time to grow the buffer..
-//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;
+//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" ;
 //    setReceiveBuffer(target_size);
 //  }
   
@@ -663,7 +664,7 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
   basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
   basicframe.fillPars();
-  // std::cout << "afterGettingFrame: " << basicframe << std::endl;
+  // std::cout << "afterGettingFrame: " << basicframe ;
   
  // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
   
@@ -671,12 +672,12 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
   
   scs.setFrame(); // flag that indicates that we got a frame
   
-  // std::cerr << "BufferSource: IN0: " << basicframe << std::endl;
-  info->run(&basicframe);
+  // std::cerr << "BufferSource: IN0: " << basicframe ;
+  //info->run(&basicframe);
   fragmp4_muxer->run(&basicframe); // starts the frame filter chain
   
 //  if (numTruncatedBytes>0) {// time to grow the buffer..
-//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" << std::endl;
+//   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" ;
 //    setReceiveBuffer(target_size);
 //  }
   

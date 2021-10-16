@@ -281,6 +281,14 @@ var hiddenInput = undefined;
                     } else {
                         // text frame
                         console.log(event.data);
+                        if(event.data == "reset" )
+                        {
+                            pass = 0;
+                            stream_started = false; 
+                            queue = [];
+                            seeked = false; 
+                             cc = 0;
+                        }
                     }
 
                     

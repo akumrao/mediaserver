@@ -93,9 +93,6 @@ namespace base {
 
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
-            
-            
-           
              
             ffparser->stop();
             ffparser->join();
@@ -127,13 +124,19 @@ namespace base {
                {
                    ffparser->stopStreamCall(*ctx);
                    
-                   
+                   ffparser->deregisterStreamCall(*ctx);
+                   delete ctx;
+                    
+                   fragmp4_muxer->resetParser = true ;// 
                    SInfo <<  "slot " <<  ++slot ;
+                   
+                   broadcast("reset" , 5, false);
+                   
                    ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, false, fragmp4_muxer, info); // Request livethread to write into filter info
                    ffparser->registerStreamCall(*ctx);
                    ffparser->playStreamCall(*ctx);
             
-                   fragmp4_muxer->resetParser = true ;//  
+                   
                }
              
              
