@@ -24,6 +24,7 @@
  * logging functions
  */
 
+extern "C" {
 #include "config.h"
 
 #if HAVE_UNISTD_H
@@ -100,6 +101,14 @@ static const uint32_t color[16 + AV_CLASS_CATEGORY_NB] = {
     [AV_LOG_VERBOSE/8] =  40 <<  8 | 0x02,
     [AV_LOG_DEBUG  /8] =  34 <<  8 | 0x02,
     [AV_LOG_TRACE  /8] =  34 <<  8 | 0x07,
+    [8] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [9] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [10] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [11] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [12] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [13] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [14] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error
+    [15] =  34 <<  8 | 0x07, //sanjay risk review required by arvind. Added to solve trivial initialization error 
     [16+AV_CLASS_CATEGORY_NA              ] = 250 << 8 | 0x09,
     [16+AV_CLASS_CATEGORY_INPUT           ] = 219 << 8 | 0x15,
     [16+AV_CLASS_CATEGORY_OUTPUT          ] = 201 << 8 | 0x05,
@@ -111,6 +120,36 @@ static const uint32_t color[16 + AV_CLASS_CATEGORY_NB] = {
     [16+AV_CLASS_CATEGORY_BITSTREAM_FILTER] = 192 << 8 | 0x14,
     [16+AV_CLASS_CATEGORY_SWSCALER        ] = 153 << 8 | 0x14,
     [16+AV_CLASS_CATEGORY_SWRESAMPLER     ] = 147 << 8 | 0x14,
+    [27] = 147 << 8 | 0x14,    
+    [28] = 147 << 8 | 0x14, 
+    [29] = 147 << 8 | 0x14,     
+    [30] = 147 << 8 | 0x14,
+    [31] = 147 << 8 | 0x14,
+    [32] = 147 << 8 | 0x14,
+    [33] = 147 << 8 | 0x14,
+    [34] = 147 << 8 | 0x14,
+    [35] = 147 << 8 | 0x14,
+    [36] = 147 << 8 | 0x14,
+    [37] = 147 << 8 | 0x14,
+    [38] = 147 << 8 | 0x14,
+    [39] = 147 << 8 | 0x14,
+    [40] = 147 << 8 | 0x14,
+    [41] = 147 << 8 | 0x14,
+    [42] = 147 << 8 | 0x14,
+    [43] = 147 << 8 | 0x14,
+    [44] = 147 << 8 | 0x14,
+    [45] = 147 << 8 | 0x14,
+    [46] = 147 << 8 | 0x14,
+    [47] = 147 << 8 | 0x14,
+    [48] = 147 << 8 | 0x14,
+    [49] = 147 << 8 | 0x14,
+    [50] = 147 << 8 | 0x14,
+    [51] = 147 << 8 | 0x14,
+    [52] = 147 << 8 | 0x14,
+    [53] = 147 << 8 | 0x14,
+    [54] = 147 << 8 | 0x14,
+    [55] = 147 << 8 | 0x14,    
+    
     [16+AV_CLASS_CATEGORY_DEVICE_VIDEO_OUTPUT ] = 213 << 8 | 0x15,
     [16+AV_CLASS_CATEGORY_DEVICE_VIDEO_INPUT  ] = 207 << 8 | 0x05,
     [16+AV_CLASS_CATEGORY_DEVICE_AUDIO_OUTPUT ] = 213 << 8 | 0x15,
@@ -341,13 +380,13 @@ void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
         count = 0;
     }
     strcpy(prev, line);
-    sanitize(part[0].str);
+    sanitize((uint8_t *)part[0].str);
     colored_fputs(type[0], 0, part[0].str);
-    sanitize(part[1].str);
+    sanitize((uint8_t *)part[1].str);
     colored_fputs(type[1], 0, part[1].str);
-    sanitize(part[2].str);
+    sanitize((uint8_t *)part[2].str);
     colored_fputs(av_clip(level >> 3, 0, NB_LEVELS - 1), tint >> 8, part[2].str);
-    sanitize(part[3].str);
+    sanitize((uint8_t *)part[3].str);
     colored_fputs(av_clip(level >> 3, 0, NB_LEVELS - 1), tint >> 8, part[3].str);
 
 #if CONFIG_VALGRIND_BACKTRACE
@@ -438,4 +477,5 @@ void avpriv_report_missing_feature(void *avc, const char *msg, ...)
     va_start(argument_list, msg);
     missing_feature_sample(0, avc, msg, argument_list);
     va_end(argument_list);
+}
 }
