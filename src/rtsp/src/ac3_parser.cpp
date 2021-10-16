@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include "channel_layout.h"
 #include "parser.h"
 #include "ac3_parser.h"
@@ -53,7 +53,7 @@ int avpriv_ac3_parse_header(GetBitContext *gbc, AC3HeaderInfo **phdr)
     AC3HeaderInfo *hdr;
 
     if (!*phdr)
-        *phdr = av_mallocz(sizeof(AC3HeaderInfo));
+        *phdr = (AC3HeaderInfo*)av_mallocz(sizeof(AC3HeaderInfo));
     if (!*phdr)
         return AVERROR(ENOMEM);
     hdr = *phdr;
@@ -188,7 +188,7 @@ static int ac3_sync(uint64_t state, AACAC3ParseContext *hdr_info,
 
 static av_cold int ac3_parse_init(AVCodecParserContext *s1)
 {
-    AACAC3ParseContext *s = s1->priv_data;
+    AACAC3ParseContext *s = (AACAC3ParseContext*)s1->priv_data;
     s->header_size = AC3_HEADER_SIZE;
     s->sync = ac3_sync;
     return 0;
@@ -202,3 +202,4 @@ AVCodecParser ff_ac3_parser = {
     .parser_parse   = ff_aac_ac3_parse,
     .parser_close   = ff_parse_close,
 };
+}
