@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include "fifo.h"
 #include "mathematics.h"
 #include "avformat.h"
@@ -31,7 +31,7 @@ void ff_audio_interleave_close(AVFormatContext *s)
     int i;
     for (i = 0; i < s->nb_streams; i++) {
         AVStream *st = s->streams[i];
-        AudioInterleaveContext *aic = st->priv_data;
+        AudioInterleaveContext *aic = (AudioInterleaveContext *)st->priv_data;
 
         if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
             av_fifo_freep(&aic->fifo);
@@ -53,7 +53,7 @@ int ff_audio_interleave_init(AVFormatContext *s,
     }
     for (i = 0; i < s->nb_streams; i++) {
         AVStream *st = s->streams[i];
-        AudioInterleaveContext *aic = st->priv_data;
+        AudioInterleaveContext *aic = (AudioInterleaveContext *)st->priv_data;
 
         if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             aic->sample_size = (st->codecpar->channels *
@@ -79,7 +79,7 @@ static int interleave_new_audio_packet(AVFormatContext *s, AVPacket *pkt,
                                        int stream_index, int flush)
 {
     AVStream *st = s->streams[stream_index];
-    AudioInterleaveContext *aic = st->priv_data;
+    AudioInterleaveContext *aic = (AudioInterleaveContext *)st->priv_data;
     int ret;
     int size = FFMIN(av_fifo_size(aic->fifo), *aic->samples * aic->sample_size);
     if (!size || (!flush && size == av_fifo_size(aic->fifo)))
@@ -110,7 +110,7 @@ int ff_audio_rechunk_interleave(AVFormatContext *s, AVPacket *out, AVPacket *pkt
 
     if (pkt) {
         AVStream *st = s->streams[pkt->stream_index];
-        AudioInterleaveContext *aic = st->priv_data;
+        AudioInterleaveContext *aic = (AudioInterleaveContext *)st->priv_data;
         if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             unsigned new_size = av_fifo_size(aic->fifo) + pkt->size;
             if (new_size > aic->fifo_size) {
@@ -143,4 +143,5 @@ int ff_audio_rechunk_interleave(AVFormatContext *s, AVPacket *out, AVPacket *pkt
     }
 
     return get_packet(s, out, NULL, flush);
+}
 }
