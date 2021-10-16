@@ -20,6 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include "channel_layout.h"
 #include "common.h"
 #include "parser.h"
@@ -30,7 +31,7 @@ int ff_aac_ac3_parse(AVCodecParserContext *s1,
                      const uint8_t **poutbuf, int *poutbuf_size,
                      const uint8_t *buf, int buf_size)
 {
-    AACAC3ParseContext *s = s1->priv_data;
+    AACAC3ParseContext *s = (AACAC3ParseContext *)s1->priv_data;
     ParseContext *pc = &s->pc;
     int len, i;
     int new_frame_start;
@@ -101,11 +102,12 @@ get_next:
                 avctx->channel_layout = s->channel_layout;
             }
             s1->duration = s->samples;
-            avctx->audio_service_type = s->service_type;
+            avctx->audio_service_type = (AVAudioServiceType)s->service_type;
         }
 
         avctx->bit_rate = s->bit_rate;
     }
 
     return i;
+}
 }
