@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include "common.h"
 #include "aes_ctr.h"
 #include "aes.h"
@@ -35,7 +36,7 @@ typedef struct AVAESCTR {
 
 struct AVAESCTR *av_aes_ctr_alloc(void)
 {
-    return av_mallocz(sizeof(struct AVAESCTR));
+    return (AVAESCTR *)av_mallocz(sizeof(struct AVAESCTR));
 }
 
 void av_aes_ctr_set_iv(struct AVAESCTR *a, const uint8_t* iv)
@@ -126,4 +127,5 @@ void av_aes_ctr_crypt(struct AVAESCTR *a, uint8_t *dst, const uint8_t *src, int 
             *dst++ = *src++ ^ *encrypted_counter_pos++;
         }
     }
+}
 }
