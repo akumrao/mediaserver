@@ -20,6 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include "common.h"
 #include "aes.h"
 #include "aes_internal.h"
@@ -30,7 +31,7 @@ const int av_aes_size= sizeof(AVAES);
 
 struct AVAES *av_aes_alloc(void)
 {
-    return av_mallocz(sizeof(struct AVAES));
+    return (AVAES*)av_mallocz(sizeof(struct AVAES));
 }
 
 static const uint8_t rcon[10] = {
@@ -265,4 +266,4 @@ int av_aes_init(AVAES *a, const uint8_t *key, int key_bits, int decrypt)
 
     return 0;
 }
-
+}
