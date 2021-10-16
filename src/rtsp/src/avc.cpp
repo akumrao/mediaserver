@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include "intreadwrite.h"
 #include "avformat.h"
 #include "avio.h"
@@ -180,7 +180,7 @@ int ff_avc_write_annexb_extradata(const uint8_t *in, uint8_t **buf, int *size)
     if (11 + sps_size + pps_size > *size)
         return AVERROR_INVALIDDATA;
     out_size = 8 + sps_size + pps_size;
-    out = av_mallocz(out_size + AV_INPUT_BUFFER_PADDING_SIZE);
+    out = (uint8_t *)av_mallocz(out_size + AV_INPUT_BUFFER_PADDING_SIZE);
     if (!out)
         return AVERROR(ENOMEM);
     AV_WB32(&out[0], 0x00000001);
@@ -207,4 +207,5 @@ const uint8_t *ff_avc_mp4_find_startcode(const uint8_t *start,
         return NULL;
 
     return start + res;
+}
 }
