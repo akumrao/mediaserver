@@ -23,6 +23,7 @@
  * @file
  * tables taken directly from the AC-3 spec.
  */
+extern "C" {
 
 #include "channel_layout.h"
 #include "mem.h"
@@ -294,7 +295,7 @@ const uint16_t ff_ac3_db_per_bit_tab[4]= {
 };
 
 const int16_t ff_ac3_floor_tab[8]= {
-    0x2f0, 0x2b0, 0x270, 0x230, 0x1f0, 0x170, 0x0f0, 0xf800,
+    (int16_t)0x2f0, (int16_t)0x2b0, (int16_t)0x270, (int16_t)0x230, (int16_t)0x1f0, (int16_t)0x170, (int16_t)0x0f0, (int16_t)0xf800,
 };
 
 const uint16_t ff_ac3_fast_gain_tab[8]= {
@@ -314,3 +315,4 @@ const uint16_t ff_eac3_default_chmap[8] = {
     AC3_CHMAP_L |               AC3_CHMAP_R | AC3_CHMAP_L_SUR |                  AC3_CHMAP_R_SUR,
     AC3_CHMAP_L | AC3_CHMAP_C | AC3_CHMAP_R | AC3_CHMAP_L_SUR |                  AC3_CHMAP_R_SUR
 };
+}
