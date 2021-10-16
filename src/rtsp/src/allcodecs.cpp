@@ -23,7 +23,7 @@
  * @file
  * Provide registration of all codecs, parsers and bitstream filters for libavcodec.
  */
-
+extern "C" {
 #include "config.h"
 #include "avthread.h"
 #include "avcodec.h"
@@ -723,4 +723,5 @@ void avcodec_register_all(void)
     static AVOnce control = AV_ONCE_INIT;
 
     ff_thread_once(&control, register_all);
+}
 }
