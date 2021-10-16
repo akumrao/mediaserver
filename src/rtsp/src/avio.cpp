@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include "avstring.h"
 #include "dict.h"
 #include "opt.h"
@@ -30,6 +31,7 @@
 #include "network.h"
 #endif
 #include "url.h"
+#include "mytime.h"
 
 /** @name Logging context. */
 /*@{*/
@@ -44,7 +46,7 @@ static const char *urlcontext_to_name(void *ptr)
 
 static void *urlcontext_child_next(void *obj, void *prev)
 {
-    URLContext *h = obj;
+    URLContext *h = (URLContext *)obj;
     if (!prev && h->priv_data && h->prot->priv_data_class)
         return h->priv_data;
     return NULL;
@@ -56,16 +58,18 @@ static void *urlcontext_child_next(void *obj, void *prev)
 static const AVOption options[] = {
     {"protocol_whitelist", "List of protocols that are allowed to be used", OFFSET(protocol_whitelist), AV_OPT_TYPE_STRING, { .str = NULL },  CHAR_MIN, CHAR_MAX, D },
     {"protocol_blacklist", "List of protocols that are not allowed to be used", OFFSET(protocol_blacklist), AV_OPT_TYPE_STRING, { .str = NULL },  CHAR_MIN, CHAR_MAX, D },
-    {"rw_timeout", "Timeout for IO operations (in microseconds)", offsetof(URLContext, rw_timeout), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, INT64_MAX, AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_DECODING_PARAM },
+    {"rw_timeout", "Timeout for IO operations (in microseconds)", offsetof(URLContext, rw_timeout), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, (double)INT64_MAX, AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_DECODING_PARAM },
     { NULL }
 };
 
 const AVClass ffurl_context_class = {
-    .class_name       = "URLContext",
-    .item_name        = urlcontext_to_name,
-    .option           = options,
-    .version          = 1,
-    .child_next       = urlcontext_child_next,
+    .class_name = "URLContext",
+    .item_name = urlcontext_to_name,
+    .option = options,
+    .version = 1,
+    .log_level_offset_offset= 0,
+    .parent_log_context_offset= 0,
+    .child_next = urlcontext_child_next,
     .child_class_next = ff_urlcontext_child_class_next,
 };
 /*@}*/
@@ -91,7 +95,7 @@ static int url_alloc_for_protocol(URLContext **puc, const URLProtocol *up,
                "Impossible to open the '%s' protocol for writing\n", up->name);
         return AVERROR(EIO);
     }
-    uc = av_mallocz(sizeof(URLContext) + strlen(filename) + 1);
+    uc = (URLContext*)av_mallocz(sizeof(URLContext) + strlen(filename) + 1);
     if (!uc) {
         err = AVERROR(ENOMEM);
         goto fail;
@@ -541,7 +545,7 @@ int avio_open_dir(AVIODirContext **s, const char *url, AVDictionary **options)
     int ret;
     av_assert0(s);
 
-    ctx = av_mallocz(sizeof(*ctx));
+    ctx = (AVIODirContext*)av_mallocz(sizeof(*ctx));
     if (!ctx) {
         ret = AVERROR(ENOMEM);
         goto fail;
@@ -635,7 +639,7 @@ int ffurl_get_multi_file_handle(URLContext *h, int **handles, int *numhandles)
     if (!h->prot->url_get_multi_file_handle) {
         if (!h->prot->url_get_file_handle)
             return AVERROR(ENOSYS);
-        *handles = av_malloc(sizeof(**handles));
+        *handles = (int *)av_malloc(sizeof(**handles));
         if (!*handles)
             return AVERROR(ENOMEM);
         *numhandles = 1;
@@ -665,4 +669,5 @@ int ff_check_interrupt(AVIOInterruptCB *cb)
     if (cb && cb->callback && (ret = cb->callback(cb->opaque)))
         return ret;
     return 0;
+}
 }
