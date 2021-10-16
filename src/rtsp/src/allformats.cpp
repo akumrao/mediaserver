@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include "avthread.h"
 #include "avformat.h"
 //#include "rtp.h"
@@ -387,4 +387,5 @@ void av_register_all(void)
     static AVOnce control = AV_ONCE_INIT;
 
     ff_thread_once(&control, register_all);
+}
 }
