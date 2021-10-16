@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include "attributes.h"
 #include "common.h"
 #include "audio_frame_queue.h"
@@ -43,24 +43,24 @@ void ff_af_queue_close(AudioFrameQueue *afq)
 
 int ff_af_queue_add(AudioFrameQueue *afq, const AVFrame *f)
 {
-    AudioFrame *new = av_fast_realloc(afq->frames, &afq->frame_alloc, sizeof(*afq->frames)*(afq->frame_count+1));
-    if(!new)
+    AudioFrame *newAF = (AudioFrame *)av_fast_realloc(afq->frames, &afq->frame_alloc, sizeof(*afq->frames)*(afq->frame_count+1));
+    if(!newAF)
         return AVERROR(ENOMEM);
-    afq->frames = new;
-    new += afq->frame_count;
+    afq->frames = newAF;
+    newAF += afq->frame_count;
 
     /* get frame parameters */
-    new->duration = f->nb_samples;
-    new->duration += afq->remaining_delay;
+    newAF->duration = f->nb_samples;
+    newAF->duration += afq->remaining_delay;
     if (f->pts != AV_NOPTS_VALUE) {
-        new->pts = av_rescale_q(f->pts,
+        newAF->pts = av_rescale_q(f->pts,
                                       afq->avctx->time_base,
                                       (AVRational){ 1, afq->avctx->sample_rate });
-        new->pts -= afq->remaining_delay;
-        if(afq->frame_count && new[-1].pts >= new->pts)
+        newAF->pts -= afq->remaining_delay;
+        if(afq->frame_count && newAF[-1].pts >= newAF->pts)
             av_log(afq->avctx, AV_LOG_WARNING, "Queue input is backward in time\n");
     } else {
-        new->pts = AV_NOPTS_VALUE;
+        newAF->pts = AV_NOPTS_VALUE;
     }
     afq->remaining_delay = 0;
 
@@ -110,4 +110,5 @@ void ff_af_queue_remove(AudioFrameQueue *afq, int nb_samples, int64_t *pts,
     }
     if (duration)
         *duration = ff_samples_to_time_base(afq->avctx, removed_samples);
+}
 }
