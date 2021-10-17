@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include <string.h>
 
 #include "log.h"
@@ -60,7 +61,7 @@ void av_bsf_free(AVBSFContext **pctx)
 
 static void *bsf_child_next(void *obj, void *prev)
 {
-    AVBSFContext *ctx = obj;
+    AVBSFContext *ctx = (AVBSFContext *)obj;
     if (!prev && ctx->filter->priv_class)
         return ctx->priv_data;
     return NULL;
@@ -69,7 +70,10 @@ static void *bsf_child_next(void *obj, void *prev)
 static const AVClass bsf_class = {
     .class_name       = "AVBSFContext",
     .item_name        = av_default_item_name,
+    .option           = NULL, 
     .version          = 1,
+    .log_level_offset_offset = 0,
+    .parent_log_context_offset = 0,
     .child_next       = bsf_child_next,
     .child_class_next = ff_bsf_child_class_next,
 };
@@ -84,7 +88,7 @@ int av_bsf_alloc(const AVBitStreamFilter *filter, AVBSFContext **pctx)
     AVBSFContext *ctx;
     int ret;
 
-    ctx = av_mallocz(sizeof(*ctx));
+    ctx = (AVBSFContext*)av_mallocz(sizeof(*ctx));
     if (!ctx)
         return AVERROR(ENOMEM);
 
@@ -98,7 +102,7 @@ int av_bsf_alloc(const AVBitStreamFilter *filter, AVBSFContext **pctx)
         goto fail;
     }
 
-    ctx->internal = av_mallocz(sizeof(*ctx->internal));
+    ctx->internal = (AVBSFInternal*)av_mallocz(sizeof(*ctx->internal));
     if (!ctx->internal) {
         ret = AVERROR(ENOMEM);
         goto fail;
@@ -240,7 +244,7 @@ int ff_bsf_get_packet_ref(AVBSFContext *ctx, AVPacket *pkt)
 }
 
 typedef struct BSFListContext {
-    const AVClass *class;
+    const AVClass *class_av;
 
     AVBSFContext **bsfs;
     int nb_bsfs;
@@ -254,7 +258,7 @@ typedef struct BSFListContext {
 
 static int bsf_list_init(AVBSFContext *bsf)
 {
-    BSFListContext *lst = bsf->priv_data;
+    BSFListContext *lst = (BSFListContext *)bsf->priv_data;
     int ret, i;
     const AVCodecParameters *cod_par = bsf->par_in;
     AVRational tb = bsf->time_base_in;
@@ -283,7 +287,7 @@ fail:
 
 static int bsf_list_filter(AVBSFContext *bsf, AVPacket *out)
 {
-    BSFListContext *lst = bsf->priv_data;
+    BSFListContext *lst = (BSFListContext *)bsf->priv_data;
     int ret;
 
     if (!lst->nb_bsfs)
@@ -340,7 +344,7 @@ static int bsf_list_filter(AVBSFContext *bsf, AVPacket *out)
 
 static void bsf_list_close(AVBSFContext *bsf)
 {
-    BSFListContext *lst = bsf->priv_data;
+    BSFListContext *lst = (BSFListContext *)bsf->priv_data;
     int i;
 
     for (i = 0; i < lst->nb_bsfs; ++i)
@@ -352,8 +356,8 @@ static void bsf_list_close(AVBSFContext *bsf)
 static const char *bsf_list_item_name(void *ctx)
 {
     static const char *null_filter_name = "null";
-    AVBSFContext *bsf_ctx = ctx;
-    BSFListContext *lst = bsf_ctx->priv_data;
+    AVBSFContext *bsf_ctx = (AVBSFContext *)ctx;
+    BSFListContext *lst = (BSFListContext *)bsf_ctx->priv_data;
 
     if (!lst->nb_bsfs)
         return null_filter_name;
@@ -377,13 +381,19 @@ static const char *bsf_list_item_name(void *ctx)
 static const AVClass bsf_list_class = {
         .class_name = "bsf_list",
         .item_name  = bsf_list_item_name,
+        .option     = NULL, 
         .version    = 1,
+        .log_level_offset_offset    = 0,
+        .parent_log_context_offset  = 0,
+        .child_next                 = NULL,
+        .child_class_next           = NULL,        
 };
 
 const AVBitStreamFilter ff_list_bsf = {
         .name           = "bsf_list",
-        .priv_data_size = sizeof(BSFListContext),
+        .codec_ids      = NULL,
         .priv_class     = &bsf_list_class,
+        .priv_data_size = sizeof(BSFListContext),
         .init           = bsf_list_init,
         .filter         = bsf_list_filter,
         .close          = bsf_list_close,
@@ -396,7 +406,7 @@ struct AVBSFList {
 
 AVBSFList *av_bsf_list_alloc(void)
 {
-    return av_mallocz(sizeof(AVBSFList));
+    return (AVBSFList *)av_mallocz(sizeof(AVBSFList));
 }
 
 void av_bsf_list_free(AVBSFList **lst)
@@ -462,7 +472,7 @@ int av_bsf_list_finalize(AVBSFList **lst, AVBSFContext **bsf)
     if (ret < 0)
         return ret;
 
-    ctx = (*bsf)->priv_data;
+    ctx = (BSFListContext*)(*bsf)->priv_data;
 
     ctx->bsfs = (*lst)->bsfs;
     ctx->nb_bsfs = (*lst)->nb_bsfs;
@@ -542,4 +552,5 @@ end:
 int av_bsf_get_null_filter(AVBSFContext **bsf)
 {
     return av_bsf_alloc(&ff_list_bsf, bsf);
+}
 }
