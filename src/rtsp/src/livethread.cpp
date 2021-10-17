@@ -328,7 +328,7 @@ void RTSPConnection::reStartStreamIf() {
     SDebug << "RTSPConnection: status: " << int(livestatus) ;
 
     if (livestatus==LiveStatus::pending or livestatus==LiveStatus::closed) { // stream trying to connect .. waiting for tcp socket most likely
-        SInfo << "RTSPConnection: reStartStreamIf: pending" ;
+        SDebug << "RTSPConnection: reStartStreamIf: pending" ;
         // frametimer=frametimer+Timeout::livethread;
         pendingtimer=pendingtimer+Timeout::livethread;
         if (pendingtimer >= ctx.msreconnect) {
