@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -307,3 +308,4 @@ void av_bprint_escape(AVBPrint *dstbuf, const char *src, const char *special_cha
     }
 }
 
+}
