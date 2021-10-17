@@ -58,7 +58,7 @@ namespace base {
 
             self = this;
 
-	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+	          fragmp4_filter = new DummyFrameFilter("fragmp4", this);
             fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
             info = new InfoFrameFilter("info", nullptr);
@@ -77,7 +77,7 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, false, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, false, fragmp4_muxer, info); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
             ffparser->playStreamCall(*ctx);
           
@@ -127,7 +127,10 @@ namespace base {
                    ffparser->deregisterStreamCall(*ctx);
                    delete ctx;
                     
-                   fragmp4_muxer->resetParser = true ;// 
+                   fragmp4_muxer->resetParser = true ;//
+                   
+                   Settings::configuration.rtsp2 = got;
+                           
                    SInfo <<  "slot " <<  ++slot ;
                    
                    broadcast("reset" , 5, false);

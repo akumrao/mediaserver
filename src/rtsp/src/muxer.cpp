@@ -95,6 +95,7 @@ avio_ctx_buffer(NULL), missing(0), ccf(0), av_dict(NULL), format_name("matroska"
     // av_dict_set(&av_dict, "frag_size", "500", 500); // nopes
     av_dict_set(&av_dict, "frag_size", "512", 0);
      */
+     SInfo <<   "MuxFrameFilter()";   
 }
 
 MuxFrameFilter::~MuxFrameFilter() {
@@ -103,7 +104,8 @@ MuxFrameFilter::~MuxFrameFilter() {
     av_free(avio_ctx_buffer);
     av_packet_unref(avpkt);
     delete avpkt;
-        
+    
+    SInfo <<   "~MuxFrameFilter()";   
 }
 
 void MuxFrameFilter::initMux() {

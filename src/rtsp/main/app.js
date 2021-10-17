@@ -250,8 +250,15 @@ var hiddenInput = undefined;
                 source_buffer.mode = 'sequence';
                 // source_buffer.mode = 'segments';
                 
+                pass = 0;
+
                 source_buffer.addEventListener("updateend",loadPacket);
            
+
+            }
+
+            function startup() 
+            {
                 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
                 if (!window.WebSocket) {
@@ -259,11 +266,10 @@ var hiddenInput = undefined;
                   return;
                 }
 
+
                 var pth = window.location.href.replace('http://', 'ws://').replace('https://', 'wss://') ;
 
                 ws = new WebSocket(pth);
-
-
 
 
                 //ws = new WebSocket("ws://localhost:1111/ws/");
@@ -275,6 +281,7 @@ var hiddenInput = undefined;
                         // binary frame
                        // const view = new DataView(event.data);
                        // console.log(view.getInt32(0));
+                       if(pass > -1 )
                        putPacket(event.data);
                      //source_buffer.appendBuffer(event.data);
 
@@ -283,11 +290,63 @@ var hiddenInput = undefined;
                         console.log(event.data);
                         if(event.data == "reset" )
                         {
-                            pass = 0;
+                            pass = -1;
                             stream_started = false; 
                             queue = [];
                             seeked = false; 
                              cc = 0;
+
+
+                            videoObj.play();
+
+                            if (ms.readyState === 'open') {
+                                    try {
+                                        ms.removeSourceBuffer(source_buffer);
+                                        ms.endOfStream();
+
+                                    } catch (error) 
+                                    {
+                                       console.log( error.message);
+                                    }
+                            }   
+                            ms =null;
+                            ms = new MediaSource();
+
+                            
+                            ms.addEventListener('sourceopen',opened,false);
+
+                            let playerDiv = document.getElementById('player');
+                            onConfig({} );
+
+                            
+
+                            if (videoObj)
+                            {
+                                
+                            // get reference to video
+                               stream_live = document.getElementById('streamingVideo');
+                        
+                            // set mediasource as source of video
+                                stream_live.src = window.URL.createObjectURL(ms);
+                            }
+
+                            //if (shouldShowPlayOverlay)
+                            {
+                              showPlayOverlay();
+                              resizePlayerStyle();
+                              //ws.send(JSON.stringify({ type: 'gettings' }));
+                            }
+
+
+                            //startup();
+
+                            //ms.removeEventListener('sourceended', this.e.onSourceEnded);
+                           // ms.removeEventListener('sourceclose', this.e.onSourceClose);
+
+
+
+
+
                         }
                     }
 
@@ -316,9 +375,7 @@ var hiddenInput = undefined;
                     console.log("DataChannel error: " + e.message);
                     console.log(e);
                 };
-            }
 
-            function startup() {
                 ms.addEventListener('sourceopen',opened,false);
 
 
@@ -531,6 +588,7 @@ function setupHtmlEvents() {
             //let backbuffersize = document.getElementById('backbuffersize').value;
 
             //ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
+            pass = -1;
             ws.send(camera);
 
 		};

@@ -311,12 +311,12 @@ void MSRTSPClient::pingGetParameter(void* clientData) {
     LiveStatus* livestatus = client->livestatus;
     UsageEnvironment& env = client->envir();
     
-    SInfo << "MSRTSPClient: sending GET_PARAMETER ping \n";
+    //SInfo << "MSRTSPClient: sending GET_PARAMETER ping";
     
     // client->sendGetParameterCommand(*scs.session, MSRTSPClient::continueAfterGET_PARAMETER, "");
     client->sendGetParameterCommand(*scs.session, NULL, ""); // just use this : no callback
     // unsigned sendGetParameterCommand (MediaSession &session, responseHandler *responseHandler, char const *parameterName, Authenticator *authenticator=NULL)
-   SDebug << "MSRTSPClient: sent GET_PARAMETER ping \n";
+   SDebug << "MSRTSPClient: sent GET_PARAMETER ping ";
     
     if (scs.pingGetParameterTask != NULL and *livestatus == LiveStatus::alive) {
         scs.pingGetParameterTask = env.taskScheduler().scheduleDelayedTask(1000000*LIVE_GET_PARAMETER_PING, (TaskFunc*)pingGetParameter, clientData);
@@ -490,7 +490,9 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   
   const char* codec_name=fSubsession.codecName();
   
- SDebug << "FrameSink: constructor: codec_name ="<< codec_name << ", subsession_index ="<<subsession_index <<std::endl;
+ SInfo<< "FrameSink: constructor: codec_name ="<< codec_name << ", subsession_index ="<<subsession_index <<std::endl;
+ 
+  fragmp4_muxer->deActivate();
   
   // https://ffmpeg.org/doxygen/3.0/avcodec_8h_source.html
   if      (strcmp(codec_name,"H264")==0) { // NEW_CODEC_DEV // when adding new codecs, make changes here
