@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include <stddef.h>
 #include <math.h>
 
@@ -232,4 +233,5 @@ avpriv_trc_function avpriv_get_trc_function_from_trc(enum AVColorTransferCharact
             break;
     }
     return func;
+}
 }
