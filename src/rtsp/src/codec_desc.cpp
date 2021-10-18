@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C" {
 #include <string.h>
 
 #include "common.h"
@@ -56,6 +56,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "mpeg2video",
         .long_name = NULL_IF_CONFIG_SMALL("MPEG-2 video"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_mpeg2_video_profiles),
     },
 #if FF_API_XVMC
@@ -116,6 +117,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "mpeg4",
         .long_name = NULL_IF_CONFIG_SMALL("MPEG-4 part 2"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_mpeg4_video_profiles),
     },
     {
@@ -222,6 +224,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "h264",
         .long_name = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_h264_profiles),
     },
     {
@@ -489,6 +492,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "vc1",
         .long_name = NULL_IF_CONFIG_SMALL("SMPTE VC-1"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,                
         .profiles  = NULL_IF_CONFIG_SMALL(ff_vc1_profiles),
     },
     {
@@ -497,6 +501,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "wmv3",
         .long_name = NULL_IF_CONFIG_SMALL("Windows Media Video 9"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_vc1_profiles),
     },
     {
@@ -677,6 +682,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "dnxhd",
         .long_name = NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_dnxhd_profiles),
     },
     {
@@ -930,6 +936,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "vp9",
         .long_name = NULL_IF_CONFIG_SMALL("Google VP9"),
         .props     = AV_CODEC_PROP_LOSSY,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_vp9_profiles),
     },
     {
@@ -1230,6 +1237,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "hevc",
         .long_name = NULL_IF_CONFIG_SMALL("H.265 / HEVC (High Efficiency Video Coding)"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_hevc_profiles),
     },
     {
@@ -2254,6 +2262,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "aac",
         .long_name = NULL_IF_CONFIG_SMALL("AAC (Advanced Audio Coding)"),
         .props     = AV_CODEC_PROP_LOSSY,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_aac_profiles),
     },
     {
@@ -2269,6 +2278,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "dts",
         .long_name = NULL_IF_CONFIG_SMALL("DCA (DTS Coherent Acoustics)"),
         .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_dca_profiles),
     },
     {
@@ -2608,6 +2618,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "aac_latm",
         .long_name = NULL_IF_CONFIG_SMALL("AAC LATM (Advanced Audio Coding LATM syntax)"),
         .props     = AV_CODEC_PROP_LOSSY,
+        .mime_types = NULL,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_aac_profiles),
     },
     {
@@ -3007,6 +3018,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_DATA,
         .name      = "ttf",
         .long_name = NULL_IF_CONFIG_SMALL("TrueType font"),
+        .props=0,
         .mime_types= MT("application/x-truetype-font", "application/x-font"),
     },
     {
@@ -3035,6 +3047,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_DATA,
         .name      = "otf",
         .long_name = NULL_IF_CONFIG_SMALL("OpenType font"),
+        .props=0,
         .mime_types= MT("application/vnd.ms-opentype"),
     },
     {
@@ -3060,6 +3073,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_DATA,
         .name      = "bin_data",
         .long_name = NULL_IF_CONFIG_SMALL("binary data"),
+        .props=0,
         .mime_types= MT("application/octet-stream"),
     },
     {
@@ -3107,4 +3121,4 @@ enum AVMediaType avcodec_get_type(enum AVCodecID codec_id)
     return desc ? desc->type : AVMEDIA_TYPE_UNKNOWN;
 }
 
-
+}
