@@ -1,13 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* This file is part of mediaserver. A RTSP live server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
  */
+
 
 #include "fmp4.h"
 
-//#include "ff/ff.h"
-//#include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
@@ -21,32 +24,9 @@ extern "C"
 #include <avformat.h>
 }
 
-
-#define SERVER_HOST  "127.0.0.1"               
-#define SERVER_PORT 8000
-
-
-
-//#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
-
-
-//#define MAX_CHUNK_SIZE 10240*8
-// maximum send buffer 262144  =1024 *256
-
-//#define highWaterMark  8 * 1048576
-//maximum buffer = 16 *1048576 where  1024*1024 =1048576
-
-
-
-
-//#define IOBUFSIZE 40960
-//40960*6
-
-
+#define tcprequest false
 
 #include "http/websocket.h"
-//std::string rtsp  = "rtsp://10.170.4.89:8554/testStream";
-//std::string rtsp  = "rtsp://192.168.0.19:8554/testStream";
 
 namespace base {
     
@@ -77,7 +57,7 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, false, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
             ffparser->playStreamCall(*ctx);
           
@@ -106,7 +86,7 @@ namespace base {
    
             
              std::string got = std::string(msg, len);
-             STrace << "on_read " << got;
+             STrace << "restart  " << got;
                 
               #if FILEPARSER
 
@@ -117,28 +97,34 @@ namespace base {
 
                if( got == "reset")
                {
-                    SInfo  << "reset";
+                    //SInfo  << "reset";
                     fragmp4_muxer->resetParser = true ;//  
                }
                else
                {
-                   ffparser->stopStreamCall(*ctx);
-                   
-                   ffparser->deregisterStreamCall(*ctx);
-                   delete ctx;
-                    
-                   fragmp4_muxer->resetParser = true ;//
-                   
-                   Settings::configuration.rtsp2 = got;
-                           
-                   SInfo <<  "slot " <<  ++slot ;
-                   
-                   broadcast("reset" , 5, false);
-                   
-                   ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, false, fragmp4_muxer, info); // Request livethread to write into filter info
-                   ffparser->registerStreamCall(*ctx);
-                   ffparser->playStreamCall(*ctx);
-            
+                   if(critical_sec++ == 0 )
+                   {
+                        broadcast("reset" , 5, false);
+
+                        ffparser->stopStreamCall(*ctx);
+
+                        ffparser->deregisterStreamCall(*ctx);
+                        delete ctx;
+
+                        fragmp4_muxer->resetParser = true ;
+
+                        Settings::configuration.rtsp2 = got;
+
+                        SInfo <<  "slot " <<  ++slot ;
+
+
+                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+                        ffparser->registerStreamCall(*ctx);
+                        ffparser->playStreamCall(*ctx);
+                        
+                        critical_sec =0;
+                   }
+                 
                    
                }
              

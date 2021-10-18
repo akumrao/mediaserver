@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 var videoObj = null;
 var print_stats = false;
@@ -285,9 +284,12 @@ var hiddenInput = undefined;
                        putPacket(event.data);
                      //source_buffer.appendBuffer(event.data);
 
-                    } else {
+                    } 
+                    else 
+                    {
                         // text frame
                         console.log(event.data);
+                        
                         if(event.data == "reset" )
                         {
                             pass = -1;
@@ -295,9 +297,11 @@ var hiddenInput = undefined;
                             queue = [];
                             seeked = false; 
                              cc = 0;
+                            
 
-
-                            videoObj.play();
+                            //videoObj.stop();
+                            stream_live.src = null;
+                            source_buffer = null;
 
                             if (ms.readyState === 'open') {
                                     try {
@@ -313,7 +317,6 @@ var hiddenInput = undefined;
                             ms = new MediaSource();
 
                             
-                            ms.addEventListener('sourceopen',opened,false);
 
                             let playerDiv = document.getElementById('player');
                             onConfig({} );
@@ -329,6 +332,8 @@ var hiddenInput = undefined;
                             // set mediasource as source of video
                                 stream_live.src = window.URL.createObjectURL(ms);
                             }
+
+                            ms.addEventListener('sourceopen',opened,false);
 
                             //if (shouldShowPlayOverlay)
                             {
@@ -577,7 +582,7 @@ function setupHtmlEvents() {
 		settingsButton.onclick = function (event) {
 			console.log(`-> SS: Camera Change`);
 
-
+            settingsButton.disabled = true;
             //let quality = document.getElementById('quality').value;
             //let minBitrate = document.getElementById('minBitrate').value;
             //let maxBitrate = document.getElementById('maxBitrate').value;
@@ -1959,7 +1964,7 @@ function onConfig(config) {
 	let playerDiv = document.getElementById('player');
 	playerElement = setupWebRtcPlayer(playerDiv, config);
 	resizePlayerStyle();
-
+    document.getElementById("settings-button").disabled = false;
 	switch (inputOptions.controlScheme) {
 		case ControlSchemeType.HoveringMouse:
 			registerHoveringMouseEvents(playerElement);

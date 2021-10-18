@@ -26,6 +26,9 @@
 #include "http/HttpServer.h" 
 #include "muxer.h"
 
+#include <atomic>
+
+
 #define AUDIOFILE  "/workspace/mediaserver/src/rtsp/main/hindi.pcm"               
 #define VIDEOFILE   "/workspace/mediaserver/src/rtsp/main/test.264"
 
@@ -85,6 +88,7 @@ class FFParse;
      int slot{1};        
      std::string fileName;
      
+     std::atomic<int> critical_sec{0};
  public:
      
      void broadcast(const char * data, int size, bool binary  );
