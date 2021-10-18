@@ -23,6 +23,7 @@
  * audio channel layout utility functions
  */
 
+extern "C" {
 #include <stdint.h>
 
 #include "avstring.h"
@@ -55,6 +56,17 @@ static const struct channel_name channel_names[] = {
     [15] = { "TBL",       "top back left"         },
     [16] = { "TBC",       "top back center"       },
     [17] = { "TBR",       "top back right"        },
+    [18] = { NULL,        NULL                    },
+    [19] = { NULL,        NULL                    },
+    [20] = { NULL,        NULL                    },
+    [21] = { NULL,        NULL                    },
+    [22] = { NULL,        NULL                    },
+    [23] = { NULL,        NULL                    },
+    [24] = { NULL,        NULL                    },
+    [25] = { NULL,        NULL                    },
+    [26] = { NULL,        NULL                    },
+    [27] = { NULL,        NULL                    },
+    [28] = { NULL,        NULL                    },
     [29] = { "DL",        "downmix left"          },
     [30] = { "DR",        "downmix right"         },
     [31] = { "WL",        "wide left"             },
@@ -284,4 +296,5 @@ int av_get_standard_channel_layout(unsigned index, uint64_t *layout,
     if (layout) *layout = channel_layout_map[index].layout;
     if (name)   *name   = channel_layout_map[index].name;
     return 0;
+}
 }
