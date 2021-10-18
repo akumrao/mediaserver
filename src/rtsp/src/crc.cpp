@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C" {
 #include "config.h"
 
 #include "bswap.h"
@@ -299,10 +300,10 @@ static struct {
     [AV_CRC_8_ATM]      = { 0,  8,       0x07 },
     [AV_CRC_16_ANSI]    = { 0, 16,     0x8005 },
     [AV_CRC_16_CCITT]   = { 0, 16,     0x1021 },
-    [AV_CRC_24_IEEE]    = { 0, 24,   0x864CFB },
-    [AV_CRC_32_IEEE]    = { 0, 32, 0x04C11DB7 },
+    [AV_CRC_32_IEEE]    = { 0, 32, 0x04C11DB7 }, 
     [AV_CRC_32_IEEE_LE] = { 1, 32, 0xEDB88320 },
-    [AV_CRC_16_ANSI_LE] = { 1, 16,     0xA001 },
+    [AV_CRC_16_ANSI_LE] = { 1, 16,     0xA001 },   
+    [AV_CRC_24_IEEE]    = { 0, 24,   0x864CFB },    
 };
 static AVCRC av_crc_table[AV_CRC_MAX][CRC_TABLE_SIZE];
 #endif
@@ -377,4 +378,5 @@ uint32_t av_crc(const AVCRC *ctx, uint32_t crc,
         crc = ctx[((uint8_t) crc) ^ *buffer++] ^ (crc >> 8);
 
     return crc;
+}
 }
