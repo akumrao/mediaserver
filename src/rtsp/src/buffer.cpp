@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+using namespace std;
+#include <atomic>
 
-//#include <stdatomic.h>
+extern "C" {
 #include <stdint.h>
 #include <string.h>
 
@@ -25,6 +27,7 @@
 #include "common.h"
 #include "mem.h"
 #include "avthread.h"
+
 
 #define FF_MEMORY_POISON 0x2a
     
@@ -36,7 +39,7 @@ AVBufferRef *av_buffer_create(uint8_t *data, int size,
     AVBufferRef *ref = NULL;
     AVBuffer    *buf = NULL;
 
-    buf = av_mallocz(sizeof(*buf));
+    buf = (AVBuffer*)av_mallocz(sizeof(*buf));
     if (!buf)
         return NULL;
 
@@ -45,12 +48,12 @@ AVBufferRef *av_buffer_create(uint8_t *data, int size,
     buf->free     = free ? free : av_buffer_default_free;
     buf->opaque   = opaque;
 
-    atomic_init(&buf->refcount, 1);
+    atomic_init<unsigned int>(&buf->refcount, 1);
 
     if (flags & AV_BUFFER_FLAG_READONLY)
         buf->flags |= BUFFER_FLAG_READONLY;
 
-    ref = av_mallocz(sizeof(*ref));
+    ref = (AVBufferRef*)av_mallocz(sizeof(*ref));
     if (!ref) {
         av_freep(&buf);
         return NULL;
@@ -73,7 +76,7 @@ AVBufferRef *av_buffer_alloc(int size)
     AVBufferRef *ret = NULL;
     uint8_t    *data = NULL;
 
-    data = av_malloc(size);
+    data = (uint8_t *)av_malloc(size);
     if (!data)
         return NULL;
 
@@ -96,14 +99,14 @@ AVBufferRef *av_buffer_allocz(int size)
 
 AVBufferRef *av_buffer_ref(AVBufferRef *buf)
 {
-    AVBufferRef *ret = av_mallocz(sizeof(*ret));
+    AVBufferRef *ret = (AVBufferRef *)av_mallocz(sizeof(*ret));
 
     if (!ret)
         return NULL;
 
     *ret = *buf;
 
-    atomic_fetch_add_explicit(&buf->buffer->refcount, 1, memory_order_relaxed);
+    atomic_fetch_add_explicit<uint>(&buf->buffer->refcount, 1, memory_order_relaxed);
 
     return ret;
 }
@@ -120,7 +123,7 @@ static void buffer_replace(AVBufferRef **dst, AVBufferRef **src)
     } else
         av_freep(dst);
 
-    if (atomic_fetch_add_explicit(&b->refcount, -1, memory_order_acq_rel) == 1) {
+    if (atomic_fetch_add_explicit<uint>(&b->refcount, -1, memory_order_acq_rel) == 1) {
         b->free(b->opaque, b->data);
         av_freep(&b);
     }
@@ -178,7 +181,7 @@ int av_buffer_realloc(AVBufferRef **pbuf, int size)
     if (!buf) {
         /* allocate a new buffer with av_realloc(), so it will be reallocatable
          * later */
-        uint8_t *data = av_realloc(NULL, size);
+        uint8_t *data = (uint8_t *)av_realloc(NULL, size);
         if (!data)
             return AVERROR(ENOMEM);
 
@@ -198,19 +201,19 @@ int av_buffer_realloc(AVBufferRef **pbuf, int size)
     if (!(buf->buffer->flags & BUFFER_FLAG_REALLOCATABLE) ||
         !av_buffer_is_writable(buf) || buf->data != buf->buffer->data) {
         /* cannot realloc, allocate a new reallocable buffer and copy data */
-        AVBufferRef *new = NULL;
+        AVBufferRef *new_bfr = NULL;
 
-        av_buffer_realloc(&new, size);
-        if (!new)
+        av_buffer_realloc(&new_bfr, size);
+        if (!new_bfr)
             return AVERROR(ENOMEM);
 
-        memcpy(new->data, buf->data, FFMIN(size, buf->size));
+        memcpy(new_bfr->data, buf->data, FFMIN(size, buf->size));
 
-        buffer_replace(pbuf, &new);
+        buffer_replace(pbuf, &new_bfr);
         return 0;
     }
 
-    tmp = av_realloc(buf->buffer->data, size);
+    tmp = (uint8_t *)av_realloc(buf->buffer->data, size);
     if (!tmp)
         return AVERROR(ENOMEM);
 
@@ -223,7 +226,7 @@ AVBufferPool *av_buffer_pool_init2(int size, void *opaque,
                                    AVBufferRef* (*alloc)(void *opaque, int size),
                                    void (*pool_free)(void *opaque))
 {
-    AVBufferPool *pool = av_mallocz(sizeof(*pool));
+    AVBufferPool *pool = (AVBufferPool *)av_mallocz(sizeof(*pool));
     if (!pool)
         return NULL;
 
@@ -234,14 +237,14 @@ AVBufferPool *av_buffer_pool_init2(int size, void *opaque,
     pool->alloc2    = alloc;
     pool->pool_free = pool_free;
 
-    atomic_init(&pool->refcount, 1);
+    atomic_init<uint>(&pool->refcount, 1);
 
     return pool;
 }
 
 AVBufferPool *av_buffer_pool_init(int size, AVBufferRef* (*alloc)(int size))
 {
-    AVBufferPool *pool = av_mallocz(sizeof(*pool));
+    AVBufferPool *pool = (AVBufferPool *)av_mallocz(sizeof(*pool));
     if (!pool)
         return NULL;
 
@@ -250,7 +253,7 @@ AVBufferPool *av_buffer_pool_init(int size, AVBufferRef* (*alloc)(int size))
     pool->size     = size;
     pool->alloc    = alloc ? alloc : av_buffer_alloc;
 
-    atomic_init(&pool->refcount, 1);
+    atomic_init<uint>(&pool->refcount, 1);
 
     return pool;
 }
@@ -285,13 +288,13 @@ void av_buffer_pool_uninit(AVBufferPool **ppool)
     pool   = *ppool;
     *ppool = NULL;
 
-    if (atomic_fetch_add_explicit(&pool->refcount, -1, memory_order_acq_rel) == 1)
+    if (atomic_fetch_add_explicit<uint>(&pool->refcount, -1, memory_order_acq_rel) == 1)
         buffer_pool_free(pool);
 }
 
 static void pool_release_buffer(void *opaque, uint8_t *data)
 {
-    BufferPoolEntry *buf = opaque;
+    BufferPoolEntry *buf = (BufferPoolEntry *)opaque;
     AVBufferPool *pool = buf->pool;
 
     if(CONFIG_MEMORY_POISONING)
@@ -302,7 +305,7 @@ static void pool_release_buffer(void *opaque, uint8_t *data)
     pool->pool = buf;
     ff_mutex_unlock(&pool->mutex);
 
-    if (atomic_fetch_add_explicit(&pool->refcount, -1, memory_order_acq_rel) == 1)
+    if (atomic_fetch_add_explicit<uint>(&pool->refcount, -1, memory_order_acq_rel) == 1)
         buffer_pool_free(pool);
 }
 
@@ -318,7 +321,7 @@ static AVBufferRef *pool_alloc_buffer(AVBufferPool *pool)
     if (!ret)
         return NULL;
 
-    buf = av_mallocz(sizeof(*buf));
+    buf = (BufferPoolEntry *)av_mallocz(sizeof(*buf));
     if (!buf) {
         av_buffer_unref(&ret);
         return NULL;
@@ -355,8 +358,8 @@ AVBufferRef *av_buffer_pool_get(AVBufferPool *pool)
     ff_mutex_unlock(&pool->mutex);
 
     if (ret)
-        atomic_fetch_add_explicit(&pool->refcount, 1, memory_order_relaxed);
+        atomic_fetch_add_explicit<uint>(&pool->refcount, 1, memory_order_relaxed);
 
     return ret;
 }
-
+}
