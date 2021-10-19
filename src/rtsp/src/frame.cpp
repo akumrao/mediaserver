@@ -1,503 +1,782 @@
-/* This file is part of mediaserver. A webrtc sfu server.
- * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+/*
+ * This file is part of FFmpeg.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-
+#include "channel_layout.h"
+#include "avassert.h"
+#include "buffer.h"
+#include "common.h"
+#include "dict.h"
 #include "frame.h"
+#include "imgutils.h"
+#include "mem.h"
+#include "samplefmt.h"
+#include "internal_util.h"
 
-#include <sstream>
+static AVFrameSideData *frame_new_side_data(AVFrame *frame,
+                                            enum AVFrameSideDataType type,
+                                            AVBufferRef *buf);
 
+MAKE_ACCESSORS(AVFrame, frame, int64_t, best_effort_timestamp)
+MAKE_ACCESSORS(AVFrame, frame, int64_t, pkt_duration)
+MAKE_ACCESSORS(AVFrame, frame, int64_t, pkt_pos)
+MAKE_ACCESSORS(AVFrame, frame, int64_t, channel_layout)
+MAKE_ACCESSORS(AVFrame, frame, int,     channels)
+MAKE_ACCESSORS(AVFrame, frame, int,     sample_rate)
+MAKE_ACCESSORS(AVFrame, frame, AVDictionary *, metadata)
+MAKE_ACCESSORS(AVFrame, frame, int,     decode_error_flags)
+MAKE_ACCESSORS(AVFrame, frame, int,     pkt_size)
+MAKE_ACCESSORS(AVFrame, frame, enum AVColorSpace, colorspace)
+MAKE_ACCESSORS(AVFrame, frame, enum AVColorRange, color_range)
 
-Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
-}
+#define CHECK_CHANNELS_CONSISTENCY(frame) \
+    av_assert2(!(frame)->channel_layout || \
+               (frame)->channels == \
+               av_get_channel_layout_nb_channels((frame)->channel_layout))
 
-  
-Frame::~Frame() {
-}
-  
- 
-void Frame::print(std::ostream &os) const {
-  os << "<Frame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<">";
-}
- 
+AVDictionary **avpriv_frame_get_metadatap(AVFrame *frame) {return &frame->metadata;};
 
-void Frame::copyMetaFrom(Frame *f) {
-  this->n_slot          =f->n_slot;
-  this->stream_index=f->stream_index;
-  this->mstimestamp     =f->mstimestamp;
-}
-
-
-std::string Frame::dumpPayload() {
-  return std::string("");
-}
-
-
-void Frame::dumpPayloadToFile(std::ofstream& fout) {
-}
-
-
-void Frame::reset() {
-    this->n_slot          =0;
-    this->stream_index=-1;
-    this->mstimestamp     =0;
-}
-
-bool Frame::isSeekable() {
-    return true;
-}
-
-
-
-void Frame::updateAux() {
-}
-
-
-
-void Frame::update() {
-}
-
-
-  
-BasicFrame::BasicFrame() : Frame(), codec_id(AV_CODEC_ID_NONE), media_type(AVMEDIA_TYPE_UNKNOWN), h264_pars(H264Pars()) {
-}
-
-
-BasicFrame::~BasicFrame() {
-}
-
-
-
-void BasicFrame::print(std::ostream &os) const {
-  os << "<BasicFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
-  os << "payload size="<<payload.size()<<" / ";
-  if (codec_id==AV_CODEC_ID_H264) {os << h264_pars;}
-  else if (codec_id==AV_CODEC_ID_PCM_MULAW) {os << "PCMU: ";}
-  os << ">";
-}
-
-
-std::string BasicFrame::dumpPayload() {
-  std::stringstream tmp;
-  for(std::vector<uint8_t>::iterator it=payload.begin(); it<min(payload.end(),payload.begin()+20); ++it) {
-    tmp << int(*(it)) <<" ";
-  }
-  return tmp.str();
-}
-
-
-void BasicFrame::dumpPayloadToFile(std::ofstream& fout) {
-//  std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
-}
-
-
-void BasicFrame::reset() {
-  Frame::reset();
-  codec_id   =AV_CODEC_ID_NONE;
-  media_type =AVMEDIA_TYPE_UNKNOWN;
-  
-  payload.clear();
-}
-
-
-bool BasicFrame::isSeekable() {
-    fillPars();
-    
-    /* // nopes
-    if (force_seekable) { // this only for filesystem debuggin
-        return true;
-    }
-    */
-    
-    switch(codec_id) {
-        case AV_CODEC_ID_H264:
-            if (h264_pars.slice_type == H264SliceType::sps) {
-                return true;
-            }
-            else {
-                return false;
-            }
-            break;
-        default:
-            return true;
-            break;
-    }
-}
-
-
-
-void BasicFrame::reserve(std::size_t n_bytes) {
-  this->payload.reserve(n_bytes);
-}
-
-
-void BasicFrame::resize(std::size_t n_bytes) {
-  this->payload.resize(n_bytes,0);
-}
-
-
-void BasicFrame::fillPars() {
-  if (codec_id==AV_CODEC_ID_H264) {
-    fillH264Pars();
-  }
-}
-
-
-void BasicFrame::fillH264Pars() {
-  if (payload.size()>(nalstamp.size()+1)) { 
-    h264_pars.slice_type = ( payload[nalstamp.size()] & 31 );
-    h264_pars.frameType =  (( payload[nalstamp.size()] & 96) >> 5);
-  }
-}
-
-
-void BasicFrame::fillAVPacket(AVPacket *avpkt) {
-  avpkt->data         =payload.data(); // +4; that four is just for debugging..
-  avpkt->size         =payload.size(); // -4;
-  avpkt->stream_index =stream_index;
-
-  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
-    avpkt->flags=AV_PKT_FLAG_KEY;
-  }
-
-  // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
-//
-//  if (mstimestamp>=0) {
-//    avpkt->pts=(int64_t)mstimestamp;
-//  }
-//  else {
-//    avpkt->pts=AV_NOPTS_VALUE;
- // }
-
-  // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
-
-  avpkt->dts=AV_NOPTS_VALUE; // let muxer set it automagically 
-}
-
-
-void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
-  payload.resize(pkt->size);
-  memcpy(payload.data(),pkt->data,pkt->size);
-  // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
-//  stream_index=pkt->stream_index;
-  // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
- // mstimestamp=(long int)pkt->pts;
-}
-
-
-void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )
+#if FF_API_FRAME_QP
+int av_frame_set_qp_table(AVFrame *f, AVBufferRef *buf, int stride, int qp_type)
 {
-  payload.resize(size +nalstamp.size());
-  
-  std::copy(nalstamp.begin(),nalstamp.end(),payload.begin());
-  memcpy(payload.data()+nalstamp.size(), buf, size);
+    av_buffer_unref(&f->qp_table_buf);
+
+    f->qp_table_buf = buf;
+
+FF_DISABLE_DEPRECATION_WARNINGS
+    f->qscale_table = buf->data;
+    f->qstride      = stride;
+    f->qscale_type  = qp_type;
+FF_ENABLE_DEPRECATION_WARNINGS
+
+    return 0;
 }
 
-//void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
-//  int out_size;
-//  uint8_t *out;
-//  
-//  av_bitstream_filter_filter(
-//    filter,
-//    codec_ctx,
-//    NULL,
-//    &out,
-//    &out_size,
-//    pkt->data,
-//    pkt->size,
-//    pkt->flags & AV_PKT_FLAG_KEY
-//  );
-//  
-//  payload.resize(out_size);
-//  // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
-//  memcpy(payload.data(),out,out_size);
-//  stream_index=pkt->stream_index;
-//  mstimestamp=(long int)pkt->pts;
-//}
+int8_t *av_frame_get_qp_table(AVFrame *f, int *stride, int *type)
+{
+FF_DISABLE_DEPRECATION_WARNINGS
+    *stride = f->qstride;
+    *type   = f->qscale_type;
+FF_ENABLE_DEPRECATION_WARNINGS
 
+    if (!f->qp_table_buf)
+        return NULL;
 
-std::size_t BasicFrame::calcSize() {
-    // device_id (std::size_t) stream_index (int) mstimestamp (long int) media_type (AVMediaType) codec_id (AVCodecId) size (std::size_t) payload (char)
-    // TODO: should use typedefs more
-    return sizeof(IdNumber) + sizeof(stream_index) + sizeof(mstimestamp) + sizeof(media_type) + sizeof(codec_id) + sizeof(std::size_t) + payload.size();
+    return f->qp_table_buf->data;
+}
+#endif
+
+const char *av_get_colorspace_name(enum AVColorSpace val)
+{
+    static const char * const name[] = {
+        [AVCOL_SPC_RGB]       = "GBR",
+        [AVCOL_SPC_BT709]     = "bt709",
+        [AVCOL_SPC_FCC]       = "fcc",
+        [AVCOL_SPC_BT470BG]   = "bt470bg",
+        [AVCOL_SPC_SMPTE170M] = "smpte170m",
+        [AVCOL_SPC_SMPTE240M] = "smpte240m",
+        [AVCOL_SPC_YCOCG]     = "YCgCo",
+    };
+    if ((unsigned)val >= FF_ARRAY_ELEMS(name))
+        return NULL;
+    return name[val];
 }
 
+static void get_frame_defaults(AVFrame *frame)
+{
+    if (frame->extended_data != frame->data)
+        av_freep(&frame->extended_data);
 
-#define dump_bytes(var) raw_writer.dump( (const char*)&var, sizeof(var));
-#define read_bytes(var) raw_reader.get((char*)&var, sizeof(var));
+    memset(frame, 0, sizeof(*frame));
 
-
-//// bool BasicFrame::dump(IdNumber device_id, std::fstream &os) {
-//bool BasicFrame::dump(IdNumber device_id, RaWriter& raw_writer) {
-//    std::size_t len;
-//    len=payload.size();
-//    
-//    dump_bytes(device_id);
-//    dump_bytes(stream_index);
-//    dump_bytes(mstimestamp);
-//    dump_bytes(media_type);
-//    dump_bytes(codec_id);
-//    dump_bytes(len); // write the number of bytes
-//    // std::cout << "BasicFrame: dump: len = " << len << std::endl;
-//    raw_writer.dump((const char*)payload.data(), payload.size());
-//    // os.write((const char*)payload.data(), payload.size()); // write the bytes themselves
-//    // os.flush();
-//    return true;
-//}
-
-
-//// IdNumber BasicFrame::read(std::fstream &is) {
-//IdNumber BasicFrame::read(RawReader& raw_reader) {
-//    std::size_t len;
-//    IdNumber device_id;
-//    
-//    len = 0;
-//    device_id = 0;
-//    
-//    read_bytes(device_id);
-//    // is.read((char*)&device_id, sizeof(IdNumber));
-//    // std::cout << "BasicFrame : read : device_id =" << device_id << std::endl;
-//    
-//    if (device_id==0) { // no frame
-//        return device_id;
-//    }
-//    
-//    read_bytes(stream_index);
-//    if (stream_index < 0) { // corrupt frame
-//        valkkafslogger.log(LogLevel::fatal) << "BasicFrame : read : corrupt frame (stream_index)" << std::endl;
-//        return 0;
-//    }
-//    
-//    read_bytes(mstimestamp);
-//    if (mstimestamp < 0) { // corrupt frame
-//        valkkafslogger.log(LogLevel::fatal) << "BasicFrame : read : corrupt frame (mstimestamp)" << std::endl;
-//        return 0;
-//    }
-//    
-//    read_bytes(media_type);
-//    read_bytes(codec_id);
-//    read_bytes(len);  // read the number of bytes
-//    
-//    try {
-//        payload.resize(len);
-//    }
-//    catch (std::bad_alloc& ba) {
-//        valkkafslogger.log(LogLevel::fatal) << "BasicFrame : read : corrupt frame : bad_alloc caught " << ba.what() << std::endl;
-//        return 0;
-//    }
-//        
-//    raw_reader.get((char*)payload.data(), len); // read the bytes themselves
-//    
-//    return device_id;
-//}
-
-
-
-MuxFrame::MuxFrame() : Frame(), 
-    codec_id(AV_CODEC_ID_NONE), 
-    media_type(AVMEDIA_TYPE_UNKNOWN),  
-    meta_type(MuxMetaType::none)
-    {}
-
-
-MuxFrame::~MuxFrame() {
+    frame->pts                   =
+    frame->pkt_dts               = AV_NOPTS_VALUE;
+#if FF_API_PKT_PTS
+FF_DISABLE_DEPRECATION_WARNINGS
+    frame->pkt_pts               = AV_NOPTS_VALUE;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+    frame->best_effort_timestamp = AV_NOPTS_VALUE;
+    frame->pkt_duration        = 0;
+    frame->pkt_pos             = -1;
+    frame->pkt_size            = -1;
+    frame->key_frame           = 1;
+    frame->sample_aspect_ratio = (AVRational){ 0, 1 };
+    frame->format              = -1; /* unknown */
+    frame->extended_data       = frame->data;
+    frame->color_primaries     = AVCOL_PRI_UNSPECIFIED;
+    frame->color_trc           = AVCOL_TRC_UNSPECIFIED;
+    frame->colorspace          = AVCOL_SPC_UNSPECIFIED;
+    frame->color_range         = AVCOL_RANGE_UNSPECIFIED;
+    frame->chroma_location     = AVCHROMA_LOC_UNSPECIFIED;
+    frame->flags               = 0;
 }
 
+static void free_side_data(AVFrameSideData **ptr_sd)
+{
+    AVFrameSideData *sd = *ptr_sd;
 
-void MuxFrame::print(std::ostream &os) const {
-    os << "<MuxFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
-    os << "fragment size="<<payload.size();
-    os << ">";
+    av_buffer_unref(&sd->buf);
+    av_dict_free(&sd->metadata);
+    av_freep(ptr_sd);
 }
 
+static void wipe_side_data(AVFrame *frame)
+{
+    int i;
 
-std::string MuxFrame::dumpPayload() {
-    std::stringstream tmp;
-    for(std::vector<uint8_t>::iterator it=payload.begin(); it<min(payload.end(),payload.begin()+20); ++it) {
-        tmp << int(*(it)) <<" ";
+    for (i = 0; i < frame->nb_side_data; i++) {
+        free_side_data(&frame->side_data[i]);
     }
-    return tmp.str();
+    frame->nb_side_data = 0;
+
+    av_freep(&frame->side_data);
 }
 
+AVFrame *av_frame_alloc(void)
+{
+    AVFrame *frame = av_mallocz(sizeof(*frame));
 
-void MuxFrame::dumpPayloadToFile(std::ofstream& fout) {
-//    std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
+    if (!frame)
+        return NULL;
+
+    frame->extended_data = NULL;
+    get_frame_defaults(frame);
+
+    return frame;
 }
 
+void av_frame_free(AVFrame **frame)
+{
+    if (!frame || !*frame)
+        return;
 
-void MuxFrame::reset() {
-    Frame::reset();
-    codec_id   =AV_CODEC_ID_NONE;
-    media_type =AVMEDIA_TYPE_UNKNOWN;
-    meta_type  =MuxMetaType::none;
+    av_frame_unref(*frame);
+    av_freep(frame);
 }
 
-
-void MuxFrame::reserve(std::size_t n_bytes) {
-    this->payload.reserve(n_bytes);
-    this->meta_blob.reserve(METADATA_MAX_SIZE);
+static int get_video_buffer(AVFrame *frame, int align)
+{
+    
+    exit(0);
+    
+//    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
+//    int ret, i;
+//
+//    if (!desc)
+//        return AVERROR(EINVAL);
+//
+//    if ((ret = av_image_check_size(frame->width, frame->height, 0, NULL)) < 0)
+//        return ret;
+//
+//    if (!frame->linesize[0]) {
+//        for(i=1; i<=align; i+=i) {
+//            ret = av_image_fill_linesizes(frame->linesize, frame->format,
+//                                          FFALIGN(frame->width, i));
+//            if (ret < 0)
+//                return ret;
+//            if (!(frame->linesize[0] & (align-1)))
+//                break;
+//        }
+//
+//        for (i = 0; i < 4 && frame->linesize[i]; i++)
+//            frame->linesize[i] = FFALIGN(frame->linesize[i], align);
+//    }
+//
+//    for (i = 0; i < 4 && frame->linesize[i]; i++) {
+//        int h = FFALIGN(frame->height, 32);
+//        if (i == 1 || i == 2)
+//            h = AV_CEIL_RSHIFT(h, desc->log2_chroma_h);
+//
+//        frame->buf[i] = av_buffer_alloc(frame->linesize[i] * h + 16 + 16/*STRIDE_ALIGN*/ - 1);
+//        if (!frame->buf[i])
+//            goto fail;
+//
+//        frame->data[i] = frame->buf[i]->data;
+//    }
+//    if (desc->flags & AV_PIX_FMT_FLAG_PAL || desc->flags & AV_PIX_FMT_FLAG_PSEUDOPAL) {
+//        av_buffer_unref(&frame->buf[1]);
+//        frame->buf[1] = av_buffer_alloc(AVPALETTE_SIZE);
+//        if (!frame->buf[1])
+//            goto fail;
+//        frame->data[1] = frame->buf[1]->data;
+//    }
+//
+//    frame->extended_data = frame->data;
+//
+//    return 0;
+//fail:
+//    av_frame_unref(frame);
+    return AVERROR(ENOMEM);
 }
 
+static int get_audio_buffer(AVFrame *frame, int align)
+{
+    int channels;
+    int planar   = av_sample_fmt_is_planar(frame->format);
+    int planes;
+    int ret, i;
 
-void MuxFrame::resize(std::size_t n_bytes) {
-    this->payload.resize(n_bytes, 0);
-}
+    if (!frame->channels)
+        frame->channels = av_get_channel_layout_nb_channels(frame->channel_layout);
 
+    channels = frame->channels;
+    planes = planar ? channels : 1;
 
-SetupFrame::SetupFrame() : Frame(), sub_type(SetupFrameType::stream_init), media_type(AVMEDIA_TYPE_UNKNOWN), codec_id(AV_CODEC_ID_NONE), stream_state(AbstractFileState::none) {
-  // reset(); // done at Frame ctor
-}
-  
-  
-SetupFrame::~SetupFrame() {
-}
-
-//frame_essentials(FrameClass::setup, SetupFrame);
-
-void SetupFrame::print(std::ostream &os) const {
-    os << "<SetupFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";  //<<std::endl;
-    if (sub_type == SetupFrameType::stream_init) {
-        os << "media_type=" << int(media_type) << " codec_id=" << int(codec_id);
+    CHECK_CHANNELS_CONSISTENCY(frame);
+    if (!frame->linesize[0]) {
+        ret = av_samples_get_buffer_size(&frame->linesize[0], channels,
+                                         frame->nb_samples, frame->format,
+                                         align);
+        if (ret < 0)
+            return ret;
     }
-    else if (sub_type == SetupFrameType::stream_state) {
-        os << "stream_state=" << int(stream_state);
+
+    if (planes > AV_NUM_DATA_POINTERS) {
+        frame->extended_data = av_mallocz_array(planes,
+                                          sizeof(*frame->extended_data));
+        frame->extended_buf  = av_mallocz_array((planes - AV_NUM_DATA_POINTERS),
+                                          sizeof(*frame->extended_buf));
+        if (!frame->extended_data || !frame->extended_buf) {
+            av_freep(&frame->extended_data);
+            av_freep(&frame->extended_buf);
+            return AVERROR(ENOMEM);
+        }
+        frame->nb_extended_buf = planes - AV_NUM_DATA_POINTERS;
+    } else
+        frame->extended_data = frame->data;
+
+    for (i = 0; i < FFMIN(planes, AV_NUM_DATA_POINTERS); i++) {
+        frame->buf[i] = av_buffer_alloc(frame->linesize[0]);
+        if (!frame->buf[i]) {
+            av_frame_unref(frame);
+            return AVERROR(ENOMEM);
+        }
+        frame->extended_data[i] = frame->data[i] = frame->buf[i]->data;
     }
-    os << ">";
+    for (i = 0; i < planes - AV_NUM_DATA_POINTERS; i++) {
+        frame->extended_buf[i] = av_buffer_alloc(frame->linesize[0]);
+        if (!frame->extended_buf[i]) {
+            av_frame_unref(frame);
+            return AVERROR(ENOMEM);
+        }
+        frame->extended_data[i + AV_NUM_DATA_POINTERS] = frame->extended_buf[i]->data;
+    }
+    return 0;
+
 }
 
+int av_frame_get_buffer(AVFrame *frame, int align)
+{
+    if (frame->format < 0)
+        return AVERROR(EINVAL);
 
-void SetupFrame::reset() {
-  Frame::reset();
-  media_type=AVMEDIA_TYPE_UNKNOWN;
-  codec_id  =AV_CODEC_ID_NONE;
+    if (frame->width > 0 && frame->height > 0)
+        return get_video_buffer(frame, align);
+    else if (frame->nb_samples > 0 && (frame->channel_layout || frame->channels > 0))
+        return get_audio_buffer(frame, align);
+
+    return AVERROR(EINVAL);
 }
 
+static int frame_copy_props(AVFrame *dst, const AVFrame *src, int force_copy)
+{
+    int i;
 
+    dst->key_frame              = src->key_frame;
+    dst->pict_type              = src->pict_type;
+    dst->sample_aspect_ratio    = src->sample_aspect_ratio;
+    dst->pts                    = src->pts;
+    dst->repeat_pict            = src->repeat_pict;
+    dst->interlaced_frame       = src->interlaced_frame;
+    dst->top_field_first        = src->top_field_first;
+    dst->palette_has_changed    = src->palette_has_changed;
+    dst->sample_rate            = src->sample_rate;
+    dst->opaque                 = src->opaque;
+#if FF_API_PKT_PTS
+FF_DISABLE_DEPRECATION_WARNINGS
+    dst->pkt_pts                = src->pkt_pts;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+    dst->pkt_dts                = src->pkt_dts;
+    dst->pkt_pos                = src->pkt_pos;
+    dst->pkt_size               = src->pkt_size;
+    dst->pkt_duration           = src->pkt_duration;
+    dst->reordered_opaque       = src->reordered_opaque;
+    dst->quality                = src->quality;
+    dst->best_effort_timestamp  = src->best_effort_timestamp;
+    dst->coded_picture_number   = src->coded_picture_number;
+    dst->display_picture_number = src->display_picture_number;
+    dst->flags                  = src->flags;
+    dst->decode_error_flags     = src->decode_error_flags;
+    dst->color_primaries        = src->color_primaries;
+    dst->color_trc              = src->color_trc;
+    dst->colorspace             = src->colorspace;
+    dst->color_range            = src->color_range;
+    dst->chroma_location        = src->chroma_location;
 
-AVMediaFrame::AVMediaFrame() : media_type(AVMEDIA_TYPE_UNKNOWN), codec_id(AV_CODEC_ID_NONE) { // , mediatype(MediaType::none) {
-  //av_frame =av_frame_alloc();
+    av_dict_copy(&dst->metadata, src->metadata, 0);
+
+#if FF_API_ERROR_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
+    memcpy(dst->error, src->error, sizeof(dst->error));
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+    for (i = 0; i < src->nb_side_data; i++) {
+        const AVFrameSideData *sd_src = src->side_data[i];
+        AVFrameSideData *sd_dst;
+        if (   sd_src->type == AV_FRAME_DATA_PANSCAN
+            && (src->width != dst->width || src->height != dst->height))
+            continue;
+        if (force_copy) {
+            sd_dst = av_frame_new_side_data(dst, sd_src->type,
+                                            sd_src->size);
+            if (!sd_dst) {
+                wipe_side_data(dst);
+                return AVERROR(ENOMEM);
+            }
+            memcpy(sd_dst->data, sd_src->data, sd_src->size);
+        } else {
+            sd_dst = frame_new_side_data(dst, sd_src->type, av_buffer_ref(sd_src->buf));
+            if (!sd_dst) {
+                wipe_side_data(dst);
+                return AVERROR(ENOMEM);
+            }
+        }
+        av_dict_copy(&sd_dst->metadata, sd_src->metadata, 0);
+    }
+
+#if FF_API_FRAME_QP
+FF_DISABLE_DEPRECATION_WARNINGS
+    dst->qscale_table = NULL;
+    dst->qstride      = 0;
+    dst->qscale_type  = 0;
+    av_buffer_unref(&dst->qp_table_buf);
+    if (src->qp_table_buf) {
+        dst->qp_table_buf = av_buffer_ref(src->qp_table_buf);
+        if (dst->qp_table_buf) {
+            dst->qscale_table = dst->qp_table_buf->data;
+            dst->qstride      = src->qstride;
+            dst->qscale_type  = src->qscale_type;
+        }
+    }
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+    av_buffer_unref(&dst->opaque_ref);
+    if (src->opaque_ref) {
+        dst->opaque_ref = av_buffer_ref(src->opaque_ref);
+        if (!dst->opaque_ref)
+            return AVERROR(ENOMEM);
+    }
+
+    return 0;
 }
 
+int av_frame_ref(AVFrame *dst, const AVFrame *src)
+{
+    int i, ret = 0;
 
-AVMediaFrame::~AVMediaFrame() {
- // av_frame_free(&av_frame);
- // av_free(av_frame); // needs this as well?
+    av_assert1(dst->width == 0 && dst->height == 0);
+    av_assert1(dst->channels == 0);
+
+    dst->format         = src->format;
+    dst->width          = src->width;
+    dst->height         = src->height;
+    dst->channels       = src->channels;
+    dst->channel_layout = src->channel_layout;
+    dst->nb_samples     = src->nb_samples;
+
+    ret = frame_copy_props(dst, src, 0);
+    if (ret < 0)
+        return ret;
+
+    /* duplicate the frame data if it's not refcounted */
+    if (!src->buf[0]) {
+        ret = av_frame_get_buffer(dst, 32);
+        if (ret < 0)
+            return ret;
+
+        ret = av_frame_copy(dst, src);
+        if (ret < 0)
+            av_frame_unref(dst);
+
+        return ret;
+    }
+
+    /* ref the buffers */
+    for (i = 0; i < FF_ARRAY_ELEMS(src->buf); i++) {
+        if (!src->buf[i])
+            continue;
+        dst->buf[i] = av_buffer_ref(src->buf[i]);
+        if (!dst->buf[i]) {
+            ret = AVERROR(ENOMEM);
+            goto fail;
+        }
+    }
+
+    if (src->extended_buf) {
+        dst->extended_buf = av_mallocz_array(sizeof(*dst->extended_buf),
+                                       src->nb_extended_buf);
+        if (!dst->extended_buf) {
+            ret = AVERROR(ENOMEM);
+            goto fail;
+        }
+        dst->nb_extended_buf = src->nb_extended_buf;
+
+        for (i = 0; i < src->nb_extended_buf; i++) {
+            dst->extended_buf[i] = av_buffer_ref(src->extended_buf[i]);
+            if (!dst->extended_buf[i]) {
+                ret = AVERROR(ENOMEM);
+                goto fail;
+            }
+        }
+    }
+
+    if (src->hw_frames_ctx) {
+        dst->hw_frames_ctx = av_buffer_ref(src->hw_frames_ctx);
+        if (!dst->hw_frames_ctx) {
+            ret = AVERROR(ENOMEM);
+            goto fail;
+        }
+    }
+
+    /* duplicate extended data */
+    if (src->extended_data != src->data) {
+        int ch = src->channels;
+
+        if (!ch) {
+            ret = AVERROR(EINVAL);
+            goto fail;
+        }
+        CHECK_CHANNELS_CONSISTENCY(src);
+
+        dst->extended_data = av_malloc_array(sizeof(*dst->extended_data), ch);
+        if (!dst->extended_data) {
+            ret = AVERROR(ENOMEM);
+            goto fail;
+        }
+        memcpy(dst->extended_data, src->extended_data, sizeof(*src->extended_data) * ch);
+    } else
+        dst->extended_data = dst->data;
+
+    memcpy(dst->data,     src->data,     sizeof(src->data));
+    memcpy(dst->linesize, src->linesize, sizeof(src->linesize));
+
+    return 0;
+
+fail:
+    av_frame_unref(dst);
+    return ret;
 }
 
+AVFrame *av_frame_clone(const AVFrame *src)
+{
+    AVFrame *ret = av_frame_alloc();
 
-//frame_essentials(FrameClass::avmedia, AVMediaFrame);
+    if (!ret)
+        return NULL;
 
+    if (av_frame_ref(ret, src) < 0)
+        av_frame_free(&ret);
 
-void AVMediaFrame::print(std::ostream& os) const {
-  os << "<AVMediaFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
-  os << "media_type=" << media_type << std::endl;
-  os << ">";
+    return ret;
 }
 
+void av_frame_unref(AVFrame *frame)
+{
+    int i;
 
-std::string AVMediaFrame::dumpPayload() {
-  std::stringstream tmp;
-  return tmp.str();
+    if (!frame)
+        return;
+
+    wipe_side_data(frame);
+
+    for (i = 0; i < FF_ARRAY_ELEMS(frame->buf); i++)
+        av_buffer_unref(&frame->buf[i]);
+    for (i = 0; i < frame->nb_extended_buf; i++)
+        av_buffer_unref(&frame->extended_buf[i]);
+    av_freep(&frame->extended_buf);
+    av_dict_free(&frame->metadata);
+#if FF_API_FRAME_QP
+    av_buffer_unref(&frame->qp_table_buf);
+#endif
+
+    av_buffer_unref(&frame->hw_frames_ctx);
+
+    av_buffer_unref(&frame->opaque_ref);
+
+    get_frame_defaults(frame);
 }
 
+void av_frame_move_ref(AVFrame *dst, AVFrame *src)
+{
+    av_assert1(dst->width == 0 && dst->height == 0);
+    av_assert1(dst->channels == 0);
 
-void AVMediaFrame::reset() {
-  Frame::reset();
-  media_type   =AVMEDIA_TYPE_UNKNOWN; 
-  codec_id     =AV_CODEC_ID_NONE;
-  // TODO: reset AVFrame ?
+    *dst = *src;
+    if (src->extended_data == src->data)
+        dst->extended_data = dst->data;
+    memset(src, 0, sizeof(*src));
+    get_frame_defaults(src);
 }
 
+int av_frame_is_writable(AVFrame *frame)
+{
+    int i, ret = 1;
 
+    /* assume non-refcounted frames are not writable */
+    if (!frame->buf[0])
+        return 0;
 
+    for (i = 0; i < FF_ARRAY_ELEMS(frame->buf); i++)
+        if (frame->buf[i])
+            ret &= !!av_buffer_is_writable(frame->buf[i]);
+    for (i = 0; i < frame->nb_extended_buf; i++)
+        ret &= !!av_buffer_is_writable(frame->extended_buf[i]);
 
-
-
-
-
-/*
-AVAudioFrame::AVAudioFrame() : AVMediaFrame(), av_sample_fmt(AV_SAMPLE_FMT_NONE) {
-  mediatype=MediaType::audio;
+    return ret;
 }
 
+int av_frame_make_writable(AVFrame *frame)
+{
+    AVFrame tmp;
+    int ret;
 
-AVAudioFrame::~AVAudioFrame() {
+    if (!frame->buf[0])
+        return AVERROR(EINVAL);
+
+    if (av_frame_is_writable(frame))
+        return 0;
+
+    memset(&tmp, 0, sizeof(tmp));
+    tmp.format         = frame->format;
+    tmp.width          = frame->width;
+    tmp.height         = frame->height;
+    tmp.channels       = frame->channels;
+    tmp.channel_layout = frame->channel_layout;
+    tmp.nb_samples     = frame->nb_samples;
+    ret = av_frame_get_buffer(&tmp, 32);
+    if (ret < 0)
+        return ret;
+
+    ret = av_frame_copy(&tmp, frame);
+    if (ret < 0) {
+        av_frame_unref(&tmp);
+        return ret;
+    }
+
+    ret = av_frame_copy_props(&tmp, frame);
+    if (ret < 0) {
+        av_frame_unref(&tmp);
+        return ret;
+    }
+
+    av_frame_unref(frame);
+
+    *frame = tmp;
+    if (tmp.data == tmp.extended_data)
+        frame->extended_data = frame->data;
+
+    return 0;
 }
 
-
-//frame_essentials(FrameClass::avaudio, AVAudioFrame);
-
-
-std::string AVAudioFrame::dumpPayload() {
-  return std::string("");
+int av_frame_copy_props(AVFrame *dst, const AVFrame *src)
+{
+    return frame_copy_props(dst, src, 1);
 }
 
+AVBufferRef *av_frame_get_plane_buffer(AVFrame *frame, int plane)
+{
+    uint8_t *data;
+    int planes, i;
 
-void AVAudioFrame::print(std::ostream& os) const {
-  os << "<AVAudioFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
-  os << ">";
+    if (frame->nb_samples) {
+        int channels = frame->channels;
+        if (!channels)
+            return NULL;
+        CHECK_CHANNELS_CONSISTENCY(frame);
+        planes = av_sample_fmt_is_planar(frame->format) ? channels : 1;
+    } else
+        planes = 4;
+
+    if (plane < 0 || plane >= planes || !frame->extended_data[plane])
+        return NULL;
+    data = frame->extended_data[plane];
+
+    for (i = 0; i < FF_ARRAY_ELEMS(frame->buf) && frame->buf[i]; i++) {
+        AVBufferRef *buf = frame->buf[i];
+        if (data >= buf->data && data < buf->data + buf->size)
+            return buf;
+    }
+    for (i = 0; i < frame->nb_extended_buf; i++) {
+        AVBufferRef *buf = frame->extended_buf[i];
+        if (data >= buf->data && data < buf->data + buf->size)
+            return buf;
+    }
+    return NULL;
 }
 
+static AVFrameSideData *frame_new_side_data(AVFrame *frame,
+                                            enum AVFrameSideDataType type,
+                                            AVBufferRef *buf)
+{
+    AVFrameSideData *ret, **tmp;
 
-bool AVAudioFrame::isOK() {
-  return true;
+    if (!buf)
+        return NULL;
+
+    if (frame->nb_side_data > INT_MAX / sizeof(*frame->side_data) - 1)
+        goto fail;
+
+    tmp = av_realloc(frame->side_data,
+                     (frame->nb_side_data + 1) * sizeof(*frame->side_data));
+    if (!tmp)
+        goto fail;
+    frame->side_data = tmp;
+
+    ret = av_mallocz(sizeof(*ret));
+    if (!ret)
+        goto fail;
+
+    ret->buf = buf;
+    ret->data = ret->buf->data;
+    ret->size = buf->size;
+    ret->type = type;
+
+    frame->side_data[frame->nb_side_data++] = ret;
+
+    return ret;
+fail:
+    av_buffer_unref(&buf);
+    return NULL;
 }
 
+AVFrameSideData *av_frame_new_side_data(AVFrame *frame,
+                                        enum AVFrameSideDataType type,
+                                        int size)
+{
 
-void AVAudioFrame::getParametersDecoder(const AVCodecContext *ctx) {
-  av_media_type   = ctx->codec_type;
-  av_sample_fmt   = ctx->sample_fmt;
-  // TODO: from FFMpeg codecs to valkka codecs
-  updateParameters();
-}
-*/
-
-
-
-
-
-MarkerFrame::MarkerFrame() : Frame(), fs_start(false), fs_end(false), tm_start(false), tm_end(false) {
+    return frame_new_side_data(frame, type, av_buffer_alloc(size));
 }
 
-MarkerFrame::~MarkerFrame() {
+AVFrameSideData *av_frame_get_side_data(const AVFrame *frame,
+                                        enum AVFrameSideDataType type)
+{
+    int i;
+
+    for (i = 0; i < frame->nb_side_data; i++) {
+        if (frame->side_data[i]->type == type)
+            return frame->side_data[i];
+    }
+    return NULL;
 }
 
+static int frame_copy_video(AVFrame *dst, const AVFrame *src)
+{
+    exit(0);
+//    const uint8_t *src_data[4];
+//    int i, planes;
+//
+//    if (dst->width  < src->width ||
+//        dst->height < src->height)
+//        return AVERROR(EINVAL);
+//
+//    planes = av_pix_fmt_count_planes(dst->format);
+//    for (i = 0; i < planes; i++)
+//        if (!dst->data[i] || !src->data[i])
+//            return AVERROR(EINVAL);
+//
+//    memcpy(src_data, src->data, sizeof(src_data));
+//    av_image_copy(dst->data, dst->linesize,
+//                  src_data, src->linesize,
+//                  dst->format, src->width, src->height);
 
-void MarkerFrame::print(std::ostream& os) const {
-  os << "<MarkerFrame: timestamp="<<mstimestamp<<" stream_index="<<stream_index<<" slot="<<n_slot<<" / ";
-  if (fs_start) {
-    os << "FS_START ";
-  }
-  if (fs_end) {
-      os << "FS_END ";
-  }
-  if (tm_start) {
-      os << "TM_START ";
-  }
-  if (tm_end) {
-      os << "TM_END ";
-  }
-  os << ">";
+    return 0;
 }
 
+static int frame_copy_audio(AVFrame *dst, const AVFrame *src)
+{
+    int planar   = av_sample_fmt_is_planar(dst->format);
+    int channels = dst->channels;
+    int planes   = planar ? channels : 1;
+    int i;
 
-void MarkerFrame::reset() {
-    fs_start=false;
-    fs_end=false;
-    tm_start=false;
-    tm_end=false;
+    if (dst->nb_samples     != src->nb_samples ||
+        dst->channels       != src->channels ||
+        dst->channel_layout != src->channel_layout)
+        return AVERROR(EINVAL);
+
+    CHECK_CHANNELS_CONSISTENCY(src);
+
+    for (i = 0; i < planes; i++)
+        if (!dst->extended_data[i] || !src->extended_data[i])
+            return AVERROR(EINVAL);
+
+    av_samples_copy(dst->extended_data, src->extended_data, 0, 0,
+                    dst->nb_samples, channels, dst->format);
+
+    return 0;
 }
-    
-    
-    
-    
-    
-    
-    
-    
+
+int av_frame_copy(AVFrame *dst, const AVFrame *src)
+{
+    if (dst->format != src->format || dst->format < 0)
+        return AVERROR(EINVAL);
+
+    if (dst->width > 0 && dst->height > 0)
+        return frame_copy_video(dst, src);
+    else if (dst->nb_samples > 0 && dst->channels > 0)
+        return frame_copy_audio(dst, src);
+
+    return AVERROR(EINVAL);
+}
+
+void av_frame_remove_side_data(AVFrame *frame, enum AVFrameSideDataType type)
+{
+    int i;
+
+    for (i = 0; i < frame->nb_side_data; i++) {
+        AVFrameSideData *sd = frame->side_data[i];
+        if (sd->type == type) {
+            free_side_data(&frame->side_data[i]);
+            frame->side_data[i] = frame->side_data[frame->nb_side_data - 1];
+            frame->nb_side_data--;
+        }
+    }
+}
+
+const char *av_frame_side_data_name(enum AVFrameSideDataType type)
+{
+    switch(type) {
+    case AV_FRAME_DATA_PANSCAN:         return "AVPanScan";
+    case AV_FRAME_DATA_A53_CC:          return "ATSC A53 Part 4 Closed Captions";
+    case AV_FRAME_DATA_STEREO3D:        return "Stereoscopic 3d metadata";
+    case AV_FRAME_DATA_MATRIXENCODING:  return "AVMatrixEncoding";
+    case AV_FRAME_DATA_DOWNMIX_INFO:    return "Metadata relevant to a downmix procedure";
+    case AV_FRAME_DATA_REPLAYGAIN:      return "AVReplayGain";
+    case AV_FRAME_DATA_DISPLAYMATRIX:   return "3x3 displaymatrix";
+    case AV_FRAME_DATA_AFD:             return "Active format description";
+    case AV_FRAME_DATA_MOTION_VECTORS:  return "Motion vectors";
+    case AV_FRAME_DATA_SKIP_SAMPLES:    return "Skip samples";
+    case AV_FRAME_DATA_AUDIO_SERVICE_TYPE:          return "Audio service type";
+    case AV_FRAME_DATA_MASTERING_DISPLAY_METADATA:  return "Mastering display metadata";
+    case AV_FRAME_DATA_GOP_TIMECODE:                return "GOP timecode";
+    }
+    return NULL;
+}
