@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C"  {
 #include "atomic.h"
 #include "avstring.h"
 #include "bprint.h"
@@ -180,7 +181,7 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
     AVProbeData lpd = *pd;
     AVInputFormat *fmt1 = NULL, *fmt;
     int score, score_max = 0;
-    const static uint8_t zerobuffer[AVPROBE_PADDING_SIZE];
+    const static uint8_t zerobuffer[AVPROBE_PADDING_SIZE]={0};
     enum nodat {
         NO_ID3,
         ID3_ALMOST_GREATER_PROBE,
@@ -293,7 +294,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         char *semi;
         av_opt_get(pb, "mime_type", AV_OPT_SEARCH_CHILDREN, &mime_type_opt);
         pd.mime_type = (const char *)mime_type_opt;
-        semi = pd.mime_type ? strchr(pd.mime_type, ';') : NULL;
+        semi = (char*)(pd.mime_type ? strchr(pd.mime_type, ';') : NULL);
         if (semi) {
             *semi = '\0';
         }
@@ -371,4 +372,5 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 {
     int ret = av_probe_input_buffer2(pb, fmt, filename, logctx, offset, max_probe_size);
     return ret < 0 ? ret : 0;
+}
 }
