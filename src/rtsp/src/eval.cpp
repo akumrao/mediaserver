@@ -25,7 +25,7 @@
  *
  * see http://joe.hotchkiss.com/programming/eval/eval.html
  */
-
+extern "C"  {
 #include <float.h>
 #include "attributes.h"
 #include "avutil.h"
@@ -39,9 +39,10 @@
 #include "avstring.h"
 //#include "timer.h"
 #include "reverse.h"
+#include "mytime.h"
 
 typedef struct Parser {
-    const AVClass *class;
+    const AVClass *class_av;
     int stack_index;
     char *s;
     const double *const_values;
@@ -63,27 +64,61 @@ static const struct {
     double bin_val;
     double dec_val;
     int8_t exp;
-} si_prefixes['z' - 'E' + 1] = {
-    ['y'-'E']= { 8.271806125530276749e-25, 1e-24, -24 },
-    ['z'-'E']= { 8.4703294725430034e-22, 1e-21, -21 },
-    ['a'-'E']= { 8.6736173798840355e-19, 1e-18, -18 },
-    ['f'-'E']= { 8.8817841970012523e-16, 1e-15, -15 },
-    ['p'-'E']= { 9.0949470177292824e-13, 1e-12, -12 },
-    ['n'-'E']= { 9.3132257461547852e-10, 1e-9,  -9 },
-    ['u'-'E']= { 9.5367431640625e-7, 1e-6, -6 },
-    ['m'-'E']= { 9.765625e-4, 1e-3, -3 },
-    ['c'-'E']= { 9.8431332023036951e-3, 1e-2, -2 },
-    ['d'-'E']= { 9.921256574801246e-2, 1e-1, -1 },
-    ['h'-'E']= { 1.0159366732596479e2, 1e2, 2 },
-    ['k'-'E']= { 1.024e3, 1e3, 3 },
-    ['K'-'E']= { 1.024e3, 1e3, 3 },
-    ['M'-'E']= { 1.048576e6, 1e6, 6 },
-    ['G'-'E']= { 1.073741824e9, 1e9, 9 },
-    ['T'-'E']= { 1.099511627776e12, 1e12, 12 },
-    ['P'-'E']= { 1.125899906842624e15, 1e15, 15 },
-    ['E'-'E']= { 1.152921504606847e18, 1e18, 18 },
-    ['Z'-'E']= { 1.1805916207174113e21, 1e21, 21 },
-    ['Y'-'E']= { 1.2089258196146292e24, 1e24, 24 },
+} si_prefixes['z' - 'E' + 1] = {						//54
+    ['E'-'E']= { 1.152921504606847e18, 1e18, 18 },				//0
+    [1]      = { 0, 0, 0 },                                                     //1
+    ['G'-'E']= { 1.073741824e9, 1e9, 9 },					//2
+    [3]      = { 0, 0, 0 },                                                     //3
+    [4]      = { 0, 0, 0 },                                                     //4
+    [5]      = { 0, 0, 0 },                                                     //5
+    ['K'-'E']= { 1.024e3, 1e3, 3 },						//6
+    [7]      = { 0, 0, 0 },                                                     //7
+    ['M'-'E']= { 1.048576e6, 1e6, 6 },						//8 
+    [9]      = { 0, 0, 0 },                                                     //9
+    [10]     = { 0, 0, 0 },                                                     //10
+    ['P'-'E']= { 1.125899906842624e15, 1e15, 15 },				//11
+    [12]     = { 0, 0, 0 },                                                     //12
+    [13]     = { 0, 0, 0 },                                                     //13
+    [14]     = { 0, 0, 0 },                                                     //14
+    ['T'-'E']= { 1.099511627776e12, 1e12, 12 },					//15
+    [16]     = { 0, 0, 0 },                                                     //16
+    [17]     = { 0, 0, 0 },                                                     //17
+    [18]     = { 0, 0, 0 },                                                     //18
+    [19]     = { 0, 0, 0 },                                                     //19    
+    ['Y'-'E']= { 1.2089258196146292e24, 1e24, 24 },				//20
+    ['Z'-'E']= { 1.1805916207174113e21, 1e21, 21 },				//21    
+    [22]     = { 0, 0, 0 },                                                     //22
+    [23]     = { 0, 0, 0 },                                                     //23
+    [24]     = { 0, 0, 0 },                                                     //24
+    [25]     = { 0, 0, 0 },                                                     //25    
+    [26]     = { 0, 0, 0 },                                                     //26
+    [27]     = { 0, 0, 0 },                                                     //27
+    ['a'-'E']= { 8.6736173798840355e-19, 1e-18, -18 },				//28
+    [29]     = { 0, 0, 0 },                                                     //29    
+    ['c'-'E']= { 9.8431332023036951e-3, 1e-2, -2 },				//30
+    ['d'-'E']= { 9.921256574801246e-2, 1e-1, -1 },				//31    
+    [32]     = { 0, 0, 0 },                                                     //32
+    ['f'-'E']= { 8.8817841970012523e-16, 1e-15, -15 },				//33
+    [34]     = { 0, 0, 0 },                                                     //34
+    ['h'-'E']= { 1.0159366732596479e2, 1e2, 2 },				//35
+    [36]     = { 0, 0, 0 },                                                     //36
+    [37]     = { 0, 0, 0 },                                                     //37
+    ['k'-'E']= { 1.024e3, 1e3, 3 },						//38
+    [39]     = { 0, 0, 0 },                                                     //39
+    ['m'-'E']= { 9.765625e-4, 1e-3, -3 },					//40
+    ['n'-'E']= { 9.3132257461547852e-10, 1e-9,  -9 },				//41
+    [42]     = { 0, 0, 0 },                                                     //42
+    ['p'-'E']= { 9.0949470177292824e-13, 1e-12, -12 },				//43    
+    [44]     = { 0, 0, 0 },                                                     //44
+    [45]     = { 0, 0, 0 },                                                     //45
+    [46]     = { 0, 0, 0 },                                                     //46
+    [47]     = { 0, 0, 0 },                                                     //47
+    ['u'-'E']= { 9.5367431640625e-7, 1e-6, -6 },				//48
+    [49]     = { 0, 0, 0 },                                                     //49
+    [50]     = { 0, 0, 0 },                                                     //50
+    [51]     = { 0, 0, 0 },                                                     //51
+    ['y'-'E']= { 8.271806125530276749e-25, 1e-24, -24 },			//52
+    ['z'-'E']= { 8.4703294725430034e-22, 1e-21, -21 },				//53
 };
 
 static const struct {
@@ -147,8 +182,7 @@ static int strmatch(const char *s, const char *prefix)
     return !IS_IDENTIFIER_CHAR(s[i]);
 }
 
-struct AVExpr {
-    enum {
+typedef enum {
         e_value, e_const, e_func0, e_func1, e_func2,
         e_squish, e_gauss, e_ld, e_isnan, e_isinf,
         e_mod, e_max, e_min, e_eq, e_gt, e_gte, e_lte, e_lt,
@@ -156,7 +190,9 @@ struct AVExpr {
         e_last, e_st, e_while, e_taylor, e_root, e_floor, e_ceil, e_trunc,
         e_sqrt, e_not, e_random, e_hypot, e_gcd,
         e_if, e_ifnot, e_print, e_bitand, e_bitor, e_between, e_clip, e_atan2
-    } type;
+    } AVExpr_type;
+struct AVExpr {
+    AVExpr_type type;
     double value; // is sign in other types
     union {
         int const_index;
@@ -329,7 +365,7 @@ void av_expr_free(AVExpr *e)
 
 static int parse_primary(AVExpr **e, Parser *p)
 {
-    AVExpr *d = av_mallocz(sizeof(AVExpr));
+    AVExpr *d = (AVExpr *)av_mallocz(sizeof(AVExpr));
     char *next = p->s, *s0 = p->s;
     int ret, i;
 
@@ -484,10 +520,10 @@ static int parse_primary(AVExpr **e, Parser *p)
 
 static AVExpr *make_eval_expr(int type, int value, AVExpr *p0, AVExpr *p1)
 {
-    AVExpr *e = av_mallocz(sizeof(AVExpr));
+    AVExpr *e = (AVExpr *)av_mallocz(sizeof(AVExpr));
     if (!e)
         return NULL;
-    e->type     =type   ;
+    e->type     =(AVExpr_type)type   ;
     e->value    =value  ;
     e->param[0] =p0     ;
     e->param[1] =p1     ;
@@ -666,7 +702,7 @@ int av_expr_parse(AVExpr **expr, const char *s,
 {
     Parser p = { 0 };
     AVExpr *e = NULL;
-    char *w = av_malloc(strlen(s) + 1);
+    char *w = (char*)av_malloc(strlen(s) + 1);
     char *wp = w;
     const char *s0 = s;
     int ret = 0;
@@ -678,7 +714,7 @@ int av_expr_parse(AVExpr **expr, const char *s,
         if (!av_isspace(*s++)) *wp++ = s[-1];
     *wp++ = 0;
 
-    p.class      = &eval_class;
+    p.class_av      = &eval_class;
     p.stack_index=100;
     p.s= w;
     p.const_names = const_names;
@@ -700,7 +736,7 @@ int av_expr_parse(AVExpr **expr, const char *s,
         ret = AVERROR(EINVAL);
         goto end;
     }
-    e->var= av_mallocz(sizeof(double) *VARS);
+    e->var= (double*)av_mallocz(sizeof(double) *VARS);
     if (!e->var) {
         ret = AVERROR(ENOMEM);
         goto end;
@@ -739,4 +775,5 @@ int av_expr_parse_and_eval(double *d, const char *s,
     *d = av_expr_eval(e, const_values, opaque);
     av_expr_free(e);
     return isnan(*d) ? AVERROR(EINVAL) : 0;
+}
 }
