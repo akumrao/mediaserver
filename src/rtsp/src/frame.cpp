@@ -15,13 +15,14 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+#include "frame.h"
+extern "C"  {
 #include "channel_layout.h"
 #include "avassert.h"
 #include "buffer.h"
 #include "common.h"
 #include "dict.h"
-#include "frame.h"
+
 #include "imgutils.h"
 #include "mem.h"
 #include "samplefmt.h"
@@ -85,6 +86,8 @@ const char *av_get_colorspace_name(enum AVColorSpace val)
     static const char * const name[] = {
         [AVCOL_SPC_RGB]       = "GBR",
         [AVCOL_SPC_BT709]     = "bt709",
+        [AVCOL_SPC_UNSPECIFIED]= NULL,
+        [AVCOL_SPC_RESERVED]   = NULL,
         [AVCOL_SPC_FCC]       = "fcc",
         [AVCOL_SPC_BT470BG]   = "bt470bg",
         [AVCOL_SPC_SMPTE170M] = "smpte170m",
@@ -149,7 +152,7 @@ static void wipe_side_data(AVFrame *frame)
 
 AVFrame *av_frame_alloc(void)
 {
-    AVFrame *frame = av_mallocz(sizeof(*frame));
+    AVFrame *frame = (AVFrame *)av_mallocz(sizeof(*frame));
 
     if (!frame)
         return NULL;
@@ -227,7 +230,7 @@ static int get_video_buffer(AVFrame *frame, int align)
 static int get_audio_buffer(AVFrame *frame, int align)
 {
     int channels;
-    int planar   = av_sample_fmt_is_planar(frame->format);
+    int planar   = av_sample_fmt_is_planar((AVSampleFormat)frame->format);
     int planes;
     int ret, i;
 
@@ -240,16 +243,16 @@ static int get_audio_buffer(AVFrame *frame, int align)
     CHECK_CHANNELS_CONSISTENCY(frame);
     if (!frame->linesize[0]) {
         ret = av_samples_get_buffer_size(&frame->linesize[0], channels,
-                                         frame->nb_samples, frame->format,
+                                         frame->nb_samples, (AVSampleFormat)frame->format,
                                          align);
         if (ret < 0)
             return ret;
     }
 
     if (planes > AV_NUM_DATA_POINTERS) {
-        frame->extended_data = av_mallocz_array(planes,
+        frame->extended_data = (uint8_t**)av_mallocz_array(planes,
                                           sizeof(*frame->extended_data));
-        frame->extended_buf  = av_mallocz_array((planes - AV_NUM_DATA_POINTERS),
+        frame->extended_buf  = (AVBufferRef**)av_mallocz_array((planes - AV_NUM_DATA_POINTERS),
                                           sizeof(*frame->extended_buf));
         if (!frame->extended_data || !frame->extended_buf) {
             av_freep(&frame->extended_data);
@@ -431,7 +434,7 @@ int av_frame_ref(AVFrame *dst, const AVFrame *src)
     }
 
     if (src->extended_buf) {
-        dst->extended_buf = av_mallocz_array(sizeof(*dst->extended_buf),
+        dst->extended_buf = (AVBufferRef**)av_mallocz_array(sizeof(*dst->extended_buf),
                                        src->nb_extended_buf);
         if (!dst->extended_buf) {
             ret = AVERROR(ENOMEM);
@@ -466,7 +469,7 @@ int av_frame_ref(AVFrame *dst, const AVFrame *src)
         }
         CHECK_CHANNELS_CONSISTENCY(src);
 
-        dst->extended_data = av_malloc_array(sizeof(*dst->extended_data), ch);
+        dst->extended_data = (uint8_t**)av_malloc_array(sizeof(*dst->extended_data), ch);
         if (!dst->extended_data) {
             ret = AVERROR(ENOMEM);
             goto fail;
@@ -611,7 +614,7 @@ AVBufferRef *av_frame_get_plane_buffer(AVFrame *frame, int plane)
         if (!channels)
             return NULL;
         CHECK_CHANNELS_CONSISTENCY(frame);
-        planes = av_sample_fmt_is_planar(frame->format) ? channels : 1;
+        planes = av_sample_fmt_is_planar((AVSampleFormat)frame->format) ? channels : 1;
     } else
         planes = 4;
 
@@ -644,13 +647,13 @@ static AVFrameSideData *frame_new_side_data(AVFrame *frame,
     if (frame->nb_side_data > INT_MAX / sizeof(*frame->side_data) - 1)
         goto fail;
 
-    tmp = av_realloc(frame->side_data,
+    tmp = (AVFrameSideData**)av_realloc(frame->side_data,
                      (frame->nb_side_data + 1) * sizeof(*frame->side_data));
     if (!tmp)
         goto fail;
     frame->side_data = tmp;
 
-    ret = av_mallocz(sizeof(*ret));
+    ret = (AVFrameSideData*)av_mallocz(sizeof(*ret));
     if (!ret)
         goto fail;
 
@@ -712,7 +715,7 @@ static int frame_copy_video(AVFrame *dst, const AVFrame *src)
 
 static int frame_copy_audio(AVFrame *dst, const AVFrame *src)
 {
-    int planar   = av_sample_fmt_is_planar(dst->format);
+    int planar   = av_sample_fmt_is_planar((AVSampleFormat)dst->format);
     int channels = dst->channels;
     int planes   = planar ? channels : 1;
     int i;
@@ -729,7 +732,7 @@ static int frame_copy_audio(AVFrame *dst, const AVFrame *src)
             return AVERROR(EINVAL);
 
     av_samples_copy(dst->extended_data, src->extended_data, 0, 0,
-                    dst->nb_samples, channels, dst->format);
+                    dst->nb_samples, channels, (AVSampleFormat)dst->format);
 
     return 0;
 }
@@ -779,4 +782,5 @@ const char *av_frame_side_data_name(enum AVFrameSideDataType type)
     case AV_FRAME_DATA_GOP_TIMECODE:                return "GOP timecode";
     }
     return NULL;
+}
 }
