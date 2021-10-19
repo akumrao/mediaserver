@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "config.h"
 #include "internal_codec.h"
 #include "mem.h"
@@ -93,7 +93,7 @@ int avpriv_open(const char *filename, int flags, ...)
 }
 
 typedef struct FileLogContext {
-    const AVClass *class;
+    const AVClass *class_av;
     int   log_offset;
     void *log_ctx;
 } FileLogContext;
@@ -116,7 +116,7 @@ int avpriv_tempfile(const char *prefix, char **filename, int log_offset, void *l
     free(ptr);
 #else
     size_t len = strlen(prefix) + 12; /* room for "/tmp/" and "XXXXXX\0" */
-    *filename  = av_malloc(len);
+    *filename  = (char*)av_malloc(len);
 #endif
     /* -----common section-----*/
     if (!*filename) {
@@ -183,4 +183,5 @@ FILE *av_fopen_utf8(const char *path, const char *mode)
     if (fd == -1)
         return NULL;
     return fdopen(fd, mode);
+}
 }
