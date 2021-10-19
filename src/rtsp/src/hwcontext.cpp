@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "config.h"
 
 #include "buffer.h"
@@ -50,6 +50,7 @@ static const HWContextType *hw_table[] = {
 static const AVClass hwdevice_ctx_class = {
     .class_name = "AVHWDeviceContext",
     .item_name  = av_default_item_name,
+    .option     = NULL,
     .version    = 1,
 };
 
@@ -91,11 +92,11 @@ AVBufferRef *av_hwdevice_ctx_alloc(enum AVHWDeviceType type)
     if (!hw_type)
         return NULL;
 
-    ctx = av_mallocz(sizeof(*ctx));
+    ctx = (AVHWDeviceContext *)av_mallocz(sizeof(*ctx));
     if (!ctx)
         return NULL;
 
-    ctx->internal = av_mallocz(sizeof(*ctx->internal));
+    ctx->internal = (AVHWDeviceInternal *)av_mallocz(sizeof(*ctx->internal));
     if (!ctx->internal)
         goto fail;
 
@@ -154,6 +155,7 @@ fail:
 static const AVClass hwframe_ctx_class = {
     .class_name = "AVHWFramesContext",
     .item_name  = av_default_item_name,
+    .option     = NULL,
     .version    = 1,
 };
 
@@ -190,11 +192,11 @@ AVBufferRef *av_hwframe_ctx_alloc(AVBufferRef *device_ref_in)
     AVHWFramesContext *ctx;
     AVBufferRef *buf, *device_ref = NULL;
 
-    ctx = av_mallocz(sizeof(*ctx));
+    ctx = (AVHWFramesContext *)av_mallocz(sizeof(*ctx));
     if (!ctx)
         return NULL;
 
-    ctx->internal = av_mallocz(sizeof(*ctx->internal));
+    ctx->internal = (AVHWFramesInternal *)av_mallocz(sizeof(*ctx->internal));
     if (!ctx->internal)
         goto fail;
 
@@ -247,7 +249,7 @@ static int hwframe_pool_prealloc(AVBufferRef *ref)
     AVFrame **frames;
     int i, ret = 0;
 
-    frames = av_mallocz_array(ctx->initial_pool_size, sizeof(*frames));
+    frames = (AVFrame**)av_mallocz_array(ctx->initial_pool_size, sizeof(*frames));
     if (!frames)
         return AVERROR(ENOMEM);
 
@@ -479,7 +481,7 @@ AVHWFramesConstraints *av_hwdevice_get_hwframe_constraints(AVBufferRef *ref,
     if (!hw_type->frames_get_constraints)
         return NULL;
 
-    constraints = av_mallocz(sizeof(*constraints));
+    constraints = (AVHWFramesConstraints*)av_mallocz(sizeof(*constraints));
     if (!constraints)
         return NULL;
 
@@ -542,7 +544,7 @@ fail:
 static void ff_hwframe_unmap(void *opaque, uint8_t *data)
 {
     HWMapDescriptor *hwmap = (HWMapDescriptor*)data;
-    AVHWFramesContext *ctx = opaque;
+    AVHWFramesContext *ctx = (AVHWFramesContext *)opaque;
 
     if (hwmap->unmap)
         hwmap->unmap(ctx, hwmap);
@@ -564,7 +566,7 @@ int ff_hwframe_map_create(AVBufferRef *hwframe_ref,
     HWMapDescriptor *hwmap;
     int ret;
 
-    hwmap = av_mallocz(sizeof(*hwmap));
+    hwmap = (HWMapDescriptor*)av_mallocz(sizeof(*hwmap));
     if (!hwmap) {
         ret = AVERROR(ENOMEM);
         goto fail;
@@ -725,4 +727,5 @@ fail:
         av_buffer_unref(&dst->internal->source_frames);
     av_buffer_unref(&dst_ref);
     return ret;
+}
 }
