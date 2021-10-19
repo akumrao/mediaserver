@@ -21,6 +21,7 @@
 
 #include <string.h>
 
+extern "C"  {
 #include "intreadwrite.h"
 #include "mem.h"
 
@@ -65,7 +66,7 @@ static int alloc_and_copy(AVPacket *out,
 
 static int h264_extradata_to_annexb(AVBSFContext *ctx, const int padding)
 {
-    H264BSFContext *s = ctx->priv_data;
+    H264BSFContext *s = (H264BSFContext *)ctx->priv_data;
     uint16_t unit_size;
     uint64_t total_size                 = 0;
     uint8_t *out                        = NULL, unit_nb, sps_done = 0,
@@ -139,7 +140,7 @@ pps:
 
 static int h264_mp4toannexb_init(AVBSFContext *ctx)
 {
-    H264BSFContext *s = ctx->priv_data;
+    H264BSFContext *s = (H264BSFContext *)ctx->priv_data;
     int extra_size = ctx->par_in->extradata_size;
     int ret;
 
@@ -169,7 +170,7 @@ static int h264_mp4toannexb_init(AVBSFContext *ctx)
 
 static int h264_mp4toannexb_filter(AVBSFContext *ctx, AVPacket *out)
 {
-    H264BSFContext *s = ctx->priv_data;
+    H264BSFContext *s = (H264BSFContext *)ctx->priv_data;
 
     AVPacket *in;
     uint8_t unit_type;
@@ -285,8 +286,10 @@ static const enum AVCodecID codec_ids[] = {
 
 const AVBitStreamFilter ff_h264_mp4toannexb_bsf = {
     .name           = "h264_mp4toannexb",
+    .codec_ids      = codec_ids,
+    .priv_class     = NULL,
     .priv_data_size = sizeof(H264BSFContext),
     .init           = h264_mp4toannexb_init,
     .filter         = h264_mp4toannexb_filter,
-    .codec_ids      = codec_ids,
 };
+}
