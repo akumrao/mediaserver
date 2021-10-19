@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "avassert.h"
 #include "common.h"
 #include "fifo.h"
@@ -29,12 +29,12 @@ static AVFifoBuffer *fifo_alloc_common(void *buffer, size_t size)
     AVFifoBuffer *f;
     if (!buffer)
         return NULL;
-    f = av_mallocz(sizeof(AVFifoBuffer));
+    f = (AVFifoBuffer *)av_mallocz(sizeof(AVFifoBuffer));
     if (!f) {
         av_free(buffer);
         return NULL;
     }
-    f->buffer = buffer;
+    f->buffer = (uint8_t*)buffer;
     f->end    = f->buffer + size;
     av_fifo_reset(f);
     return f;
@@ -237,4 +237,5 @@ void av_fifo_drain(AVFifoBuffer *f, int size)
     if (f->rptr >= f->end)
         f->rptr -= f->end - f->buffer;
     f->rndx += size;
+}
 }
