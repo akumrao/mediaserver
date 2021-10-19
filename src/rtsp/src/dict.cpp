@@ -19,7 +19,7 @@
  */
 
 
-    
+extern "C"  {
 #include "dict.h"
 #include <string.h>
 
@@ -278,3 +278,4 @@ int avpriv_dict_set_timestamp(AVDictionary **dict, const char *key, int64_t time
     }
 }
 
+}
