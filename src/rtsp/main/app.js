@@ -299,7 +299,7 @@ var hiddenInput = undefined;
                              cc = 0;
                             
 
-                            //videoObj.stop();
+                            videoObj.stop();
                             stream_live.src = null;
                             source_buffer = null;
 
