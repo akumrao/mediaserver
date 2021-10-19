@@ -17,7 +17,8 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+#include <pthread.h>
+extern "C"  {
 #include "frame_thread_encoder.h"
 
 #include "fifo.h"
@@ -28,6 +29,10 @@
 #include "internal_codec.h"
 #include "internal_util.h"
 //#include "avthread.h"
+
+#include "cpu.h"
+
+extern int av_dup_packet(AVPacket *pkt);
 
 #define MAX_THREADS 64
 #define BUFFER_SIZE (2*MAX_THREADS)
@@ -59,8 +64,8 @@ typedef struct{
 } ThreadContext;
 
 static void * attribute_align_arg worker(void *v){
-    AVCodecContext *avctx = v;
-    ThreadContext *c = avctx->internal->frame_thread_encoder;
+    AVCodecContext *avctx = (AVCodecContext *)v;
+    ThreadContext *c = (ThreadContext *)avctx->internal->frame_thread_encoder;
     AVPacket *pkt = NULL;
 
     while(!c->exit){
@@ -68,7 +73,7 @@ static void * attribute_align_arg worker(void *v){
         AVFrame *frame;
         Task task;
 
-        if(!pkt) pkt= av_mallocz(sizeof(*pkt));
+        if(!pkt) pkt= (AVPacket*)av_mallocz(sizeof(*pkt));
         if(!pkt) continue;
         av_init_packet(pkt);
 
@@ -82,7 +87,7 @@ static void * attribute_align_arg worker(void *v){
         }
         av_fifo_generic_read(c->task_fifo, &task, sizeof(task), NULL);
         pthread_mutex_unlock(&c->task_fifo_mutex);
-        frame = task.indata;
+        frame = (AVFrame*)task.indata;
 
         ret = avcodec_encode_video2(avctx, pkt, frame, &got_packet);
         pthread_mutex_lock(&c->buffer_mutex);
@@ -172,7 +177,8 @@ int ff_frame_thread_encoder_init(AVCodecContext *avctx, AVDictionary *options){
         return AVERROR(EINVAL);
 
     av_assert0(!avctx->internal->frame_thread_encoder);
-    c = avctx->internal->frame_thread_encoder = av_mallocz(sizeof(ThreadContext));
+    avctx->internal->frame_thread_encoder = (ThreadContext *)av_mallocz(sizeof(ThreadContext));
+    c = (ThreadContext *)avctx->internal->frame_thread_encoder;
     if(!c)
         return AVERROR(ENOMEM);
 
@@ -228,7 +234,7 @@ fail:
 
 void ff_frame_thread_encoder_free(AVCodecContext *avctx){
     int i;
-    ThreadContext *c= avctx->internal->frame_thread_encoder;
+    ThreadContext *c= (ThreadContext *)avctx->internal->frame_thread_encoder;
 
     pthread_mutex_lock(&c->task_fifo_mutex);
     c->exit = 1;
@@ -249,24 +255,24 @@ void ff_frame_thread_encoder_free(AVCodecContext *avctx){
 }
 
 int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFrame *frame, int *got_packet_ptr){
-    ThreadContext *c = avctx->internal->frame_thread_encoder;
+    ThreadContext *c = (ThreadContext *)avctx->internal->frame_thread_encoder;
     Task task;
     int ret;
 
     av_assert1(!*got_packet_ptr);
 
     if(frame){
-        AVFrame *new = av_frame_alloc();
-        if(!new)
+        AVFrame *new_frame = av_frame_alloc();
+        if(!new_frame)
             return AVERROR(ENOMEM);
-        ret = av_frame_ref(new, frame);
+        ret = av_frame_ref(new_frame, frame);
         if(ret < 0) {
-            av_frame_free(&new);
+            av_frame_free(&new_frame);
             return ret;
         }
 
         task.index = c->task_index;
-        task.indata = (void*)new;
+        task.indata = (void*)new_frame;
         pthread_mutex_lock(&c->task_fifo_mutex);
         av_fifo_generic_write(c->task_fifo, &task, sizeof(task), NULL);
         pthread_cond_signal(&c->task_fifo_cond);
@@ -294,4 +300,5 @@ int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt, const AVF
     pthread_mutex_unlock(&c->finished_task_mutex);
 
     return task.return_code;
+}
 }
