@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "id3v1.h"
 #include "avcodec.h"
 #include "dict.h"
@@ -250,4 +250,5 @@ void ff_id3v1_read(AVFormatContext *s)
             avio_seek(s->pb, position, SEEK_SET);
         }
     }
+}
 }
