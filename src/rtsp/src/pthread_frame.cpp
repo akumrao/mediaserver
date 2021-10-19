@@ -23,9 +23,10 @@
  */
 
 #include <atomic>
-#include "frame.h"
+
 
 extern "C"  {
+#include "frame.h"    
 #include "config.h"
 #include <stdint.h>
 

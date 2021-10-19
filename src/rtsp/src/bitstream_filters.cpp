@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 extern "C" {
+
 #include "config.h"
 
 #include "common.h"
@@ -32,7 +33,7 @@ extern const AVBitStreamFilter ff_aac_adtstoasc_bsf;
 //extern const AVBitStreamFilter ff_dump_extradata_bsf;
 //extern const AVBitStreamFilter ff_dca_core_bsf;
 //extern const AVBitStreamFilter ff_extract_extradata_bsf;
-extern const AVBitStreamFilter ff_h264_mp4toannexb_bsf;
+//
 //extern const AVBitStreamFilter ff_hevc_mp4toannexb_bsf;
 //extern const AVBitStreamFilter ff_imx_dump_header_bsf;
 //extern const AVBitStreamFilter ff_mjpeg2jpeg_bsf;
@@ -51,7 +52,7 @@ static const AVBitStreamFilter *bitstream_filters[] = {
     //&ff_dump_extradata_bsf,
     //&ff_dca_core_bsf,
     //&ff_extract_extradata_bsf,
-    &ff_h264_mp4toannexb_bsf,
+    //&ff_h264_mp4toannexb_bsf,
     //&ff_hevc_mp4toannexb_bsf,
 //    &ff_imx_dump_header_bsf,
     //&ff_mjpeg2jpeg_bsf,

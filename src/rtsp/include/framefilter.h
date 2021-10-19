@@ -2,7 +2,7 @@
 #define framefilter_HEADER_GUARD
 
 
-#include "frame.h"
+#include "muxframe.h"
 
 #include <map>
 #include <deque>
