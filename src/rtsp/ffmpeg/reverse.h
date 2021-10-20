@@ -23,6 +23,6 @@
 
 #include <stdint.h>
 
-extern const uint8_t ff_reverse[256];
+const uint8_t ff_reverse[256];
 
 #endif /* AVUTIL_REVERSE_H */
