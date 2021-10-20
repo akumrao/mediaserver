@@ -19,13 +19,15 @@
  */
 
 #include <stdint.h>
-
+extern "C"  {
 #include "common.h"
 #include "frame.h"
 #include "pixdesc.h"
 
 #include "avcodec.h"
+
 #include "mpegutils.h"
+#include "internal_util.h"
 
 void ff_draw_horiz_band(AVCodecContext *avctx,
                         AVFrame *cur, AVFrame *last,
@@ -77,4 +79,5 @@ void ff_draw_horiz_band(AVCodecContext *avctx,
         avctx->draw_horiz_band(avctx, src, offset,
                                y, picture_structure, h);
     }
+}
 }
