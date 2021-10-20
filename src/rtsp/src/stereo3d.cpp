@@ -20,14 +20,15 @@
 
 #include <stdint.h>
 #include <string.h>
-
+extern "C" {
 #include "common.h"
 #include "mem.h"
+
 #include "stereo3d.h"
 
 AVStereo3D *av_stereo3d_alloc(void)
 {
-    return av_mallocz(sizeof(AVStereo3D));
+    return (AVStereo3D *)av_mallocz(sizeof(AVStereo3D));
 }
 
 AVStereo3D *av_stereo3d_create_side_data(AVFrame *frame)
@@ -73,4 +74,5 @@ int av_stereo3d_from_name(const char *name)
     }
 
     return -1;
+}
 }
