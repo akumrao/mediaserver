@@ -26,6 +26,7 @@
  * http://id3.org/Developer_Information
  */
 
+extern "C"  {
 #include "config.h"
 
 #if CONFIG_ZLIB
@@ -85,24 +86,25 @@ static const AVMetadataConv id3v2_2_metadata_conv[] = {
     { 0 }
 };
 
-const char ff_id3v2_tags[][4] = {
-    "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDLY", "TENC", "TEXT",
-    "TFLT", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED",
-    "TOAL", "TOFN", "TOLY", "TOPE", "TOWN", "TPE1", "TPE2", "TPE3",
-    "TPE4", "TPOS", "TPUB", "TRCK", "TRSN", "TRSO", "TSRC", "TSSE",
-    { 0 },
-};
-
-const char ff_id3v2_4_tags[][4] = {
-    "TDEN", "TDOR", "TDRC", "TDRL", "TDTG", "TIPL", "TMCL", "TMOO",
-    "TPRO", "TSOA", "TSOP", "TSOT", "TSST",
-    { 0 },
-};
-
-const char ff_id3v2_3_tags[][4] = {
-    "TDAT", "TIME", "TORY", "TRDA", "TSIZ", "TYER",
-    { 0 },
-};
+// Sanjay  removed it 
+//const char ff_id3v2_tags[][4] = {
+//    "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDLY", "TENC", "TEXT",
+//    "TFLT", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED",
+//    "TOAL", "TOFN", "TOLY", "TOPE", "TOWN", "TPE1", "TPE2", "TPE3",
+//    "TPE4", "TPOS", "TPUB", "TRCK", "TRSN", "TRSO", "TSRC", "TSSE",
+//    { 0 },
+//};
+//
+//const char ff_id3v2_4_tags[][4] = {
+//    "TDEN", "TDOR", "TDRC", "TDRL", "TDTG", "TIPL", "TMCL", "TMOO",
+//    "TPRO", "TSOA", "TSOP", "TSOT", "TSST",
+//    { 0 },
+//};
+//
+//const char ff_id3v2_3_tags[][4] = {
+//    "TDAT", "TIME", "TORY", "TRDA", "TSIZ", "TYER",
+//    { 0 },
+//};
 
 const char *ff_id3v2_picture_types[21] = {
     "Other",
@@ -1165,4 +1167,5 @@ int ff_id3v2_parse_apic(AVFormatContext *s, ID3v2ExtraMeta **extra_meta)
     }
 
     return 0;
+}
 }
