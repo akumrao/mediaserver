@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 
+extern "C"  {
 #include "attributes.h"
 #include "avassert.h"
 #include "mem.h"
@@ -71,17 +72,17 @@ av_cold int ff_rl_init(RLTable *rl,
                 max_run[level] = run;
         }
         if (static_store)
-            rl->max_level[last] = static_store[last];
+            rl->max_level[last] = (int8_t*)static_store[last];
         else {
-            rl->max_level[last] = av_malloc(MAX_RUN + 1);
+            rl->max_level[last] =(int8_t*) av_malloc(MAX_RUN + 1);
             if (!rl->max_level[last])
                 goto fail;
         }
         memcpy(rl->max_level[last], max_level, MAX_RUN + 1);
         if (static_store)
-            rl->max_run[last]   = static_store[last] + MAX_RUN + 1;
+            rl->max_run[last]   = (int8_t*)static_store[last] + MAX_RUN + 1;
         else {
-            rl->max_run[last]   = av_malloc(MAX_LEVEL + 1);
+            rl->max_run[last]   = (int8_t*)av_malloc(MAX_LEVEL + 1);
             if (!rl->max_run[last])
                 goto fail;
         }
@@ -89,7 +90,7 @@ av_cold int ff_rl_init(RLTable *rl,
         if (static_store)
             rl->index_run[last] = static_store[last] + MAX_RUN + MAX_LEVEL + 2;
         else {
-            rl->index_run[last] = av_malloc(MAX_RUN + 1);
+            rl->index_run[last] = (uint8_t*)av_malloc(MAX_RUN + 1);
             if (!rl->index_run[last])
                 goto fail;
         }
@@ -106,7 +107,7 @@ av_cold void ff_rl_init_vlc(RLTable *rl, unsigned static_size)
 {
     int i, q;
     VLC_TYPE table[1500][2] = {{0}};
-    VLC vlc = { .table = table, .table_allocated = static_size };
+    VLC vlc = {  .bits = 0, .table = table, .table_size = 0,  .table_allocated = static_size };
     av_assert0(static_size <= FF_ARRAY_ELEMS(table));
     init_vlc(&vlc, 9, rl->n + 1, &rl->table_vlc[0][1], 4, 2, &rl->table_vlc[0][0], 4, 2, INIT_VLC_USE_NEW_STATIC);
 
@@ -144,4 +145,5 @@ av_cold void ff_rl_init_vlc(RLTable *rl, unsigned static_size)
             rl->rl_vlc[q][i].run   = run;
         }
     }
+}
 }
