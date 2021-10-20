@@ -15,12 +15,13 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "config.h"
 #include "attributes.h"
 #include "common.h"
 #include "mpegvideodsp.h"
-
+#include "log.h"
+    
 static void gmc1_c(uint8_t *dst, uint8_t *src, int stride, int h,
                    int x16, int y16, int rounder)
 {
@@ -113,7 +114,18 @@ av_cold void ff_mpegvideodsp_init(MpegVideoDSPContext *c)
     c->gmc  = ff_gmc_c;
 
     if (ARCH_PPC)
-        ff_mpegvideodsp_init_ppc(c);
+    {
+        //ff_mpegvideodsp_init_ppc(c);
+        av_log(NULL, AV_LOG_ERROR, "Code  Execution should not come herel\n");
+        // Sanjay  removed it 
+        exit(0);
+    }
     if (ARCH_X86)
-        ff_mpegvideodsp_init_x86(c);
+    {
+        //ff_mpegvideodsp_init_x86(c);
+        av_log(NULL, AV_LOG_ERROR, "Code  Execution should not come herel\n");
+        // Sanjay  removed it 
+        exit(0);
+    }
+}
 }
