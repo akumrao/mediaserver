@@ -175,7 +175,31 @@ var hiddenInput = undefined;
                 }
                 else if ((name=="moov") && (pass==1)) {
                     pass = pass + 1;
-                    console.log("got moov");
+                    
+                    // var arv="";
+                    // for( var i = 0 ; i < arr.byteLength; ++i)
+                    // {
+                    //      if (memview[i] == 0x67) 
+                    //      {
+                    //             var x = 0;
+                    //      }
+
+                    //     arv += memview[i].toString(16);
+                    // }
+
+
+                    // console.log("got moov" + arv);
+
+                    if (memview[491] == 0x67) 
+                    { 
+                        var mimeCodec =
+                      'video/mp4; codecs="avc1.' +
+                      memview[492].toString(16) +
+                      memview[493].toString(16) +
+                      memview[494].toString(16) +
+                      '"'
+                      console.log("Video actual codec:'" + mimeCodec + "'")
+                    }
                 }
                 else if ((name=="moof") && (pass==2)) {
                     if (hasFirstSampleFlag(memview)) {
