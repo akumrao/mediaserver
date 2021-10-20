@@ -24,7 +24,7 @@ extern "C"
 #include <avformat.h>
 }
 
-#define tcprequest false
+#define tcprequest true
 
 #include "http/websocket.h"
 
