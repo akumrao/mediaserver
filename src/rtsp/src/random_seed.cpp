@@ -34,12 +34,14 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+extern "C"  {
 #include "avassert.h"
 #include "internal_codec.h"
 #include "intreadwrite.h"
 //#include "timer.h"
 #include "random_seed.h"
-//#include "sha.h"
+#include "sha.h"
+#include "internal_util.h"
 
 #ifndef TEST
 #define TEST 0
@@ -65,7 +67,7 @@ static int read_random(uint32_t *dst, const char *file)
 static uint32_t get_generic_seed(void)
 {
     uint64_t tmp[120/8];
-    struct AVSHA *sha = (void*)tmp;
+    struct AVSHA *sha = (AVSHA*)tmp;
     clock_t last_t  = 0;
     clock_t last_td = 0;
     clock_t init_t = 0;
@@ -141,4 +143,5 @@ uint32_t av_get_random_seed(void)
     if (read_random(&seed, "/dev/random")  == sizeof(seed))
         return seed;
     return get_generic_seed();
+}
 }
