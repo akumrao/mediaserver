@@ -284,12 +284,17 @@ static const enum AVCodecID codec_ids[] = {
     AV_CODEC_ID_H264, AV_CODEC_ID_NONE,
 };
 
-const AVBitStreamFilter ff_h264_mp4toannexb_bsf = {
+
+extern const AVBitStreamFilter ff_h264_mp4toannexb_bsf = {
     .name           = "h264_mp4toannexb",
     .codec_ids      = codec_ids,
     .priv_class     = NULL,
     .priv_data_size = sizeof(H264BSFContext),
     .init           = h264_mp4toannexb_init,
     .filter         = h264_mp4toannexb_filter,
+    
 };
+
 }
+
+
