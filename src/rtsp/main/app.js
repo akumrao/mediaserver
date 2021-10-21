@@ -273,10 +273,10 @@ var hiddenInput = undefined;
                 //videoObj.stop();
                  if (videoObj)
                 {
-                   videoObj.pause();
-                   videoObj.removeAttribute('src'); // empty source
-                   //videoObj.load(); 
-	            videoObj = null;
+                    videoObj.pause();
+        	    videoObj.removeAttribute('src'); 
+                    videoObj.remove();
+                    videoObj = null;
                 }
                 source_buffer = null;
 
@@ -302,13 +302,6 @@ var hiddenInput = undefined;
             {
                 console.log("Open");
               
-	        videoObj = document.createElement('video');
-                videoObj.id = "streamingVideo";
-                videoObj.playsInline = true;
-                videoObj.autoplay = true;
-                videoObj.muted = true;
-		htmlElement.appendChild(videoObj);
-
 
                 let playerDiv = document.getElementById('player');
                 onConfig({} );
@@ -365,7 +358,7 @@ var hiddenInput = undefined;
                             inp =  queue[0];
                             if (verbose) { console.log("queue pop:", queue.length); }
                     
-                            //if (verbose)
+                            if (verbose)
 			    {
 				    var memview = new Uint8Array(inp);
 				     res = getBox(memview, 0);
