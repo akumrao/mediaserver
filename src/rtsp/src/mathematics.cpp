@@ -22,7 +22,7 @@
  * @file
  * miscellaneous math routines and tables
  */
-
+extern "C"  {
 #include <stdint.h>
 #include <limits.h>
 
@@ -69,11 +69,11 @@ int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd)
     if (rnd & AV_ROUND_PASS_MINMAX) {
         if (a == INT64_MIN || a == INT64_MAX)
             return a;
-        rnd -= AV_ROUND_PASS_MINMAX;
+        rnd = (AVRounding)(rnd - AV_ROUND_PASS_MINMAX);
     }
 
     if (a < 0)
-        return -(uint64_t)av_rescale_rnd(-FFMAX(a, -INT64_MAX), b, c, rnd ^ ((rnd >> 1) & 1));
+        return -(uint64_t)av_rescale_rnd(-FFMAX(a, -INT64_MAX), b, c, (AVRounding)(rnd ^ ((rnd >> 1) & 1)));
 
     if (rnd == AV_ROUND_NEAR_INF)
         r = c / 2;
@@ -167,7 +167,7 @@ int64_t av_compare_mod(uint64_t a, uint64_t b, uint64_t mod)
 }
 
 int64_t av_rescale_delta(AVRational in_tb, int64_t in_ts,  AVRational fs_tb, int duration, int64_t *last, AVRational out_tb){
-    int64_t a, b, this;
+    int64_t a, b, this_var;
 
     av_assert0(in_ts != AV_NOPTS_VALUE);
     av_assert0(duration >= 0);
@@ -183,10 +183,10 @@ simple_round:
     if (*last < 2*a - b || *last > 2*b - a)
         goto simple_round;
 
-    this = av_clip64(*last, a, b);
-    *last = this + duration;
+    this_var = av_clip64(*last, a, b);
+    *last = this_var + duration;
 
-    return av_rescale_q(this, fs_tb, out_tb);
+    return av_rescale_q(this_var, fs_tb, out_tb);
 }
 
 int64_t av_add_stable(AVRational ts_tb, int64_t ts, AVRational inc_tb, int64_t inc)
@@ -209,4 +209,5 @@ int64_t av_add_stable(AVRational ts_tb, int64_t ts, AVRational inc_tb, int64_t i
         int64_t old_ts = av_rescale_q(old, inc_tb, ts_tb);
         return av_rescale_q(old + 1, inc_tb, ts_tb) + (ts - old_ts);
     }
+}
 }
