@@ -45,7 +45,6 @@
 #include "macros.h"
 #include "pixfmt.h"
 //#include "version.h"
-#include <cmath>
 
 
 

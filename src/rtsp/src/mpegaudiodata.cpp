@@ -23,7 +23,8 @@
  * @file
  * mpeg audio layer common tables.
  */
-
+extern "C"  {
+#include <cmath>
 #include "mpegaudiodata.h"
 
 
@@ -145,3 +146,4 @@ static const unsigned char alloc_table_4[] = {
 
 const unsigned char * const ff_mpa_alloc_tables[5] =
 { alloc_table_1, alloc_table_1, alloc_table_3, alloc_table_3, alloc_table_4, };
+}

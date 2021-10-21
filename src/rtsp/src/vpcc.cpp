@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "pixdesc.h"
 #include "pixfmt.h"
 #include "vpcc.h"
@@ -116,10 +116,10 @@ int ff_isom_write_vpcc(AVFormatContext *s, AVIOContext *pb,
 {
     int profile = par->profile;
     int level = par->level == FF_LEVEL_UNKNOWN ? 0 : par->level;
-    int bit_depth = get_bit_depth(s, par->format);
+    int bit_depth = (int)get_bit_depth(s, (AVPixelFormat)par->format);
     int vpx_color_space = get_vpx_color_space(s, par->color_space);
     int vpx_chroma_subsampling =
-        get_vpx_chroma_subsampling(s, par->format, par->chroma_location);
+        get_vpx_chroma_subsampling(s, (AVPixelFormat)par->format, (AVChromaLocation)par->chroma_location);
     int vpx_transfer_function = get_vpx_transfer_function(par->color_trc);
     int vpx_video_full_range_flag =
         get_vpx_video_full_range_flag(par->color_range);
@@ -145,4 +145,5 @@ int ff_isom_write_vpcc(AVFormatContext *s, AVIOContext *pb,
     // vp9 does not have codec initialization data.
     avio_wb16(pb, 0);
     return 0;
+}
 }
