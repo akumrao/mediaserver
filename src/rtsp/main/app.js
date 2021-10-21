@@ -192,13 +192,13 @@ var hiddenInput = undefined;
 
                     if (memview[491] == 0x67) 
                     { 
-                       codecPars =
+                       var codecPars1 =
                       'video/mp4; codecs="avc1.' +
                       memview[492].toString(16) +
                       memview[493].toString(16) +
                       memview[494].toString(16) +
                       '"'
-                      console.log("Video actual codec:'" + codecPars + "'")
+                      console.log("Video actual codec:'" + codecPars1 + "'")
 
                       reOpen();
                     }
@@ -757,7 +757,7 @@ function showPlayOverlay() {
 	setOverlay('clickableState', img, event => {
 		if (videoObj)
 			videoObj.play();
-			videoObj.muted =false;
+			//videoObj.muted =false;
 		requestQualityControl();
 
 		showFreezeFrameOverlay();
@@ -858,6 +858,16 @@ const ToClientMessageType = {
 var VideoEncoderQP = "N/A";
 
 function setupWebRtcPlayer(htmlElement, config) {
+
+     if(videoObj)
+     {
+
+        videoObj.pause();
+        videoObj.removeAttribute('src'); // empty source
+        videoObj.remove();
+        videoObj = null;
+
+     }
 
      videoObj = document.createElement('video');
      videoObj.id = "streamingVideo";

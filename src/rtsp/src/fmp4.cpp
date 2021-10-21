@@ -86,7 +86,7 @@ namespace base {
    
             
              std::string got = std::string(msg, len);
-             STrace << "restart  " << got;
+             SInfo << "restart  " << got;
                 
               #if FILEPARSER
 
@@ -102,7 +102,7 @@ namespace base {
                }
                else
                {
-                   if(critical_sec++ == 0 )
+                   if(critical_sec++ == 0 && !strncmp(msg,"rtsp",4 ) )
                    {
                         broadcast("reset" , 5, false);
 
