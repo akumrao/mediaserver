@@ -731,10 +731,10 @@ namespace base {
                     basicvideoframe.mstimestamp = startTime +  framecount;
                     basicvideoframe.fillPars();
 
-                    if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+                    if ( basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                     {
                         fragmp4_muxer->sendMeta();
-                        resetParser = false;
+                       // resetParser = false;
                     }
                     
                     if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter

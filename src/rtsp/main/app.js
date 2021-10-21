@@ -81,7 +81,7 @@ var hiddenInput = undefined;
            // var codecs = "avc1.4D401F,mp4a.40.2";
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
-            var stream_started = false; // is the source_buffer updateend callback active nor not
+            //var stream_started = false; // is the source_buffer updateend callback active nor not
             
             // create media source instance
             var ms = new MediaSource();
@@ -89,12 +89,12 @@ var hiddenInput = undefined;
             // queue for incoming media packets
             var queue = [];
             
-            var stream_live; // the HTMLMediaElement (i.e. <video> element)
+            //var stream_live; // the HTMLMediaElement (i.e. <video> element)
             var ws; // websocket
             var seeked = false; // have have seeked manually once ..
             var cc = 0;
             
-            var source_buffer; // source_buffer instance
+            var source_buffer = null; // source_buffer instance
             
             var pass = 0;
             
@@ -192,13 +192,15 @@ var hiddenInput = undefined;
 
                     if (memview[491] == 0x67) 
                     { 
-                        var mimeCodec =
+                       codecPars =
                       'video/mp4; codecs="avc1.' +
                       memview[492].toString(16) +
                       memview[493].toString(16) +
                       memview[494].toString(16) +
                       '"'
-                      console.log("Video actual codec:'" + mimeCodec + "'")
+                      console.log("Video actual codec:'" + codecPars + "'")
+
+                      reOpen();
                     }
                 }
                 else if ((name=="moof") && (pass==2)) {
@@ -213,70 +215,168 @@ var hiddenInput = undefined;
                 else if (pass < 3) {
                     return;
                 }
-                
-                // keep the latency to minimum
-                let latest = stream_live.duration;
-                if ((stream_live.duration >= buffering_sec) && 
-                    ((latest - stream_live.currentTime) > buffering_sec_seek)) {
-                    console.log("seek from ", stream_live.currentTime, " to ", latest);
-                    df = (stream_live.duration - stream_live.currentTime); // this much away from the last available frame
-                    if ((df > buffering_sec_seek)) {
-                        seek_to = stream_live.duration - buffering_sec_seek_distance;
-                        stream_live.currentTime = seek_to;
-                        }
+
+
+                if ((name=="moof") ) {
+                    if (hasFirstSampleFlag(memview)) {
+                       
+                        console.log("got that special moof");
+                    }
+                    
                 }
 
-                data = arr;
-                if (!stream_started) {
-                    if (verbose) {console.log("Streaming started: ", memview[0], memview[1], memview[2], memview[3], memview[4]);}
-                    source_buffer.appendBuffer(data);
-                    stream_started = true;
-                    cc = cc + 1;
-                    return;
-                }
                 
-                queue.push(data); // add to the end
+                // keep the latency to minimum
+                if(videoObj && source_buffer)
+                {
+                    let latest = videoObj.duration;
+                    if ((videoObj.duration >= buffering_sec) && 
+                        ((latest - videoObj.currentTime) > buffering_sec_seek)) {
+                        console.log("seek from ", videoObj.currentTime, " to ", latest);
+                        df = (videoObj.duration - videoObj.currentTime); // this much away from the last available frame
+                        if ((df > buffering_sec_seek)) {
+                            seek_to = videoObj.duration - buffering_sec_seek_distance;
+                            videoObj.currentTime = seek_to;
+                            }
+                    }
+                }
+
+                queue.push(arr); // add to the end
                 if (verbose) { console.log("queue push:", queue.length); }
+
+                // data = arr;
+                
+                // if (!stream_started) {
+                //     if (verbose) {console.log("Streaming started: ", memview[0], memview[1], memview[2], memview[3], memview[4]);}
+                //     source_buffer.appendBuffer(data);
+                //     stream_started = true;
+                //     cc = cc + 1;
+                //     return;
+                // }
+                if(source_buffer)
+                loadPacket();
+
+                      
+               
             }
             
+            function reSet()
+            {
+                console.log("reSet");
+                pass = -1;
+                stream_started = false; 
+                queue = [];
+                seeked = false; 
+                 cc = 0;
+                
+
+                //videoObj.stop();
+                 if (videoObj)
+                {
+                    
+                    // get reference to video
+                   //stream_live = document.getElementById('streamingVideo');
             
-            function loadPacket() { // called when source_buffer is ready for more
-               if (!source_buffer.updating) { // really, really ready
-                    if (queue.length>0) {
+                    // set mediasource as source of video
+                    videoObj.src = window.URL.createObjectURL(ms);
+                }
+                source_buffer = null;
+
+                if (ms.readyState === 'open')
+                {
+                    try {
+                        ms.removeSourceBuffer(source_buffer);
+                        ms.endOfStream();
+
+                    } catch (error) 
+                    {
+                       console.log( error.message);
+                    }
+                }  
+                
+                ms =null;
+               
+                ms = new MediaSource();          
+                pass = 0; 
+            }
+
+            function reOpen()
+            {
+                console.log("Open");
+              
+
+                let playerDiv = document.getElementById('player');
+                onConfig({} );
+                if (videoObj)
+                {
                     
-                        inp = queue.shift(); // pop from the beginning
-                        if (verbose) { console.log("queue pop:", queue.length); }
+                // get reference to video
+                   //stream_live = document.getElementById('streamingVideo');
+            
+                // set mediasource as source of video
+                    videoObj.src = window.URL.createObjectURL(ms);
+                }
+
+                //ms.addEventListener('sourceopen',opened,false);
+
+                 ms.addEventListener('sourceopen',opened);
+
+                //if (shouldShowPlayOverlay)
+                {
+                  showPlayOverlay();
+                  resizePlayerStyle();
+                  //ws.send(JSON.stringify({ type: 'gettings' }));
+                }
+            }
+            
+            function opened() { // MediaSource object is ready to go
+                // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
+                 if(ms && ms.readyState == 'open')
+                 {
+                    ms.duration = buffering_sec;
+                    source_buffer = ms.addSourceBuffer(codecPars);
                     
-                        var memview = new Uint8Array(inp);
+                    // https://developer.mozilla.org/en-US/docs/Web/API/source_buffer/mode
+                    var myMode = source_buffer.mode;
+                    source_buffer.mode = 'sequence';
+                    // source_buffer.mode = 'segments';
+
+                    //source_buffer.addEventListener("updateend",loadPacket);
+                    source_buffer.addEventListener("update",loadPacket);
+                }
+           
+
+            }
+
+             function loadPacket() 
+            {
+
+                if (!source_buffer.updating) { // really, really ready
+                    if (queue.length>0) 
+                    {
+                         try
+                         {
+                    
+                            inp =  queue[0];
+                            if (verbose) { console.log("queue pop:", queue.length); }
+                    
+                            if (verbose) { var memview = new Uint8Array(inp); console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]); }
                         
-                        if (verbose) { console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]); }
-                        
-                        source_buffer.appendBuffer(inp);
+                            source_buffer.appendBuffer(inp);
+                            queue.shift();
+                         } catch (e) 
+                         {
+                            console.log("sourceBuffer.appendBuffer = " + e.toString())
+                         }
+
                         cc = cc + 1;
                         }
                     else { // the queue runs empty, so the next packet is fed directly
-                        stream_started = false;
+                       // stream_started = false;
                     }
                 }
                 else { // so it was not?
                 }
-            }
-            
-            
-            function opened() { // MediaSource object is ready to go
-                // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
-                ms.duration = buffering_sec;
-                source_buffer = ms.addSourceBuffer(codecPars);
-                
-                // https://developer.mozilla.org/en-US/docs/Web/API/source_buffer/mode
-                var myMode = source_buffer.mode;
-                source_buffer.mode = 'sequence';
-                // source_buffer.mode = 'segments';
-                
-                pass = 0;
-
-                source_buffer.addEventListener("updateend",loadPacket);
-           
 
             }
 
@@ -299,6 +399,10 @@ var hiddenInput = undefined;
                 ws.binaryType = "arraybuffer";
                 ws.onmessage = function (event) {
 
+                   /* if (document.hidden) {
+                 
+                        return;
+                    }*/
 
                     if(event.data instanceof ArrayBuffer) {
                         // binary frame
@@ -316,66 +420,8 @@ var hiddenInput = undefined;
                         
                         if(event.data == "reset" )
                         {
-                            pass = -1;
-                            stream_started = false; 
-                            queue = [];
-                            seeked = false; 
-                             cc = 0;
-                            
-
-                            //videoObj.stop();
-                            stream_live.src = null;
-                            source_buffer = null;
-
-                            if (ms.readyState === 'open') {
-                                    try {
-                                        ms.removeSourceBuffer(source_buffer);
-                                        ms.endOfStream();
-
-                                    } catch (error) 
-                                    {
-                                       console.log( error.message);
-                                    }
-                            }   
-                            ms =null;
-                            ms = new MediaSource();
-
-                            
-
-                            let playerDiv = document.getElementById('player');
-                            onConfig({} );
-
-                            
-
-                            if (videoObj)
-                            {
-                                
-                            // get reference to video
-                               stream_live = document.getElementById('streamingVideo');
-                        
-                            // set mediasource as source of video
-                                stream_live.src = window.URL.createObjectURL(ms);
-                            }
-
-                            ms.addEventListener('sourceopen',opened,false);
-
-                            //if (shouldShowPlayOverlay)
-                            {
-                              showPlayOverlay();
-                              resizePlayerStyle();
-                              //ws.send(JSON.stringify({ type: 'gettings' }));
-                            }
-
-
-                            //startup();
-
-                            //ms.removeEventListener('sourceended', this.e.onSourceEnded);
-                           // ms.removeEventListener('sourceclose', this.e.onSourceClose);
-
-
-
-
-
+                           
+                            reSet();
                         }
                     }
 
@@ -405,25 +451,9 @@ var hiddenInput = undefined;
                     console.log(e);
                 };
 
-                ms.addEventListener('sourceopen',opened,false);
 
 
-                let playerDiv = document.getElementById('player');
-                onConfig({} );
-
-                
-
-                if (videoObj)
-                {
-                    
-                // get reference to video
-                   stream_live = document.getElementById('streamingVideo');
-            
-                // set mediasource as source of video
-                    stream_live.src = window.URL.createObjectURL(ms);
-                }
-
-                resizePlayerStyle();
+          
             }
 
 
