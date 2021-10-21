@@ -18,9 +18,14 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "avcodec.h"
 #include "bsf.h"
+#include "config.h"
+#ifdef av_restrict
+    #undef av_restrict
+    #define av_restrict 
+#endif
 #include "mpeg4video.h"
 
 typedef struct UnpackBFramesBSFContext {
@@ -73,7 +78,7 @@ static void scan_buffer(const uint8_t *buf, int buf_size,
 
 /* allocate new buffer and copy size bytes from src */
 static uint8_t *create_new_buffer(const uint8_t *src, int size) {
-    uint8_t *dst = av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
+    uint8_t *dst = (uint8_t*)av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
 
     if (dst) {
         memcpy(dst, src, size);
@@ -85,7 +90,7 @@ static uint8_t *create_new_buffer(const uint8_t *src, int size) {
 
 static int mpeg4_unpack_bframes_filter(AVBSFContext *ctx, AVPacket *out)
 {
-    UnpackBFramesBSFContext *s = ctx->priv_data;
+    UnpackBFramesBSFContext *s = (UnpackBFramesBSFContext*)ctx->priv_data;
     int pos_p = -1, nb_vop = 0, pos_vop2 = -1, ret = 0;
     AVPacket *in;
 
@@ -183,7 +188,7 @@ static int mpeg4_unpack_bframes_init(AVBSFContext *ctx)
 
 static void mpeg4_unpack_bframes_close(AVBSFContext *bsfc)
 {
-    UnpackBFramesBSFContext *ctx = bsfc->priv_data;
+    UnpackBFramesBSFContext *ctx = (UnpackBFramesBSFContext*)bsfc->priv_data;
     av_freep(&ctx->b_frame_buf);
 }
 
@@ -193,9 +198,11 @@ static const enum AVCodecID codec_ids[] = {
 
 const AVBitStreamFilter ff_mpeg4_unpack_bframes_bsf = {
     .name           = "mpeg4_unpack_bframes",
+    .codec_ids      = codec_ids,
+    .priv_class     = NULL,
     .priv_data_size = sizeof(UnpackBFramesBSFContext),
     .init           = mpeg4_unpack_bframes_init,
     .filter         = mpeg4_unpack_bframes_filter,
-    .close          = mpeg4_unpack_bframes_close,
-    .codec_ids      = codec_ids,
+    .close          = mpeg4_unpack_bframes_close    
 };
+}
