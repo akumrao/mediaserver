@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "get_bits.h"
 #include "put_bits.h"
 #include "mpeg4audio.h"
@@ -206,4 +206,5 @@ int avpriv_copy_pce_data(PutBitContext *pb, GetBitContext *gb)
         copy_bits(pb, gb, 8);
 
     return put_bits_count(pb) - offset;
+}
 }
