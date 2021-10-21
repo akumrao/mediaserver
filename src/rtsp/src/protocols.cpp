@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "config.h"
 
 #include "avstring.h"
@@ -130,7 +130,7 @@ const AVClass *ff_urlcontext_child_class_next(const AVClass *prev)
 
 const char *avio_enum_protocols(void **opaque, int output)
 {
-    const URLProtocol **p = *opaque;
+    const URLProtocol **p = (const URLProtocol **)*opaque;
 
     p = p ? p + 1 : url_protocols;
     *opaque = p;
@@ -154,7 +154,7 @@ const URLProtocol **ffurl_get_protocols(const char *whitelist,
     exit(0);
     
     
-    ret = av_mallocz_array(FF_ARRAY_ELEMS(url_protocols), sizeof(*ret));
+    ret = (const URLProtocol**)av_mallocz_array(FF_ARRAY_ELEMS(url_protocols), sizeof(*ret));
     if (!ret)
         return NULL;
 
@@ -170,4 +170,5 @@ const URLProtocol **ffurl_get_protocols(const char *whitelist,
     }
 
     return ret;
+}
 }
