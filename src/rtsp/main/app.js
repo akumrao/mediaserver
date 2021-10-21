@@ -273,12 +273,10 @@ var hiddenInput = undefined;
                 //videoObj.stop();
                  if (videoObj)
                 {
-                    
-                    // get reference to video
-                   //stream_live = document.getElementById('streamingVideo');
-            
-                    // set mediasource as source of video
-                    videoObj.src = window.URL.createObjectURL(ms);
+                   videoObj.pause();
+                   videoObj.removeAttribute('src'); // empty source
+                   //videoObj.load(); 
+	            videoObj = null;
                 }
                 source_buffer = null;
 
@@ -304,6 +302,13 @@ var hiddenInput = undefined;
             {
                 console.log("Open");
               
+	        videoObj = document.createElement('video');
+                videoObj.id = "streamingVideo";
+                videoObj.playsInline = true;
+                videoObj.autoplay = true;
+                videoObj.muted = true;
+		htmlElement.appendChild(videoObj);
+
 
                 let playerDiv = document.getElementById('player');
                 onConfig({} );
@@ -360,7 +365,13 @@ var hiddenInput = undefined;
                             inp =  queue[0];
                             if (verbose) { console.log("queue pop:", queue.length); }
                     
-                            if (verbose) { var memview = new Uint8Array(inp); console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]); }
+                            //if (verbose)
+			    {
+				    var memview = new Uint8Array(inp);
+				     res = getBox(memview, 0);
+                                     console.log(res[1]);
+				    //console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]);
+			     }
                         
                             source_buffer.appendBuffer(inp);
                             queue.shift();
@@ -758,6 +769,7 @@ function showPlayOverlay() {
 		if (videoObj)
 			videoObj.play();
 			//videoObj.muted =false;
+
 		requestQualityControl();
 
 		showFreezeFrameOverlay();
