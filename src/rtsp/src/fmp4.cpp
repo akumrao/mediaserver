@@ -102,14 +102,14 @@ namespace base {
                }
                else
                {
-                   if(critical_sec++ == 0 && !strncmp(msg,"rtsp",4 ) )
+                   if( !strncmp(msg,"rtsp",4 ) && critical_sec++ == 0  )
                    {
                         broadcast("reset" , 5, false);
 
                         ffparser->stopStreamCall(*ctx);
 
                         ffparser->deregisterStreamCall(*ctx);
-                        delete ctx;
+                        
 
                         fragmp4_muxer->resetParser = true ;
 
@@ -117,8 +117,11 @@ namespace base {
 
                         ffparser->stop();
                         ffparser->join();
-                        delete ffparser;
+                        
 
+
+                        delete ffparser;
+                        delete ctx;
                         delete fragmp4_filter;
                         delete fragmp4_muxer;
                         delete info;

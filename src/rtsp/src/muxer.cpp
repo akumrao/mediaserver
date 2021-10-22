@@ -712,7 +712,7 @@ void FragMP4MuxFrameFilter::sendMeta() {
     }
     if (got_ftyp && got_moov) {
         
-        SInfo<< " sendMeta "<<  "send ftyp & moov";
+        SDebug<< " sendMeta "<<  "send ftyp & moov";
         //std::cout << "FragMP4MuxFrameFilter: sending metadata!" << std::endl;
         next->run(&ftyp_frame);
         next->run(&moov_frame);
