@@ -38,7 +38,7 @@ namespace base {
 
             self = this;
 
-	          fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
             fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
             info = new InfoFrameFilter("info", nullptr);
@@ -115,12 +115,41 @@ namespace base {
 
                         Settings::configuration.rtsp2 = got;
 
-                        SInfo <<  "slot " <<  ++slot ;
+                        ffparser->stop();
+                        ffparser->join();
+                        delete ffparser;
 
+                        delete fragmp4_filter;
+                        delete fragmp4_muxer;
+                        delete info;
+                        delete txt;
+                        
+                        fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+                        fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
-                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+                        info = new InfoFrameFilter("info", nullptr);
+
+                        txt = new TextFrameFilter("txt", this);
+                        
+                        ffparser = new LiveThread("live");
+                        
+                        ffparser->start();
+                        
+                      
+                        
+                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
                         ffparser->registerStreamCall(*ctx);
                         ffparser->playStreamCall(*ctx);
+
+
+
+
+                        // SInfo <<  "slot " <<  ++slot ;
+
+
+                        // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+                        // ffparser->registerStreamCall(*ctx);
+                        // ffparser->playStreamCall(*ctx);
                         
                         critical_sec =0;
                    }

@@ -965,6 +965,12 @@ void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
     }
 }
 
+void LiveThread::stop(bool flag)
+{
+    eventLoopWatchVariable = 1;
+
+    Thread::stop(flag);
+}
 
 void LiveThread::run() {
     SInfo << " run : live555 loop start " ;

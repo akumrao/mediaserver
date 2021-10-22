@@ -80,11 +80,11 @@ class FFParse;
      
  private:
      
-     DummyFrameFilter *fragmp4_filter;
-     FrameFilter *fragmp4_muxer;
-     FrameFilter *info;
-     FrameFilter *txt;
-     LiveConnectionContext *ctx;
+     DummyFrameFilter *fragmp4_filter{nullptr};
+     FrameFilter *fragmp4_muxer{nullptr};;
+     FrameFilter *info{nullptr};;
+     FrameFilter *txt{nullptr};;
+     LiveConnectionContext *ctx{nullptr};;
      int slot{1};        
      std::string fileName;
      

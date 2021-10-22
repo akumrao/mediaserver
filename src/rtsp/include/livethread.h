@@ -397,6 +397,7 @@ protected: // rtsp server for live and/or recorded stream
   
 public: // redefined virtual functions
   void run();
+  void stop(bool flag = true);
   void preRun();
   void postRun();
   /** @copydoc Thread::sendSignal */

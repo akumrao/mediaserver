@@ -490,12 +490,14 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   
   const char* codec_name=fSubsession.codecName();
   
- SInfo<< "FrameSink: constructor: codec_name ="<< codec_name << ", subsession_index ="<<subsession_index <<std::endl;
+  SInfo<< "FrameSink: constructor: codec_name ="<< codec_name << ", subsession_index ="<<subsession_index <<std::endl;
  
-  fragmp4_muxer->deActivate();
+  
   
   // https://ffmpeg.org/doxygen/3.0/avcodec_8h_source.html
-  if      (strcmp(codec_name,"H264")==0) { // NEW_CODEC_DEV // when adding new codecs, make changes here
+  if (strcmp(codec_name,"H264")==0) { // NEW_CODEC_DEV // when adding new codecs, make changes here
+
+    fragmp4_muxer->deActivate();
 
     // WARNING: force subsession index to 0
     subsession_index = 0;
@@ -516,8 +518,10 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
     fragmp4_muxer->run(&setupframe);
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
-  else {
-    // return; // no return here!  You won't do sendParameteSets() ..!
+  else 
+  {
+     SInfo<< "FrameSink: constructor: codec_name ="<< codec_name << " not supported yet" <<std::endl;
+     return; // no return here!  You won't do sendParameteSets() ..!
   }
   
   // some beautiful day enable audio.  At the moment, it messes up some things (for example, re-transmitting streams, etc.)
