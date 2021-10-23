@@ -17,7 +17,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include <fcntl.h>
 #include "network.h"
 //#include "tls.h"
@@ -26,6 +26,7 @@
 #include "avutil.h"
 #include "mem.h"
 #include "time.h"
+#include "mytime.h"
 
 int ff_tls_init(void)
 {
@@ -332,4 +333,5 @@ int ff_http_match_no_proxy(const char *no_proxy, const char *hostname)
     }
     av_free(buf);
     return ret;
+}
 }
