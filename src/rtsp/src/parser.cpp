@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 
+extern "C"  {
 #include "avassert.h"
 #include "atomic.h"
 #include "internal_codec.h"
@@ -280,7 +281,7 @@ int ff_combine_frame(ParseContext *pc, int next,
            pc->index = 0;
            return AVERROR(ENOMEM);
        }
-       pc->buffer = new_buffer;
+       pc->buffer = (uint8_t*)new_buffer;
        memcpy(&pc->buffer[pc->index], *buf, *buf_size);
        pc->index += *buf_size;
        return -1;
@@ -300,7 +301,7 @@ int ff_combine_frame(ParseContext *pc, int next,
            pc->index = 0;
            return AVERROR(ENOMEM);
        }
-       pc->buffer = new_buffer;
+       pc->buffer = (uint8_t*)new_buffer;
        if (next > -AV_INPUT_BUFFER_PADDING_SIZE)
            memcpy(&pc->buffer[pc->index], *buf,
                   next + AV_INPUT_BUFFER_PADDING_SIZE);
@@ -327,7 +328,7 @@ int ff_combine_frame(ParseContext *pc, int next,
 
 void ff_parse_close(AVCodecParserContext *s)
 {
-   ParseContext *pc = s->priv_data;
+   ParseContext *pc = (ParseContext*)s->priv_data;
 
    av_freep(&pc->buffer);
 }
@@ -344,4 +345,5 @@ int ff_mpeg4video_split(AVCodecContext *avctx, const uint8_t *buf, int buf_size)
     }
 
     return 0;
+}
 }
