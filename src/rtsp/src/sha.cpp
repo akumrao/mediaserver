@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+extern "C"  {
 #include "attributes.h"
 #include "avutil.h"
 #include "bswap.h"
@@ -44,7 +45,7 @@ const int av_sha_size = sizeof(AVSHA);
 
 struct AVSHA *av_sha_alloc(void)
 {
-    return av_mallocz(sizeof(struct AVSHA));
+    return (AVSHA *)av_mallocz(sizeof(struct AVSHA));
 }
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -343,10 +344,11 @@ void av_sha_final(AVSHA* ctx, uint8_t *digest)
     int i;
     uint64_t finalcount = av_be2ne64(ctx->count << 3);
 
-    av_sha_update(ctx, "\200", 1);
+    av_sha_update(ctx, (const uint8_t*)"\200", 1);
     while ((ctx->count & 63) != 56)
-        av_sha_update(ctx, "", 1);
+        av_sha_update(ctx, (const uint8_t*)"", 1);
     av_sha_update(ctx, (uint8_t *)&finalcount, 8); /* Should cause a transform() */
     for (i = 0; i < ctx->digest_len; i++)
         AV_WB32(digest + i*4, ctx->state[i]);
+}
 }
