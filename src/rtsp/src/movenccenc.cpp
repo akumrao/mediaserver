@@ -18,6 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+extern "C"  {
 #include "movenccenc.h"
 #include "intreadwrite.h"
 #include "avio_internal.h"
@@ -295,7 +296,7 @@ static int mov_cenc_write_senc_tag(MOVMuxCencContext* ctx, AVIOContext *pb,
     int64_t pos = avio_tell(pb);
 
     avio_wb32(pb, 0); /* size */
-    ffio_wfourcc(pb, "senc");
+    ffio_wfourcc(pb, (const uint8_t*)"senc");
     avio_wb32(pb, ctx->use_subsamples ? 0x02 : 0); /* version & flags */
     avio_wb32(pb, ctx->auxiliary_info_entries); /* entry count */
     *auxiliary_info_offset = avio_tell(pb);
@@ -309,7 +310,7 @@ static int mov_cenc_write_saio_tag(AVIOContext *pb, int64_t auxiliary_info_offse
     uint8_t version;
 
     avio_wb32(pb, 0); /* size */
-    ffio_wfourcc(pb, "saio");
+    ffio_wfourcc(pb, (const uint8_t*)"saio");
     version = auxiliary_info_offset > 0xffffffff ? 1 : 0;
     avio_w8(pb, version);
     avio_wb24(pb, 0); /* flags */
@@ -326,7 +327,7 @@ static int mov_cenc_write_saiz_tag(MOVMuxCencContext* ctx, AVIOContext *pb)
 {
     int64_t pos = avio_tell(pb);
     avio_wb32(pb, 0); /* size */
-    ffio_wfourcc(pb, "saiz");
+    ffio_wfourcc(pb, (const uint8_t*)"saiz");
     avio_wb32(pb, 0); /* version & flags */
     avio_w8(pb, ctx->use_subsamples ? 0 : AES_CTR_IV_SIZE);    /* default size*/
     avio_wb32(pb, ctx->auxiliary_info_entries); /* entry count */
@@ -349,10 +350,10 @@ static int mov_cenc_write_schi_tag(AVIOContext *pb, uint8_t* kid)
 {
     int64_t pos = avio_tell(pb);
     avio_wb32(pb, 0);     /* size */
-    ffio_wfourcc(pb, "schi");
+    ffio_wfourcc(pb, (const uint8_t*)"schi");
 
     avio_wb32(pb, 32);    /* size */
-    ffio_wfourcc(pb, "tenc");
+    ffio_wfourcc(pb, (const uint8_t*)"tenc");
     avio_wb32(pb, 0);     /* version & flags */
     avio_wb24(pb, 1);     /* is encrypted */
     avio_w8(pb, AES_CTR_IV_SIZE); /* iv size */
@@ -365,18 +366,18 @@ int ff_mov_cenc_write_sinf_tag(MOVTrack* track, AVIOContext *pb, uint8_t* kid)
 {
     int64_t pos = avio_tell(pb);
     avio_wb32(pb, 0); /* size */
-    ffio_wfourcc(pb, "sinf");
+    ffio_wfourcc(pb, (const uint8_t*)"sinf");
 
     /* frma */
     avio_wb32(pb, 12);    /* size */
-    ffio_wfourcc(pb, "frma");
+    ffio_wfourcc(pb, (const uint8_t*)"frma");
     avio_wl32(pb, track->tag);
 
     /* schm */
     avio_wb32(pb, 20);    /* size */
-    ffio_wfourcc(pb, "schm");
+    ffio_wfourcc(pb, (const uint8_t*)"schm");
     avio_wb32(pb, 0); /* version & flags */
-    ffio_wfourcc(pb, "cenc");    /* scheme type*/
+    ffio_wfourcc(pb, (const uint8_t*)"cenc");    /* scheme type*/
     avio_wb32(pb, 0x10000); /* scheme version */
 
     /* schi */
@@ -412,4 +413,5 @@ int ff_mov_cenc_init(MOVMuxCencContext* ctx, uint8_t* encryption_key,
 void ff_mov_cenc_free(MOVMuxCencContext* ctx)
 {
     av_aes_ctr_free(ctx->aes_ctr);
+}
 }
