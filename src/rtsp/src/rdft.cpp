@@ -18,11 +18,11 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+extern "C"  {
 #include <stdlib.h>
 #include <math.h>
 #include "mathematics.h"
 #include "rdft.h"
-
 /**
  * @file
  * (Inverse) Real Discrete Fourier Transforms.
@@ -134,3 +134,4 @@ static void rdft_calc_c(RDFTContext *s, FFTSample *data)
 //{
 //    ff_fft_end(&s->fft);
 //}
+}
