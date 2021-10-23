@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
     
-    
+extern "C"  {
 #include "common.h"
 #include "samplefmt.h"
 
@@ -65,7 +65,7 @@ enum AVSampleFormat av_get_sample_fmt(const char *name)
 
     for (i = 0; i < AV_SAMPLE_FMT_NB; i++)
         if (!strcmp(sample_fmt_info[i].name, name))
-            return i;
+            return (AVSampleFormat)i;
     return AV_SAMPLE_FMT_NONE;
 }
 
@@ -257,4 +257,5 @@ int av_samples_set_silence(uint8_t **audio_data, int offset, int nb_samples,
         memset(audio_data[i] + offset, fill_char, data_size);
 
     return 0;
+}
 }
