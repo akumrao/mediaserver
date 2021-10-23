@@ -22,7 +22,7 @@ extern "C"
 
 #include "constant.h"
 
-/** Enumeration of Frame classes used by Valkka
+/** Enumeration of Frame classes 
  * 
  * @ingroup frames_tag
  */
@@ -200,6 +200,8 @@ public:                 // codec-dependent parameters
 public:                  // codec-dependent functions
     void fillPars();     ///< Fill codec-dependent parameters based on the payload
     void fillH264Pars(); ///< Inspects payload and fills BasicFrame::h264_pars;
+    
+    void copyBuf( u_int8_t* buf  ,unsigned size );
 
 public:
     void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
@@ -416,4 +418,21 @@ public:
     bool tm_start, tm_end; ///< Transmission start / end
 };
 
+
+/** Custom TextFrame Frame
+ * 
+ * Includes codec info and the payload.  Received typically from LiveThread or FileThread.
+ * 
+ * @ingroup frames_tag
+ */
+class TextFrame : public Frame
+{
+
+public:
+    TextFrame();          ///< Default ctor
+    virtual ~TextFrame(){}; ///< Default virtual dtor
+    
+public:                                                
+    std::string txt;
+};
 #endif

@@ -1,11 +1,13 @@
 #ifndef framefilter_HEADER_GUARD
 #define framefilter_HEADER_GUARD
-#include "fmp4.h"
+
 
 #include "frame.h"
 
 #include <map>
-
+#include <deque>
+#include <atomic>
+#include <condition_variable>
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
 
@@ -19,7 +21,7 @@
                                                 
 namespace base {
 namespace fmp4 {
-
+class ReadMp4; 
 class FrameFilter { 
 
 public: 
@@ -46,6 +48,10 @@ public: // API
     /** Calls this->go(Frame* frame) and then calls the this->next->run(Frame* frame) (if this->next != NULL)
    */
     virtual void run(Frame *frame);
+    
+    virtual void deActivate(){};
+    virtual void sendMeta(){};
+    std::atomic< bool > resetParser { false };
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.
@@ -78,18 +84,21 @@ protected:
 }; 
 
 
-class TextFrameFilter  { 
+class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn ); 
+    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn,  FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
      base::fmp4::ReadMp4 *conn; 
+     
   
 public:
-    void go(std::string cmd);
+    
+    protected:
+    void go(Frame *frame);    
 
-    std::string name;
+    //std::string name;
 }; 
 
 /** Dump the beginning of Frame's payload into stdout

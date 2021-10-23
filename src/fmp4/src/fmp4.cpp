@@ -51,12 +51,19 @@ namespace base {
 
     namespace fmp4 {
 
-        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpsServer(  ip, port,  factory, true){
+        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
             
-         self = this;
+           self = this;
+           fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+           fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+           info = new InfoFrameFilter("info", nullptr);
+
+           txt = new TextFrameFilter("txt", this);
+
          
-            ffparser = new FFParse(this, AUDIOFILE, VIDEOFILE);
-            ffparser->start();    
+           ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
+           ffparser->start();    
 
         }
 
@@ -79,15 +86,17 @@ namespace base {
                 //  m_ping_timeout_timer.Reset();
                 //  m_packet_mgr.put_payload(std::string(data,sz));
                 if( got == "reset")
-                    ffparser->reset();    
-                else if( got == "mute")
-                    ffparser->restart(true);
-                else if( got == "unmute")
-                    ffparser->restart(false);   
-                else if( got  == "hd")
-		         ffparser->resHD(true);
-	            else if (got == "sd")
-		          ffparser->resHD(false);
+                {
+                  //  ffparser->reset();    
+                }
+//                else if( got == "mute")
+//                    ffparser->restart(true);
+//                else if( got == "unmute")
+//                    ffparser->restart(false);   
+//                else if( got  == "hd")
+//		         ffparser->resHD(true);
+//	            else if (got == "sd")
+//		          ffparser->resHD(false);
             //con->send( msg, len );
 
            // sendAll(msg, len);

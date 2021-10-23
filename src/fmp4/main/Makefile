@@ -54,7 +54,7 @@ CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialize
  
 
 CPPFLAGS   := -I../../fmp4/include/ -I../ffmpeg -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../net/uv_multiplex/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
--DHTTPSSL=1
+# -DHTTPSSL=1
               
 LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 #/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a

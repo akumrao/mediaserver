@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 var videoObj = null;
 var print_stats = false;
@@ -74,48 +73,30 @@ var hiddenInput = undefined;
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs;//  = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
-            //var codecs = "avc1.4D401F,mp4a.40.2";
-            var codecPars;//  = mimeType+';codecs="'+codecs+'"';
+            // var codecs = "mp4a.40.2";
+
+           // var codecs = "avc1.4D401F,mp4a.40.2";
+            var codecPars = mimeType+';codecs="'+codecs+'"';
             
-            var stream_started = false; // is the source_buffer updateend callback active nor not
+            //var stream_started = false; // is the source_buffer updateend callback active nor not
             
             // create media source instance
-            var ms;
+            var ms = new MediaSource();
             
             // queue for incoming media packets
             var queue = [];
-
-            var ms_queue=[];
             
-            var stream_live; // the HTMLMediaElement (i.e. <video> element)
+            //var stream_live; // the HTMLMediaElement (i.e. <video> element)
             var ws; // websocket
             var seeked = false; // have have seeked manually once ..
             var cc = 0;
             
-            var source_buffer; // source_buffer instance
+            var source_buffer = null; // source_buffer instance
             
             var pass = 0;
-
-            var contentType="none";
-
-
-            function resetms() {
-
-                 stream_started=false;
-                 cc = 0;
-                 pass = 0;
-                 seeked = false;
-                 ms = null;
-                 ms = new MediaSource();
-                 source_buffer = null;
-                 queue = [];
-                 ms_queue = [];
-                 codecs = "";
-                 codecPars="";
-            }
             
             // *** MP4 Box manipulation functions ***
             // taken from here: https://stackoverflow.com/questions/54186634/sending-periodic-metadata-in-fragmented-live-mp4-stream/
@@ -194,7 +175,33 @@ var hiddenInput = undefined;
                 }
                 else if ((name=="moov") && (pass==1)) {
                     pass = pass + 1;
-                    console.log("got moov");
+                    
+                    // var arv="";
+                    // for( var i = 0 ; i < arr.byteLength; ++i)
+                    // {
+                    //      if (memview[i] == 0x67) 
+                    //      {
+                    //             var x = 0;
+                    //      }
+
+                    //     arv += memview[i].toString(16);
+                    // }
+
+
+                    // console.log("got moov" + arv);
+
+                    if (memview[491] == 0x67) 
+                    { 
+                       var codecPars1 =
+                      'video/mp4; codecs="avc1.' +
+                      memview[492].toString(16) +
+                      memview[493].toString(16) +
+                      memview[494].toString(16) +
+                      '"'
+                      console.log("Video actual codec:'" + codecPars1 + "'")
+
+                      reOpen();
+                    }
                 }
                 else if ((name=="moof") && (pass==2)) {
                     if (hasFirstSampleFlag(memview)) {
@@ -208,82 +215,184 @@ var hiddenInput = undefined;
                 else if (pass < 3) {
                     return;
                 }
-                
-                // keep the latency to minimum
-                let latest = stream_live.duration;
-                if ((stream_live.duration >= buffering_sec) && 
-                    ((latest - stream_live.currentTime) > buffering_sec_seek)) {
-                    console.log("seek from ", stream_live.currentTime, " to ", latest);
-                    df = (stream_live.duration - stream_live.currentTime); // this much away from the last available frame
-                    if ((df > buffering_sec_seek)) {
-                        seek_to = stream_live.duration - buffering_sec_seek_distance;
-                        stream_live.currentTime = seek_to;
-                        }
+
+
+                if ((name=="moof") ) {
+                    if (hasFirstSampleFlag(memview)) {
+                       
+                        console.log("got that special moof");
+                    }
+                    
                 }
 
-                data = arr;
-                if (!stream_started) {
-                    if (verbose) {console.log("Streaming started: ", memview[0], memview[1], memview[2], memview[3], memview[4]);}
-                    source_buffer.appendBuffer(data);
-                    stream_started = true;
-                    cc = cc + 1;
-                    return;
-                }
                 
-                queue.push(data); // add to the end
+                // keep the latency to minimum
+                if(videoObj && source_buffer)
+                {
+                    let latest = videoObj.duration;
+                    if ((videoObj.duration >= buffering_sec) && 
+                        ((latest - videoObj.currentTime) > buffering_sec_seek)) {
+                        console.log("seek from ", videoObj.currentTime, " to ", latest);
+                        df = (videoObj.duration - videoObj.currentTime); // this much away from the last available frame
+                        if ((df > buffering_sec_seek)) {
+                            seek_to = videoObj.duration - buffering_sec_seek_distance;
+                            videoObj.currentTime = seek_to;
+                            }
+                    }
+                }
+
+                queue.push(arr); // add to the end
                 if (verbose) { console.log("queue push:", queue.length); }
+
+                // data = arr;
+                
+                // if (!stream_started) {
+                //     if (verbose) {console.log("Streaming started: ", memview[0], memview[1], memview[2], memview[3], memview[4]);}
+                //     source_buffer.appendBuffer(data);
+                //     stream_started = true;
+                //     cc = cc + 1;
+                //     return;
+                // }
+                if(source_buffer)
+                loadPacket();
+
+                      
+               
             }
             
+            function reSet()
+            {
+               // console.log("reSet");
+                pass = -1;
+                stream_started = false; 
+                queue = [];
+                seeked = false; 
+                 cc = 0;
+                
+
+                //videoObj.stop();
+                 if (videoObj)
+                {
+                    videoObj.pause();
+        	    videoObj.removeAttribute('src'); 
+                    videoObj.remove();
+                    videoObj = null;
+                }
+                source_buffer = null;
+
+                if (ms.readyState === 'open')
+                {
+                    try {
+                        ms.removeSourceBuffer(source_buffer);
+                        ms.endOfStream();
+
+                    } catch (error) 
+                    {
+                       console.log( error.message);
+                    }
+                }  
+                
+                ms =null;
+               
+                ms = new MediaSource();          
+                pass = 0; 
+            }
+
+            function reOpen()
+            {
+                console.log("Open");
+              
+
+                let playerDiv = document.getElementById('player');
+                onConfig({} );
+                if (videoObj)
+                {
+                    
+                // get reference to video
+                   //stream_live = document.getElementById('streamingVideo');
             
-            function loadPacket() { // called when source_buffer is ready for more
-               if (!source_buffer.updating) { // really, really ready
-                    if (queue.length>0) {
+                // set mediasource as source of video
+                    videoObj.src = window.URL.createObjectURL(ms);
+                }
+
+                //ms.addEventListener('sourceopen',opened,false);
+
+                 ms.addEventListener('sourceopen',opened);
+
+                //if (shouldShowPlayOverlay)
+                {
+                  showPlayOverlay();
+                  resizePlayerStyle();
+                  //ws.send(JSON.stringify({ type: 'gettings' }));
+                }
+            }
+            
+            function opened() { // MediaSource object is ready to go
+                // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
+                 if(ms && ms.readyState == 'open')
+                 {
+                    ms.duration = buffering_sec;
+                    source_buffer = ms.addSourceBuffer(codecPars);
                     
-                        inp = queue.shift(); // pop from the beginning
-                        if (verbose) { console.log("queue pop:", queue.length); }
+                    // https://developer.mozilla.org/en-US/docs/Web/API/source_buffer/mode
+                    var myMode = source_buffer.mode;
+                    source_buffer.mode = 'sequence';
+                    // source_buffer.mode = 'segments';
+
+                    //source_buffer.addEventListener("updateend",loadPacket);
+                    source_buffer.addEventListener("update",loadPacket);
+                }
+           
+
+            }
+
+             function loadPacket() 
+            {
+
+                if (!source_buffer.updating) { // really, really ready
+                    if (queue.length>0) 
+                    {
+                         try
+                         {
                     
-                        var memview = new Uint8Array(inp);
+                            inp =  queue[0];
+                            if (verbose) { console.log("queue pop:", queue.length); }
+                    
+                            if (verbose)
+			    {
+				    var memview = new Uint8Array(inp);
+				     res = getBox(memview, 0);
+                                     console.log(res[1]);
+				    //console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]);
+			     }
                         
-                        if (verbose) { console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]); }
-                        
-                        source_buffer.appendBuffer(inp);
+                            source_buffer.appendBuffer(inp);
+                            queue.shift();
+                         } catch (e) 
+                         {
+                            console.log("sourceBuffer.appendBuffer = " + e.toString())
+                         }
+
                         cc = cc + 1;
                         }
                     else { // the queue runs empty, so the next packet is fed directly
-                        stream_started = false;
+                       // stream_started = false;
                     }
                 }
                 else { // so it was not?
                 }
-            }
-            
-            
-            function opened() { // MediaSource object is ready to go
-                // https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/duration
 
-                console.log(codecPars);
-
-                ms.duration = buffering_sec;
-                source_buffer = ms.addSourceBuffer(codecPars);
-                
-                // https://developer.mozilla.org/en-US/docs/Web/API/source_buffer/mode
-                var myMode = source_buffer.mode;
-                source_buffer.mode = 'sequence';
-                // source_buffer.mode = 'segments';
-                
-                source_buffer.addEventListener("updateend",loadPacket);
-       
             }
 
-            function startws()
+            function startup() 
             {
-
                 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
                 if (!window.WebSocket) {
                   alert('Your browser doesn\'t support WebSocket');
                   return;
                 }
+
 
                 var pth = window.location.href.replace('http://', 'ws://').replace('https://', 'wss://') ;
 
@@ -294,54 +403,40 @@ var hiddenInput = undefined;
                 ws.binaryType = "arraybuffer";
                 ws.onmessage = function (event) {
 
+                   /* if (document.hidden) {
+                 
+                        return;
+                    }*/
 
                     if(event.data instanceof ArrayBuffer) {
                         // binary frame
                        // const view = new DataView(event.data);
                        // console.log(view.getInt32(0));
+                       if(pass > -1 )
+                       putPacket(event.data);
+                     //source_buffer.appendBuffer(event.data);
 
-                        if( ms && ms.readyState === 'open')
-                        {
-                            while (ms_queue.length>0)
-                            {
-                                var tmpItm = ms_queue.shift(); // pop from the beginning
-                                putPacket(tmpItm); 
-                            }
-                    
-                           
-                            putPacket(event.data); 
-                        } 
-                       else
-                       {
-                          ms_queue.push(event.data);
-                          console.log("Mediasoure not started yet");
-                       }
-                     
-
-                    } else {
+                    } 
+                    else 
+                    {
                         // text frame
                         console.log(event.data);
-
-                        if(  event.data != contentType )
-                        {   
-                             // if( ms && ms.readyState === 'open')
-                             //   ms.endOfStream();
-
-                            contentType = event.data;
-
-                            if(event.data == "vhd")
-                                startup(true , true);
-                            else if( event.data == "vsd")
-                                startup(true , false);
-                            else if(event.data == "avhd")
-                                 startup(false, true);
-                            else if(event.data == "avsd")
-                                startup(false, false);
-                       }
+                        
+                        if(event.data == "reset" )
+                        {
+                            document.getElementById("parStats").innerHTML = "";
+                            reSet();
+                        }
+                        else
+                        {
+                            document.getElementById("settings-button").disabled = false;
+                            document.getElementById("parStats").innerHTML = event.data ;
+                        }
                     }
 
                     
                 };
+                
                 ws.onopen = function() 
                 {
                     console.log('WebSocket Client Connected');
@@ -349,7 +444,6 @@ var hiddenInput = undefined;
 
                        if (shouldShowPlayOverlay)
                        {
-                          onConfig({} );
                           showPlayOverlay();
                           resizePlayerStyle();
                           //ws.send(JSON.stringify({ type: 'gettings' }));
@@ -365,79 +459,17 @@ var hiddenInput = undefined;
                     console.log("DataChannel error: " + e.message);
                     console.log(e);
                 };
-            }
 
-            function startup(videoonly , hd) {
-
-
-        
-                var checkBox = document.getElementById("muteaudio");
-                checkBox.checked = videoonly;
-
-                if(hd)
-                   document.getElementById('resolution').value = 'hd';
-                else
-                  document.getElementById('resolution').value = 'sd';
-
-
-                resetms();
-
-                if(videoonly)
-                  codecs = "avc1.4D401F";
-                else
-                  codecs = "avc1.4D401F,mp4a.40.2";
-            
-                codecPars = mimeType+';codecs="'+codecs+'"';
-                
-
-                ms.addEventListener('sourceopen',opened,false);
-
-	            let playerDiv = document.getElementById('player');
-                //onConfig({} );
-                
-		if (videoObj)
-                {
-                  // get reference to video
-                   stream_live = document.getElementById('streamingVideo');
-            
-                   // set mediasource as source of video
-                    stream_live.src = window.URL.createObjectURL(ms);
-                }
-
-                resizePlayerStyle();
+          
             }
 
 
-            function muteit() 
-            {
 
-                // stream_live = document.getElementById('stream_live');
-                // if (stream_live)
-                // {
-                //     stream_live.pause();
-                //     stream_live.muted =true;
-                // }
-                //if( ms && ms.readyState === 'open')
-                 // ms.endOfStream();
 
-                 ms = null;
-                if(document.getElementById("muteaudio").checked)
-                {
-                  ws.send("mute");
-                }
-                else
-                {
-                  ws.send("unmute");    
-                }
-            }
 
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
 
 
@@ -605,19 +637,22 @@ function setupHtmlEvents() {
 	var settingsButton = document.getElementById('settings-button');
 	if (settingsButton) {
 		settingsButton.onclick = function (event) {
-			console.log(`-> SS: settings`);
+			console.log(`-> SS: Camera Change`);
 
-			//let quality = document.getElementById('quality').value;
-			//let minBitrate = document.getElementById('minBitrate').value;
-			//let maxBitrate = document.getElementById('maxBitrate').value;
-			let resolution = document.getElementById('resolution').value;
-			//let minQP = document.getElementById('minQP').value;
-			//let rateCtrl = document.getElementById('rateCtrl').value;
-			////let minFPS = document.getElementById('minFPS').value;
-			//let backbuffersize = document.getElementById('backbuffersize').value;
+            settingsButton.disabled = true;
+            //let quality = document.getElementById('quality').value;
+            //let minBitrate = document.getElementById('minBitrate').value;
+            //let maxBitrate = document.getElementById('maxBitrate').value;
+            let camera = document.getElementById('camera').value;
+            //let minQP = document.getElementById('minQP').value;
+            //let rateCtrl = document.getElementById('rateCtrl').value;
+            ////let minFPS = document.getElementById('minFPS').value;
+            //let backbuffersize = document.getElementById('backbuffersize').value;
 
-			//ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
-                        ws.send(resolution );
+            //ws.send(JSON.stringify({ type: 'settings', data:    { "quality": quality, "minBitrate": minBitrate, "maxBitrate": maxBitrate,"resolution": resolution, "rateCtrl":rateCtrl  }    }));
+            pass = -1;
+            ws.send(camera);
+
 		};
 	}
 
@@ -725,7 +760,8 @@ function showPlayOverlay() {
 	setOverlay('clickableState', img, event => {
 		if (videoObj)
 			videoObj.play();
-			videoObj.muted =false;
+			//videoObj.muted =false;
+
 		requestQualityControl();
 
 		showFreezeFrameOverlay();
@@ -801,7 +837,7 @@ function resetAfkWarningTimer() {
 function sendInputData(data) {
     if (videoObj) {
         //console.log("input data send.");
-        ws.send(data);
+        //ws.send(data);
     }
 }
 
@@ -827,12 +863,22 @@ var VideoEncoderQP = "N/A";
 
 function setupWebRtcPlayer(htmlElement, config) {
 
+     if(videoObj)
+     {
+
+        videoObj.pause();
+        videoObj.removeAttribute('src'); // empty source
+        videoObj.remove();
+        videoObj = null;
+
+     }
+
      videoObj = document.createElement('video');
      videoObj.id = "streamingVideo";
      videoObj.playsInline = true;
      videoObj.autoplay = true;
      videoObj.muted = true;
-    // videoObj.controls = true;
+     //videoObj.controls = true;
             
 
 
@@ -1918,9 +1964,7 @@ function updateKickButton(playersCount) {
 
 function connect() {
 
-	//startup();
-
-    startws();
+	startup();
 
 	// "use strict";
 
@@ -1988,7 +2032,7 @@ function onConfig(config) {
 	let playerDiv = document.getElementById('player');
 	playerElement = setupWebRtcPlayer(playerDiv, config);
 	resizePlayerStyle();
-
+    document.getElementById("settings-button").disabled = false;
 	switch (inputOptions.controlScheme) {
 		case ControlSchemeType.HoveringMouse:
 			registerHoveringMouseEvents(playerElement);

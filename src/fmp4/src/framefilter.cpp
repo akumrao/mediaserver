@@ -1,7 +1,8 @@
 
 #include "framefilter.h"
 #include "tools.h"
-
+#include "base/logger.h"
+#include "fmp4.h"
 
 namespace base {
 namespace fmp4 {
@@ -27,6 +28,7 @@ void FrameFilter::run(Frame *frame)
 // subclass like this:
 DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
 {
+    #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
     const char *input_file = "/tmp/test.mp4"; 
     if ((fp_out = fopen(input_file, "wb")) == NULL) {
@@ -34,7 +36,7 @@ DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbos
         // goto ret7;
         return;
     }
-    
+     #endif
 }
 DummyFrameFilter::~DummyFrameFilter()
 {
@@ -83,7 +85,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *nm,  ReadMp4 *conn, FrameFilter *next) : name(nm),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *name,  ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
 {
 }
 
@@ -92,14 +94,13 @@ TextFrameFilter::~TextFrameFilter()
     
 }
 
-void TextFrameFilter::go(std::string cmd) {
-
-        // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
-        SDebug << "TextFrameFilter : " << this->name << " : got frame : " << cmd ;
-
+void TextFrameFilter::go(Frame *frame) {
         
-        if(conn)
-         conn->broadcast((const char*)cmd.c_str(), cmd.size(), false );
+      TextFrame *txt    =  (TextFrame*) frame;
+       SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
+        
+      if(conn)
+         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false );
    
 }
 
@@ -120,14 +121,14 @@ InfoFrameFilter::InfoFrameFilter(const char *name, FrameFilter *next) : FrameFil
 
 void InfoFrameFilter::go(Frame *frame)
 {
-    std::cout << "InfoFrameFilter: " << name << " start dump>> " << std::endl;
-    std::cout << "InfoFrameFilter: FRAME   : " << *(frame) << std::endl;
-    std::cout << "InfoFrameFilter: PAYLOAD : [";
-    std::cout << frame->dumpPayload();
-    std::cout << "]" << std::endl;
+    SInfo << "InfoFrameFilter: " << name << " start dump>> " ;
+    SInfo << "InfoFrameFilter: FRAME   : " << *(frame) ;
+    SInfo << "InfoFrameFilter: PAYLOAD : [";
+    SInfo << frame->dumpPayload();
+    SInfo << "]" << std::endl;
     // std::cout << "InfoFrameFilter:<" << frame->dumpAVFrame() << ">" << std::endl;
    // std::cout << "InfoFrameFilter: timediff: " << frame->mstimestamp - getCurrentMsTimestamp() << std::endl;
-    std::cout << "InfoFrameFilter: " << name << " <<end dump   " << std::endl;
+    SInfo<< "InfoFrameFilter: " << name << " <<end dump   " ;
 }
 
 
