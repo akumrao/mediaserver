@@ -138,38 +138,41 @@ extern COSTABLE(65536);
 extern COSTABLE(131072);
 extern COSTABLE_CONST FFTSample* const FFT_NAME(ff_cos_tabs)[18];
 
-#define ff_init_ff_cos_tabs FFT_NAME(ff_init_ff_cos_tabs)
+// Sanjay  removed it
+//#define ff_init_ff_cos_tabs FFT_NAME(ff_init_ff_cos_tabs)
+//
+///**
+// * Initialize the cosine table in ff_cos_tabs[index]
+// * @param index index in ff_cos_tabs array of the table to initialize
+// */
+//void ff_init_ff_cos_tabs(int index);
 
-/**
- * Initialize the cosine table in ff_cos_tabs[index]
- * @param index index in ff_cos_tabs array of the table to initialize
- */
-void ff_init_ff_cos_tabs(int index);
 
-#define ff_fft_init FFT_NAME(ff_fft_init)
-#define ff_fft_end  FFT_NAME(ff_fft_end)
+//#define ff_fft_init FFT_NAME(ff_fft_init)
+//#define ff_fft_end  FFT_NAME(ff_fft_end)
 
-/**
- * Set up a complex FFT.
- * @param nbits           log2 of the length of the input array
- * @param inverse         if 0 perform the forward transform, if 1 perform the inverse
- */
-int ff_fft_init(FFTContext *s, int nbits, int inverse);
+// Sanjay  removed it
+///**
+// * Set up a complex FFT.
+// * @param nbits           log2 of the length of the input array
+// * @param inverse         if 0 perform the forward transform, if 1 perform the inverse
+// */
+//int ff_fft_init(FFTContext *s, int nbits, int inverse);
+//
+//void ff_fft_init_aarch64(FFTContext *s);
+//void ff_fft_init_x86(FFTContext *s);
+//void ff_fft_init_arm(FFTContext *s);
+//void ff_fft_init_mips(FFTContext *s);
+//void ff_fft_init_ppc(FFTContext *s);
+//
+//void ff_fft_fixed_init_arm(FFTContext *s);
+//
+//void ff_fft_end(FFTContext *s);
 
-void ff_fft_init_aarch64(FFTContext *s);
-void ff_fft_init_x86(FFTContext *s);
-void ff_fft_init_arm(FFTContext *s);
-void ff_fft_init_mips(FFTContext *s);
-void ff_fft_init_ppc(FFTContext *s);
-
-void ff_fft_fixed_init_arm(FFTContext *s);
-
-void ff_fft_end(FFTContext *s);
-
-#define ff_mdct_init FFT_NAME(ff_mdct_init)
-#define ff_mdct_end  FFT_NAME(ff_mdct_end)
-
-int ff_mdct_init(FFTContext *s, int nbits, int inverse, double scale);
-void ff_mdct_end(FFTContext *s);
+//#define ff_mdct_init FFT_NAME(ff_mdct_init)
+//#define ff_mdct_end  FFT_NAME(ff_mdct_end)
+//
+//int ff_mdct_init(FFTContext *s, int nbits, int inverse, double scale);
+//void ff_mdct_end(FFTContext *s);
 
 #endif /* AVCODEC_FFT_H */

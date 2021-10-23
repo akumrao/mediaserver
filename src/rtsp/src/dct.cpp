@@ -26,7 +26,7 @@
  * (Inverse) Discrete Cosine Transforms. These are also known as the
  * type II and type III DCTs respectively.
  */
-
+extern "C" {
 #include <math.h>
 #include <string.h>
 
@@ -174,51 +174,53 @@ static void dct32_func(DCTContext *ctx, FFTSample *data)
     ctx->dct32(data, data);
 }
 
-av_cold int ff_dct_init(DCTContext *s, int nbits, enum DCTTransformType inverse)
-{
-    int n = 1 << nbits;
-    int i;
-
-    memset(s, 0, sizeof(*s));
-
-    s->nbits   = nbits;
-    s->inverse = inverse;
-
-    if (inverse == DCT_II && nbits == 5) {
-        s->dct_calc = dct32_func;
-    } else {
-        ff_init_ff_cos_tabs(nbits + 2);
-
-        s->costab = ff_cos_tabs[nbits + 2];
-        s->csc2   = av_malloc_array(n / 2, sizeof(FFTSample));
-        if (!s->csc2)
-            return AVERROR(ENOMEM);
-
-        if (ff_rdft_init(&s->rdft, nbits, inverse == DCT_III) < 0) {
-            av_freep(&s->csc2);
-            return -1;
-        }
-
-        for (i = 0; i < n / 2; i++)
-            s->csc2[i] = 0.5 / sin((M_PI / (2 * n) * (2 * i + 1)));
-
-        switch (inverse) {
-        case DCT_I  : s->dct_calc = dct_calc_I_c;   break;
-        case DCT_II : s->dct_calc = dct_calc_II_c;  break;
-        case DCT_III: s->dct_calc = dct_calc_III_c; break;
-        case DST_I  : s->dct_calc = dst_calc_I_c;   break;
-        }
-    }
-
-    s->dct32 = ff_dct32_float;
-    if (ARCH_X86)
-        ff_dct_init_x86(s);
-
-    return 0;
-}
-
-av_cold void ff_dct_end(DCTContext *s)
-{
-    ff_rdft_end(&s->rdft);
-    av_freep(&s->csc2);
+// Sanjay  removed it 
+//av_cold int ff_dct_init(DCTContext *s, int nbits, enum DCTTransformType inverse)
+//{
+//    int n = 1 << nbits;
+//    int i;
+//
+//    memset(s, 0, sizeof(*s));
+//
+//    s->nbits   = nbits;
+//    s->inverse = inverse;
+//
+//    if (inverse == DCT_II && nbits == 5) {
+//        s->dct_calc = dct32_func;
+//    } else {
+//        ff_init_ff_cos_tabs(nbits + 2);
+//
+//        s->costab = ff_cos_tabs[nbits + 2];
+//        s->csc2   = (FFTSample*)av_malloc_array(n / 2, sizeof(FFTSample));
+//        if (!s->csc2)
+//            return AVERROR(ENOMEM);
+//
+//        if (ff_rdft_init(&s->rdft, nbits, (RDFTransformType)(inverse == DCT_III)) < 0) {
+//            av_freep(&s->csc2);
+//            return -1;
+//        }
+//
+//        for (i = 0; i < n / 2; i++)
+//            s->csc2[i] = 0.5 / sin((M_PI / (2 * n) * (2 * i + 1)));
+//
+//        switch (inverse) {
+//        case DCT_I  : s->dct_calc = dct_calc_I_c;   break;
+//        case DCT_II : s->dct_calc = dct_calc_II_c;  break;
+//        case DCT_III: s->dct_calc = dct_calc_III_c; break;
+//        case DST_I  : s->dct_calc = dst_calc_I_c;   break;
+//        }
+//    }
+//
+//    s->dct32 = ff_dct32_float;
+//    if (ARCH_X86)
+//        ff_dct_init_x86(s);
+//
+//    return 0;
+//}
+//
+//av_cold void ff_dct_end(DCTContext *s)
+//{
+//    ff_rdft_end(&s->rdft);
+//    av_freep(&s->csc2);
+//}
 }
