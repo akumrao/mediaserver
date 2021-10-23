@@ -19,7 +19,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
-
+extern "C"  {
 #include "config.h"
 #include "avassert.h"
 #include "attributes.h"
@@ -28,6 +28,7 @@
 #include "me_cmp.h"
 #include "mpegvideoencdsp.h"
 
+extern uint32_t ff_square_tab[512];
 static int try_8x8basis_c(int16_t rem[64], int16_t weight[64],
                           int16_t basis[64], int scale)
 {
@@ -78,41 +79,42 @@ static int pix_sum_c(uint8_t *pix, int line_size)
     return s;
 }
 
-static int pix_norm1_c(uint8_t *pix, int line_size)
-{
-    int s = 0, i, j;
-    uint32_t *sq = ff_square_tab + 256;
-
-    for (i = 0; i < 16; i++) {
-        for (j = 0; j < 16; j += 8) {
-#if HAVE_FAST_64BIT
-            register uint64_t x = *(uint64_t *) pix;
-            s += sq[x         & 0xff];
-            s += sq[(x >>  8) & 0xff];
-            s += sq[(x >> 16) & 0xff];
-            s += sq[(x >> 24) & 0xff];
-            s += sq[(x >> 32) & 0xff];
-            s += sq[(x >> 40) & 0xff];
-            s += sq[(x >> 48) & 0xff];
-            s += sq[(x >> 56) & 0xff];
-#else
-            register uint32_t x = *(uint32_t *) pix;
-            s += sq[x         & 0xff];
-            s += sq[(x >>  8) & 0xff];
-            s += sq[(x >> 16) & 0xff];
-            s += sq[(x >> 24) & 0xff];
-            x  = *(uint32_t *) (pix + 4);
-            s += sq[x         & 0xff];
-            s += sq[(x >>  8) & 0xff];
-            s += sq[(x >> 16) & 0xff];
-            s += sq[(x >> 24) & 0xff];
-#endif
-            pix += 8;
-        }
-        pix += line_size - 16;
-    }
-    return s;
-}
+// Sanjay  removed it 
+//static int pix_norm1_c(uint8_t *pix, int line_size)
+//{
+//    int s = 0, i, j;
+//    uint32_t *sq = ff_square_tab + 256;
+//
+//    for (i = 0; i < 16; i++) {
+//        for (j = 0; j < 16; j += 8) {
+//#if HAVE_FAST_64BIT
+//            register uint64_t x = *(uint64_t *) pix;
+//            s += sq[x         & 0xff];
+//            s += sq[(x >>  8) & 0xff];
+//            s += sq[(x >> 16) & 0xff];
+//            s += sq[(x >> 24) & 0xff];
+//            s += sq[(x >> 32) & 0xff];
+//            s += sq[(x >> 40) & 0xff];
+//            s += sq[(x >> 48) & 0xff];
+//            s += sq[(x >> 56) & 0xff];
+//#else
+//            register uint32_t x = *(uint32_t *) pix;
+//            s += sq[x         & 0xff];
+//            s += sq[(x >>  8) & 0xff];
+//            s += sq[(x >> 16) & 0xff];
+//            s += sq[(x >> 24) & 0xff];
+//            x  = *(uint32_t *) (pix + 4);
+//            s += sq[x         & 0xff];
+//            s += sq[(x >>  8) & 0xff];
+//            s += sq[(x >> 16) & 0xff];
+//            s += sq[(x >> 24) & 0xff];
+//#endif
+//            pix += 8;
+//        }
+//        pix += line_size - 16;
+//    }
+//    return s;
+//}
 
 /* draw the edges of width 'w' of an image of size width, height */
 // FIXME: Check that this is OK for MPEG-4 interlaced.
@@ -229,28 +231,35 @@ static void shrink88(uint8_t *dst, int dst_wrap,
     }
 }
 
-av_cold void ff_mpegvideoencdsp_init(MpegvideoEncDSPContext *c,
-                                     AVCodecContext *avctx)
-{
-    c->try_8x8basis = try_8x8basis_c;
-    c->add_8x8basis = add_8x8basis_c;
-
-    c->shrink[0] = av_image_copy_plane;
-    c->shrink[1] = shrink22;
-    c->shrink[2] = shrink44;
-    c->shrink[3] = shrink88;
-
-    c->pix_sum   = pix_sum_c;
-    c->pix_norm1 = pix_norm1_c;
-
-    c->draw_edges = draw_edges_8_c;
-
-    if (ARCH_ARM)
-        ff_mpegvideoencdsp_init_arm(c, avctx);
-    if (ARCH_PPC)
-        ff_mpegvideoencdsp_init_ppc(c, avctx);
-    if (ARCH_X86)
-        ff_mpegvideoencdsp_init_x86(c, avctx);
-    if (ARCH_MIPS)
-        ff_mpegvideoencdsp_init_mips(c, avctx);
+// Sanjay  removed it 
+//av_cold void ff_mpegvideoencdsp_init(MpegvideoEncDSPContext *c,
+//                                     AVCodecContext *avctx)
+//{
+//    c->try_8x8basis = try_8x8basis_c;
+//    c->add_8x8basis = add_8x8basis_c;
+//
+//    c->shrink[0] = av_image_copy_plane;
+//    c->shrink[1] = shrink22;
+//    c->shrink[2] = shrink44;
+//    c->shrink[3] = shrink88;
+//
+//    c->pix_sum   = pix_sum_c;
+//    c->pix_norm1 = pix_norm1_c;
+//
+//    c->draw_edges = draw_edges_8_c;
+//
+//    if (ARCH_ARM)
+//        ff_mpegvideoencdsp_init_arm(c, avctx);
+//    if (ARCH_PPC)
+//        ff_mpegvideoencdsp_init_ppc(c, avctx);
+//    if (ARCH_X86)
+//    {
+//            av_log(NULL, AV_LOG_ERROR, "Code  Execution should not come herel\n");
+//            // Sanjay  removed it
+//            exit(0);
+//            //ff_mpegvideoencdsp_init_x86(c, avctx);
+//    }
+//    if (ARCH_MIPS)
+//        ff_mpegvideoencdsp_init_mips(c, avctx);
+//}
 }
