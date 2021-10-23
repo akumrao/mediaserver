@@ -25,7 +25,7 @@
  * @see https://en.wikipedia.org/wiki/SMPTE_time_code
  * @see http://www.dropframetimecode.org
  */
-
+extern "C"  {
 #include <stdio.h>
 #include "timecode.h"
 #include "log.h"
@@ -217,4 +217,5 @@ int av_timecode_init_from_string(AVTimecode *tc, AVRational rate, const char *st
         tc->start -= 2 * (tmins - tmins/10);
     }
     return 0;
+}
 }
