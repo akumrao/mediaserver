@@ -18,7 +18,7 @@
  */
 
 #include <fdk-aac/aacdecoder_lib.h>
-
+extern "C"  {
 #include "channel_layout.h"
 #include "common.h"
 #include "opt.h"
@@ -40,7 +40,7 @@ enum ConcealMethod {
 };
 
 typedef struct FDKAACDecContext {
-    const AVClass *class;
+    const AVClass *class_av;
     HANDLE_AACDECODER handle;
     uint8_t *decoder_buffer;
     int decoder_buffer_size;
@@ -85,7 +85,7 @@ static const AVClass fdk_aac_dec_class = {
 
 static int get_stream_info(AVCodecContext *avctx)
 {
-    FDKAACDecContext *s   = avctx->priv_data;
+    FDKAACDecContext *s   = (FDKAACDecContext *)avctx->priv_data;
     CStreamInfo *info     = aacDecoder_GetStreamInfo(s->handle);
     int channel_counts[0x24] = { 0 };
     int i, ch_error       = 0;
@@ -196,7 +196,7 @@ static int get_stream_info(AVCodecContext *avctx)
 
 static av_cold int fdk_aac_decode_close(AVCodecContext *avctx)
 {
-    FDKAACDecContext *s = avctx->priv_data;
+    FDKAACDecContext *s = (FDKAACDecContext *)avctx->priv_data;
 
     if (s->handle)
         aacDecoder_Close(s->handle);
@@ -208,7 +208,7 @@ static av_cold int fdk_aac_decode_close(AVCodecContext *avctx)
 
 static av_cold int fdk_aac_decode_init(AVCodecContext *avctx)
 {
-    FDKAACDecContext *s = avctx->priv_data;
+    FDKAACDecContext *s = (FDKAACDecContext *)avctx->priv_data;
     AAC_DECODER_ERROR err;
 
     s->handle = aacDecoder_Open(avctx->extradata_size ? TT_MP4_RAW : TT_MP4_ADTS, 1);
@@ -219,7 +219,7 @@ static av_cold int fdk_aac_decode_init(AVCodecContext *avctx)
 
     if (avctx->extradata_size) {
         if ((err = aacDecoder_ConfigRaw(s->handle, &avctx->extradata,
-                                        &avctx->extradata_size)) != AAC_DEC_OK) {
+                                        (const UINT*)&avctx->extradata_size)) != AAC_DEC_OK) {
             av_log(avctx, AV_LOG_ERROR, "Unable to set extradata\n");
             return AVERROR_INVALIDDATA;
         }
@@ -253,7 +253,7 @@ static av_cold int fdk_aac_decode_init(AVCodecContext *avctx)
                                     downmix_channels) != AAC_DEC_OK) {
                av_log(avctx, AV_LOG_WARNING, "Unable to set output channels in the decoder\n");
             } else {
-               s->anc_buffer = av_malloc(DMX_ANC_BUFFSIZE);
+               s->anc_buffer = (uint8_t*)av_malloc(DMX_ANC_BUFFSIZE);
                if (!s->anc_buffer) {
                    av_log(avctx, AV_LOG_ERROR, "Unable to allocate ancillary buffer for the decoder\n");
                    return AVERROR(ENOMEM);
@@ -304,7 +304,7 @@ static av_cold int fdk_aac_decode_init(AVCodecContext *avctx)
     avctx->sample_fmt = AV_SAMPLE_FMT_S16;
 
     s->decoder_buffer_size = DECODER_BUFFSIZE * DECODER_MAX_CHANNELS;
-    s->decoder_buffer = av_malloc(s->decoder_buffer_size);
+    s->decoder_buffer = (uint8_t*)av_malloc(s->decoder_buffer_size);
     if (!s->decoder_buffer)
         return AVERROR(ENOMEM);
 
@@ -314,13 +314,13 @@ static av_cold int fdk_aac_decode_init(AVCodecContext *avctx)
 static int fdk_aac_decode_frame(AVCodecContext *avctx, void *data,
                                 int *got_frame_ptr, AVPacket *avpkt)
 {
-    FDKAACDecContext *s = avctx->priv_data;
-    AVFrame *frame = data;
+    FDKAACDecContext *s = (FDKAACDecContext *)avctx->priv_data;
+    AVFrame *frame = (AVFrame *)data;
     int ret;
     AAC_DECODER_ERROR err;
     UINT valid = avpkt->size;
 
-    err = aacDecoder_Fill(s->handle, &avpkt->data, &avpkt->size, &valid);
+    err = aacDecoder_Fill(s->handle, (UCHAR**)&avpkt->data, (const UINT*)&avpkt->size, &valid);
     if (err != AAC_DEC_OK) {
         av_log(avctx, AV_LOG_ERROR, "aacDecoder_Fill() failed: %x\n", err);
         return AVERROR_INVALIDDATA;
@@ -358,7 +358,7 @@ end:
 
 static av_cold void fdk_aac_decode_flush(AVCodecContext *avctx)
 {
-    FDKAACDecContext *s = avctx->priv_data;
+    FDKAACDecContext *s = (FDKAACDecContext *)avctx->priv_data;
     AAC_DECODER_ERROR err;
 
     if (!s->handle)
@@ -373,14 +373,33 @@ AVCodec ff_libfdk_aac_decoder = {
     .name           = "libfdk_aac",
     .long_name      = NULL_IF_CONFIG_SMALL("Fraunhofer FDK AAC"),
     .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = AV_CODEC_ID_AAC,
+    .id             = AV_CODEC_ID_AAC,    
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+    .supported_framerates = NULL,
+    .pix_fmts       = NULL,
+    .supported_samplerates = NULL,
+    .sample_fmts    = NULL,
+    .channel_layouts = NULL,
+    .max_lowres     = 0,
+    .priv_class     = &fdk_aac_dec_class,
+    .profiles       = NULL,    
     .priv_data_size = sizeof(FDKAACDecContext),
+    .next           = NULL,
+    .init_thread_copy = NULL,
+    .update_thread_context = NULL,
+    .defaults       = NULL,
+    .init_static_data = NULL,
     .init           = fdk_aac_decode_init,
+    .encode_sub     = NULL,
+    .encode2        = NULL,
     .decode         = fdk_aac_decode_frame,
     .close          = fdk_aac_decode_close,
+    .send_frame     = NULL,
+    .send_packet    = NULL,
+    .receive_frame  = NULL,
+    .receive_packet = NULL,    
     .flush          = fdk_aac_decode_flush,
-    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
-    .priv_class     = &fdk_aac_dec_class,
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE |
                       FF_CODEC_CAP_INIT_CLEANUP,
 };
+}
