@@ -494,7 +494,11 @@ void MarkerFrame::reset() {
     tm_end=false;
 }
     
+
+
+TextFrame::TextFrame() : Frame() {
     
+}
     
     
     

@@ -17,15 +17,15 @@ namespace base {
 namespace fmp4 {
     
     
-    namespace Timeout { ///< Various thread timeouts in milliseconds
+  namespace Timeout { ///< Various thread timeouts in milliseconds
   const static long unsigned thread       =250; // Timeout::thread
   const static long unsigned livethread   =250; // Timeout::livethread
   const static long unsigned avthread     =250; // Timeout::avthread
   const static long unsigned openglthread =250; // Timeout::openglthread
-  const static long unsigned valkkafswriterthread = 250; // Timeout::valkkafswriterthread
-  const static long unsigned valkkafsreaderthread = 250; // Timeout::valkkafswriterthread
-  const static long unsigned filecachethread = 1000; // Timeout::valkkacachethread
-  // const static long unsigned filecachethread = 500; // Timeout::valkkacachethread
+  const static long unsigned fswriterthread = 250; // Timeout::fswriterthread
+  const static long unsigned fsreaderthread = 250; // Timeout::fswriterthread
+  const static long unsigned filecachethread = 1000; // Timeout::cachethread
+  // const static long unsigned filecachethread = 500; // Timeout::cachethread
   const static long unsigned usbthread    =250; // Timeout::usbthread
   const static long int filethread        =2000; // Timeout::filethread
   const static long int fdwritethread        =250; // Timeout::filethread
@@ -119,7 +119,7 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
 
           fragmp4_muxer        = ctx.framefilter;
           info = ctx.info;
-          
+          txt = ctx.txt;
     }
     else if  (ctx.time_correction==TimeCorrectionType::dummy) {
         // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
@@ -128,6 +128,7 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
       //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
           fragmp4_muxer        = ctx.framefilter;
           info = ctx.info;
+           txt = ctx.txt;
     }
     else { // smart corrector
         // brute-force timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> {DummyTimestampFrameFilter: timestampfilter} --> ctx.framefilter
@@ -136,6 +137,7 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
        // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
           fragmp4_muxer        = ctx.framefilter;
           info = ctx.info;
+           txt = ctx.txt;
     }
 }
 
@@ -275,7 +277,7 @@ void RTSPConnection::playStream() {
         livestatus=LiveStatus::pending;
         frametimer=0;
         SInfo<< "RTSPConnection : playStream " << ctx.address;
-        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, &livestatus);
+        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, txt, &livestatus);
         if (ctx.request_multicast)   { client->requestMulticast();      }
         if (ctx.request_tcp)         { client->requestTCP(); SInfo<< " TCP RTP "; }
         if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
@@ -467,7 +469,7 @@ void SDPConnection :: playStream() {
             // subsession->sink = DummySink::createNew(*env, *subsession, filename);
             env << "SDPConnection: Creating data sink for subsession \"" << *scs->subsession << "\" \n";
             // subsession->sink= FrameSink::createNew(env, *subsession, inputfilter, cc, ctx.address.c_str());
-            scs->subsession->sink= FrameSink::createNew(env, *scs, fragmp4_muxer, info , ctx.address.c_str());
+            scs->subsession->sink= FrameSink::createNew(env, *scs, fragmp4_muxer, info , txt, ctx.address.c_str());
             if (scs->subsession->sink == NULL)
             {
                 env << "SDPConnection: Failed to create a data sink for the \"" << *scs->subsession << "\" subsession: " << env.getResultMsg() << "\n";

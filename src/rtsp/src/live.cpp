@@ -50,11 +50,11 @@ void usage(UsageEnvironment& env, char const* progName) {
 
 // Implementation of "MSRTSPClient":
 
-MSRTSPClient* MSRTSPClient::createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
-  return new MSRTSPClient(env, rtspURL, fragmp4_muxer, info, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
+MSRTSPClient* MSRTSPClient::createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
+  return new MSRTSPClient(env, rtspURL, fragmp4_muxer, info, txt, livestatus, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
 }
 
-MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
+MSRTSPClient::MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) : RTSPClient(env, rtspURL.c_str(), verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1), fragmp4_muxer(fragmp4_muxer),info(info), txt(txt), livestatus(livestatus), request_multicast(false), request_tcp(false), recv_buffer_size(0), reordering_time(0) {
 }
 
 
@@ -70,21 +70,30 @@ void MSRTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode,
     StreamClientState& scs = ((MSRTSPClient*)rtspClient)->scs; // alias
 
     if (resultCode != 0) {
-      SInfo << "MSRTSPClient: "  << "Failed to get a SDP description: " << resultString << "\n";
+      
+        SInfo << "MSRTSPClient: "  << "Failed to get a SDP description: " << resultString ;
+        
+       MSRTSPClient* client = (MSRTSPClient*)rtspClient;
+       
+       TextFrame txtFrame;
+       
+       txtFrame.txt =  std::string("Failed to get a SDP description: ") + resultString;
+       client->txt->run(&txtFrame);
+      
       delete[] resultString;
       break;
     }
 
     char* const sdpDescription = resultString;
-    // SInfo << "Got a SDP description:\n" << sdpDescription << "\n";
-   SInfo << "MSRTSPClient: Got a SDP description:\n" << sdpDescription << "\n";
+    // SInfo << "Got a SDP description:\n" << sdpDescription ;
+   SInfo << "MSRTSPClient: Got a SDP description:\n" << sdpDescription ;
 
     // Create a media session object from this SDP description:
     scs.session = MediaSession::createNew(env, sdpDescription);
     delete[] sdpDescription; // because we don't need it anymore
     if (scs.session == NULL) {
-      // SInfo  << "Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
-      SInfo << "MSRTSPClient: Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
+      // SInfo  << "Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() ;
+      SInfo << "MSRTSPClient: Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() ;
       break;
     } else if (!scs.session->hasSubsessions()) {
       // SInfo  << "This session has no media subsessions (i.e., no \"m=\" lines)\n";
@@ -108,14 +117,14 @@ void MSRTSPClient::continueAfterGET_PARAMETER(RTSPClient* rtspClient, int result
     // do nothing! (or maybe something)
     std::cout << "MSRTSPClient::continueAfterGET_PARAMETER\n";
     if (resultCode != 0) {
-      SInfo << "MSRTSPClient: " << "Failed to get GET_PARAMETER description: " << resultString << "\n";
+      SInfo << "MSRTSPClient: " << "Failed to get GET_PARAMETER description: " << resultString ;
       delete[] resultString;
       return;
     }
 
     char* const sdpDescription = resultString;
-    // SInfo  << "Got a SDP description:\n" << sdpDescription << "\n";
-   SDebug << "MSRTSPClient: Got GET_PARAMETER description:\n" << sdpDescription << "\n";
+    // SInfo  << "Got a SDP description:\n" << sdpDescription ;
+   SDebug << "MSRTSPClient: Got GET_PARAMETER description:\n" << sdpDescription ;
 }
 
 
@@ -143,7 +152,7 @@ void MSRTSPClient::setupNextSubsession(RTSPClient* rtspClient) {
     if (ok_subsession_type) { // a decent subsession
     
       if (!scs.subsession->initiate()) {
-        SInfo << "MSRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() << "\n";
+        SInfo << "MSRTSPClient: "  << "Failed to initiate the \""  << "\" subsession: " << env.getResultMsg() ;
         setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
       } else { // subsession ok
        SInfo << "MSRTSPClient: "  << " Initiated the \""  << "\" subsession (";
@@ -208,9 +217,10 @@ void MSRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, ch
     StreamClientState& scs   = ((MSRTSPClient*)rtspClient)->scs; // alias
     FrameFilter *fragmp4_muxer = ((MSRTSPClient*)rtspClient)->fragmp4_muxer;
     FrameFilter *info = ((MSRTSPClient*)rtspClient)->info;
-
+    FrameFilter *txt = ((MSRTSPClient*)rtspClient)->txt;
+    
     if (resultCode != 0) {
-      SInfo << "MSRTSPClient: "  << "Failed to set up the \""  << "\" subsession: " << resultString << "\n";
+      SInfo << "MSRTSPClient: "  << "Failed to set up the \""  << "\" subsession: " << resultString ;
       break;
     }
 
@@ -231,11 +241,11 @@ void MSRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, ch
     // after we've sent a RTSP "PLAY" command.)
 
     // scs.subsession->sink = FrameSink::createNew(env, *scs.subsession, framefilter, scs.subsession_index, rtspClient->url());
-    scs.subsession->sink = FrameSink::createNew(env, scs, fragmp4_muxer, info, rtspClient->url());
+    scs.subsession->sink = FrameSink::createNew(env, scs, fragmp4_muxer, info, txt, rtspClient->url());
       // perhaps use your own custom "MediaSink" subclass instead
     if (scs.subsession->sink == NULL) {
       SInfo << "MSRTSPClient: " << "Failed to create a data sink for the \"" 
-	  << "\" subsession: " << env.getResultMsg() << "\n";
+	  << "\" subsession: " << env.getResultMsg() ;
       break;
     }
 
@@ -264,7 +274,7 @@ void MSRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, cha
   do {
 
     if (resultCode != 0) {
-      SInfo << "MSRTSPClient: " << " Failed to start playing session: " << resultString << "\n";
+      SInfo << "MSRTSPClient: " << " Failed to start playing session: " << resultString ;
       break;
     }
 
@@ -474,11 +484,11 @@ FrameSink* FrameSink::createNew(UsageEnvironment& env, MediaSubsession& subsessi
 FrameSink::FrameSink(UsageEnvironment& env, MediaSubsession& subsession, FrameFilter& framefilter, int subsession_index, char const* streamId) : MediaSink(env), fSubsession(subsession), framefilter(framefilter), subsession_index(subsession_index), on(true), nbuf(0) 
 */
 
-FrameSink* FrameSink::createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) {
-  return new FrameSink(env, scs, fragmp4_muxer,info, streamId);
+FrameSink* FrameSink::createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, char const* streamId) {
+  return new FrameSink(env, scs, fragmp4_muxer,info, txt, streamId);
 }
 
-FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId) : MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info), on(true), fSubsession(*(scs.subsession))
+FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, char const* streamId) : MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info),txt(txt), on(true), fSubsession(*(scs.subsession))
 
 {
   // some aliases:
@@ -738,7 +748,7 @@ void FrameSink::sendParameterSets() {
   SInfo << "Found " << num << " parameter sets\n";
   for(i=0;i<num;i++) {
     if (pars[i].sPropLength>0) {
-      SInfo << "Sending parameter set " << i << " " << pars[i].sPropLength << "\n";
+      SInfo << "Sending parameter set " << i << " " << pars[i].sPropLength ;
       memcpy(fReceiveBuffer, pars[i].sPropBytes, pars[i].sPropLength);
       
       afterGettingHeader(pars[i].sPropLength, 0, frametime, 0);

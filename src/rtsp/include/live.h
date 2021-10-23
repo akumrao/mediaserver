@@ -91,10 +91,10 @@ public:
    * @param applicationName       (optional)
    * @param tunnelOverHTTPPortNum (optional)
    */
-  static MSRTSPClient* createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, LiveStatus* livestatus, int verbosityLevel = 0, char const* applicationName = NULL, portNumBits tunnelOverHTTPPortNum = 0);
+  static MSRTSPClient* createNew(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, LiveStatus* livestatus, int verbosityLevel = 0, char const* applicationName = NULL, portNumBits tunnelOverHTTPPortNum = 0);
   
 protected:
-  MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info,  LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
+  MSRTSPClient(UsageEnvironment& env, const std::string rtspURL, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt,   LiveStatus* livestatus, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
   /** Default virtual destructor */
   virtual ~MSRTSPClient();
   
@@ -103,7 +103,7 @@ public:
   //FrameFilter& framefilter;     ///< Target frame filter where frames are being fed
     FrameFilter *fragmp4_muxer;
     FrameFilter *info;
-  
+    FrameFilter *txt;
   LiveStatus* livestatus;       ///< This points to a variable that is being used by LiveThread to inform about the stream state
   
 public: // some extra parameters and their setters
@@ -151,10 +151,10 @@ public:
    * @param streamId     (optional) identifies the stream itself
    * 
    */
-  static FrameSink* createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId = NULL);
+  static FrameSink* createNew(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, char const* streamId = NULL);
 
 private:
-  FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, char const* streamId);
+  FrameSink(UsageEnvironment& env, StreamClientState& scs, FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, char const* streamId);
   /** Default virtual destructor */
   virtual ~FrameSink();
 
@@ -182,7 +182,7 @@ private:
   
   FrameFilter *fragmp4_muxer;
   FrameFilter *info;
-    
+  FrameFilter *txt;  
   SetupFrame        setupframe;  ///< This frame is used to send subsession information
   BasicFrame        basicframe;  ///< Data is being copied into this frame
   int               subsession_index;

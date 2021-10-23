@@ -94,14 +94,13 @@ TextFrameFilter::~TextFrameFilter()
     
 }
 
-void TextFrameFilter::go(std::string cmd) {
-
-        // std::cout << "DummyFrameFilter : "<< this->name << " " << verbose << " : got frame : " << *(frame) << std::endl;
-        SDebug << "TextFrameFilter : " << this->name << " : got frame : " << cmd ;
-
+void TextFrameFilter::go(Frame *frame) {
         
-        if(conn)
-         conn->broadcast((const char*)cmd.c_str(), cmd.size(), false );
+      TextFrame *txt    =  (TextFrame*) frame;
+       SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
+        
+      if(conn)
+         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false );
    
 }
 

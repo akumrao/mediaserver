@@ -262,7 +262,7 @@ var hiddenInput = undefined;
             
             function reSet()
             {
-                console.log("reSet");
+               // console.log("reSet");
                 pass = -1;
                 stream_started = false; 
                 queue = [];
@@ -424,8 +424,13 @@ var hiddenInput = undefined;
                         
                         if(event.data == "reset" )
                         {
-                           
+                            document.getElementById("parStats").innerHTML = "";
                             reSet();
+                        }
+                        else
+                        {
+                            document.getElementById("settings-button").disabled = false;
+                            document.getElementById("parStats").innerHTML = event.data ;
                         }
                     }
 
@@ -455,8 +460,6 @@ var hiddenInput = undefined;
                     console.log(e);
                 };
 
-
-
           
             }
 
@@ -467,10 +470,6 @@ var hiddenInput = undefined;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
 
 

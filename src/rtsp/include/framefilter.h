@@ -164,9 +164,9 @@ public:
      
   
 public:
-    void go(std::string cmd);
+    
     protected:
-    void go(Frame *frame){};
+    void go(Frame *frame);    
 
     //std::string name;
 }; 

@@ -57,7 +57,7 @@ namespace base {
             
           
             
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
             ffparser->registerStreamCall(*ctx);
             ffparser->playStreamCall(*ctx);
           
@@ -140,7 +140,7 @@ namespace base {
                         
                       
                         
-                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
                         ffparser->registerStreamCall(*ctx);
                         ffparser->playStreamCall(*ctx);
 

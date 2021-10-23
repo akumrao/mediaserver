@@ -418,4 +418,21 @@ public:
     bool tm_start, tm_end; ///< Transmission start / end
 };
 
+
+/** Custom TextFrame Frame
+ * 
+ * Includes codec info and the payload.  Received typically from LiveThread or FileThread.
+ * 
+ * @ingroup frames_tag
+ */
+class TextFrame : public Frame
+{
+
+public:
+    TextFrame();          ///< Default ctor
+    virtual ~TextFrame(){}; ///< Default virtual dtor
+    
+public:                                                
+    std::string txt;
+};
 #endif
