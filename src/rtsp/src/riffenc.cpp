@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C"  {
 #include "dict.h"
 #include "log.h"
 #include "mathematics.h"
@@ -32,7 +33,7 @@
 
 int64_t ff_start_tag(AVIOContext *pb, const char *tag)
 {
-    ffio_wfourcc(pb, tag);
+    ffio_wfourcc(pb, (const uint8_t*)tag);
     avio_wl32(pb, -1);
     return avio_tell(pb);
 }
@@ -214,7 +215,7 @@ void ff_put_bmp_header(AVIOContext *pb, AVCodecParameters *par,
     int keep_height = par->extradata_size >= 9 &&
                       !memcmp(par->extradata + par->extradata_size - 9, "BottomUp", 9);
     int extradata_size = par->extradata_size - 9*keep_height;
-    enum AVPixelFormat pix_fmt = par->format;
+    enum AVPixelFormat pix_fmt = (AVPixelFormat)par->format;
     int pal_avi;
 
     if (pix_fmt == AV_PIX_FMT_NONE && par->bits_per_coded_sample == 1)
@@ -299,7 +300,7 @@ void ff_riff_write_info_tag(AVIOContext *pb, const char *tag, const char *str)
     size_t len = strlen(str);
     if (len > 0 && len < UINT32_MAX) {
         len++;
-        ffio_wfourcc(pb, tag);
+        ffio_wfourcc(pb, (const uint8_t*)tag);
         avio_wl32(pb, len);
         avio_put_str(pb, str);
         if (len & 1)
@@ -340,7 +341,7 @@ void ff_riff_write_info(AVFormatContext *s)
         return;
 
     list_pos = ff_start_tag(pb, "LIST");
-    ffio_wfourcc(pb, "INFO");
+    ffio_wfourcc(pb, (const uint8_t*)"INFO");
     for (i = 0; *riff_tags[i]; i++)
         if ((t = av_dict_get(s->metadata, riff_tags[i],
                              NULL, AV_DICT_MATCH_CASE)))
@@ -362,4 +363,5 @@ const ff_asf_guid *ff_get_codec_guid(enum AVCodecID id, const AVCodecGuid *av_gu
             return &(av_guid[i].guid);
     }
     return NULL;
+}
 }
