@@ -23,10 +23,11 @@
 
 #include <time.h>
 
+extern "C"  {
 #include "avstring.h"
 #include "avutil.h"
 #include "common.h"
-//#include "eval.h"
+#include "eval.h"
 #include "log.h"
 #include "random_seed.h"
 #include "time_internal.h"
@@ -39,7 +40,8 @@
 static uint32_t av_get_random_seed_deterministic(void);
 
 #define av_gettime() 1331972053200000
-
+#else
+extern int64_t av_gettime(void);
 #endif
 
 int av_parse_ratio(AVRational *q, const char *str, int max,
@@ -160,10 +162,10 @@ int av_parse_video_size(int *width_ptr, int *height_ptr, const char *str)
         }
     }
     if (i == n) {
-        width = strtol(str, (void*)&p, 10);
+        width = strtol(str, (char**)&p, 10);
         if (*p)
             p++;
-        height = strtol(p, (void*)&p, 10);
+        height = strtol(p, (char**)&p, 10);
 
         /* trailing extraneous data detected, like in 123x345foobar */
         if (*p)
@@ -346,7 +348,7 @@ static const ColorEntry color_table[] = {
 
 static int color_table_compare(const void *lhs, const void *rhs)
 {
-    return av_strcasecmp(lhs, ((const ColorEntry *)rhs)->name);
+    return av_strcasecmp((const char *)lhs, (const char *)(((const ColorEntry *)rhs)->name));
 }
 
 #define ALPHA_SEP '@'
@@ -395,7 +397,7 @@ int av_parse_color(uint8_t *rgba_color, const char *color_string, int slen,
         rgba_color[1] = rgba >> 8;
         rgba_color[2] = rgba;
     } else {
-        entry = bsearch(color_string2,
+        entry = (const ColorEntry*)bsearch(color_string2,
                         color_table,
                         FF_ARRAY_ELEMS(color_table),
                         sizeof(ColorEntry),
@@ -767,4 +769,5 @@ int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info
         p++;
     }
     return 0;
+}
 }
