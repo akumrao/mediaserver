@@ -23,7 +23,7 @@
  * @file
  * Options definition for AVCodecContext.
  */
-
+extern "C"  {
 #include "avcodec.h"
 #include "internal_codec.h"
 #include "avassert.h"
@@ -84,6 +84,7 @@ static const AVClass av_codec_context_class = {
     .option                  = avcodec_options,
     .version                = 1,
     .log_level_offset_offset = offsetof(AVCodecContext, log_level_offset),
+    .parent_log_context_offset = 0,
     .child_next              = codec_child_next,
     .child_class_next        = codec_child_class_next,
     .category                = AV_CLASS_CATEGORY_ENCODER,
@@ -140,7 +141,7 @@ static int init_context_defaults(AVCodecContext *s, const AVCodec *codec)
         int ret;
         const AVCodecDefault *d = codec->defaults;
         while (d->key) {
-            ret = av_opt_set(s, d->key, d->value, 0);
+            ret = av_opt_set(s, (const char*)d->key, (const char*)d->value, 0);
             av_assert0(ret >= 0);
             d++;
         }
@@ -518,3 +519,4 @@ int main(void)
     return 0;
 }
 #endif
+}
