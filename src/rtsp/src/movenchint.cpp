@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "movenc.h"
 #include "intreadwrite.h"
 #include "internal_avformat.h"
@@ -110,7 +110,7 @@ static void sample_queue_push(HintSampleQueue *queue, uint8_t *data, int size,
         return;
     if (!queue->samples || queue->len >= queue->size) {
         HintSample *samples;
-        samples = av_realloc_array(queue->samples, queue->size + 10, sizeof(HintSample));
+        samples = (HintSample*)av_realloc_array(queue->samples, queue->size + 10, sizeof(HintSample));
         if (!samples)
             return;
         queue->size += 10;
@@ -133,7 +133,7 @@ static void sample_queue_retain(HintSampleQueue *queue)
     for (i = 0; i < queue->len; ) {
         HintSample *sample = &queue->samples[i];
         if (!sample->own_data) {
-            uint8_t *ptr = av_malloc(sample->size);
+            uint8_t *ptr = (uint8_t *)av_malloc(sample->size);
             if (!ptr) {
                 /* Unable to allocate memory for this one, remove it */
                 memmove(queue->samples + i, queue->samples + i + 1,
@@ -376,7 +376,7 @@ static int write_hint_packets(AVIOContext *out, const uint8_t *data,
         if (ts_diff) { /* if extra_flag is set */
             avio_wb32(out, 16); /* extra_information_length */
             avio_wb32(out, 12); /* rtpoffsetTLV box */
-            avio_write(out, "rtpo", 4);
+            avio_write(out,(const unsigned char*) "rtpo", 4);
             avio_wb32(out, ts_diff);
         }
 
@@ -407,7 +407,7 @@ int ff_mov_add_hinted_packet(AVFormatContext *s, AVPacket *pkt,
                              int track_index, int sample,
                              uint8_t *sample_data, int sample_size)
 {
-    MOVMuxContext *mov = s->priv_data;
+    MOVMuxContext *mov = (MOVMuxContext *)s->priv_data;
     MOVTrack *trk = &mov->tracks[track_index];
     AVFormatContext *rtp_ctx = trk->rtp_ctx;
     uint8_t *buf = NULL;
@@ -474,4 +474,5 @@ void ff_mov_close_hinting(MOVTrack *track)
         ffio_free_dyn_buf(&rtp_ctx->pb);
     }
     avformat_free_context(rtp_ctx);
+}
 }
