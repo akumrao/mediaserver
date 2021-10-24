@@ -368,12 +368,13 @@ namespace base {
             size_t npending = BIO_ctrl_pending(_readBIO);
             if (npending > 0) {
                 int nread;
-                char buffer[npending];
+                char *buffer = new char[npending];
                 while ((nread = SSL_read(_ssl, buffer, npending)) > 0) {
                    // LTrace("On Read ", buffer)
                     //  _socket->listener->on_read(_socket, buffer, nread); // arvind
                     _socket->on_read(buffer, nread); // arvind
                 }
+                delete []buffer;
             }
         }
 
@@ -398,12 +399,13 @@ namespace base {
         void SSLAdapter::flushWriteBIO() {
             size_t npending = BIO_ctrl_pending(_writeBIO);
             if (npending > 0) {
-                char buffer[npending];
+                char *buffer = new char[npending];
                 int nread = BIO_read(_writeBIO, buffer, npending);
                 if (nread > 0) {
                     _socket->Write(buffer, nread,cb); // arvind
                     cb = nullptr;
                 }
+                delete []buffer;
             }
         }
 
