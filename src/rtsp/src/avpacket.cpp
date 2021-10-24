@@ -168,80 +168,54 @@ int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size)
 
 //#if FF_API_AVPACKET_OLD_API
 //FF_DISABLE_DEPRECATION_WARNINGS
-//#define ALLOC_MALLOC(data, size) data = av_malloc(size)
-//#define ALLOC_BUF(data, size)                \
-//do {                                         \
-//    av_buffer_realloc(&pkt->buf, size);      \
-//    data = pkt->buf ? pkt->buf->data : NULL; \
-//} while (0)
+#define ALLOC_MALLOC(data, size) data = av_malloc(size)
+#define ALLOC_BUF(data, size)                \
+do {                                         \
+    av_buffer_realloc(&pkt->buf, size);      \
+    data = pkt->buf ? pkt->buf->data : NULL; \
+} while (0)
 
-//#define DUP_DATA(dst, src, size, padding, ALLOC)                        \
-//    do {                                                                \
-//        void *data;                                                     \
-//        if (padding) {                                                  \
-//            if ((unsigned)(size) >                                      \
-//                (unsigned)(size) + AV_INPUT_BUFFER_PADDING_SIZE)        \
-//                goto failed_alloc;                                      \
-//            ALLOC(data, size + AV_INPUT_BUFFER_PADDING_SIZE);           \
-//        } else {                                                        \
-//            ALLOC(data, size);                                          \
-//        }                                                               \
-//        if (!data)                                                      \
-//            goto failed_alloc;                                          \
-//        memcpy(data, src, size);                                        \
-//        if (padding)                                                    \
-//            memset((uint8_t *)data + size, 0,                           \
-//                   AV_INPUT_BUFFER_PADDING_SIZE);                       \
-//        dst = data;                                                     \
-//    } while (0)
-
-// template<typename T, typename U> 
-// typedef void (*fn_Alloc)(T* data, int size, U* pkt);
-template<typename T, typename U> 
-struct fnAlloc {
-    typedef void (*fnAllocCallback)(T* data, int size, U* pkt);
-};
-
-//use like fnAlloc<int>::fnAllocCallback
+#define DUP_DATA(dst, src, size, padding, ALLOC)                        \
+    do {                                                                \
+        void *data;                                                     \
+        if (padding) {                                                  \
+            if ((unsigned)(size) >                                      \
+                (unsigned)(size) + AV_INPUT_BUFFER_PADDING_SIZE)        \
+                goto failed_alloc;                                      \
+            ALLOC(data, size + AV_INPUT_BUFFER_PADDING_SIZE);           \
+        } else {                                                        \
+            ALLOC(data, size);                                          \
+        }                                                               \
+        if (!data)                                                      \
+            goto failed_alloc;                                          \
+        memcpy(data, src, size);                                        \
+        if (padding)                                                    \
+            memset((uint8_t *)data + size, 0,                           \
+                   AV_INPUT_BUFFER_PADDING_SIZE);                       \
+        dst = (uint8_t*)data;                                                     \
+    } while (0)
 
 
 
-template<typename T, typename U> 
-void ALLOC_MALLOC(T* data, int size, U* pkt) { data = av_malloc(size); }
-
-template<typename T, typename U> 
-void ALLOC_BUF(T* data, int size, U* pkt) 
-{
-    do {
-        av_buffer_realloc(&pkt->buf, size);
-        data = pkt->buf ? pkt->buf->data : NULL; 
-    } while (0);
-}
-
-template <typename T, typename U,  typename V>
-int DUP_DATA(T* dst, T* src, int size, int padding, fnAlloc<U, V>::fnAllocCallback ALLOC) {
-    do {                                                               
-        void *data;                                                     
-        if (padding) {                                                  
-            if ((unsigned)(size) >                                      
-                (unsigned)(size) + AV_INPUT_BUFFER_PADDING_SIZE)        
-                return -1;
-                //goto failed_alloc;                                      
-            fnAlloc.ALLOC(data, size + AV_INPUT_BUFFER_PADDING_SIZE);           
-        } else {                                                        
-            ALLOC(data, size);                                          
-        }                                                               
-        if (!data)                                                      
-            return -1;
-            //goto failed_alloc;                                          
-        memcpy(data, src, size);                                        
-        if (padding)                                                    
-            memset((uint8_t *)data + size, 0,                           
-                   AV_INPUT_BUFFER_PADDING_SIZE);                       
-        dst = data;                                                     
-    } while (0);
-    return 0;
-}
+#define DUP_DATA1(dst, src, size, padding, ALLOC)                        \
+    do {                                                                \
+        void *data;                                                     \
+        if (padding) {                                                  \
+            if ((unsigned)(size) >                                      \
+                (unsigned)(size) + AV_INPUT_BUFFER_PADDING_SIZE)        \
+                goto failed_alloc;                                      \
+            ALLOC(data, size + AV_INPUT_BUFFER_PADDING_SIZE);           \
+        } else {                                                        \
+            ALLOC(data, size);                                          \
+        }                                                               \
+        if (!data)                                                      \
+            goto failed_alloc;                                          \
+        memcpy(data, src, size);                                        \
+        if (padding)                                                    \
+            memset((uint8_t *)data + size, 0,                           \
+                   AV_INPUT_BUFFER_PADDING_SIZE);                       \
+        dst = (AVPacketSideData*)data;                                                     \
+    } while (0)
 
 /* Makes duplicates of data, side_data, but does not copy any other fields */
 static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup)
@@ -256,9 +230,7 @@ static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup)
         pkt->buf  = ref;
         pkt->data = ref->data;
     } else {
-        fnAlloc<const AVPacket *, AVPacket *>::fnAllocCallback fnPtrAlloc = ALLOC_BUF;
-        if( DUP_DATA(pkt->data, src->data, pkt->size, 1, fnPtrAlloc) == -1)
-            goto failed_alloc;
+        DUP_DATA(pkt->data, src->data, pkt->size, 1, ALLOC_BUF);
     }
     if (src->side_data_elems && dup) {
         pkt->side_data = src->side_data;
@@ -278,21 +250,15 @@ int av_copy_packet_side_data(AVPacket *pkt, const AVPacket *src)
 {
     if (src->side_data_elems) {
         int i;
-        fnAlloc<const AVPacket *, AVPacket *>::fnAllocCallback fnPtrAlloc = ALLOC_MALLOC;
-        if( DUP_DATA(pkt->side_data, src->side_data,
-                src->side_data_elems * sizeof(*src->side_data), 0, fnPtrAlloc) == -1)
-            goto failed_alloc;
-        
+        DUP_DATA1(pkt->side_data, src->side_data,
+                src->side_data_elems * sizeof(*src->side_data), 0, ALLOC_MALLOC);
         if (src != pkt) {
             memset(pkt->side_data, 0,
                    src->side_data_elems * sizeof(*src->side_data));
         }
         for (i = 0; i < src->side_data_elems; i++) {
-        fnAlloc<const AVPacket *, AVPacket *>::fnAllocCallback fnPtrAlloc = ALLOC_MALLOC;
-        if( DUP_DATA(pkt->side_data[i].data, src->side_data[i].data,
-                    src->side_data[i].size, 1, fnPtrAlloc) == -1)
-            goto failed_alloc;
-            
+            DUP_DATA(pkt->side_data[i].data, src->side_data[i].data,
+                    src->side_data[i].size, 1, ALLOC_MALLOC);
             pkt->side_data[i].size = src->side_data[i].size;
             pkt->side_data[i].type = src->side_data[i].type;
         }
@@ -515,9 +481,9 @@ int av_packet_split_side_data(AVPacket *pkt){
         for (i=0; ; i++){
             size= AV_RB32(p);
             av_assert0(size<=INT_MAX - 5 && p - pkt->data >= size);
-            pkt->side_data[i].data = ( uint8_t *)av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
+            pkt->side_data[i].data = (uint8_t*)av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
             pkt->side_data[i].size = size;
-            pkt->side_data[i].type = (AVPacketSideDataType)p[4]&127;
+            pkt->side_data[i].type = (AVPacketSideDataType)(p[4]&127);
             if (!pkt->side_data[i].data)
                 return AVERROR(ENOMEM);
             memcpy(pkt->side_data[i].data, p-size, size);
