@@ -18,7 +18,7 @@
  */
 
 #include <fdk-aac/aacenc_lib.h>
-
+extern "C"  {
 #include "channel_layout.h"
 #include "common.h"
 #include "opt.h"
@@ -28,7 +28,7 @@
 #include "internal_util.h"
 
 typedef struct AACContext {
-    const AVClass *class;
+    const AVClass *class_av;
     HANDLE_AACENCODER handle;
     int afterburner;
     int eld_sbr;
@@ -92,7 +92,7 @@ static const char *aac_get_error(AACENC_ERROR err)
 
 static int aac_encode_close(AVCodecContext *avctx)
 {
-    AACContext *s = avctx->priv_data;
+    AACContext *s = (AACContext *)avctx->priv_data;
 
     if (s->handle)
         aacEncClose(&s->handle);
@@ -104,7 +104,7 @@ static int aac_encode_close(AVCodecContext *avctx)
 
 static av_cold int aac_encode_init(AVCodecContext *avctx)
 {
-    AACContext *s = avctx->priv_data;
+    AACContext *s = (AACContext *)avctx->priv_data;
     int ret = AVERROR(EINVAL);
     AACENC_InfoStruct info = { 0 };
     CHANNEL_MODE mode;
@@ -292,7 +292,7 @@ static av_cold int aac_encode_init(AVCodecContext *avctx)
 
     if (avctx->flags & AV_CODEC_FLAG_GLOBAL_HEADER) {
         avctx->extradata_size = info.confSize;
-        avctx->extradata      = av_mallocz(avctx->extradata_size +
+        avctx->extradata      = (uint8_t*)av_mallocz(avctx->extradata_size +
                                            AV_INPUT_BUFFER_PADDING_SIZE);
         if (!avctx->extradata) {
             ret = AVERROR(ENOMEM);
@@ -310,7 +310,7 @@ error:
 static int aac_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
                             const AVFrame *frame, int *got_packet_ptr)
 {
-    AACContext    *s        = avctx->priv_data;
+    AACContext    *s        = (AACContext    *)avctx->priv_data;
     AACENC_BufDesc in_buf   = { 0 }, out_buf = { 0 };
     AACENC_InArgs  in_args  = { 0 };
     AACENC_OutArgs out_args = { 0 };
@@ -386,7 +386,7 @@ static const AVProfile profiles[] = {
 };
 
 static const AVCodecDefault aac_encode_defaults[] = {
-    { "b", "0" },
+    { (const uint8_t*)"b", (const uint8_t*)"0" },
     { NULL }
 };
 
@@ -414,16 +414,27 @@ AVCodec ff_libfdk_aac_encoder = {
     .long_name             = NULL_IF_CONFIG_SMALL("Fraunhofer FDK AAC"),
     .type                  = AVMEDIA_TYPE_AUDIO,
     .id                    = AV_CODEC_ID_AAC,
-    .priv_data_size        = sizeof(AACContext),
-    .init                  = aac_encode_init,
-    .encode2               = aac_encode_frame,
-    .close                 = aac_encode_close,
-    .capabilities          = AV_CODEC_CAP_SMALL_LAST_FRAME | AV_CODEC_CAP_DELAY,
+    .capabilities          = AV_CODEC_CAP_SMALL_LAST_FRAME | AV_CODEC_CAP_DELAY,    
+    .supported_framerates = NULL,
+    .pix_fmts             = NULL,
+    .supported_samplerates = aac_sample_rates,
     .sample_fmts           = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
                                                             AV_SAMPLE_FMT_NONE },
-    .priv_class            = &aac_enc_class,
-    .defaults              = aac_encode_defaults,
-    .profiles              = profiles,
-    .supported_samplerates = aac_sample_rates,
     .channel_layouts       = aac_channel_layout,
+    .max_lowres            = 0,
+    .priv_class            = &aac_enc_class,
+    .profiles              = profiles,
+    .priv_data_size        = sizeof(AACContext),
+    .next                  = NULL,
+    .init_thread_copy      = NULL,
+    .update_thread_context = NULL,
+    .defaults              = aac_encode_defaults,
+    .init_static_data      = NULL,                                                      
+    .init                  = aac_encode_init,
+    .encode_sub            = NULL,
+    .encode2               = aac_encode_frame,
+    .decode                = NULL,              
+    .close                 = aac_encode_close,
+    
 };
+}
