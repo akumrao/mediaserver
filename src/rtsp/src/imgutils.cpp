@@ -21,6 +21,7 @@
  * misc image utilities
  */
 
+extern "C"  {
 #include "avassert.h"
 #include "common.h"
 #include "imgutils.h"
@@ -210,7 +211,7 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
 
     if ((ret = av_image_fill_pointers(pointers, pix_fmt, h, NULL, linesizes)) < 0)
         return ret;
-    buf = av_malloc(ret + align);
+    buf = (uint8_t*)av_malloc(ret + align);
     if (!buf)
         return AVERROR(ENOMEM);
     if ((ret = av_image_fill_pointers(pointers, pix_fmt, h, buf, linesizes)) < 0) {
@@ -237,7 +238,7 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
 }
 
 typedef struct ImgUtils {
-    const AVClass *class;
+    const AVClass *class_av;
     int   log_offset;
     void *log_ctx;
 } ImgUtils;
@@ -245,6 +246,7 @@ typedef struct ImgUtils {
 static const AVClass imgutils_class = {
     .class_name = "IMGUTILS",
     .item_name  = av_default_item_name,
+    .option     = NULL,
     .version    = 1,
     .log_level_offset_offset   = offsetof(ImgUtils, log_offset),
     .parent_log_context_offset = offsetof(ImgUtils, log_ctx),
@@ -253,7 +255,7 @@ static const AVClass imgutils_class = {
 int av_image_check_size2(unsigned int w, unsigned int h, int64_t max_pixels, enum AVPixelFormat pix_fmt, int log_offset, void *log_ctx)
 {
     ImgUtils imgutils = {
-        .class      = &imgutils_class,
+        .class_av      = &imgutils_class,
         .log_offset = log_offset,
         .log_ctx    = log_ctx,
     };
@@ -491,4 +493,5 @@ int av_image_copy_to_buffer(uint8_t *dst, int dst_size,
     }
 
     return size;
+}
 }
