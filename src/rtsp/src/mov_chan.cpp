@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 
+extern "C"  {
 #include "channel_layout.h"
 #include "avcodec.h"
 #include "mov_chan.h"
@@ -381,7 +382,7 @@ static const enum MovChannelLayoutTag mov_ch_layouts_aac[] = {
     MOV_CH_LAYOUT_AAC_OCTAGONAL,
     MOV_CH_LAYOUT_MPEG_7_1_B,
     MOV_CH_LAYOUT_DTS_8_0_A,
-    0,
+    (MovChannelLayoutTag)0,
 };
 
 static const enum MovChannelLayoutTag mov_ch_layouts_ac3[] = {
@@ -399,7 +400,7 @@ static const enum MovChannelLayoutTag mov_ch_layouts_ac3[] = {
     MOV_CH_LAYOUT_DVD_18,
     MOV_CH_LAYOUT_AC3_3_1_1,
     MOV_CH_LAYOUT_MPEG_5_1_C,
-    0,
+    (MovChannelLayoutTag)0,
 };
 
 static const enum MovChannelLayoutTag mov_ch_layouts_alac[] = {
@@ -411,7 +412,7 @@ static const enum MovChannelLayoutTag mov_ch_layouts_alac[] = {
     MOV_CH_LAYOUT_MPEG_5_1_D,
     MOV_CH_LAYOUT_AAC_6_1,
     MOV_CH_LAYOUT_MPEG_7_1_B,
-    0,
+    (MovChannelLayoutTag)0,
 };
 
 static const enum MovChannelLayoutTag mov_ch_layouts_wav[] = {
@@ -426,7 +427,7 @@ static const enum MovChannelLayoutTag mov_ch_layouts_wav[] = {
     MOV_CH_LAYOUT_MPEG_7_1_A,
     MOV_CH_LAYOUT_MPEG_7_1_C,
     MOV_CH_LAYOUT_SMPTE_DTV,
-    0,
+    (MovChannelLayoutTag)0,
 };
 
 static const struct {
@@ -595,4 +596,5 @@ int ff_mov_read_chan(AVFormatContext *s, AVIOContext *pb, AVStream *st,
     avio_skip(pb, size - 12);
 
     return 0;
+}
 }
