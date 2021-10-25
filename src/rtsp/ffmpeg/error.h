@@ -116,8 +116,27 @@ static inline char *av_make_error_string(char *errbuf, size_t errbuf_size, int e
  * Convenience macro, the return value should be used only directly in
  * function arguments but never stand-alone.
  */
+//#define av_err2str(errnum) \
+//    av_make_error_string((char[AV_ERROR_MAX_STRING_SIZE]){0}, AV_ERROR_MAX_STRING_SIZE, errnum)
 #define av_err2str(errnum) \
-    av_make_error_string((char[AV_ERROR_MAX_STRING_SIZE]){0}, AV_ERROR_MAX_STRING_SIZE, errnum)
+ av_make_error_string((char*)__builtin_alloca(AV_ERROR_MAX_STRING_SIZE), AV_ERROR_MAX_STRING_SIZE, errnum)
+
+/*
+#include "attributes.h"
+#include <string.h> 
+
+av_always_inline char* av_err2str(int errnum)
+
+{
+
+	static char str[AV_ERROR_MAX_STRING_SIZE];
+
+	memset(str, 0, sizeof(str));
+
+	return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
+
+}
+*/
 
 /**
  * @}

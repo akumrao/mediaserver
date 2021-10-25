@@ -4526,7 +4526,7 @@ int av_grow_packet(AVPacket *pkt, int grow_by);
  */
 int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size);
 
-#if FF_API_AVPACKET_OLD_API
+//#if FF_API_AVPACKET_OLD_API
 /**
  * @warning This is a hack - the packet memory allocation stuff is broken. The
  * packet is allocated if it was not really allocated.
@@ -4558,7 +4558,7 @@ int av_copy_packet_side_data(AVPacket *dst, const AVPacket *src);
  */
 attribute_deprecated
 void av_free_packet(AVPacket *pkt);
-#endif
+//#endif
 /**
  * Allocate new information of a packet.
  *
