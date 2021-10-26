@@ -161,10 +161,4 @@ void av_assert0_fpu(void) {
     av_assert0((state[4] & 3) == 3);
 #endif
 }
-
-inline char* av_fourcc2str(uint32_t fourcc)
-{
-    char buffer[AV_FOURCC_MAX_STRING_SIZE];
-    return av_fourcc_make_string(buffer, fourcc);     
-}
 }
