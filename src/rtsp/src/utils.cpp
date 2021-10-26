@@ -24,7 +24,7 @@
  * @file
  * utils.
  */
-
+extern "C"  {
 #include "config.h"
 #include "atomic.h"
 #include "attributes.h"
@@ -486,8 +486,8 @@ enum AVChromaLocation avcodec_chroma_pos_to_enum(int xpos, int ypos)
     int pos, xout, yout;
 
     for (pos = AVCHROMA_LOC_UNSPECIFIED + 1; pos < AVCHROMA_LOC_NB; pos++) {
-        if (avcodec_enum_to_chroma_pos(&xout, &yout, pos) == 0 && xout == xpos && yout == ypos)
-            return pos;
+        if (avcodec_enum_to_chroma_pos(&xout, &yout, (AVChromaLocation)pos) == 0 && xout == xpos && yout == ypos)
+            return (AVChromaLocation)pos;
     }
     return AVCHROMA_LOC_UNSPECIFIED;
 }
@@ -593,7 +593,7 @@ static int update_frame_pool(AVCodecContext *avctx, AVFrame *frame)
        }
    case AVMEDIA_TYPE_AUDIO: {
        int ch     = av_frame_get_channels(frame); //av_get_channel_layout_nb_channels(frame->channel_layout);
-       int planar = av_sample_fmt_is_planar(frame->format);
+       int planar = av_sample_fmt_is_planar((AVSampleFormat)frame->format);
        int planes = planar ? ch : 1;
 
        if (pool->format == frame->format && pool->planes == planes &&
@@ -602,7 +602,7 @@ static int update_frame_pool(AVCodecContext *avctx, AVFrame *frame)
 
        av_buffer_pool_uninit(&pool->pools[0]);
        ret = av_samples_get_buffer_size(&pool->linesize[0], ch,
-                                        frame->nb_samples, frame->format, 0);
+                                        frame->nb_samples, (AVSampleFormat)frame->format, 0);
        if (ret < 0)
            goto fail;
 
@@ -678,7 +678,7 @@ fail:
 static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
 {
    FramePool *pool = s->internal->pool;
-   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pic->format);
+   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get((AVPixelFormat)pic->format);
    int i;
 
    if (pic->data[0] || pic->data[1] || pic->data[2] || pic->data[3]) {
@@ -689,7 +689,7 @@ static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
    if (!desc) {
        av_log(s, AV_LOG_ERROR,
            "Unable to get pixel format descriptor for format %s\n",
-           av_get_pix_fmt_name(pic->format));
+           av_get_pix_fmt_name((AVPixelFormat)pic->format));
        return AVERROR(EINVAL);
    }
 
@@ -711,7 +711,7 @@ static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
    }
    if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
        desc->flags & AV_PIX_FMT_FLAG_PSEUDOPAL)
-       avpriv_set_systematic_pal2((uint32_t *)pic->data[1], pic->format);
+       avpriv_set_systematic_pal2((uint32_t *)pic->data[1], (AVPixelFormat)pic->format);
 
    if (s->debug & FF_DEBUG_BUFFERS)
        av_log(s, AV_LOG_DEBUG, "default_get_buffer called on pic %p\n", pic);
@@ -724,7 +724,7 @@ fail:
 
 void ff_color_frame(AVFrame *frame, const int c[4])
 {
-   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
+   const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get((AVPixelFormat)frame->format);
    int p, y, x;
 
    av_assert0(desc->flags & AV_PIX_FMT_FLAG_PLANAR);
@@ -903,8 +903,8 @@ static void validate_avframe_allocation(AVCodecContext *avctx, AVFrame *frame)
 {
    if (avctx->codec_type == AVMEDIA_TYPE_VIDEO) {
        int i;
-       int num_planes = av_pix_fmt_count_planes(frame->format);
-       const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
+       int num_planes = av_pix_fmt_count_planes((AVPixelFormat)frame->format);
+       const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get((AVPixelFormat)frame->format);
        int flags = desc ? desc->flags : 0;
        if (num_planes == 1 && (flags & AV_PIX_FMT_FLAG_PAL))
            num_planes = 2;
@@ -1145,7 +1145,7 @@ int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt)
     avctx->sw_pix_fmt = fmt[n - 1];
     av_assert2(!is_hwaccel_pix_fmt(avctx->sw_pix_fmt));
 
-    choices = av_malloc_array(n + 1, sizeof(*choices));
+    choices = (AVPixelFormat*)av_malloc_array(n + 1, sizeof(*choices));
     if (!choices)
         return AV_PIX_FMT_NONE;
 
@@ -2452,7 +2452,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                       avctx->internal->skip_samples);
            } else {
                av_samples_copy(frame->extended_data, frame->extended_data, 0, avctx->internal->skip_samples,
-                               frame->nb_samples - avctx->internal->skip_samples, avctx->channels, frame->format);
+                               frame->nb_samples - avctx->internal->skip_samples, avctx->channels, (AVSampleFormat)frame->format);
                if(avctx->pkt_timebase.num && avctx->sample_rate) {
                    int64_t diff_ts = av_rescale_q(avctx->internal->skip_samples,
                                                   (AVRational){1, avctx->sample_rate},
@@ -4300,7 +4300,7 @@ int avcodec_parameters_to_context(AVCodecContext *codec,
 
     switch (par->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
-        codec->pix_fmt                = par->format;
+        codec->pix_fmt                = (AVPixelFormat)par->format;
         codec->width                  = par->width;
         codec->height                 = par->height;
         codec->field_order            = par->field_order;
@@ -4313,7 +4313,7 @@ int avcodec_parameters_to_context(AVCodecContext *codec,
         codec->has_b_frames           = par->video_delay;
         break;
     case AVMEDIA_TYPE_AUDIO:
-        codec->sample_fmt       =  par->format;
+        codec->sample_fmt       = (AVSampleFormat)par->format;
         codec->channel_layout   = par->channel_layout;
         codec->channels         = par->channels;
         codec->sample_rate      = par->sample_rate;
@@ -4404,6 +4404,7 @@ int64_t ff_guess_coded_bitrate(AVCodecContext *avctx)
               framerate.num / framerate.den;
 
     return bitrate;
+}
 }
 
 

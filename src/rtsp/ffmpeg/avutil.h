@@ -345,7 +345,6 @@ AVRational av_get_time_base_q(void);
 
 #define AV_FOURCC_MAX_STRING_SIZE 32
 
-#define av_fourcc2str(fourcc) av_fourcc_make_string((char[AV_FOURCC_MAX_STRING_SIZE]){0}, fourcc) 
 
 /**
  * Fill the provided buffer with a string containing a FourCC (four-character
@@ -362,4 +361,12 @@ char *av_fourcc_make_string(char *buf, uint32_t fourcc);
  * @}
  */
 
+/**
+ * Fill the provided buffer with a string containing a FourCC (four-character
+ * code) representation.
+ *
+ * @param fourcc the fourcc to represent
+ * @return the buffer in input
+ */
+char* av_fourcc2str(uint32_t fourcc);
 #endif /* AVUTIL_AVUTIL_H */
