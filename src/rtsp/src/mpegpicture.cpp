@@ -19,7 +19,7 @@
  */
 
 #include <stdint.h>
-
+extern "C"  {
 #include "avassert.h"
 #include "common.h"
 
@@ -269,13 +269,13 @@ int ff_alloc_picture(AVCodecContext *avctx, Picture *pic, MotionEstContext *me,
     }
 
     pic->mbskip_table = pic->mbskip_table_buf->data;
-    pic->qscale_table = pic->qscale_table_buf->data + 2 * mb_stride + 1;
+    pic->qscale_table = (int8_t*)pic->qscale_table_buf->data + 2 * mb_stride + 1;
     pic->mb_type      = (uint32_t*)pic->mb_type_buf->data + 2 * mb_stride + 1;
 
     if (pic->motion_val_buf[0]) {
         for (i = 0; i < 2; i++) {
             pic->motion_val[i] = (int16_t (*)[2])pic->motion_val_buf[i]->data + 4;
-            pic->ref_index[i]  = pic->ref_index_buf[i]->data;
+            pic->ref_index[i]  = (int8_t*)pic->ref_index_buf[i]->data;
         }
     }
 
@@ -472,4 +472,5 @@ void ff_free_picture_tables(Picture *pic)
         av_buffer_unref(&pic->motion_val_buf[i]);
         av_buffer_unref(&pic->ref_index_buf[i]);
     }
+}
 }
