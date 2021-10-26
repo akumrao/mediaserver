@@ -7,7 +7,8 @@
 #define FFMPEG_DATADIR "/usr/local/share/ffmpeg"
 #define AVCONV_DATADIR "/usr/local/share/ffmpeg"
 #define CC_IDENT "gcc 7 (Ubuntu 7.5.0-3ubuntu1~18.04)"
-#define av_restrict restrict
+//#define av_restrict restrict
+#define av_restrict 
 #define EXTERN_PREFIX ""
 #define EXTERN_ASM 
 #define BUILDSUF ""

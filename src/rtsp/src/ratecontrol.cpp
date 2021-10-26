@@ -24,7 +24,7 @@
  * @file
  * Rate control for video encoders.
  */
-
+extern "C"  {
 #include "attributes.h"
 #include "internal_codec.h"
 
@@ -349,8 +349,8 @@ static int init_pass2(MpegEncContext *s)
         return -1;
     }
 
-    qscale         = av_malloc_array(rcc->num_entries, sizeof(double));
-    blurred_qscale = av_malloc_array(rcc->num_entries, sizeof(double));
+    qscale         = (double*)av_malloc_array(rcc->num_entries, sizeof(double));
+    blurred_qscale = (double*)av_malloc_array(rcc->num_entries, sizeof(double));
     if (!qscale || !blurred_qscale) {
         av_free(qscale);
         av_free(blurred_qscale);
@@ -552,7 +552,7 @@ av_cold int ff_rate_control_init(MpegEncContext *s)
         i += s->max_b_frames;
         if (i <= 0 || i >= INT_MAX / sizeof(RateControlEntry))
             return -1;
-        rcc->entry       = av_mallocz(i * sizeof(RateControlEntry));
+        rcc->entry       = (RateControlEntry*)av_mallocz(i * sizeof(RateControlEntry));
         if (!rcc->entry)
             return AVERROR(ENOMEM);
         rcc->num_entries = i;
@@ -1001,7 +1001,7 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         av_log(s->avctx, AV_LOG_DEBUG,
                "%c qp:%d<%2.1f<%d %d want:%d total:%d comp:%f st_q:%2.2f "
                "size:%d var:%"PRId64"/%"PRId64" br:%"PRId64" fps:%d\n",
-               av_get_picture_type_char(pict_type),
+               av_get_picture_type_char((AVPictureType)pict_type),
                qmin, q, qmax, picture_number,
                (int)wanted_bits / 1000, (int)s->total_bits / 1000,
                br_compensation, short_term_q, s->frame_bits,
@@ -1025,4 +1025,5 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         rcc->last_mb_var_sum    = pic->mb_var_sum;
     }
     return q;
+}
 }
