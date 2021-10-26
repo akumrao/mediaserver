@@ -5377,7 +5377,7 @@ static int mov_create_chapter_track(AVFormatContext *s, int tracknum)
 
     MOVMuxContext *mov = (MOVMuxContext *)s->priv_data;
     MOVTrack *track = &mov->tracks[tracknum];
-    AVPacket pkt = { .stream_index = tracknum, .flags = AV_PKT_FLAG_KEY };
+    AVPacket pkt = { .buf = NULL, .pts = 0, .dts = 0, .data = NULL, .size = 0, .stream_index = tracknum, .flags = AV_PKT_FLAG_KEY };
     int i, len;
 
     track->mode = mov->mode;
@@ -5484,7 +5484,7 @@ static int mov_create_timecode_track(AVFormatContext *s, int index, int src_inde
     MOVMuxContext *mov  = (MOVMuxContext *)s->priv_data;
     MOVTrack *track     = &mov->tracks[index];
     AVStream *src_st    = s->streams[src_index];
-    AVPacket pkt    = {.stream_index = index, .flags = AV_PKT_FLAG_KEY, .size = 4};
+    AVPacket pkt    = { .buf = NULL, .pts = 0, .dts = 0, .data = NULL, .size = 4, .stream_index = index, .flags = AV_PKT_FLAG_KEY};
     AVRational rate = find_fps(s, src_st);
 
     /* tmcd track based on video stream */
@@ -6395,22 +6395,34 @@ MOV_CLASS(mov)
 AVOutputFormat ff_mov_muxer = {
     .name              = "mov",
     .long_name         = NULL_IF_CONFIG_SMALL("QuickTime / MOV"),
+    .mime_type         = NULL,
     .extensions        = "mov",
-    .priv_data_size    = sizeof(MOVMuxContext),
     .audio_codec       = AV_CODEC_ID_AAC,
     .video_codec       = CONFIG_LIBX264_ENCODER ?
                          AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG4,
-    .init              = mov_init,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .deinit            = mov_free,
+    .subtitle_codec    = AV_CODEC_ID_NONE,
     .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH | AVFMT_TS_NEGATIVE,
     .codec_tag         = (const AVCodecTag* const []){
         ff_codec_movvideo_tags, ff_codec_movaudio_tags, 0
     },
-    .check_bitstream   = mov_check_bitstream,
     .priv_class        = &mov_muxer_class,
+    .next              = NULL,
+    .priv_data_size    = sizeof(MOVMuxContext),
+    .write_header      = mov_write_header,
+    .write_packet      = mov_write_packet,
+    .write_trailer     = mov_write_trailer,
+    .interleave_packet = NULL,
+    .query_codec        = NULL,
+    .get_output_timestamp = NULL,
+    .control_message = NULL,
+    .write_uncoded_frame = NULL,
+    .get_device_list = NULL,
+    .create_device_capabilities = NULL,
+    .free_device_capabilities = NULL,
+    .data_codec    = AV_CODEC_ID_NONE,    
+    .init              = mov_init,
+    .deinit            = mov_free,
+    .check_bitstream   = mov_check_bitstream,
 };
 #endif
 #if CONFIG_TGP_MUXER
