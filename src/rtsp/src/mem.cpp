@@ -25,15 +25,16 @@ extern "C" {
  * Note that this will cost performance. */
 
 
+  
 
-    
-#include "mem.h"
 
 #include <stdint.h>    
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+extern "C"  {
+#include "mem.h"
 #include "common.h"
 #include "mem_internal.h"
 #include "dynarray.h"   
@@ -194,7 +195,9 @@ void av_freep(void *arg)
     void *val;
 
     memcpy(&val, arg, sizeof(val));
-    memcpy(arg, &(void *){ NULL }, sizeof(val));
+    //memcpy(arg, &(void *){ NULL }, sizeof(val));
+    static void* const temp = NULL; //Sanjay Arvind Risky code.
+    memcpy(arg, &temp, sizeof(val));    
     av_free(val);
 }
 
@@ -455,3 +458,4 @@ void av_fast_mallocz(void *ptr, unsigned int *size, size_t min_size)
     ff_fast_malloc(ptr, size, min_size, 1);
 }
 
+}
