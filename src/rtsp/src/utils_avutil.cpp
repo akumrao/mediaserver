@@ -162,7 +162,7 @@ void av_assert0_fpu(void) {
 #endif
 }
 
-char* av_fourcc2str(uint32_t fourcc)
+inline char* av_fourcc2str(uint32_t fourcc)
 {
     char buffer[AV_FOURCC_MAX_STRING_SIZE];
     return av_fourcc_make_string(buffer, fourcc);     

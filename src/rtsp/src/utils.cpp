@@ -57,6 +57,7 @@ extern "C"  {
 #include "raw.h"
 #include "bytestream.h"
 //#include "version.h"
+#include "avutil.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <limits.h>
@@ -65,6 +66,7 @@ extern "C"  {
 # include <iconv.h>
 #endif
 
+extern inline char* av_fourcc2str(uint32_t fourcc);    
 #ifndef emms_c
 #   define emms_c() while(0)
 #endif

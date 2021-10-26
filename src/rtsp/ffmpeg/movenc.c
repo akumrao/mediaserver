@@ -55,7 +55,7 @@
 //#include "rtpenc.h"
 #include "mov_chan.h"
 #include "vpcc.h"
-
+#include "avutil.h"
 
 #define LIBAVCODEC_IDENT        "Lavc" AV_STRINGIFY(1)
 #define LIBAVFORMAT_IDENT       "Lavf" AV_STRINGIFY(1)

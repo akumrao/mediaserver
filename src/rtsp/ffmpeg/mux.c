@@ -43,7 +43,7 @@
 #if CONFIG_NETWORK
 #include "network.h"
 #endif
-
+#include "avutil.h"
 
 #define LIBAVFORMAT_IDENT       "Lavf" AV_STRINGIFY(1)
 

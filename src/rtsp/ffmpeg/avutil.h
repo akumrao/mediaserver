@@ -368,5 +368,5 @@ char *av_fourcc_make_string(char *buf, uint32_t fourcc);
  * @param fourcc the fourcc to represent
  * @return the buffer in input
  */
-char* av_fourcc2str(uint32_t fourcc);
+inline char* av_fourcc2str(uint32_t fourcc);
 #endif /* AVUTIL_AVUTIL_H */

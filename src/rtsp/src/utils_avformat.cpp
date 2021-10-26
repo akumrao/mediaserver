@@ -23,14 +23,14 @@
 #include <stdint.h>
 
 #include "config.h"
-
+extern "C"  {
 #include "avassert.h"
 #include "avstring.h"
 #include "dict.h"
 //#include "libavutil/internal.h"
 #include "mathematics.h"
 #include "opt.h"
-//#include "parseutils.h"
+#include "parseutils.h"
 #include "pixdesc.h"
 #include "time.h"
 #include "time_internal.h"
@@ -51,6 +51,7 @@
 #endif
 #include "riff.h"
 #include "url.h"
+#include "mytime.h"
 
 //#include "libavutil/ffversion.h"
 const char av_format_ffversion[] = "FFmpeg version 1";
@@ -425,7 +426,7 @@ static int init_input(AVFormatContext *s, const char *filename,
 static int add_to_pktbuf(AVPacketList **packet_buffer, AVPacket *pkt,
                          AVPacketList **plast_pktl, int ref)
 {
-    AVPacketList *pktl = av_mallocz(sizeof(AVPacketList));
+    AVPacketList *pktl = (AVPacketList *)av_mallocz(sizeof(AVPacketList));
     int ret;
 
     if (!pktl)
@@ -686,7 +687,7 @@ static int probe_codec(AVFormatContext *s, AVStream *st, const AVPacket *pkt)
         --st->probe_packets;
 
         if (pkt) {
-            uint8_t *new_buf = av_realloc(pd->buf, pd->buf_size+pkt->size+AVPROBE_PADDING_SIZE);
+            uint8_t *new_buf = (uint8_t*)av_realloc(pd->buf, pd->buf_size+pkt->size+AVPROBE_PADDING_SIZE);
             if (!new_buf) {
                 av_log(s, AV_LOG_WARNING,
                        "Failed to reallocate probe buffer for stream %d\n",
@@ -1950,7 +1951,7 @@ int ff_add_index_entry(AVIndexEntry **index_entries,
     if (is_relative(timestamp)) //FIXME this maintains previous behavior but we should shift by the correct offset once known
         timestamp -= RELATIVE_TS_BASE;
 
-    entries = av_fast_realloc(*index_entries,
+    entries = (AVIndexEntry*)av_fast_realloc(*index_entries,
                               index_entries_allocated_size,
                               (*nb_index_entries + 1) *
                               sizeof(AVIndexEntry));
@@ -2499,10 +2500,10 @@ int avformat_seek_file(AVFormatContext *s, int stream_index, int64_t min_ts,
             ts = av_rescale_q(ts, AV_TIME_BASE_Q, time_base);
             min_ts = av_rescale_rnd(min_ts, time_base.den,
                                     time_base.num * (int64_t)AV_TIME_BASE,
-                                    AV_ROUND_UP   | AV_ROUND_PASS_MINMAX);
+                                    (AVRounding)(AV_ROUND_UP   | AV_ROUND_PASS_MINMAX));
             max_ts = av_rescale_rnd(max_ts, time_base.den,
                                     time_base.num * (int64_t)AV_TIME_BASE,
-                                    AV_ROUND_DOWN | AV_ROUND_PASS_MINMAX);
+                                    (AVRounding)(AV_ROUND_DOWN | AV_ROUND_PASS_MINMAX));
             stream_index = 0;
         }
 
@@ -2593,7 +2594,7 @@ static void update_stream_timings(AVFormatContext *ic)
                 start_time = FFMIN(start_time, start_time1);
             end_time1 = av_rescale_q_rnd(st->duration, st->time_base,
                                          AV_TIME_BASE_Q,
-                                         AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+                                         (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             if (end_time1 != AV_NOPTS_VALUE && (end_time1 > 0 ? start_time1 <= INT64_MAX - end_time1 : start_time1 >= INT64_MIN - end_time1)) {
                 end_time1 += start_time1;
                 if (st->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE || st->codecpar->codec_type == AVMEDIA_TYPE_DATA)
@@ -3230,7 +3231,7 @@ int ff_alloc_extradata(AVCodecParameters *par, int size)
         par->extradata_size = 0;
         return AVERROR(EINVAL);
     }
-    par->extradata = av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
+    par->extradata = (uint8_t*)av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
     if (par->extradata) {
         memset(par->extradata + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
         par->extradata_size = size;
@@ -3269,7 +3270,7 @@ int ff_rfps_add_frame(AVFormatContext *ic, AVStream *st, int64_t ts)
         int64_t duration = ts - last;
 
         if (!st->info->duration_error)
-            st->info->duration_error = av_mallocz(sizeof(st->info->duration_error[0])*2);
+            st->info->duration_error = (double (*)[2][MAX_STD_TIMEBASES])av_mallocz(sizeof(st->info->duration_error[0])*2);
         if (!st->info->duration_error)
             return AVERROR(ENOMEM);
 
@@ -3398,7 +3399,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     int64_t max_subtitle_analyze_duration;
     int64_t probesize = ic->probesize;
     int eof_reached = 0;
-    int *missing_streams = av_opt_ptr(ic->iformat->priv_class, ic->priv_data, "missing_streams");
+    int *missing_streams = (int *)av_opt_ptr(ic->iformat->priv_class, ic->priv_data, "missing_streams");
 
     flush_codecs = probesize > 0;
 
@@ -3696,7 +3697,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
             int i = st->parser->parser->split(avctx, pkt->data, pkt->size);
             if (i > 0 && i < FF_MAX_EXTRADATA_SIZE) {
                 avctx->extradata_size = i;
-                avctx->extradata      = av_mallocz(avctx->extradata_size +
+                avctx->extradata      = (uint8_t*)av_mallocz(avctx->extradata_size +
                                                    AV_INPUT_BUFFER_PADDING_SIZE);
                 if (!avctx->extradata)
                     return AVERROR(ENOMEM);
@@ -3932,7 +3933,7 @@ FF_DISABLE_DEPRECATION_WARNINGS
         st->codec->framerate = st->avg_frame_rate;
 
         if (st->internal->avctx->subtitle_header) {
-            st->codec->subtitle_header = av_malloc(st->internal->avctx->subtitle_header_size);
+            st->codec->subtitle_header = (uint8_t*)av_malloc(st->internal->avctx->subtitle_header_size);
             if (!st->codec->subtitle_header)
                 goto find_stream_info_err;
             st->codec->subtitle_header_size = st->internal->avctx->subtitle_header_size;
@@ -4092,14 +4093,14 @@ int ff_stream_encode_params_copy(AVStream *dst, const AVStream *src)
 
     /* Copy side data if present */
     if (src->nb_side_data) {
-        dst->side_data = av_mallocz_array(src->nb_side_data,
+        dst->side_data = (AVPacketSideData*)av_mallocz_array(src->nb_side_data,
                                           sizeof(AVPacketSideData));
         if (!dst->side_data)
             return AVERROR(ENOMEM);
         dst->nb_side_data = src->nb_side_data;
 
         for (i = 0; i < src->nb_side_data; i++) {
-            uint8_t *data = av_memdup(src->side_data[i].data,
+            uint8_t *data = (uint8_t *)av_memdup(src->side_data[i].data,
                                       src->side_data[i].size);
             if (!data)
                 return AVERROR(ENOMEM);
@@ -4250,15 +4251,15 @@ AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)
             av_log(s, AV_LOG_ERROR, "Number of streams exceeds max_streams parameter (%d), see the documentation if you wish to increase it\n", s->max_streams);
         return NULL;
     }
-    streams = av_realloc_array(s->streams, s->nb_streams + 1, sizeof(*streams));
+    streams = (AVStream**)av_realloc_array(s->streams, s->nb_streams + 1, sizeof(*streams));
     if (!streams)
         return NULL;
     s->streams = streams;
 
-    st = av_mallocz(sizeof(AVStream));
+    st = (AVStream*)av_mallocz(sizeof(AVStream));
     if (!st)
         return NULL;
-    if (!(st->info = av_mallocz(sizeof(*st->info)))) {
+    if (!(st->info = (AVStream::stream_info*)av_mallocz(sizeof(*st->info)))) {
         av_free(st);
         return NULL;
     }
@@ -4275,7 +4276,7 @@ FF_DISABLE_DEPRECATION_WARNINGS
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
-    st->internal = av_mallocz(sizeof(*st->internal));
+    st->internal = (AVStreamInternal*)av_mallocz(sizeof(*st->internal));
     if (!st->internal)
         goto fail;
 
@@ -4350,10 +4351,10 @@ AVProgram *av_new_program(AVFormatContext *ac, int id)
             program = ac->programs[i];
 
     if (!program) {
-        program = av_mallocz(sizeof(AVProgram));
+        program = (AVProgram*)av_mallocz(sizeof(AVProgram));
         if (!program)
             return NULL;
-        dynarray_add(&ac->programs, &ac->nb_programs, program);
+        dynarray_add(&ac->programs, (int*)&ac->nb_programs, program);
         program->discard = AVDISCARD_NONE;
     }
     program->id = id;
@@ -4382,10 +4383,10 @@ AVChapter *avpriv_new_chapter(AVFormatContext *s, int id, AVRational time_base,
             chapter = s->chapters[i];
 
     if (!chapter) {
-        chapter = av_mallocz(sizeof(AVChapter));
+        chapter = (AVChapter*)av_mallocz(sizeof(AVChapter));
         if (!chapter)
             return NULL;
-        dynarray_add(&s->chapters, &s->nb_chapters, chapter);
+        dynarray_add(&s->chapters, (int*)&s->nb_chapters, chapter);
     }
     av_dict_set(&chapter->metadata, "title", title, 0);
     chapter->id        = id;
@@ -4418,7 +4419,7 @@ void av_program_add_stream_index(AVFormatContext *ac, int progid, unsigned idx)
         tmp = av_realloc_array(program->stream_index, program->nb_stream_indexes+1, sizeof(unsigned int));
         if (!tmp)
             return;
-        program->stream_index = tmp;
+        program->stream_index = (unsigned int*)tmp;
         program->stream_index[program->nb_stream_indexes++] = idx;
         return;
     }
@@ -4917,7 +4918,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         int ret;
 
         spec += 2;
-        val = strchr(spec, ':');
+        val = (char*)strchr(spec, ':');
 
         key = val ? av_strndup(spec, val - spec) : av_strdup(spec);
         if (!key)
@@ -5162,7 +5163,7 @@ int av_stream_add_side_data(AVStream *st, enum AVPacketSideDataType type,
     if ((unsigned)st->nb_side_data + 1 >= INT_MAX / sizeof(*st->side_data))
         return AVERROR(ERANGE);
 
-    tmp = av_realloc(st->side_data, (st->nb_side_data + 1) * sizeof(*tmp));
+    tmp = (AVPacketSideData*)av_realloc(st->side_data, (st->nb_side_data + 1) * sizeof(*tmp));
     if (!tmp) {
         return AVERROR(ENOMEM);
     }
@@ -5182,7 +5183,7 @@ uint8_t *av_stream_new_side_data(AVStream *st, enum AVPacketSideDataType type,
                                  int size)
 {
     int ret;
-    uint8_t *data = av_malloc(size);
+    uint8_t *data = (uint8_t *)av_malloc(size);
 
     if (!data)
         return NULL;
@@ -5392,7 +5393,7 @@ int ff_bprint_to_codecpar_extradata(AVCodecParameters *par, struct AVBPrint *buf
         return AVERROR(ENOMEM);
     }
 
-    par->extradata = str;
+    par->extradata = (uint8_t*)str;
     /* Note: the string is NUL terminated (so extradata can be read as a
      * string), but the ending character is not accounted in the size (in
      * binary formats you are likely not supposed to mux that character). When
@@ -5474,4 +5475,5 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #else
     return st->internal->avctx->time_base;
 #endif
+}
 }
