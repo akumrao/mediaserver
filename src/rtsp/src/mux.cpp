@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+extern "C"  {
 #include "avformat.h"
 #include "avio_internal.h"
 #include "internal_avformat.h"
@@ -121,7 +121,7 @@ AVRational ff_choose_timebase(AVFormatContext *s, AVStream *st, int min_precisio
 enum AVChromaLocation ff_choose_chroma_location(AVFormatContext *s, AVStream *st)
 {
     AVCodecParameters *par = st->codecpar;
-    const AVPixFmtDescriptor *pix_desc = av_pix_fmt_desc_get(par->format);
+    const AVPixFmtDescriptor *pix_desc = av_pix_fmt_desc_get((AVPixelFormat)par->format);
 
     if (par->chroma_location != AVCHROMA_LOC_UNSPECIFIED)
         return par->chroma_location;
@@ -456,7 +456,7 @@ static int init_pts(AVFormatContext *s)
         }
 
         if (!st->priv_pts)
-            st->priv_pts = av_mallocz(sizeof(*st->priv_pts));
+            st->priv_pts = (FFFrac*)av_mallocz(sizeof(*st->priv_pts));
         if (!st->priv_pts)
             return AVERROR(ENOMEM);
 
@@ -987,7 +987,7 @@ int ff_interleave_add_packet(AVFormatContext *s, AVPacket *pkt,
     AVStream *st   = s->streams[pkt->stream_index];
     int chunked    = s->max_chunk_size || s->max_chunk_duration;
 
-    this_pktl      = av_mallocz(sizeof(AVPacketList));
+    this_pktl      = (AVPacketList*)av_mallocz(sizeof(AVPacketList));
     if (!this_pktl)
         return AVERROR(ENOMEM);
     if ((pkt->flags & AV_PKT_FLAG_UNCODED_FRAME)) {
@@ -1421,7 +1421,7 @@ static int av_write_uncoded_frame_internal(AVFormatContext *s, int stream_index,
     } else {
         pktp = &pkt;
         av_init_packet(&pkt);
-        pkt.data = (void *)frame;
+        pkt.data = (uint8_t*)frame;
         pkt.size         = UNCODED_FRAME_PACKET_SIZE;
         pkt.pts          =
         pkt.dts          = frame->pts;
@@ -1453,4 +1453,5 @@ int av_write_uncoded_frame_query(AVFormatContext *s, int stream_index)
         return AVERROR(ENOSYS);
     return s->oformat->write_uncoded_frame(s, stream_index, NULL,
                                            AV_WRITE_UNCODED_FRAME_QUERY);
+}
 }
