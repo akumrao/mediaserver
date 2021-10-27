@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+extern "C"  {
 #include "compat/cuda/dynlink_loader.h"
 
 #include "buffer.h"
@@ -92,7 +93,7 @@ typedef struct CuvidParsedFrame
 
 static int check_cu(AVCodecContext *avctx, CUresult err, const char *func)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     const char *err_name;
     const char *err_string;
 
@@ -116,8 +117,8 @@ static int check_cu(AVCodecContext *avctx, CUresult err, const char *func)
 
 static int CUDAAPI cuvid_handle_video_sequence(void *opaque, CUVIDEOFORMAT* format)
 {
-    AVCodecContext *avctx = opaque;
-    CuvidContext *ctx = avctx->priv_data;
+    AVCodecContext *avctx = (AVCodecContext *)opaque;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     AVHWFramesContext *hwframe_ctx = (AVHWFramesContext*)ctx->hwframe->data;
     CUVIDDECODECREATEINFO cuinfo;
     int surface_fmt;
@@ -188,10 +189,10 @@ static int CUDAAPI cuvid_handle_video_sequence(void *opaque, CUVIDEOFORMAT* form
 
     av_log(avctx, AV_LOG_VERBOSE, "Formats: Original: %s | HW: %s | SW: %s\n",
            av_get_pix_fmt_name(avctx->pix_fmt),
-           av_get_pix_fmt_name(surface_fmt),
+           av_get_pix_fmt_name((AVPixelFormat)surface_fmt),
            av_get_pix_fmt_name(avctx->sw_pix_fmt));
 
-    avctx->pix_fmt = surface_fmt;
+    avctx->pix_fmt = (AVPixelFormat)surface_fmt;
 
     // Update our hwframe ctx, as the get_format callback might have refreshed it!
     if (avctx->hw_frames_ctx) {
@@ -224,9 +225,9 @@ static int CUDAAPI cuvid_handle_video_sequence(void *opaque, CUVIDEOFORMAT* form
     else
         avctx->color_range = AVCOL_RANGE_MPEG;
 
-    avctx->color_primaries = format->video_signal_description.color_primaries;
-    avctx->color_trc = format->video_signal_description.transfer_characteristics;
-    avctx->colorspace = format->video_signal_description.matrix_coefficients;
+    avctx->color_primaries = (AVColorPrimaries)format->video_signal_description.color_primaries;
+    avctx->color_trc = (AVColorTransferCharacteristic)format->video_signal_description.transfer_characteristics;
+    avctx->colorspace = (AVColorSpace)format->video_signal_description.matrix_coefficients;
 
     if (format->bitrate)
         avctx->bit_rate = format->bitrate;
@@ -297,7 +298,7 @@ static int CUDAAPI cuvid_handle_video_sequence(void *opaque, CUVIDEOFORMAT* form
     cuinfo.ulNumOutputSurfaces = 1;
     cuinfo.ulCreationFlags = cudaVideoCreate_PreferCUVID;
     cuinfo.bitDepthMinus8 = format->bit_depth_luma_minus8;
-    cuinfo.DeinterlaceMode = ctx->deint_mode_current;
+    cuinfo.DeinterlaceMode = (cudaVideoDeinterlaceMode)ctx->deint_mode_current;
 
     if (ctx->deint_mode_current != cudaVideoDeinterlaceMode_Weave && !ctx->drop_second_field)
         avctx->framerate = av_mul_q(avctx->framerate, (AVRational){2, 1});
@@ -323,8 +324,8 @@ static int CUDAAPI cuvid_handle_video_sequence(void *opaque, CUVIDEOFORMAT* form
 
 static int CUDAAPI cuvid_handle_picture_decode(void *opaque, CUVIDPICPARAMS* picparams)
 {
-    AVCodecContext *avctx = opaque;
-    CuvidContext *ctx = avctx->priv_data;
+    AVCodecContext *avctx = (AVCodecContext *)opaque;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
 
     av_log(avctx, AV_LOG_TRACE, "pfnDecodePicture\n");
 
@@ -337,8 +338,8 @@ static int CUDAAPI cuvid_handle_picture_decode(void *opaque, CUVIDPICPARAMS* pic
 
 static int CUDAAPI cuvid_handle_picture_display(void *opaque, CUVIDPARSERDISPINFO* dispinfo)
 {
-    AVCodecContext *avctx = opaque;
-    CuvidContext *ctx = avctx->priv_data;
+    AVCodecContext *avctx = (AVCodecContext *)opaque;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     CuvidParsedFrame parsed_frame = { { 0 } };
 
     parsed_frame.dispinfo = *dispinfo;
@@ -360,9 +361,9 @@ static int CUDAAPI cuvid_handle_picture_display(void *opaque, CUVIDPARSERDISPINF
 
 static int cuvid_decode_packet(AVCodecContext *avctx, const AVPacket *avpkt)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     AVHWDeviceContext *device_ctx = (AVHWDeviceContext*)ctx->hwdevice->data;
-    AVCUDADeviceContext *device_hwctx = device_ctx->hwctx;
+    AVCUDADeviceContext *device_hwctx = (AVCUDADeviceContext *)device_ctx->hwctx;
     CUcontext dummy, cuda_ctx = device_hwctx->cuda_ctx;
     CUVIDSOURCEDATAPACKET cupkt;
     AVPacket filter_packet = { 0 };
@@ -401,7 +402,7 @@ static int cuvid_decode_packet(AVCodecContext *avctx, const AVPacket *avpkt)
         avpkt = &filtered_packet;
     }
 
-    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent(cuda_ctx));
+    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent((void**)cuda_ctx));
     if (ret < 0) {
         av_packet_unref(&filtered_packet);
         return ret;
@@ -454,9 +455,9 @@ error:
 
 static int cuvid_output_frame(AVCodecContext *avctx, AVFrame *frame)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     AVHWDeviceContext *device_ctx = (AVHWDeviceContext*)ctx->hwdevice->data;
-    AVCUDADeviceContext *device_hwctx = device_ctx->hwctx;
+    AVCUDADeviceContext *device_hwctx = (AVCUDADeviceContext *)device_ctx->hwctx;
     CUcontext dummy, cuda_ctx = device_hwctx->cuda_ctx;
     CUdeviceptr mapped_frame = 0;
     int ret = 0, eret = 0;
@@ -469,7 +470,7 @@ static int cuvid_output_frame(AVCodecContext *avctx, AVFrame *frame)
             return ret;
     }
 
-    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent(cuda_ctx));
+    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent((void**)cuda_ctx));
     if (ret < 0)
         return ret;
 
@@ -506,13 +507,20 @@ static int cuvid_output_frame(AVCodecContext *avctx, AVFrame *frame)
 
             for (i = 0; i < 2; i++) {
                 CUDA_MEMCPY2D cpy = {
-                    .srcMemoryType = CU_MEMORYTYPE_DEVICE,
-                    .dstMemoryType = CU_MEMORYTYPE_DEVICE,
-                    .srcDevice     = mapped_frame,
-                    .dstDevice     = (CUdeviceptr)frame->data[i],
-                    .srcPitch      = pitch,
-                    .dstPitch      = frame->linesize[i],
+                    .srcXInBytes   = 0,
                     .srcY          = offset,
+                    .srcMemoryType = CU_MEMORYTYPE_DEVICE,
+                    .srcHost       = NULL,
+                    .srcDevice     = mapped_frame,
+                    .srcArray      = NULL,
+                    .srcPitch      = pitch,
+                    .dstXInBytes   = 0,
+                    .dstY          = 0,
+                    .dstMemoryType = CU_MEMORYTYPE_DEVICE,
+                    .dstHost       = NULL,
+                    .dstDevice     = (CUdeviceptr)frame->data[i],
+                    .dstArray      = NULL,
+                    .dstPitch      = frame->linesize[i],
                     .WidthInBytes  = FFMIN(pitch, frame->linesize[i]),
                     .Height        = avctx->height >> (i ? 1 : 0),
                 };
@@ -615,8 +623,8 @@ error:
 
 static int cuvid_decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPacket *avpkt)
 {
-    CuvidContext *ctx = avctx->priv_data;
-    AVFrame *frame = data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
+    AVFrame *frame = (AVFrame *)data;
     int ret = 0;
 
     av_log(avctx, AV_LOG_TRACE, "cuvid_decode_frame\n");
@@ -646,7 +654,7 @@ static int cuvid_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
 
 static av_cold int cuvid_decode_end(AVCodecContext *avctx)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
 
     av_fifo_freep(&ctx->frame_queue);
 
@@ -674,7 +682,7 @@ static int cuvid_test_dummy_decoder(AVCodecContext *avctx,
                                     int probed_width,
                                     int probed_height)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     CUVIDDECODECREATEINFO cuinfo;
     CUvideodecoder cudec = 0;
     int ret = 0;
@@ -715,7 +723,7 @@ static int cuvid_test_dummy_decoder(AVCodecContext *avctx,
 
 static av_cold int cuvid_decode_init(AVCodecContext *avctx)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     AVCUDADeviceContext *device_hwctx;
     AVHWDeviceContext *device_ctx;
     AVHWFramesContext *hwframe_ctx;
@@ -741,7 +749,7 @@ static av_cold int cuvid_decode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "ff_get_format failed: %d\n", ret);
         return ret;
     }
-    avctx->pix_fmt = ret;
+    avctx->pix_fmt = (AVPixelFormat)ret;
 
     if (ctx->resize_expr && sscanf(ctx->resize_expr, "%dx%d",
                                    &ctx->resize.width, &ctx->resize.height) != 2) {
@@ -800,7 +808,7 @@ static av_cold int cuvid_decode_init(AVCodecContext *avctx)
     }
 
     device_ctx = hwframe_ctx->device_ctx;
-    device_hwctx = device_ctx->hwctx;
+    device_hwctx = (AVCUDADeviceContext*)device_ctx->hwctx;
 
     cuda_ctx = device_hwctx->cuda_ctx;
     ctx->cudl = device_hwctx->internal->cuda_dl;
@@ -898,7 +906,7 @@ static av_cold int cuvid_decode_init(AVCodecContext *avctx)
     ctx->cuparseinfo.pfnDecodePicture = cuvid_handle_picture_decode;
     ctx->cuparseinfo.pfnDisplayPicture = cuvid_handle_picture_display;
 
-    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent(cuda_ctx));
+    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent((CUcontext*)cuda_ctx));
     if (ret < 0)
         goto error;
 
@@ -939,14 +947,14 @@ error:
 
 static void cuvid_flush(AVCodecContext *avctx)
 {
-    CuvidContext *ctx = avctx->priv_data;
+    CuvidContext *ctx = (CuvidContext *)avctx->priv_data;
     AVHWDeviceContext *device_ctx = (AVHWDeviceContext*)ctx->hwdevice->data;
-    AVCUDADeviceContext *device_hwctx = device_ctx->hwctx;
+    AVCUDADeviceContext *device_hwctx = (AVCUDADeviceContext *)device_ctx->hwctx;
     CUcontext dummy, cuda_ctx = device_hwctx->cuda_ctx;
     CUVIDSOURCEDATAPACKET seq_pkt = { 0 };
     int ret;
 
-    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent(cuda_ctx));
+    ret = CHECK_CU(ctx->cudl->cuCtxPushCurrent((CUcontext*)cuda_ctx));
     if (ret < 0)
         goto error;
 
@@ -1026,20 +1034,35 @@ static const AVOption options[] = {
         .long_name      = NULL_IF_CONFIG_SMALL("Nvidia CUVID " #X " decoder"), \
         .type           = AVMEDIA_TYPE_VIDEO, \
         .id             = AV_CODEC_ID_##X, \
-        .priv_data_size = sizeof(CuvidContext), \
-        .priv_class     = &x##_cuvid_class, \
-        .init           = cuvid_decode_init, \
-        .close          = cuvid_decode_end, \
-        .decode         = cuvid_decode_frame, \
-        .send_packet    = cuvid_decode_packet, \
-        .receive_frame  = cuvid_output_frame, \
-        .flush          = cuvid_flush, \
         .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_AVOID_PROBING, \
+        .supported_framerates = NULL, \
         .pix_fmts       = (const enum AVPixelFormat[]){ AV_PIX_FMT_CUDA, \
                                                         AV_PIX_FMT_NV12, \
                                                         AV_PIX_FMT_P010, \
                                                         AV_PIX_FMT_P016, \
                                                         AV_PIX_FMT_NONE }, \
+        .supported_samplerates = NULL, \
+        .sample_fmts    = NULL, \
+        .channel_layouts = NULL, \
+        .max_lowres     = 0, \
+        .priv_class     = &x##_cuvid_class, \
+        .profiles       = NULL, \
+        .priv_data_size = sizeof(CuvidContext), \
+        .next           = NULL, \
+        .init_thread_copy = NULL, \
+        .update_thread_context = NULL, \
+        .defaults       = NULL, \
+        .init_static_data    = NULL, \
+        .init           = cuvid_decode_init, \
+        .encode_sub     = NULL, \
+        .encode2        = NULL, \
+        .decode         = cuvid_decode_frame, \
+        .close          = cuvid_decode_end, \
+        .send_frame     = NULL, \
+        .send_packet    = cuvid_decode_packet, \
+        .receive_frame  = cuvid_output_frame, \
+        .receive_packet = NULL, \
+        .flush          = cuvid_flush, \
     };
 
 #if CONFIG_HEVC_CUVID_DECODER
@@ -1077,3 +1100,4 @@ DEFINE_CUVID_CODEC(h264, H264)
 #if CONFIG_VC1_CUVID_DECODER
 //DEFINE_CUVID_CODEC(vc1, VC1)
 #endif
+}
