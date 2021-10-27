@@ -11,11 +11,10 @@
 
 // #include "ff/ff.h"
  //#include "ff/mediacapture.h"
-extern "C"
-{
+
 //#include <libavutil/timestamp.h>
 #include "avformat.h"
-}
+
 
 //#include "micro.h"
 #include "codec.h"

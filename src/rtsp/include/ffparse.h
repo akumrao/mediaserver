@@ -23,8 +23,6 @@
 // #include "http/HttpsClient.h"
 
 
-
-extern "C" {
  
 // #include <libavutil/avassert.h>    
  #include <avcodec.h>
@@ -35,7 +33,6 @@ extern "C" {
 // #else
 // #include <libavresample/avresample.h>
 // #endif
-}
 
  
 
