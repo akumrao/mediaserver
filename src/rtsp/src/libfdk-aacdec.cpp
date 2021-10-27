@@ -18,7 +18,6 @@
  */
 
 #include <fdk-aac/aacdecoder_lib.h>
-extern "C"  {
 #include "channel_layout.h"
 #include "common.h"
 #include "opt.h"
@@ -402,4 +401,3 @@ AVCodec ff_libfdk_aac_decoder = {
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE |
                       FF_CODEC_CAP_INIT_CLEANUP,
 };
-}

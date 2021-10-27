@@ -41,9 +41,9 @@
 #endif
 #endif
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /* __cplusplus */
+//#if defined(__cplusplus)
+//extern "C" {
+//#endif /* __cplusplus */
 
 #if defined(__CYGWIN__)
 typedef unsigned int tcu_ulong;
@@ -808,8 +808,8 @@ typedef CUresult CUDAAPI tcuvidCtxUnlock(CUvideoctxlock lck, unsigned int reserv
 
 /** @} */  /* End VIDEO_DECODER */
 
-#if defined(__cplusplus)
-}
-#endif /* __cplusplus */
+//#if defined(__cplusplus)
+//}
+//#endif /* __cplusplus */
 
 #endif // __CUDA_VIDEO_H__

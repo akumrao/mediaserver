@@ -34,7 +34,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-extern "C"  {
+
 #include "avassert.h"
 #include "internal_codec.h"
 #include "intreadwrite.h"
@@ -143,5 +143,4 @@ uint32_t av_get_random_seed(void)
     if (read_random(&seed, "/dev/random")  == sizeof(seed))
         return seed;
     return get_generic_seed();
-}
 }

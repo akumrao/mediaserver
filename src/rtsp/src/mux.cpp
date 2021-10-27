@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avformat.h"
 #include "avio_internal.h"
 #include "internal_avformat.h"
@@ -1453,5 +1453,4 @@ int av_write_uncoded_frame_query(AVFormatContext *s, int stream_index)
         return AVERROR(ENOSYS);
     return s->oformat->write_uncoded_frame(s, stream_index, NULL,
                                            AV_WRITE_UNCODED_FRAME_QUERY);
-}
 }

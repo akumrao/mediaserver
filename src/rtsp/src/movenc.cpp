@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-extern "C"  {
 #include "movenc.h"
 #include "avformat.h"
 #include "avio_internal.h"
@@ -6652,4 +6651,4 @@ AVOutputFormat ff_f4v_muxer = {
     .check_bitstream   = mov_check_bitstream,
 };
 #endif
-}
+

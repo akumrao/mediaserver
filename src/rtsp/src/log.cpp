@@ -24,7 +24,7 @@
  * logging functions
  */
 
-extern "C" {
+
 #include "config.h"
 
 #if HAVE_UNISTD_H
@@ -477,5 +477,4 @@ void avpriv_report_missing_feature(void *avc, const char *msg, ...)
     va_start(argument_list, msg);
     missing_feature_sample(0, avc, msg, argument_list);
     va_end(argument_list);
-}
 }

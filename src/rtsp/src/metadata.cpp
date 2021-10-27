@@ -17,7 +17,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avformat.h"
 #include "metadata.h"
 #include "dict.h"
@@ -67,5 +67,4 @@ void ff_metadata_conv_ctx(AVFormatContext *ctx, const AVMetadataConv *d_conv,
         ff_metadata_conv(&ctx->chapters[i]->metadata, d_conv, s_conv);
     for (i=0; i<ctx->nb_programs; i++)
         ff_metadata_conv(&ctx->programs[i]->metadata, d_conv, s_conv);
-}
 }

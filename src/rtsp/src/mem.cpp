@@ -1,6 +1,6 @@
 
 /*Mixing C and C++ Code in the Same Program
-extern "C" {
+
     void f();              // C linkage
     extern "C++" {
         void g();          // C++ linkage
@@ -33,7 +33,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-extern "C"  {
+
 #include "mem.h"
 #include "common.h"
 #include "mem_internal.h"
@@ -456,6 +456,4 @@ void av_fast_malloc(void *ptr, unsigned int *size, size_t min_size)
 void av_fast_mallocz(void *ptr, unsigned int *size, size_t min_size)
 {
     ff_fast_malloc(ptr, size, min_size, 1);
-}
-
 }

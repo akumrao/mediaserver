@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "attributes.h"
 #include "avcodec.h"
 #include "dct.h"
@@ -49,4 +49,3 @@ extern "C"  {
 //    if (ARCH_X86)
 //        ff_fdctdsp_init_x86(c, avctx, high_bit_depth);
 //}
-}

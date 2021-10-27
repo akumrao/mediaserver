@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include "intreadwrite.h"
 #include "avformat.h"
 #include "avio.h"
@@ -207,5 +207,4 @@ const uint8_t *ff_avc_mp4_find_startcode(const uint8_t *start,
         return NULL;
 
     return start + res;
-}
 }

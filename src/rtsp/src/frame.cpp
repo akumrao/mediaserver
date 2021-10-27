@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C"  {
-    #include "frame.h"
+#include "frame.h"
 #include "channel_layout.h"
 #include "avassert.h"
 #include "buffer.h"
@@ -783,5 +782,4 @@ const char *av_frame_side_data_name(enum AVFrameSideDataType type)
     case AV_FRAME_DATA_GOP_TIMECODE:                return "GOP timecode";
     }
     return NULL;
-}
 }

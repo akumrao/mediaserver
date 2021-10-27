@@ -21,7 +21,6 @@
  * misc image utilities
  */
 
-extern "C"  {
 #include "avassert.h"
 #include "common.h"
 #include "imgutils.h"
@@ -493,5 +492,4 @@ int av_image_copy_to_buffer(uint8_t *dst, int dst_size,
     }
 
     return size;
-}
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
+
 #include "bprint.h"
 #include "crc.h"
 #include "dict.h"
@@ -1388,5 +1388,4 @@ int ffio_close_null_buf(AVIOContext *s)
     av_free(d);
     av_free(s);
     return size;
-}
 }

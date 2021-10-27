@@ -19,7 +19,6 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
-extern "C"  {
 #include "config.h"
 #include "avassert.h"
 #include "attributes.h"
@@ -262,4 +261,3 @@ static void shrink88(uint8_t *dst, int dst_wrap,
 //    if (ARCH_MIPS)
 //        ff_mpegvideoencdsp_init_mips(c, avctx);
 //}
-}

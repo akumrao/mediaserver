@@ -26,7 +26,7 @@
  * (Inverse) Discrete Cosine Transforms. These are also known as the
  * type II and type III DCTs respectively.
  */
-extern "C" {
+
 #include <math.h>
 #include <string.h>
 
@@ -223,4 +223,3 @@ static void dct32_func(DCTContext *ctx, FFTSample *data)
 //    ff_rdft_end(&s->rdft);
 //    av_freep(&s->csc2);
 //}
-}

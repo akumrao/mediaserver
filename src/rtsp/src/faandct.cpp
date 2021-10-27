@@ -24,7 +24,7 @@
  *     Floating point AAN DCT
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
-extern "C"  {
+
 #include "faandct.h"
 #include "internal_codec.h"
 #include "libm.h"
@@ -212,5 +212,4 @@ void ff_faandct248(int16_t *data)
         data[8*3 + i] = lrintf(postscale[8*2 + i] * (tmp13 + tmp12));
         data[8*7 + i] = lrintf(postscale[8*6 + i] * (tmp13 - tmp12));
     }
-}
 }

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
+
 #include "attributes.h"
 #include "mem.h"
 #include "avfft.h"
@@ -146,4 +146,3 @@ void av_fft_calc(FFTContext *s, FFTComplex *z)
 //}
 //
 //#endif /* CONFIG_DCT */
-}

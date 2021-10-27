@@ -21,14 +21,12 @@
 #include "tools.h"
 #include "fmp4.h"
 
-extern "C"
-{
+
 //#include <libavutil/timestamp.h>
 #include <avformat.h>
 #include <avcodec.h>
 #include <channel_layout.h>    
 #include <mathematics.h>
-}
 
 #define MAX_CHUNK_SIZE 10240*8
 // maximum send buffer 262144  =1024 *256

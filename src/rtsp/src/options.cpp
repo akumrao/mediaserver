@@ -23,7 +23,7 @@
  * @file
  * Options definition for AVCodecContext.
  */
-extern "C"  {
+
 #include "avcodec.h"
 #include "internal_codec.h"
 #include "avassert.h"
@@ -519,4 +519,3 @@ int main(void)
     return 0;
 }
 #endif
-}

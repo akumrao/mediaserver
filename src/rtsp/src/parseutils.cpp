@@ -23,7 +23,6 @@
 
 #include <time.h>
 
-extern "C"  {
 #include "avstring.h"
 #include "avutil.h"
 #include "common.h"
@@ -769,5 +768,4 @@ int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info
         p++;
     }
     return 0;
-}
 }

@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "config.h"
 
 #include "buffer.h"
@@ -727,5 +727,4 @@ fail:
         av_buffer_unref(&dst->internal->source_frames);
     av_buffer_unref(&dst_ref);
     return ret;
-}
 }

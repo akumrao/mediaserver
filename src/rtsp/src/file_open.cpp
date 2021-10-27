@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "config.h"
 #include "internal_codec.h"
 #include "mem.h"
@@ -183,5 +183,4 @@ FILE *av_fopen_utf8(const char *path, const char *mode)
     if (fd == -1)
         return NULL;
     return fdopen(fd, mode);
-}
 }

@@ -23,7 +23,7 @@
  * audio channel layout utility functions
  */
 
-extern "C" {
+
 #include <stdint.h>
 
 #include "avstring.h"
@@ -296,5 +296,4 @@ int av_get_standard_channel_layout(unsigned index, uint64_t *layout,
     if (layout) *layout = channel_layout_map[index].layout;
     if (name)   *name   = channel_layout_map[index].name;
     return 0;
-}
 }

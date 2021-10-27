@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include "intmath.h"
 
 /* undef these to get the function prototypes from common.h */
@@ -81,11 +81,4 @@ int av_log2(unsigned v)
 int av_log2_16bit(unsigned v)
 {
     return ff_log2_16bit(v);
-}
-
-
-
-
-
-
 }

@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include <pthread.h>
-extern "C"  {
 #include "frame_thread_encoder.h"
 
 #include "fifo.h"
@@ -300,5 +299,4 @@ int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt, const AVF
     pthread_mutex_unlock(&c->finished_task_mutex);
 
     return task.return_code;
-}
 }

@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "movenccenc.h"
 #include "intreadwrite.h"
 #include "avio_internal.h"
@@ -413,5 +413,4 @@ int ff_mov_cenc_init(MOVMuxCencContext* ctx, uint8_t* encryption_key,
 void ff_mov_cenc_free(MOVMuxCencContext* ctx)
 {
     av_aes_ctr_free(ctx->aes_ctr);
-}
 }

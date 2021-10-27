@@ -23,7 +23,6 @@
  * @file
  * tables taken directly from the AC-3 spec.
  */
-extern "C" {
 
 #include "channel_layout.h"
 #include "mem.h"
@@ -315,4 +314,3 @@ const uint16_t ff_eac3_default_chmap[8] = {
     AC3_CHMAP_L |               AC3_CHMAP_R | AC3_CHMAP_L_SUR |                  AC3_CHMAP_R_SUR,
     AC3_CHMAP_L | AC3_CHMAP_C | AC3_CHMAP_R | AC3_CHMAP_L_SUR |                  AC3_CHMAP_R_SUR
 };
-}

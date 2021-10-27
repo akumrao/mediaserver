@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avcodec.h"
 #include "bsf.h"
 #include "config.h"
@@ -205,4 +205,3 @@ const AVBitStreamFilter ff_mpeg4_unpack_bframes_bsf = {
     .filter         = mpeg4_unpack_bframes_filter,
     .close          = mpeg4_unpack_bframes_close    
 };
-}

@@ -24,7 +24,7 @@
  * AVOptions
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
-extern "C" {
+
 #include "avutil.h"
 #include "avassert.h"
 #include "avstring.h"
@@ -2023,4 +2023,4 @@ int av_opt_serialize(void *obj, int opt_flags, int flags, char **buffer,
     av_bprint_finalize(&bprint, buffer);
     return 0;
 }
-}
+

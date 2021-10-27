@@ -23,7 +23,6 @@
  */
 
 #include <pthread.h>
-extern "C"  {
 #include "config.h"
 
 #include "avcodec.h"
@@ -313,5 +312,4 @@ void ff_reset_entries(AVCodecContext *avctx)
 {
     SliceThreadContext *p = (SliceThreadContext *)avctx->internal->thread_ctx;
     memset(p->entries, 0, p->entries_count * sizeof(int));
-}
 }

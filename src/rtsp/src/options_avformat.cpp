@@ -17,7 +17,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avformat.h"
 #include "avio_internal.h"
 #include "internal_avformat.h"
@@ -259,5 +259,4 @@ enum AVDurationEstimationMethod av_fmt_ctx_get_duration_estimation_method(const 
 const AVClass *avformat_get_class(void)
 {
     return &av_format_context_class;
-}
 }

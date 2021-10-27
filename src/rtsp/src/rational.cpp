@@ -24,7 +24,7 @@
  * rational numbers
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
-extern "C"  {
+
 #include "avassert.h"
 #include <limits.h>
 
@@ -181,5 +181,4 @@ uint32_t av_q2intfloat(AVRational q) {
     av_assert1(n >= (1<<23));
 
     return sign<<31 | (150-shift)<<23 | (n - (1<<23));
-}
 }

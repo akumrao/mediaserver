@@ -18,7 +18,6 @@
  */
 
 #include <fdk-aac/aacenc_lib.h>
-extern "C"  {
 #include "channel_layout.h"
 #include "common.h"
 #include "opt.h"
@@ -437,4 +436,3 @@ AVCodec ff_libfdk_aac_encoder = {
     .close                 = aac_encode_close,
     
 };
-}

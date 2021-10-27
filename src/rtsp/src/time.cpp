@@ -17,7 +17,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "config.h"
 
 #include <stddef.h>
@@ -95,5 +95,4 @@ int av_usleep(unsigned usec)
 #else
     return AVERROR(ENOSYS);
 #endif
-}
 }
