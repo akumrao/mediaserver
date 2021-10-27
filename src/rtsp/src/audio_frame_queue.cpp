@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include "attributes.h"
 #include "common.h"
 #include "audio_frame_queue.h"
@@ -110,5 +110,4 @@ void ff_af_queue_remove(AudioFrameQueue *afq, int nb_samples, int64_t *pts,
     }
     if (duration)
         *duration = ff_samples_to_time_base(afq->avctx, removed_samples);
-}
 }

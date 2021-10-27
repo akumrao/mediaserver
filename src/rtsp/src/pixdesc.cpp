@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
-extern "C"  {
+
 #include "avassert.h"
 #include "avstring.h"
 #include "common.h"
@@ -2930,5 +2930,4 @@ const char *av_chroma_location_name(enum AVChromaLocation location)
 {
     return (unsigned) location < AVCHROMA_LOC_NB ?
         chroma_location_names[location] : NULL;
-}
 }

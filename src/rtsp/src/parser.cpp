@@ -23,7 +23,6 @@
 #include <stdint.h>
 #include <string.h>
 
-extern "C"  {
 #include "avassert.h"
 #include "atomic.h"
 #include "internal_codec.h"
@@ -345,5 +344,4 @@ int ff_mpeg4video_split(AVCodecContext *avctx, const uint8_t *buf, int buf_size)
     }
 
     return 0;
-}
 }

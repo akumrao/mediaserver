@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include "channel_layout.h"
 #include "parser.h"
 #include "ac3_parser.h"
@@ -202,4 +202,3 @@ AVCodecParser ff_ac3_parser = {
     .parser_parse   = ff_aac_ac3_parse,
     .parser_close   = ff_parse_close,
 };
-}

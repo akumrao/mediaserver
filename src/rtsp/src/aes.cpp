@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
 #include "common.h"
 #include "aes.h"
 #include "aes_internal.h"
@@ -265,5 +264,4 @@ int av_aes_init(AVAES *a, const uint8_t *key, int key_bits, int decrypt)
     }
 
     return 0;
-}
 }

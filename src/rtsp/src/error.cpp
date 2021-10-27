@@ -15,7 +15,6 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
 #undef _GNU_SOURCE
 #define _XOPEN_SOURCE 600 /* XSI-compliant version of strerror_r */
 #include "avutil.h"
@@ -126,5 +125,4 @@ int av_strerror(int errnum, char *errbuf, size_t errbuf_size)
     }
 
     return ret;
-}
 }

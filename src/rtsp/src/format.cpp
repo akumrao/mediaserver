@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C"  {
 #include "atomic.h"
 #include "avstring.h"
 #include "bprint.h"
@@ -372,5 +371,4 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 {
     int ret = av_probe_input_buffer2(pb, fmt, filename, logctx, offset, max_probe_size);
     return ret < 0 ? ret : 0;
-}
 }

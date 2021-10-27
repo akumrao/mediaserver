@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avassert.h"
 #include "common.h"
 #include "fifo.h"
@@ -237,5 +237,4 @@ void av_fifo_drain(AVFifoBuffer *f, int size)
     if (f->rptr >= f->end)
         f->rptr -= f->end - f->buffer;
     f->rndx += size;
-}
 }

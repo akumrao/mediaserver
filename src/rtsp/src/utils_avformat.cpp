@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 #include "config.h"
-extern "C"  {
+
 #include "avassert.h"
 #include "avstring.h"
 #include "dict.h"
@@ -5475,5 +5475,4 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #else
     return st->internal->avctx->time_base;
 #endif
-}
 }

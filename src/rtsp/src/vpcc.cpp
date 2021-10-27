@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "pixdesc.h"
 #include "pixfmt.h"
 #include "vpcc.h"
@@ -145,5 +145,4 @@ int ff_isom_write_vpcc(AVFormatContext *s, AVIOContext *pb,
     // vp9 does not have codec initialization data.
     avio_wb16(pb, 0);
     return 0;
-}
 }

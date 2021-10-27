@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
+
 #include <string.h>
 
 #include "log.h"
@@ -552,5 +552,4 @@ end:
 int av_bsf_get_null_filter(AVBSFContext **bsf)
 {
     return av_bsf_alloc(&ff_list_bsf, bsf);
-}
 }

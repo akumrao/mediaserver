@@ -25,7 +25,7 @@
  *
  * see http://joe.hotchkiss.com/programming/eval/eval.html
  */
-extern "C"  {
+
 #include <float.h>
 #include "attributes.h"
 #include "avutil.h"
@@ -775,5 +775,4 @@ int av_expr_parse_and_eval(double *d, const char *s,
     *d = av_expr_eval(e, const_values, opaque);
     av_expr_free(e);
     return isnan(*d) ? AVERROR(EINVAL) : 0;
-}
 }

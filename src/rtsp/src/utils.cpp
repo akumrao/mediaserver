@@ -24,7 +24,7 @@
  * @file
  * utils.
  */
-extern "C"  {
+
 #include "config.h"
 #include "atomic.h"
 #include "attributes.h"
@@ -4407,6 +4407,3 @@ int64_t ff_guess_coded_bitrate(AVCodecContext *avctx)
 
     return bitrate;
 }
-}
-
-

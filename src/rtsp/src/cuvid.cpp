@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C"  {
+
 #include "compat/cuda/dynlink_loader.h"
 
 #include "buffer.h"
@@ -1100,4 +1100,3 @@ DEFINE_CUVID_CODEC(h264, H264)
 #if CONFIG_VC1_CUVID_DECODER
 //DEFINE_CUVID_CODEC(vc1, VC1)
 #endif
-}

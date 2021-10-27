@@ -24,8 +24,6 @@
 
 #include <atomic>
 
-
-extern "C"  {
 #include "frame.h"    
 #include "config.h"
 #include <stdint.h>
@@ -1024,5 +1022,4 @@ void ff_thread_release_buffer(AVCodecContext *avctx, ThreadFrame *f)
 
 fail:
     pthread_mutex_unlock(&fctx->buffer_mutex);
-}
 }

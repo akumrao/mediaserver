@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C"  {
 /* needed by inet_aton() */
 #define _DEFAULT_SOURCE
 #define _SVID_SOURCE
@@ -334,4 +333,3 @@ int ff_poll(struct pollfd *fds, nfds_t numfds, int timeout)
 #endif /* !HAVE_POLL_H */
 
 #endif /* CONFIG_NETWORK */
-}

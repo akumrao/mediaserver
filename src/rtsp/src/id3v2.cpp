@@ -26,7 +26,6 @@
  * http://id3.org/Developer_Information
  */
 
-extern "C"  {
 #include "config.h"
 
 #if CONFIG_ZLIB
@@ -1167,5 +1166,4 @@ int ff_id3v2_parse_apic(AVFormatContext *s, ID3v2ExtraMeta **extra_meta)
     }
 
     return 0;
-}
 }

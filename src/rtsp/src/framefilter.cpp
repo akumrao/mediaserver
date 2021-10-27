@@ -3,7 +3,6 @@
 #include "base/logger.h"
 #include "fmp4.h"
 
-extern "C"  {
 #include "tools.h"
 
 
@@ -356,6 +355,5 @@ void FifoFrameFilter::go(Frame *frame)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-}
 }
 }

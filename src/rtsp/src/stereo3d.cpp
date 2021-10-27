@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 #include <string.h>
-extern "C" {
+
 #include "common.h"
 #include "mem.h"
 
@@ -74,5 +74,4 @@ int av_stereo3d_from_name(const char *name)
     }
 
     return -1;
-}
 }

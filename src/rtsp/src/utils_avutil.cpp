@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "config.h"
 #include "avutil.h"
 #include "avassert.h"
@@ -160,5 +160,4 @@ void av_assert0_fpu(void) {
     );
     av_assert0((state[4] & 3) == 3);
 #endif
-}
 }

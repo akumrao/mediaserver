@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
 #include "channel_layout.h"
 #include "common.h"
 #include "parser.h"
@@ -109,5 +108,4 @@ get_next:
     }
 
     return i;
-}
 }

@@ -21,7 +21,6 @@
 
 #include <string.h>
 
-extern "C"  {
 #include "intreadwrite.h"
 #include "mem.h"
 
@@ -295,6 +294,5 @@ extern const AVBitStreamFilter ff_h264_mp4toannexb_bsf = {
     
 };
 
-}
 
 

@@ -19,7 +19,7 @@
 using namespace std;
 #include <atomic>
 
-extern "C" {
+
 #include <stdint.h>
 #include <string.h>
 
@@ -361,5 +361,4 @@ AVBufferRef *av_buffer_pool_get(AVBufferPool *pool)
         atomic_fetch_add_explicit<uint>(&pool->refcount, 1, memory_order_relaxed);
 
     return ret;
-}
 }

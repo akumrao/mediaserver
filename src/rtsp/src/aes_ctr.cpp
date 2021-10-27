@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
 #include "common.h"
 #include "aes_ctr.h"
 #include "aes.h"
@@ -127,5 +126,4 @@ void av_aes_ctr_crypt(struct AVAESCTR *a, uint8_t *dst, const uint8_t *src, int 
             *dst++ = *src++ ^ *encrypted_counter_pos++;
         }
     }
-}
 }

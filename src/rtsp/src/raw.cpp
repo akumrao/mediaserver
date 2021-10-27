@@ -23,7 +23,7 @@
  * @file
  * Raw Video Codec
  */
-extern "C"  {
+
 #include "avcodec.h"
 #include "raw.h"
 #include "common.h"
@@ -320,4 +320,3 @@ const PixelFormatTag avpriv_pix_fmt_bps_mov[] = {
     { AV_PIX_FMT_PAL8,     33 },
     { AV_PIX_FMT_NONE,      0 },
 };
-}

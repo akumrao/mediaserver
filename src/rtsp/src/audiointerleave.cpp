@@ -19,7 +19,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include "fifo.h"
 #include "mathematics.h"
 #include "avformat.h"
@@ -143,5 +143,4 @@ int ff_audio_rechunk_interleave(AVFormatContext *s, AVPacket *out, AVPacket *pkt
     }
 
     return get_packet(s, out, NULL, flush);
-}
 }

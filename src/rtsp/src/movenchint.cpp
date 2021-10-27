@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "movenc.h"
 #include "intreadwrite.h"
 #include "internal_avformat.h"
@@ -474,5 +474,4 @@ void ff_mov_close_hinting(MOVTrack *track)
         ffio_free_dyn_buf(&rtp_ctx->pb);
     }
     avformat_free_context(rtp_ctx);
-}
 }

@@ -15,7 +15,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 
 #include "config.h"
 
@@ -118,5 +118,4 @@ const AVClass *ff_bsf_child_class_next(const AVClass *prev)
         if (bitstream_filters[i]->priv_class)
             return bitstream_filters[i]->priv_class;
     return NULL;
-}
 }

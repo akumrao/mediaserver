@@ -37,9 +37,9 @@
 
 #include "compat/cuda/dynlink_cuviddec.h"
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /* __cplusplus */
+//#if defined(__cplusplus)
+//extern "C" {
+//#endif /* __cplusplus */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -307,9 +307,9 @@ typedef CUresult CUDAAPI tcuvidDestroyVideoParser(CUvideoparser obj);
 /** @} */  /* END VIDEO_PARSER */
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__cplusplus)
-}
-#endif /* __cplusplus */
+//#if defined(__cplusplus)
+//}
+//#endif /* __cplusplus */
 
 #endif // __NVCUVID_H__
 

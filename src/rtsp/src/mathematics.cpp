@@ -22,7 +22,7 @@
  * @file
  * miscellaneous math routines and tables
  */
-extern "C"  {
+
 #include <stdint.h>
 #include <limits.h>
 
@@ -209,5 +209,4 @@ int64_t av_add_stable(AVRational ts_tb, int64_t ts, AVRational inc_tb, int64_t i
         int64_t old_ts = av_rescale_q(old, inc_tb, ts_tb);
         return av_rescale_q(old + 1, inc_tb, ts_tb) + (ts - old_ts);
     }
-}
 }

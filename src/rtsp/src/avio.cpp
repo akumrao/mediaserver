@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
+
 #include "avstring.h"
 #include "dict.h"
 #include "opt.h"
@@ -669,5 +669,4 @@ int ff_check_interrupt(AVIOInterruptCB *cb)
     if (cb && cb->callback && (ret = cb->callback(cb->opaque)))
         return ret;
     return 0;
-}
 }

@@ -28,7 +28,7 @@
  * bitstream api.
  */
 
-extern "C" {
+
 #include "avassert.h"
 #include "qsort.h"
 #include "avcodec.h"
@@ -356,5 +356,4 @@ int ff_init_vlc_sparse(VLC *vlc_arg, int nb_bits, int nb_codes,
 void ff_free_vlc(VLC *vlc)
 {
     av_freep(&vlc->table);
-}
 }

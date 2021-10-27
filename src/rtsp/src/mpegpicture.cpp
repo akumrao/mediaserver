@@ -19,7 +19,6 @@
  */
 
 #include <stdint.h>
-extern "C"  {
 #include "avassert.h"
 #include "common.h"
 
@@ -472,5 +471,4 @@ void ff_free_picture_tables(Picture *pic)
         av_buffer_unref(&pic->motion_val_buf[i]);
         av_buffer_unref(&pic->ref_index_buf[i]);
     }
-}
 }

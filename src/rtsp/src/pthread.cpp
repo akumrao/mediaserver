@@ -28,7 +28,7 @@
  * Multithreading support functions
  * @see doc/multithreading.txt
  */
-extern "C"  {
+
 #include "avcodec.h"
 #include "internal_codec.h"
 #include "pthread_internal.h"
@@ -85,5 +85,4 @@ void ff_thread_free(AVCodecContext *avctx)
         ff_frame_thread_free(avctx, avctx->thread_count);
     else
         ff_slice_thread_free(avctx);
-}
 }

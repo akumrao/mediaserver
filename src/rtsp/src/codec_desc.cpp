@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C" {
+
 #include <string.h>
 
 #include "common.h"
@@ -3119,6 +3119,4 @@ enum AVMediaType avcodec_get_type(enum AVCodecID codec_id)
 {
     const AVCodecDescriptor *desc = avcodec_descriptor_get(codec_id);
     return desc ? desc->type : AVMEDIA_TYPE_UNKNOWN;
-}
-
 }

@@ -25,7 +25,6 @@
 
 #include <stdint.h>
 
-extern "C"  {
 #include "channel_layout.h"
 #include "avcodec.h"
 #include "mov_chan.h"
@@ -596,5 +595,4 @@ int ff_mov_read_chan(AVFormatContext *s, AVIOContext *pb, AVStream *st,
     avio_skip(pb, size - 12);
 
     return 0;
-}
 }

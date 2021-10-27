@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
+
 #include "config.h"
 
 #include "bswap.h"
@@ -378,5 +378,4 @@ uint32_t av_crc(const AVCRC *ctx, uint32_t crc,
         crc = ctx[((uint8_t) crc) ^ *buffer++] ^ (crc >> 8);
 
     return crc;
-}
 }

@@ -24,7 +24,7 @@
  * @file
  * Rate control for video encoders.
  */
-extern "C"  {
+
 #include "attributes.h"
 #include "internal_codec.h"
 
@@ -1025,5 +1025,4 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         rcc->last_mb_var_sum    = pic->mb_var_sum;
     }
     return q;
-}
 }

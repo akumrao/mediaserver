@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include <string.h>
 
-extern "C"  {
 #include "attributes.h"
 #include "avassert.h"
 #include "mem.h"
@@ -145,5 +144,4 @@ av_cold void ff_rl_init_vlc(RLTable *rl, unsigned static_size)
             rl->rl_vlc[q][i].run   = run;
         }
     }
-}
 }

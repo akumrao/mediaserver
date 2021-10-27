@@ -20,7 +20,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-extern "C"  {
+
 #include "avformat.h"
 #include "internal_avformat.h"
 #include "isom.h"
@@ -648,5 +648,4 @@ const struct AVCodecTag *avformat_get_mov_video_tags(void)
 const struct AVCodecTag *avformat_get_mov_audio_tags(void)
 {
     return ff_codec_movaudio_tags;
-}
 }

@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
     
-extern "C"  {
 #include "common.h"
 #include "samplefmt.h"
 
@@ -257,5 +256,4 @@ int av_samples_set_silence(uint8_t **audio_data, int offset, int nb_samples,
         memset(audio_data[i] + offset, fill_char, data_size);
 
     return 0;
-}
 }

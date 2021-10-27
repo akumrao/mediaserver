@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C"  {
 #include "dict.h"
 #include "log.h"
 #include "mathematics.h"
@@ -363,5 +362,4 @@ const ff_asf_guid *ff_get_codec_guid(enum AVCodecID id, const AVCodecGuid *av_gu
             return &(av_guid[i].guid);
     }
     return NULL;
-}
 }

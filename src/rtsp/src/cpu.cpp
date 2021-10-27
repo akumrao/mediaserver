@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <atomic>
 
-extern "C" {
+
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "config.h"
@@ -304,5 +304,4 @@ int av_cpu_count(void)
     }
 
     return nb_cpus;
-}
 }
