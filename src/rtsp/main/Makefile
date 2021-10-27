@@ -1,5 +1,5 @@
 LIVE555_ROOT = /workspace/live
-CXX     = g++
+CXX     = clang++
 TARGET=mediaserver # define the name of the executable
 SOURCES    = $(wildcard *.cpp ../src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../json/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp  ../../http_parser/*.cpp )
 
