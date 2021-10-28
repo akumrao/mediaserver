@@ -44,7 +44,7 @@ int av_reduce(int *dst_num, int *dst_den,
         den = FFABS(den) / gcd;
     }
     if (num <= max && den <= max) {
-        a1 = (AVRational) { num, den };
+        a1 = (AVRational) { (int)num, (int)den };
         den = 0;
     }
 

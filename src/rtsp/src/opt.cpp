@@ -1223,7 +1223,7 @@ static void opt_list(void *obj, void *av_log_obj, const char *unit,
                     av_log(av_log_obj, AV_LOG_INFO, "%s", def_flags);
                     av_freep(&def_flags);
                 } else {
-                    av_log(av_log_obj, AV_LOG_INFO, "%"PRIX64, opt->default_val.i64);
+                    av_log(av_log_obj, AV_LOG_INFO, "%" PRIX64, opt->default_val.i64);
                 }
                 break;
             }

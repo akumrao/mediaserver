@@ -461,14 +461,14 @@ static void read_geobtag(AVFormatContext *s, AVIOContext *pb, int taglen,
 
     geob_data = (ID3v2ExtraMetaGEOB*)av_mallocz(sizeof(ID3v2ExtraMetaGEOB));
     if (!geob_data) {
-        av_log(s, AV_LOG_ERROR, "Failed to alloc %"SIZE_SPECIFIER" bytes\n",
+        av_log(s, AV_LOG_ERROR, "Failed to alloc %" SIZE_SPECIFIER " bytes\n",
                sizeof(ID3v2ExtraMetaGEOB));
         return;
     }
 
     new_extra = (ID3v2ExtraMeta*)av_mallocz(sizeof(ID3v2ExtraMeta));
     if (!new_extra) {
-        av_log(s, AV_LOG_ERROR, "Failed to alloc %"SIZE_SPECIFIER" bytes\n",
+        av_log(s, AV_LOG_ERROR, "Failed to alloc %" SIZE_SPECIFIER " bytes\n",
                sizeof(ID3v2ExtraMeta));
         goto fail;
     }

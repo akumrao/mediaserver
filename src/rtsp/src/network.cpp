@@ -74,7 +74,7 @@ int ff_network_init(void)
 int ff_network_wait_fd(int fd, int write)
 {
     int ev = write ? POLLOUT : POLLIN;
-    struct pollfd p = { .fd = fd, .events = ev, .revents = 0 };
+    struct pollfd p = { .fd = fd, .events = (short int)ev, .revents = 0 };
     int ret;
     ret = poll(&p, 1, POLLING_TIME);
     return ret < 0 ? ff_neterrno() : p.revents & (ev | POLLERR | POLLHUP) ? 0 : AVERROR(EAGAIN);

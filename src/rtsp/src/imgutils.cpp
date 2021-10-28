@@ -271,7 +271,7 @@ int av_image_check_size2(unsigned int w, unsigned int h, int64_t max_pixels, enu
     if (max_pixels < INT64_MAX) {
         if (w*(int64_t)h > max_pixels) {
             av_log(&imgutils, AV_LOG_ERROR,
-                    "Picture size %ux%u exceeds specified max pixel count %"PRId64", see the documentation if you wish to increase it\n",
+                    "Picture size %ux%u exceeds specified max pixel count %" PRId64", see the documentation if you wish to increase it\n",
                     w, h, max_pixels);
             return AVERROR(EINVAL);
         }

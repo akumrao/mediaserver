@@ -39,7 +39,7 @@ void ff_write_pass1_stats(MpegEncContext *s)
 {
     snprintf(s->avctx->stats_out, 256,
              "in:%d out:%d type:%d q:%d itex:%d ptex:%d mv:%d misc:%d "
-             "fcode:%d bcode:%d mc-var:%"PRId64" var:%"PRId64" icount:%d skipcount:%d hbits:%d;\n",
+             "fcode:%d bcode:%d mc-var:%" PRId64 " var:%" PRId64 " icount:%d skipcount:%d hbits:%d;\n",
              s->current_picture_ptr->f->display_picture_number,
              s->current_picture_ptr->f->coded_picture_number,
              s->pict_type,
@@ -445,7 +445,7 @@ static int init_pass2(MpegEncContext *s)
     }
     av_assert0(toobig <= 40);
     av_log(s->avctx, AV_LOG_DEBUG,
-           "[lavc rc] requested bitrate: %"PRId64" bps  expected bitrate: %"PRId64" bps\n",
+           "[lavc rc] requested bitrate: %" PRId64 " bps  expected bitrate: %" PRId64 " bps\n",
            s->bit_rate,
            (int64_t)(expected_bits / ((double)all_available_bits / s->bit_rate)));
     av_log(s->avctx, AV_LOG_DEBUG,
@@ -939,7 +939,7 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
             av_assert0(pict_type == rce->new_pict_type);
 
         q = rce->new_qscale / br_compensation;
-        ff_dlog(s, "%f %f %f last:%d var:%"PRId64" type:%d//\n", q, rce->new_qscale,
+        ff_dlog(s, "%f %f %f last:%d var:%" PRId64 " type:%d//\n", q, rce->new_qscale,
                 br_compensation, s->frame_bits, var, pict_type);
     } else {
         rce->pict_type     =
@@ -1000,7 +1000,7 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
     if (s->avctx->debug & FF_DEBUG_RC) {
         av_log(s->avctx, AV_LOG_DEBUG,
                "%c qp:%d<%2.1f<%d %d want:%d total:%d comp:%f st_q:%2.2f "
-               "size:%d var:%"PRId64"/%"PRId64" br:%"PRId64" fps:%d\n",
+               "size:%d var:%" PRId64 "/%" PRId64 " br:%" PRId64 " fps:%d\n",
                av_get_picture_type_char((AVPictureType)pict_type),
                qmin, q, qmax, picture_number,
                (int)wanted_bits / 1000, (int)s->total_bits / 1000,

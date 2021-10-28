@@ -237,7 +237,7 @@ int ffio_limit(AVIOContext *s, int size)
         }
 
         if (s->maxsize>= 0 && remaining+1 < size) {
-            av_log(NULL, remaining ? AV_LOG_ERROR : AV_LOG_DEBUG, "Truncating packet of size %d to %"PRId64"\n", size, remaining+1);
+            av_log(NULL, remaining ? AV_LOG_ERROR : AV_LOG_DEBUG, "Truncating packet of size %d to %" PRId64 "\n", size, remaining+1);
             size = remaining+1;
         }
     }
@@ -1157,7 +1157,7 @@ static void update_initial_durations(AVFormatContext *s, AVStream *st,
             }
         }
         if (pktl && pktl->pkt.dts != st->first_dts) {
-            av_log(s, AV_LOG_DEBUG, "first_dts %s not matching first dts %s (pts %s, duration %"PRId64") in the queue\n",
+            av_log(s, AV_LOG_DEBUG, "first_dts %s not matching first dts %s (pts %s, duration %" PRId64 ") in the queue\n",
                    av_ts2str(st->first_dts), av_ts2str(pktl->pkt.dts), av_ts2str(pktl->pkt.pts), pktl->pkt.duration);
             return;
         }
@@ -1211,7 +1211,7 @@ static void compute_pkt_fields(AVFormatContext *s, AVStream *st,
                 st->dts_ordered++;
             } else {
                 av_log(s, st->dts_misordered ? AV_LOG_DEBUG : AV_LOG_WARNING,
-                       "DTS %"PRIi64" < %"PRIi64" out of order\n",
+                       "DTS %" PRIi64 " < %" PRIi64 " out of order\n",
                        pkt->dts,
                        st->last_dts_for_order_check);
                 st->dts_misordered++;

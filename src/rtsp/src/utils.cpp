@@ -1590,7 +1590,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         }
         if (   (avctx->codec_type == AVMEDIA_TYPE_VIDEO || avctx->codec_type == AVMEDIA_TYPE_AUDIO)
             && avctx->bit_rate>0 && avctx->bit_rate<1000) {
-            av_log(avctx, AV_LOG_WARNING, "Bitrate %"PRId64" is extremely low, maybe you mean %"PRId64"k\n", (int64_t)avctx->bit_rate, (int64_t)avctx->bit_rate);
+            av_log(avctx, AV_LOG_WARNING, "Bitrate %" PRId64 " is extremely low, maybe you mean %" PRId64 "k\n", (int64_t)avctx->bit_rate, (int64_t)avctx->bit_rate);
         }
 
         if (!avctx->rc_initial_buffer_occupancy)
@@ -1766,7 +1766,7 @@ int ff_alloc_packet2(AVCodecContext *avctx, AVPacket *avpkt, int64_t size, int64
         return AVERROR(EINVAL);
     }
     if (size < 0 || size > INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE) {
-        av_log(avctx, AV_LOG_ERROR, "Invalid minimum required packet size %"PRId64" (max allowed is %d)\n",
+        av_log(avctx, AV_LOG_ERROR, "Invalid minimum required packet size %" PRId64 " (max allowed is %d)\n",
                size, INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
         return AVERROR(EINVAL);
     }
@@ -1784,7 +1784,7 @@ int ff_alloc_packet2(AVCodecContext *avctx, AVPacket *avpkt, int64_t size, int64
         AVBufferRef *buf = avpkt->buf;
 
         if (avpkt->size < size) {
-            av_log(avctx, AV_LOG_ERROR, "User packet is too small (%d < %"PRId64")\n", avpkt->size, size);
+            av_log(avctx, AV_LOG_ERROR, "User packet is too small (%d < %" PRId64 ")\n", avpkt->size, size);
             return AVERROR(EINVAL);
         }
 
@@ -1795,7 +1795,7 @@ int ff_alloc_packet2(AVCodecContext *avctx, AVPacket *avpkt, int64_t size, int64
     } else {
         int ret = av_new_packet(avpkt, size);
         if (ret < 0)
-            av_log(avctx, AV_LOG_ERROR, "Failed to allocate packet of size %"PRId64"\n", size);
+            av_log(avctx, AV_LOG_ERROR, "Failed to allocate packet of size %" PRId64 "\n", size);
         return ret;
     }
 }
@@ -3440,10 +3440,10 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
    bitrate = get_bit_rate(enc);
    if (bitrate != 0) {
        snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                ", %"PRId64" kb/s", bitrate / 1000);
+                ", %" PRId64 " kb/s", bitrate / 1000);
    } else if (enc->rc_max_rate > 0) {
        snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                ", max. %"PRId64" kb/s", (int64_t)enc->rc_max_rate / 1000);
+                ", max. %" PRId64 " kb/s", (int64_t)enc->rc_max_rate / 1000);
    }
 }
 

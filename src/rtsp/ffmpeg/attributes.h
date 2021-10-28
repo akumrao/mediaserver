@@ -72,11 +72,11 @@
 #    define av_pure
 #endif
 
-#if AV_GCC_VERSION_AT_LEAST(2,6) && !defined(av_const)
-#    define av_const __attribute__((const))
-#else
+//#if AV_GCC_VERSION_AT_LEAST(2,6) && !defined(av_const)
+//#    define av_const __attribute__((const))
+//#else
 #    define av_const
-#endif
+//#endif
 
 #if AV_GCC_VERSION_AT_LEAST(4,3)
 #    define av_cold __attribute__((cold))

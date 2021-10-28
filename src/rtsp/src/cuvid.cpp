@@ -508,7 +508,7 @@ static int cuvid_output_frame(AVCodecContext *avctx, AVFrame *frame)
             for (i = 0; i < 2; i++) {
                 CUDA_MEMCPY2D cpy = {
                     .srcXInBytes   = 0,
-                    .srcY          = offset,
+                    .srcY          = (size_t)offset,
                     .srcMemoryType = CU_MEMORYTYPE_DEVICE,
                     .srcHost       = NULL,
                     .srcDevice     = mapped_frame,
@@ -520,9 +520,9 @@ static int cuvid_output_frame(AVCodecContext *avctx, AVFrame *frame)
                     .dstHost       = NULL,
                     .dstDevice     = (CUdeviceptr)frame->data[i],
                     .dstArray      = NULL,
-                    .dstPitch      = frame->linesize[i],
+                    .dstPitch      = (size_t)frame->linesize[i],
                     .WidthInBytes  = FFMIN(pitch, frame->linesize[i]),
-                    .Height        = avctx->height >> (i ? 1 : 0),
+                    .Height        = (size_t)avctx->height >> (i ? 1 : 0),
                 };
 
                 ret = CHECK_CU(ctx->cudl->cuMemcpy2D(&cpy));
