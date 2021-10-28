@@ -59,12 +59,12 @@ int av_reduce(int *dst_num, int *dst_den,
             if (a1.den) x = FFMIN(x, (max - a0.den) / a1.den);
 
             if (den * (2 * x * a1.den + a0.den) > num * a1.den)
-                a1 = (AVRational) { x * a1.num + a0.num, x * a1.den + a0.den };
+                a1 = (AVRational) { (int)(x * a1.num + a0.num), int(x * a1.den + a0.den) };
             break;
         }
 
         a0  = a1;
-        a1  = (AVRational) { a2n, a2d };
+        a1  = (AVRational) { (int)a2n, (int)a2d };
         num = den;
         den = next_den;
     }

@@ -157,7 +157,7 @@ static int write_number(void *obj, const AVOption *o, void *dst, double num, int
     case AV_OPT_TYPE_RATIONAL:
     case AV_OPT_TYPE_VIDEO_RATE:
         if ((int) num == num)
-            *(AVRational *)dst = (AVRational) { num *intnum, den };
+            *(AVRational *)dst = (AVRational) { (int)(num *intnum), (int)den };
         else
             *(AVRational *)dst = av_d2q(num * intnum / den, 1 << 24);
         break;
@@ -728,7 +728,7 @@ static void format_duration(char *buf, size_t size, int64_t d)
     else if (d == INT64_MIN)
         snprintf(buf, size, "INT64_MIN");
     else if (d > (int64_t)3600*1000000)
-        snprintf(buf, size, "%"PRId64":%02d:%02d.%06d", d / 3600000000,
+        snprintf(buf, size, "%" PRId64":%02d:%02d.%06d", d / 3600000000,
                  (int)((d / 60000000) % 60),
                  (int)((d / 1000000) % 60),
                  (int)(d % 1000000));
@@ -773,10 +773,10 @@ int av_opt_get(void *obj, const char *name, int search_flags, uint8_t **out_val)
         ret = snprintf((char*)buf, sizeof(buf), "%d", *(int *)dst);
         break;
     case AV_OPT_TYPE_INT64:
-        ret = snprintf((char*)buf, sizeof(buf), "%"PRId64, *(int64_t *)dst);
+        ret = snprintf((char*)buf, sizeof(buf), "%" PRId64, *(int64_t *)dst);
         break;
     case AV_OPT_TYPE_UINT64:
-        ret = snprintf((char*)buf, sizeof(buf), "%"PRIu64, *(uint64_t *)dst);
+        ret = snprintf((char*)buf, sizeof(buf), "%" PRIu64, *(uint64_t *)dst);
         break;
     case AV_OPT_TYPE_FLOAT:
         ret = snprintf((char*)buf, sizeof(buf), "%f", *(float *)dst);
@@ -840,7 +840,7 @@ int av_opt_get(void *obj, const char *name, int search_flags, uint8_t **out_val)
         break;
     case AV_OPT_TYPE_CHANNEL_LAYOUT:
         i64 = *(int64_t *)dst;
-        ret = snprintf((char*)buf, sizeof(buf), "0x%"PRIx64, i64);
+        ret = snprintf((char*)buf, sizeof(buf), "0x%" PRIx64, i64);
         break;
     default:
         return AVERROR(EINVAL);
@@ -906,7 +906,7 @@ int av_opt_get_q(void *obj, const char *name, int search_flags, AVRational *out_
         return ret;
 
     if (num == 1.0 && (int)intnum == intnum)
-        *out_val = (AVRational){intnum, den};
+        *out_val = (AVRational){(int)intnum, (int)den};
     else
         *out_val = av_d2q(num*intnum/den, 1<<24);
     return 0;
@@ -940,7 +940,7 @@ int av_opt_get_video_rate(void *obj, const char *name, int search_flags, AVRatio
         return ret;
 
     if (num == 1.0 && (int)intnum == intnum)
-        *out_val = (AVRational) { intnum, den };
+        *out_val = (AVRational) { (int)intnum, (int)den };
     else
         *out_val = av_d2q(num * intnum / den, 1 << 24);
     return 0;
@@ -1264,7 +1264,7 @@ static void opt_list(void *obj, void *av_log_obj, const char *unit,
                 av_log(av_log_obj, AV_LOG_INFO, "\"%s\"", opt->default_val.str);
                 break;
             case AV_OPT_TYPE_CHANNEL_LAYOUT:
-                av_log(av_log_obj, AV_LOG_INFO, "0x%"PRIx64, opt->default_val.i64);
+                av_log(av_log_obj, AV_LOG_INFO, "0x%" PRIx64, opt->default_val.i64);
                 break;
             }
             av_log(av_log_obj, AV_LOG_INFO, ")");

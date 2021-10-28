@@ -256,9 +256,9 @@ static double get_qscale(MpegEncContext *s, RateControlEntry *rce,
         rce->i_count / mb_num,
         rce->mc_mb_var_sum / mb_num,
         rce->mb_var_sum / mb_num,
-        rce->pict_type == AV_PICTURE_TYPE_I,
-        rce->pict_type == AV_PICTURE_TYPE_P,
-        rce->pict_type == AV_PICTURE_TYPE_B,
+        double(rce->pict_type == AV_PICTURE_TYPE_I),
+        double(rce->pict_type == AV_PICTURE_TYPE_P),
+        double(rce->pict_type == AV_PICTURE_TYPE_B),
         rcc->qscale_sum[pict_type] / (double)rcc->frame_count[pict_type],
         a->qcompress,
         rcc->i_cplx_sum[AV_PICTURE_TYPE_I] / (double)rcc->frame_count[AV_PICTURE_TYPE_I],
@@ -587,7 +587,7 @@ av_cold int ff_rate_control_init(MpegEncContext *s)
             av_assert0(picture_number < rcc->num_entries);
             rce = &rcc->entry[picture_number];
 
-            e += sscanf(p, " in:%*d out:%*d type:%d q:%f itex:%d ptex:%d mv:%d misc:%d fcode:%d bcode:%d mc-var:%"SCNd64" var:%"SCNd64" icount:%d skipcount:%d hbits:%d",
+            e += sscanf(p, " in:%*d out:%*d type:%d q:%f itex:%d ptex:%d mv:%d misc:%d fcode:%d bcode:%d mc-var:%" SCNd64" var:%" SCNd64" icount:%d skipcount:%d hbits:%d",
                         &rce->pict_type, &rce->qscale, &rce->i_tex_bits, &rce->p_tex_bits,
                         &rce->mv_bits, &rce->misc_bits,
                         &rce->f_code, &rce->b_code,

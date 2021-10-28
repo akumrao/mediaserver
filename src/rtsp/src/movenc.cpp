@@ -1733,7 +1733,7 @@ static int mov_write_gama_tag(AVIOContext *pb, MOVTrack *track, double gamma)
 
     if (gamma > 1e-6) {
         gama = (uint32_t)lrint((double)(1<<16) * gamma);
-        av_log(pb, AV_LOG_DEBUG, "writing gama value %"PRId32"\n", gama);
+        av_log(pb, AV_LOG_DEBUG, "writing gama value %" PRId32"\n", gama);
 
         av_assert0(track->mode == MODE_MOV);
         avio_wb32(pb, 12);
@@ -2031,7 +2031,7 @@ static int mov_write_source_reference_tag(AVIOContext *pb, MOVTrack *track, cons
     int64_t pos = avio_tell(pb);
 
     if (str_size >= UINT16_MAX){
-        av_log(NULL, AV_LOG_ERROR, "reel_name length %"PRIu64" is too large\n", str_size);
+        av_log(NULL, AV_LOG_ERROR, "reel_name length %" PRIu64" is too large\n", str_size);
         avio_wb16(pb, 0);
         return AVERROR(EINVAL);
     }
@@ -2706,7 +2706,7 @@ static int mov_write_edts_tag(AVIOContext *pb, MOVMuxContext *mov,
         if (start_dts != track->cluster[0].dts || start_ct != track->cluster[0].cts) {
 
             av_log(mov->fc, AV_LOG_DEBUG,
-                   "EDTS using dts:%"PRId64" cts:%d instead of dts:%"PRId64" cts:%"PRId64" tid:%d\n",
+                   "EDTS using dts:%" PRId64" cts:%d instead of dts:%" PRId64" cts:%" PRId64" tid:%d\n",
                    track->cluster[0].dts, track->cluster[0].cts,
                    start_dts, start_ct, track->track_id);
             start_dts = track->cluster[0].dts;
@@ -3786,7 +3786,7 @@ static int mov_write_isml_manifest(AVIOContext *pb, MOVMuxContext *mov, AVFormat
             manifest_bit_rate = props->max_bitrate;
         }
 
-        avio_printf(pb, "<%s systemBitrate=\"%"PRId64"\">\n", type,
+        avio_printf(pb, "<%s systemBitrate=\"%" PRId64"\">\n", type,
                     manifest_bit_rate);
         param_write_int(pb, "systemBitrate", manifest_bit_rate);
         param_write_int(pb, "trackID", track_id);
@@ -4897,7 +4897,7 @@ static int check_pkt(AVFormatContext *s, AVPacket *pkt)
 
     duration = pkt->dts - ref;
     if (pkt->dts < ref || duration >= INT_MAX) {
-        av_log(s, AV_LOG_ERROR, "Application provided duration: %"PRId64" / timestamp: %"PRId64" is out of range for mov/mp4 format\n",
+        av_log(s, AV_LOG_ERROR, "Application provided duration: %" PRId64" / timestamp: %" PRId64" is out of range for mov/mp4 format\n",
             duration, pkt->dts
         );
 
@@ -4906,7 +4906,7 @@ static int check_pkt(AVFormatContext *s, AVPacket *pkt)
     }
 
     if (pkt->duration < 0 || pkt->duration > INT_MAX) {
-        av_log(s, AV_LOG_ERROR, "Application provided duration: %"PRId64" is invalid\n", pkt->duration);
+        av_log(s, AV_LOG_ERROR, "Application provided duration: %" PRId64" is invalid\n", pkt->duration);
         return AVERROR(EINVAL);
     }
     return 0;
@@ -5137,7 +5137,7 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
             trk->frag_discont = 0;
         } else if (pkt->dts && mov->moov_written)
             av_log(s, AV_LOG_WARNING,
-                   "Track %d starts with a nonzero dts %"PRId64", while the moov "
+                   "Track %d starts with a nonzero dts %" PRId64", while the moov "
                    "already has been written. Set the delay_moov flag to handle "
                    "this case.\n",
                    pkt->stream_index, pkt->dts);
@@ -6338,7 +6338,7 @@ static int mov_write_trailer(AVFormatContext *s)
                 return res;
             size = mov->reserved_moov_size - (avio_tell(pb) - mov->reserved_header_pos);
             if (size < 8){
-                av_log(s, AV_LOG_ERROR, "reserved_moov_size is too small, needed %"PRId64" additional\n", 8-size);
+                av_log(s, AV_LOG_ERROR, "reserved_moov_size is too small, needed %" PRId64" additional\n", 8-size);
                 return AVERROR(EINVAL);
             }
             avio_wb32(pb, size);

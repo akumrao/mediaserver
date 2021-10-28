@@ -1260,13 +1260,13 @@ static void compute_pkt_fields(AVFormatContext *s, AVStream *st,
      * presentation_delayed is not set correctly. */
     if (delay == 1 && pkt->dts == pkt->pts &&
         pkt->dts != AV_NOPTS_VALUE && presentation_delayed) {
-        av_log(s, AV_LOG_DEBUG, "invalid dts/pts combination %"PRIi64"\n", pkt->dts);
+        av_log(s, AV_LOG_DEBUG, "invalid dts/pts combination %" PRIi64"\n", pkt->dts);
         if (    strcmp(s->iformat->name, "mov,mp4,m4a,3gp,3g2,mj2")
              && strcmp(s->iformat->name, "flv")) // otherwise we discard correct timestamps for vc1-wmapro.ism
             pkt->dts = AV_NOPTS_VALUE;
     }
 
-    duration = av_mul_q((AVRational) {pkt->duration, 1}, st->time_base);
+    duration = av_mul_q((AVRational) {(int)pkt->duration, 1}, st->time_base);
     if (pkt->duration == 0) {
         ff_compute_frame_duration(s, &num, &den, st, pc, pkt);
         if (den && num) {
@@ -1300,7 +1300,7 @@ static void compute_pkt_fields(AVFormatContext *s, AVStream *st,
 
     if (s->debug & FF_FDEBUG_TS)
         av_log(s, AV_LOG_TRACE,
-            "IN delayed:%d pts:%s, dts:%s cur_dts:%s st:%d pc:%p duration:%"PRId64" delay:%d onein_oneout:%d\n",
+            "IN delayed:%d pts:%s, dts:%s cur_dts:%s st:%d pc:%p duration:%" PRId64" delay:%d onein_oneout:%d\n",
             presentation_delayed, av_ts2str(pkt->pts), av_ts2str(pkt->dts), av_ts2str(st->cur_dts),
             pkt->stream_index, pc, pkt->duration, delay, onein_oneout);
 
@@ -1583,7 +1583,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         }
         if (s->debug & FF_FDEBUG_TS)
             av_log(s, AV_LOG_DEBUG,
-                   "ff_read_packet stream=%d, pts=%s, dts=%s, size=%d, duration=%"PRId64", flags=%d\n",
+                   "ff_read_packet stream=%d, pts=%s, dts=%s, size=%d, duration=%" PRId64", flags=%d\n",
                    cur_pkt.stream_index,
                    av_ts2str(cur_pkt.pts),
                    av_ts2str(cur_pkt.dts),
@@ -1710,7 +1710,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     if (s->debug & FF_FDEBUG_TS)
         av_log(s, AV_LOG_DEBUG,
                "read_frame_internal stream=%d, pts=%s, dts=%s, "
-               "size=%d, duration=%"PRId64", flags=%d\n",
+               "size=%d, duration=%" PRId64", flags=%d\n",
                pkt->stream_index,
                av_ts2str(pkt->pts),
                av_ts2str(pkt->dts),
@@ -2088,7 +2088,7 @@ void ff_configure_buffers_for_index(AVFormatContext *s, int64_t time_tolerance)
     pos_delta *= 2;
     /* XXX This could be adjusted depending on protocol*/
     if (s->pb->buffer_size < pos_delta && pos_delta < (1<<24)) {
-        av_log(s, AV_LOG_VERBOSE, "Reconfiguring buffers to size %"PRId64"\n", pos_delta);
+        av_log(s, AV_LOG_VERBOSE, "Reconfiguring buffers to size %" PRId64"\n", pos_delta);
         ffio_set_buf_size(s->pb, pos_delta);
         s->pb->short_seek_threshold = FFMAX(s->pb->short_seek_threshold, pos_delta/2);
     }
@@ -2146,7 +2146,7 @@ int ff_seek_frame_binary(AVFormatContext *s, int stream_index,
         if (e->timestamp <= target_ts || e->pos == e->min_distance) {
             pos_min = e->pos;
             ts_min  = e->timestamp;
-            av_log(s, AV_LOG_TRACE, "using cached pos_min=0x%"PRIx64" dts_min=%s\n",
+            av_log(s, AV_LOG_TRACE, "using cached pos_min=0x%" PRIx64" dts_min=%s\n",
                     pos_min, av_ts2str(ts_min));
         } else {
             av_assert1(index == 0);
@@ -2161,7 +2161,7 @@ int ff_seek_frame_binary(AVFormatContext *s, int stream_index,
             pos_max   = e->pos;
             ts_max    = e->timestamp;
             pos_limit = pos_max - e->min_distance;
-            av_log(s, AV_LOG_TRACE, "using cached pos_max=0x%"PRIx64" pos_limit=0x%"PRIx64
+            av_log(s, AV_LOG_TRACE, "using cached pos_max=0x%" PRIx64" pos_limit=0x%" PRIx64
                     " dts_max=%s\n", pos_max, pos_limit, av_ts2str(ts_max));
         }
     }
@@ -2261,7 +2261,7 @@ int64_t ff_gen_search(AVFormatContext *s, int stream_index, int64_t target_ts,
     no_change = 0;
     while (pos_min < pos_limit) {
         av_log(s, AV_LOG_TRACE,
-                "pos_min=0x%"PRIx64" pos_max=0x%"PRIx64" dts_min=%s dts_max=%s\n",
+                "pos_min=0x%" PRIx64" pos_max=0x%" PRIx64" dts_min=%s dts_max=%s\n",
                 pos_min, pos_max, av_ts2str(ts_min), av_ts2str(ts_max));
         av_assert0(pos_limit <= pos_max);
 
@@ -2291,8 +2291,8 @@ int64_t ff_gen_search(AVFormatContext *s, int stream_index, int64_t target_ts,
             no_change++;
         else
             no_change = 0;
-        av_log(s, AV_LOG_TRACE, "%"PRId64" %"PRId64" %"PRId64" / %s %s %s"
-                " target:%s limit:%"PRId64" start:%"PRId64" noc:%d\n",
+        av_log(s, AV_LOG_TRACE, "%" PRId64" %" PRId64" %" PRId64" / %s %s %s"
+                " target:%s limit:%" PRId64" start:%" PRId64" noc:%d\n",
                 pos_min, pos, pos_max,
                 av_ts2str(ts_min), av_ts2str(ts), av_ts2str(ts_max), av_ts2str(target_ts),
                 pos_limit, start_pos, no_change);
@@ -2318,7 +2318,7 @@ int64_t ff_gen_search(AVFormatContext *s, int stream_index, int64_t target_ts,
     ts_min  = ff_read_timestamp(s, stream_index, &pos_min, INT64_MAX, read_timestamp);
     pos_min++;
     ts_max = ff_read_timestamp(s, stream_index, &pos_min, INT64_MAX, read_timestamp);
-    av_log(s, AV_LOG_TRACE, "pos=0x%"PRIx64" %s<=%s<=%s\n",
+    av_log(s, AV_LOG_TRACE, "pos=0x%" PRIx64" %s<=%s<=%s\n",
             pos, av_ts2str(ts_min), av_ts2str(target_ts), av_ts2str(ts_max));
 #endif
     *ts_ret = ts;
@@ -2649,7 +2649,7 @@ static void update_stream_timings(AVFormatContext *ic)
         /* compute the bitrate */
         double bitrate = (double) filesize * 8.0 * AV_TIME_BASE /
                          (double) ic->duration;
-        if (bitrate >= 0 && bitrate <= INT64_MAX)
+        if (bitrate >= 0 && bitrate <= (double)INT64_MAX)
             ic->bit_rate = bitrate;
     }
 }
@@ -2896,7 +2896,7 @@ static void estimate_timings(AVFormatContext *ic, int64_t old_offset)
                    (double) st->duration   * av_q2d(st->time_base));
         }
         av_log(ic, AV_LOG_TRACE,
-                "format: start_time: %0.3f duration: %0.3f bitrate=%"PRId64" kb/s\n",
+                "format: start_time: %0.3f duration: %0.3f bitrate=%" PRId64" kb/s\n",
                 (double) ic->start_time / AV_TIME_BASE,
                 (double) ic->duration   / AV_TIME_BASE,
                 (int64_t)ic->bit_rate / 1000);
@@ -3418,7 +3418,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     }
 
     if (ic->pb)
-        av_log(ic, AV_LOG_DEBUG, "Before avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d nb_streams:%d\n",
+        av_log(ic, AV_LOG_DEBUG, "Before avformat_find_stream_info() pos: %" PRId64" bytes read:%" PRId64" seeks:%d nb_streams:%d\n",
                avio_tell(ic->pb), ic->pb->bytes_read, ic->pb->seek_count, ic->nb_streams);
 
     for (i = 0; i < ic->nb_streams; i++) {
@@ -3570,7 +3570,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         if (read_size >= probesize) {
             ret = count;
             av_log(ic, AV_LOG_DEBUG,
-                   "Probe buffer size limit of %"PRId64" bytes reached\n", probesize);
+                   "Probe buffer size limit of %" PRId64" bytes reached\n", probesize);
             for (i = 0; i < ic->nb_streams; i++)
                 if (!ic->streams[i]->r_frame_rate.num &&
                     ic->streams[i]->info->duration_count <= 1 &&
@@ -3621,7 +3621,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 st->info->fps_last_dts >= pkt->dts) {
                 av_log(ic, AV_LOG_DEBUG,
                        "Non-increasing DTS in stream %d: packet %d with DTS "
-                       "%"PRId64", packet %d with DTS %"PRId64"\n",
+                       "%" PRId64", packet %d with DTS %" PRId64"\n",
                        st->index, st->info->fps_last_dts_idx,
                        st->info->fps_last_dts, st->codec_info_nb_frames,
                        pkt->dts);
@@ -3638,7 +3638,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 (st->info->fps_last_dts_idx - st->info->fps_first_dts_idx)) {
                 av_log(ic, AV_LOG_WARNING,
                        "DTS discontinuity in stream %d: packet %d with DTS "
-                       "%"PRId64", packet %d with DTS %"PRId64"\n",
+                       "%" PRId64", packet %d with DTS %" PRId64"\n",
                        st->index, st->info->fps_last_dts_idx,
                        st->info->fps_last_dts, st->codec_info_nb_frames,
                        pkt->dts);
@@ -3674,7 +3674,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
             else                                                     limit = max_stream_analyze_duration;
 
             if (t >= limit) {
-                av_log(ic, AV_LOG_VERBOSE, "max_analyze_duration %"PRId64" reached at %"PRId64" microseconds st:%d\n",
+                av_log(ic, AV_LOG_VERBOSE, "max_analyze_duration %" PRId64" reached at %" PRId64" microseconds st:%d\n",
                        limit,
                        t, pkt->stream_index);
                 if (ic->flags & AVFMT_FLAG_NOBUFFER)
@@ -3960,7 +3960,7 @@ find_stream_info_err:
         av_freep(&ic->streams[i]->info);
     }
     if (ic->pb)
-        av_log(ic, AV_LOG_DEBUG, "After avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d frames:%d\n",
+        av_log(ic, AV_LOG_DEBUG, "After avformat_find_stream_info() pos: %" PRId64" bytes read:%" PRId64" seeks:%d frames:%d\n",
                avio_tell(ic->pb), ic->pb->bytes_read, ic->pb->seek_count, count);
     return ret;
 }
@@ -4374,7 +4374,7 @@ AVChapter *avpriv_new_chapter(AVFormatContext *s, int id, AVRational time_base,
     int i;
 
     if (end != AV_NOPTS_VALUE && start > end) {
-        av_log(s, AV_LOG_ERROR, "Chapter end time %"PRId64" before start %"PRId64"\n", end, start);
+        av_log(s, AV_LOG_ERROR, "Chapter end time %" PRId64" before start %" PRId64"\n", end, start);
         return NULL;
     }
 

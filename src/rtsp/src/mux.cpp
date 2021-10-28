@@ -1134,7 +1134,7 @@ int ff_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out,
         if (delta_dts > s->max_interleave_delta) {
             av_log(s, AV_LOG_DEBUG,
                    "Delay between the first packet and last packet in the "
-                   "muxing queue is %"PRId64" > %"PRId64": forcing output\n",
+                   "muxing queue is %" PRId64" > %" PRId64": forcing output\n",
                    delta_dts, s->max_interleave_delta);
             flush = 1;
         }
