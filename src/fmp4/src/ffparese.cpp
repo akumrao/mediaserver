@@ -889,7 +889,7 @@ namespace base {
                        basicvideoframe.mstimestamp = startTime +  videoframecount;
                        basicvideoframe.fillPars();
 
-                       if (resetParser && basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+                       if ( basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                        {
                            fragmp4_muxer->sendMeta();
                            resetParser = false;

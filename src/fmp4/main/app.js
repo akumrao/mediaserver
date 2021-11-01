@@ -73,12 +73,12 @@ var hiddenInput = undefined;
             // *** INTERNAL PARAMETERS ***
             // set mimetype and codec
             var mimeType = "video/mp4";
-            var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
+            //var codecs = "avc1.4D401F"; // https://wiki.whatwg.org/wiki/Video_type_parameters
             // if your stream has audio, remember to include it in these definitions.. otherwise your mse goes sour
 
             // var codecs = "mp4a.40.2";
 
-           // var codecs = "avc1.4D401F,mp4a.40.2";
+            var codecs = "avc1.4D401F,mp4a.40.2";
             var codecPars = mimeType+';codecs="'+codecs+'"';
             
             //var stream_started = false; // is the source_buffer updateend callback active nor not
@@ -176,19 +176,19 @@ var hiddenInput = undefined;
                 else if ((name=="moov") && (pass==1)) {
                     pass = pass + 1;
                     
-                    // var arv="";
-                    // for( var i = 0 ; i < arr.byteLength; ++i)
-                    // {
-                    //      if (memview[i] == 0x67) 
-                    //      {
-                    //             var x = 0;
-                    //      }
+                    var arv="";
+                    for( var i = 0 ; i < arr.byteLength; ++i)
+                    {
+                         if (memview[i] == 0x67) 
+                         {
+                                var x = 0;
+                         }
 
-                    //     arv += memview[i].toString(16);
-                    // }
+                        arv += memview[i].toString(16);
+                    }
 
 
-                    // console.log("got moov" + arv);
+                    console.log("got moov" + arv);
 
                     if (memview[491] == 0x67) 
                     { 

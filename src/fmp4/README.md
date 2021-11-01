@@ -303,3 +303,59 @@ The reason for the typical use of 90,000 as a common base of calculation is that
 3
 27 Mhz / 300 = 90000 Hz. – Gyan Jun 26 '19 at 14:13
 Show 7 more comments
+
+
+
+http://underpop.online.fr/f/ffmpeg/help/mov_002c-mp4_002c-ismv.htm.gz
+Writing a fragmented file has the advantage that the file is decodable even if the writing is interrupted (while a normal MOV/MP4 is undecodable if it is not properly finished), and it requires less memory when writing very long files (since writing normal MOV/MP4 files stores info about every single packet in memory until the file is closed). The downside is that it is less compatible with other applications.
+
+
+'-moov_size bytes'
+Reserves space for the moov atom at the beginning of the file instead of placing the moov atom at the end. If the space reserved is insufficient, muxing will fail.
+
+'-movflags frag_keyframe'
+Start a new fragment at each video keyframe.
+
+'-frag_duration duration'
+Create fragments that are duration microseconds long.
+
+'-frag_size size'
+Create fragments that contain up to size bytes of payload data.
+
+'-movflags frag_custom'
+Allow the caller to manually choose when to cut fragments, by calling av_write_frame(ctx, NULL) to write a fragment with the packets written so far. (This is only useful with other applications integrating libavformat, not from ffmpeg.)
+
+'-min_frag_duration duration'
+Don't create fragments that are shorter than duration microseconds long.
+
+If more than one condition is specified, fragments are cut when one of the specified conditions is fulfilled. The exception to this is -min_frag_duration, which has to be fulfilled for any of the other conditions to apply.
+
+Additionally, the way the output file is written can be adjusted through a few other options:
+
+'-movflags empty_moov'
+Write an initial moov atom directly at the start of the file, without describing any samples in it. Generally, an mdat/moov pair is written at the start of the file, as a normal MOV/MP4 file, containing only a short portion of the file. With this option set, there is no initial mdat atom, and the moov atom only describes the tracks but has a zero duration.
+
+This option is implicitly set when writing ismv (Smooth Streaming) files.
+
+'-movflags separate_moof'
+Write a separate moof (movie fragment) atom for each track. Normally, packets for all tracks are written in a moof atom (which is slightly more efficient), but with this option set, the muxer writes one moof/mdat pair for each track, making it easier to separate tracks.
+
+This option is implicitly set when writing ismv (Smooth Streaming) files.
+
+'-movflags skip_sidx'
+Skip writing of sidx atom. When bitrate overhead due to sidx atom is high, this option could be used for cases where sidx atom is not mandatory. When global_sidx flag is enabled, this option will be ignored.
+
+empty_moov will cause output to be 100% fragmented; without this the first fragment will be muxed as a short movie (using moov) followed by the rest of the media in fragments,
+
+In streaming mode mp4 trailer is not required for playout.
+
+// very important 
+
+        if (os->segment_type == SEGMENT_TYPE_MP4) {
+            if (c->streaming)
+                av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx", 0);
+                av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx+skip_trailer", 0);
+            else
+                av_dict_set(&opts, "movflags", "frag_custom+dash+delay_moov", 0);
+        } else {
+
