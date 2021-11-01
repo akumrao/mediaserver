@@ -158,10 +158,7 @@ namespace base {
                 fragmp4_muxer->deActivate();
                 if(!mute )
                 {   
-//                    if(hd)
-//                        mediaContent("avhd");
-//                    else
-//                         mediaContent("avsd"); 
+
                     if (parseH264Header()) {
                         ++stream_index;
                         if (parseAACHeader()) {
@@ -173,11 +170,7 @@ namespace base {
                }
                else
                {   
-//                    if(hd)
-//                        mediaContent("vhd");
-//                    else
-//                         mediaContent("vsd"); 
-                            
+
                     if (parseH264Header()) {
                     ++stream_index;
                     parseH264Content();
@@ -393,11 +386,7 @@ namespace base {
                   
                     basicaudioframe.mstimestamp = startTime + framecount;
                    
-                    if( resetParser ) 
-                    {
-                          fragmp4_muxer->sendMeta();
-                          resetParser =false;
-                    }
+ 
                     framecount = framecount + AUDIOSAMPLE ;
                     fragmp4_muxer->run(&basicaudioframe);
 
@@ -468,7 +457,6 @@ namespace base {
 //               SDebug<< " FFParse::reset()"<<  "Stream both Video & Audio";
 //            }
               
-            resetParser = true;
             
         }
 
@@ -892,7 +880,7 @@ namespace base {
                        if ( basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
                        {
                            fragmp4_muxer->sendMeta();
-                           resetParser = false;
+
                        }
 
                        if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
@@ -1009,10 +997,6 @@ namespace base {
        }
        
         
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void FFParse::mediaContent(std::string mediaContent) {
-         //   txt->go(mediaContent);
-       }
 
       }// ns mp4
 

@@ -80,6 +80,7 @@ class FFParse;
      int slot{1};        
      std::string fileName;
      
+     std::atomic<int> critical_sec{0};
  public:
      
      void broadcast(const char * data, int size, bool binary  );

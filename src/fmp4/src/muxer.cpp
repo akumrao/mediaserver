@@ -720,7 +720,24 @@ void FragMP4MuxFrameFilter::sendMeta() {
         std::cout << "FragMP4MuxFrameFilter: No metadata!" << std::endl;
     }
 }
+//http://underpop.online.fr/f/ffmpeg/help/mov_002c-mp4_002c-ismv.htm.gz
 
+/*
+ 
+In streaming mode mp4 trailer is not required for playout.
+
+// very important 
+
+        if (os->segment_type == SEGMENT_TYPE_MP4) {
+            if (c->streaming)
+                av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx", 0);
+                av_dict_set(&opts, "movflags", "frag_every_frame+dash+delay_moov+skip_sidx+skip_trailer", 0);
+            else
+                av_dict_set(&opts, "movflags", "frag_custom+dash+delay_moov", 0);
+        } else {
+
+ 
+ */
 void FragMP4MuxFrameFilter::defineMux() {
     this->avio_ctx = avio_alloc_context(this->avio_ctx_buffer, this->avio_ctx_buffer_size, 1,
             this, this->read_packet, this->write_packet, this->seek); // no read, nor seek

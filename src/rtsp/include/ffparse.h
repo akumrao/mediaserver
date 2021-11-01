@@ -128,12 +128,11 @@ class ReadMp4;
     int stream_index{0};
     void parseMuxContent();
     
-    void mediaContent(std::string mediaContent);
-       
+      
  private:
      
-    std::atomic< bool > resetParser { false };
-    std::atomic< bool > mute { true };
+    //std::atomic< bool > resetParser { false };
+    std::atomic< bool > mute { false };
     std::atomic< bool > hd { false };
     std::atomic< bool > keeprunning { true };
 

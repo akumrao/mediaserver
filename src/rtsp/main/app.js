@@ -220,7 +220,7 @@ var hiddenInput = undefined;
                 if ((name=="moof") ) {
                     if (hasFirstSampleFlag(memview)) {
                        
-                        console.log("got that special moof");
+                        //console.log("got that special moof");
                     }
                     
                 }
@@ -278,7 +278,7 @@ var hiddenInput = undefined;
                     videoObj.remove();
                     videoObj = null;
                 }
-                source_buffer = null;
+                
 
                 if (ms.readyState === 'open')
                 {
@@ -293,6 +293,7 @@ var hiddenInput = undefined;
                 }  
                 
                 ms =null;
+                source_buffer = null;
                
                 ms = new MediaSource();          
                 pass = 0; 

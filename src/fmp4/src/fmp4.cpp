@@ -4,10 +4,9 @@
  * and open the template in the editor.
  */
 
+
 #include "fmp4.h"
 
-//#include "ff/ff.h"
-//#include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
@@ -20,28 +19,7 @@ extern "C"
 }
 
 
-#define SERVER_HOST  "127.0.0.1"               
-#define SERVER_PORT 8000
-
-
-
-//#define VIDEOFILE  "/experiment/fmp4/kunal720.264"
-
-
-//#define MAX_CHUNK_SIZE 10240*8
-// maximum send buffer 262144  =1024 *256
-
-//#define highWaterMark  8 * 1048576
-//maximum buffer = 16 *1048576 where  1024*1024 =1048576
-
-
-
-
-//#define IOBUFSIZE 40960
-//40960*6
-
-
-
+#include "http/websocket.h"
 #include "http/websocket.h"
 
 
@@ -81,13 +59,71 @@ namespace base {
    
             
              std::string got = std::string(msg, len);
-             STrace << "on_read " << got;
+             SInfo << "on_read " << got;
                 
                 //  m_ping_timeout_timer.Reset();
                 //  m_packet_mgr.put_payload(std::string(data,sz));
                 if( got == "reset")
                 {
                   //  ffparser->reset();    
+                }
+                else
+                {
+		    
+//                     broadcast("reset" , 5, false);
+//
+//                    int x = 0;
+//                    if( got  == "hd")
+//                        ffparser->resHD(true);
+//                    else if (got == "sd")
+//                        ffparser->resHD(false);
+                    // hd or sd
+                    if( len == 2  && critical_sec++ == 0  )
+                   {
+                        broadcast("reset" , 5, false);
+
+                 
+
+                        ffparser->stop();
+                        ffparser->join();
+                        
+
+
+                        delete ffparser;
+                        delete ctx;
+                        delete fragmp4_filter;
+                        delete fragmp4_muxer;
+                        delete info;
+                        delete txt;
+                        
+                        fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+                        fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+                        info = new InfoFrameFilter("info", nullptr);
+
+                        txt = new TextFrameFilter("txt", this);
+                        
+                        ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
+                        
+                        ffparser->start();
+                        
+                      
+                        
+           
+
+
+
+
+                        // SInfo <<  "slot " <<  ++slot ;
+
+
+                        // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+                        // ffparser->registerStreamCall(*ctx);
+                        // ffparser->playStreamCall(*ctx);
+                        
+                        critical_sec =0;
+                   }
+
                 }
 //                else if( got == "mute")
 //                    ffparser->restart(true);
