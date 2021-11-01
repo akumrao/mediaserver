@@ -201,7 +201,7 @@ public:                  // codec-dependent functions
     void fillPars();     ///< Fill codec-dependent parameters based on the payload
     void fillH264Pars(); ///< Inspects payload and fills BasicFrame::h264_pars;
     
-    void copyBuf( u_int8_t* buf  ,unsigned size );
+    void copyBuf( uint8_t* buf  ,unsigned size );
 
 public:
     void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
