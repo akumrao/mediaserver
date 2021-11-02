@@ -84,16 +84,16 @@ namespace base {
         
          void ReadMp4::broadcast(const char * data, int size, bool binary   )
          {
-             g_num_mutex.lock();
+            //  g_num_mutex.lock();
               
-             std::set<wrtc::PeerfMp4*>::iterator it;
-            for (it = setfmp4Peers.begin(); it != setfmp4Peers.end(); ++it) {
+            //  std::set<wrtc::PeerfMp4*>::iterator it;
+            // for (it = setfmp4Peers.begin(); it != setfmp4Peers.end(); ++it) {
                 
-                wrtc::PeerfMp4 *obj = *it; 
-                obj->pc->sendDataBinary((const uint8_t *) data, size);
-            }
+            //     wrtc::PeerfMp4 *obj = *it; 
+            //     obj->pc->sendDataBinary((const uint8_t *) data, size);
+            // }
             
-            g_num_mutex.unlock();
+            // g_num_mutex.unlock();
 
              
          }

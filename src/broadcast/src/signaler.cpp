@@ -98,7 +98,7 @@ namespace base {
             // Create the media stream and attach decoder
             // output to the peer connection
             conn->createConnection();
-//            _capturer.addMediaTracks(_context.factory, conn->_peerConnection);
+            _capturer.addMediaTracks(_context.factory, conn->_peerConnection);
 
             // Send the Offer SDP
             

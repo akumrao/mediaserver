@@ -3,7 +3,7 @@
 
 <head>
 
-  <title>Realtime communication with WebRTC</title>
+  <title>Camera video feed for webrtcstreamer</title>
 
   <link rel="stylesheet" href="/css/main.css" />
 
@@ -11,7 +11,7 @@
 
 <body>
 
-  <h1>Realtime communication with WebRTC</h1>
+  <h1>Camera video feed for webrtcstreamer</h1>
 
    <script>
 
@@ -28,16 +28,16 @@
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
-        <strong>Live Streaming!</strong> WebRTC video feed for webrtcstreamer</code> sample.
+        <strong>Live Streaming from DummyCamera!</strong> Camera video feed for webrtcstreamer</code> sample.
       </div>
 
       <div class="row">
         <div class="col">
         <!--  <video id="localVideo" autoplay muted playsinline></video> -->
-         <video id="remoteVideo" autoplay playsinline controls></video>
+         <video id="remoteVideo" autoplay playsinline muted></video>
         </div>
       </div>
-      <div class="row">Mute: <input type="checkbox" id="checkmute" onclick="onMuteClick()"> </div>
+      <!-- <div class="row">Mute: <input type="checkbox" id="checkmute" onclick="onMuteClick()"> </div> -->
       <div class="row">
         <div class="col">
           <div class="card">

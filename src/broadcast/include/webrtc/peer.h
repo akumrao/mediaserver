@@ -7,36 +7,17 @@
 
 #include "api/jsep.h"
 #include <json/json.hpp>
-#include "webrtc/fmp4.h"
 using json = nlohmann::json;
-
-//#include "base/thread.h"
 
 namespace base {
 namespace wrtc {
 
+
 class PeerManager;
-/*class Peer;
- class ReadMp4: public Thread
- {
-     Peer *pc;
-     
- public:
-     ReadMp4( Peer *pc):pc(pc) 
-     {
-         
-     }
-          
-   //virtual void start() override
-   // virtual void stop() override;
-     void run() override;
-     
 
 
- };
- */
 class Peer : public webrtc::PeerConnectionObserver,
-             public webrtc::CreateSessionDescriptionObserver, public webrtc::DataChannelObserver
+             public webrtc::CreateSessionDescriptionObserver
 {
 public:
     enum Mode
@@ -45,8 +26,6 @@ public:
         Answer ///< Operating as answerer
     };
 
-    wrtc::PeerfMp4 readmp4;
-    
     Peer(PeerManager* manager,
          PeerFactoryContext* context,
          const std::string& peerid,
@@ -102,7 +81,7 @@ protected:
     virtual void OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
     virtual void OnRemoveTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver)  override;
     virtual void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override; ///< since 7f0676
-  //  virtual void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream) override; ///< since 7f0676
+    virtual void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> stream) override; ///< since 7f0676
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
     virtual void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
     virtual void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
@@ -115,13 +94,6 @@ protected:
 
     virtual void AddRef() const override { return; }
     virtual rtc::RefCountReleaseStatus Release() const override { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
-    
-    
-      // DataChannelObserver implementation.
-    virtual void OnStateChange() override;
-    virtual void OnMessage(const webrtc::DataBuffer& buffer) override;
-    virtual void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override;
-  
 
 protected:
     PeerManager* _manager;
@@ -130,21 +102,13 @@ protected:
     std::string _token;
     Mode _mode;
     webrtc::PeerConnectionInterface::RTCConfiguration _config;
-    void CloseDataChannel();
-    
-   
-        
    // webrtc::FakeConstraints _constraints;
 public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 
     bool hasIceLiteOffer{false};
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
     //std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
-    
-    bool sendDataMsg(const std::string& data);
-    bool sendDataBinary(const uint8_t *data, int len);
 };
 
 
@@ -164,10 +128,6 @@ protected:
     DummySetSessionDescriptionObserver() = default;
     ~DummySetSessionDescriptionObserver() = default;
 };
-
-
-
-
 
 
 } } // namespace wrtc
