@@ -1,10 +1,20 @@
+/* This file is part of mediaserver. A webrtc RTSP server.
+ * Copyright (C) 2018 Arvind Umrao <akumrao@yahoo.com> & Herman Umrao<hermanumrao@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ */
 
 #include "base/filesystem.h"
 #include "base/application.h"
 #include "base/util.h"
 #include "base/idler.h"
 #include "base/logger.h"
-
+#include "Settings.h"
+#include "json/configuration.h"
 #include "rtc_base/ssl_adapter.h"
 
 #include "webrtc/signaler.h"
@@ -38,8 +48,72 @@ CMemLeakDetect memLeakDetect;
 //    return dir;
 //}
 
+
+void IgnoreSignals() {
+#ifndef _WIN32
+
+    int err;
+    struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+    // clang-format off
+    std::map<std::string, int> ignoredSignals ={
+        { "PIPE", SIGPIPE},
+        { "HUP", SIGHUP},
+        { "ALRM", SIGALRM},
+        { "USR1", SIGUSR1},
+        { "USR2", SIGUSR2}
+    };
+    // clang-format on
+
+    act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+    act.sa_flags = 0;
+    err = sigfillset(&act.sa_mask);
+
+    if (err != 0)
+        base::uv::throwError("sigfillset() failed: ", errno);
+
+    for (auto& kv : ignoredSignals) {
+        auto& sigName = kv.first;
+        int sigId = kv.second;
+
+        err = sigaction(sigId, &act, nullptr);
+
+        if (err != 0)
+            base::uv::throwError("sigaction() failed for signal " + sigName, errno);
+    }
+#endif
+}
+
 int main(int argc, char** argv) {
-    Logger::instance().add(new ConsoleChannel("info", Level::Info));
+     //Logger::instance().add(new ConsoleChannel("debug", Level::Info));
+    
+   // ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Info);
+            
+    //Logger::instance().add(ch);
+   
+    
+       
+    //Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Info));
+   // Logger::instance().setWriter(new AsyncLogWriter);
+    
+    base::cnfg::Configuration config;
+
+    config.load("/workspace/mediaserver/src/broadcast/main/config.js");
+  
+    json cnfg;
+   
+    if( !config.getRaw("webrtc", cnfg))
+    {
+        std::cout << "Could not parse config file";
+    }
+            
+
+    try {
+        Settings::SetConfiguration(cnfg);
+    } catch (const std::exception& error) {
+
+        std::_Exit(-1);
+    } 
 
 
     // Setup WebRTC environment
@@ -71,14 +145,22 @@ int main(int argc, char** argv) {
 //    Idler rtc([rtcthread]() {
 //        rtcthread->ProcessMessages(3);
 //       // LTrace(" rtcthread->ProcessMessages")
-//        base::sleep(1000);
+//        base::sleep(1000);s
 //    });
 
-    LTrace("app.run() run start")
-    app.run();
+    //LTrace("app.run() run start")
+   // app.run();
+
+   // Ignore some signals.
+    IgnoreSignals();
+        
+    app.waitForShutdown([&](void*)
+   {
+
     LTrace("app.run() is over")
     rtc::CleanupSSL();
     Logger::destroy();
+   });
 
     return 0;
 }
