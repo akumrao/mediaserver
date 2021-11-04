@@ -1,14 +1,16 @@
 
 #include "webrtc/multiplexmediacapturer.h"
 
-#ifdef HAVE_FFMPEG
+//#ifdef HAVE_FFMPEG
 
 #if MP4File
 #include "ff/audioresampler.h"
 #include "ff/ffmpeg.h"
 #endif
 
-//#include "ff/realtimepacketqueue.h"
+#include "muxer.h"
+ #include "Settings.h"
+
 #include "base/filesystem.h"
 #include "base/logger.h"
 #include "webrtc/webrtc.h"
@@ -210,6 +212,31 @@ void MultiplexMediaCapturer::addMediaTracks(
          conn->AddTrack(video_track, {streamId});
     }
 #endif
+  
+  
+  
+  if (ffparser)
+  {
+      using std::placeholders::_1;
+//      assert(_videoCapture->video());
+ //     auto oparams = _videoCapture->video()->oparams;
+      //auto source = new VideoPacketSource();
+       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
+       
+    //  ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
+
+    //  _videoCapture->cbProcessVideo.push_back(var);
+      
+
+      
+      if(!video_track)
+        video_track =     factory->CreateVideoTrack(videoLable, VideoCapturer);
+        
+         video_track->set_enabled(true);
+         conn->AddTrack(video_track, {streamId});
+    }        
+          
+          
       //stream->AddTrack(video_track);
 
 //      video_track->set_enabled(true);
@@ -232,6 +259,26 @@ void MultiplexMediaCapturer::start()
     #endif
     
     SInfo << "MultiplexMediaCapturer::start()" ;
+    
+    
+    
+    fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", nullptr);
+    fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+    info = new fmp4::InfoFrameFilter("info", nullptr);
+
+    txt = new fmp4::TextFrameFilter("txt", nullptr);
+
+
+    ffparser = new fmp4::LiveThread("live");
+
+    ffparser->start();
+
+
+
+    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, false, fragmp4_muxer, info, txt); // Request livethread to write into filter info
+    ffparser->registerStreamCall(*ctx);
+    ffparser->playStreamCall(*ctx);
             
 }
 
@@ -239,10 +286,26 @@ void MultiplexMediaCapturer::stop()
 {
   // _stream.stop();
     //_videoCapture->stop();
+    SInfo << "MultiplexMediaCapturer::stop()" ;
+    
+     ffparser->stopStreamCall(*ctx);
+
+    ffparser->deregisterStreamCall(*ctx);
+    ffparser->stop();
+    ffparser->join();
+
+
+
+    delete ffparser;
+    delete ctx;
+    delete fragmp4_filter;
+    delete fragmp4_muxer;
+    delete info;
+    delete txt;
 }
 
 
 } } // namespace wrtc
 
 
-#endif // HAVE_FFMPEG
+//#endif // HAVE_FFMPEG

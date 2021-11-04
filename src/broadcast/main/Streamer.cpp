@@ -16,8 +16,8 @@
 #include "Settings.h"
 #include "json/configuration.h"
 #include "rtc_base/ssl_adapter.h"
-
 #include "webrtc/signaler.h"
+
 
 using namespace std;
 using namespace base;
@@ -35,7 +35,7 @@ CMemLeakDetect memLeakDetect;
 #define SERVER_PORT 8080 //443
 #define JOIN_ROOM  "foo"        
 
-#include "webrtc/signaler.h"
+
 
 //std::string sampleDataDir(const std::string& file) {
 //    std::string dir;

@@ -27,13 +27,13 @@
 
 namespace base {
     
-    fmp4::ReadMp4 *self;
+    //fmp4::ReadMp4 *self;
 
     namespace fmp4 {
 
         ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
 
-            self = this;
+           // self = this;
 
 	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
             fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
@@ -71,9 +71,22 @@ namespace base {
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
              
+      
+            
+            ffparser->stopStreamCall(*ctx);
+
+            ffparser->deregisterStreamCall(*ctx);
             ffparser->stop();
             ffparser->join();
+
+
+
             delete ffparser;
+            delete ctx;
+            delete fragmp4_filter;
+            delete fragmp4_muxer;
+            delete info;
+            delete txt;
         }
 
 
@@ -95,7 +108,7 @@ namespace base {
                if( got == "reset")
                {
                     //SInfo  << "reset";
-                    fragmp4_muxer->resetParser = true ;//  
+                   // fragmp4_muxer->resetParser = true ;//  
                }
                else
                {
@@ -108,7 +121,7 @@ namespace base {
                         ffparser->deregisterStreamCall(*ctx);
                         
 
-                        fragmp4_muxer->resetParser = true ;
+                      //  fragmp4_muxer->resetParser = true ;
 
                         Settings::configuration.rtsp2 = got;
 

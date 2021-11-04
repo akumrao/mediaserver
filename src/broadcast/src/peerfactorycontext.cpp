@@ -66,6 +66,7 @@ PeerFactoryContext::PeerFactoryContext(
     // }
 
 
+      VideoEncoderFactoryStrong = std::make_unique<FVideoEncoderFactory>();
 
     factory = webrtc::CreatePeerConnectionFactory(
               networkThread.get(), workerThread.get(), g_signaling_thread.get(),
@@ -73,8 +74,9 @@ PeerFactoryContext::PeerFactoryContext(
 
               webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
               webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
-
-              webrtc::CreateBuiltinVideoEncoderFactory(),
+            
+              std::move(VideoEncoderFactoryStrong),
+              //webrtc::CreateBuiltinVideoEncoderFactory(),
 
               webrtc::CreateBuiltinVideoDecoderFactory(),
 

@@ -21,7 +21,7 @@
 
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
-
+#include "VideoEncoder.h"
 
 namespace base {
 namespace wrtc {
@@ -40,7 +40,7 @@ private:
     std::unique_ptr<rtc::Thread> networkThread;
     std::unique_ptr<rtc::Thread> workerThread;
     std::unique_ptr<rtc::Thread> g_signaling_thread;
-
+    std::unique_ptr<FVideoEncoderFactory> VideoEncoderFactoryStrong;
     
  public:
     //std::unique_ptr<rtc::NetworkManager> networkManager;

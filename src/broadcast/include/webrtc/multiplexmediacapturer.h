@@ -6,7 +6,7 @@
 
 #include "base/base.h"
 
-#ifdef HAVE_FFMPEG
+//#ifdef HAVE_FFMPEG
 
 
 #if MP4File
@@ -20,6 +20,7 @@
 
 #include "api/peer_connection_interface.h"
 
+#include "livethread.h"
 
 
 namespace base {
@@ -50,6 +51,9 @@ protected:
     #if MP4File
     ff::MediaCapture::Ptr _videoCapture;
     #endif
+
+    
+    
     
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
@@ -61,12 +65,27 @@ protected:
       
     
     int PlayerID;
+    
+    
+     
+     fmp4::LiveThread  *ffparser{nullptr};
+
+     
+ private:
+     
+     fmp4::DummyFrameFilter *fragmp4_filter{nullptr};
+     fmp4::FrameFilter *fragmp4_muxer{nullptr};;
+     fmp4::FrameFilter *info{nullptr};;
+     fmp4::FrameFilter *txt{nullptr};;
+     fmp4::LiveConnectionContext *ctx{nullptr};;
+     int slot{1};        
+     std::string fileName;
 };
 
 
 } } // namespace wrtc
 
 
-#endif // HAVE_FFMPEG
+//#endif // HAVE_FFMPEG
 #endif
 

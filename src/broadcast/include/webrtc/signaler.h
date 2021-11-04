@@ -9,7 +9,7 @@
 #include "webrtc/multiplexmediacapturer.h"
 //#include "rtc_base/ssladapter.h"
 
-using namespace base::sockio;
+
 
 namespace base {
     namespace wrtc {
@@ -48,8 +48,8 @@ namespace base {
 #if USE_SSL
             //  SocketioSecClient *client;
 #else
-            SocketioClient *client;
-            Socket *socket;
+            sockio::SocketioClient *client;
+            sockio::Socket *socket;
             //std::string peerID;
            // std::string remotePeerID;
 #endif

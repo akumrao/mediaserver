@@ -10,7 +10,7 @@
 
 
 using std::endl;
-
+//using namespace base::sockio;
 namespace base {
     namespace wrtc {
 
@@ -230,21 +230,21 @@ namespace base {
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-            client = new SocketioClient(host, port, true);
+            client = new sockio::SocketioClient(host, port, true);
             client->connect();
 
             socket = client->io();
 
-            socket->on("connection", Socket::event_listener_aux([ = ](string const& name, json const& data, bool isAck, json & ack_resp){
+            socket->on("connection", sockio::Socket::event_listener_aux([ = ](string const& name, json const& data, bool isAck, json & ack_resp){
 
-                socket->on("ipaddr", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("ipaddr", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                     LTrace(cnfg::stringify(data))
 
                     LTrace("Server IP address is: ", data)
                             // updateRoomURL(ipaddr);
                 }));
 
-                socket->on("created", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("created", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
 
                     LTrace(cnfg::stringify(data))
                     LTrace("Created room", data[0], "- my client ID is", data[1])
@@ -252,14 +252,14 @@ namespace base {
                     //grabWebCamVideo();
                 }));
 
-                socket->on("full", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("full", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                     LTrace(cnfg::stringify(data));
                     //LTrace("Room " + room + " is full.")
 
                 }));
 
 
-                socket->on("join", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("join", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                     LTrace(cnfg::stringify(data));
                    // LTrace("Another peer made a request to join room " + room)
                     //LTrace("This peer is the initiator of room " + room + "!")
@@ -268,7 +268,7 @@ namespace base {
                 }));
 
    /// for webrtc messages
-                socket->on("message", Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
+                socket->on("message", sockio::Socket::event_listener_aux([&](string const& name, json const& m, bool isAck, json & ack_resp) {
                     //  LTrace(cnfg::stringify(m));
                     // LTrace('SocketioClient received message:', cnfg::stringify(m));
 
@@ -280,13 +280,13 @@ namespace base {
 
 
                 // Leaving rooms and disconnecting from peers.
-                socket->on("disconnectClient", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("disconnectClient", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                      LTrace(cnfg::stringify(data));
                     
                 }));
 
 
-                socket->on("bye", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                socket->on("bye", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                     LTrace(cnfg::stringify(data));
                     //LTrace("Peer leaving room", room);
    

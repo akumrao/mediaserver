@@ -121,7 +121,7 @@ public: // API
     
     virtual void deActivate(){};
     virtual void sendMeta(){};
-    std::atomic< bool > resetParser { false };
+    //std::atomic< bool > resetParser { false };
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.
