@@ -1,11 +1,13 @@
 #ifndef framefilter_HEADER_GUARD
 #define framefilter_HEADER_GUARD
-#include "fmp4.h"
+
 
 #include "frame.h"
 
 #include <map>
-
+#include <deque>
+#include <atomic>
+#include <condition_variable>
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
 
@@ -20,6 +22,76 @@
 namespace base {
 namespace fmp4 {
 
+class ReadMp4;    
+    
+struct FrameFifoContext {                                                                                                                                       // <pyapi>
+                                                                                                                   // <pyapi>
+  int n_basic;     ///< data at payload                                                                                                                         // <pyapi>
+  int n_avpkt;     ///< data at ffmpeg avpkt                                                                                                                    // <pyapi>
+  int n_avframe;   ///< data at ffmpeg av_frame and ffmpeg av_codec_context                                                                                     // <pyapi>
+  int n_yuvpbo;    ///< data at yuvpbo struct                                                                                                                   // <pyapi>
+  int n_setup;     ///< setup data                                                                                                                              // <pyapi>
+  int n_signal;    ///< signal to AVThread or OpenGLThread                                                                                                      // <pyapi>
+  int n_marker;    ///< marks start/end of frame emission.  defaults to n_signal                                                                                // <pyapi>    
+  bool flush_when_full; ///< Flush when filled                                                                                                                  // <pyapi>
+};   
+
+/** A thread-safe combination of a fifo (first-in-first-out) queue and an associated stack.
+ * 
+ * Frame instances are placed into FrameFifo with FrameFifo::writeCopy that draws a Frame from the stack and performs a copy of the frame.
+ * 
+ * If no frames are available, an "overflow" occurs.  The behaviour at overflow event can be defined (see FrameFifoContext).
+ * 
+ * When Frame has been used, it should be returned to the FrameFifo by calling FrameFifo::recycle.  This returns the Frame to the stack.
+ * 
+ * @ingroup queues_tag
+ */
+class FrameFifo {                                                                                   
+
+public:                                                                                             
+  FrameFifo(const char *name, FrameFifoContext ctx =FrameFifoContext()); ///< Default ctor          
+  virtual ~FrameFifo();                                                  ///< Default virtual dtor  
+//  ban_copy_ctor(FrameFifo);
+ // ban_copy_asm(FrameFifo);
+  
+protected:
+  std::string      name;
+  FrameFifoContext ctx;   ///< Parameters defining the stack and overflow behaviour
+  
+protected: // reservoir, stack & fifo queue
+ // std::map<FrameClass,Reservoir>  reservoirs;   ///< The actual frames
+ // std::map<FrameClass,Stack>      stacks;       ///< Pointers to the actual frames, sorted by FrameClass
+   typedef std::deque<Frame *> Fifo;
+  Fifo                            fifo;         ///< The fifo queue
+  
+  
+protected: // mutex synchro
+  std::mutex mutex;                         ///< The Lock
+  std::condition_variable condition;        ///< The Event/Flag
+  std::condition_variable ready_condition;  ///< The Event/Flag for FrameFifo::ready_mutex
+    
+protected:
+  virtual void recycle_(Frame* f);  ///< Return Frame f back into the stack.  Update target_size if necessary
+  virtual void recycleAll_();       ///< Recycle all frames back to the stack
+  
+public:
+   // Reservoir &getReservoir(FrameClass cl) {return this->reservoirs[cl];}  ///< Get the reservoir .. in the case you want to manipulate the frames
+  
+public:
+  virtual bool writeCopy(Frame* f, bool wait=false);     ///< Take a frame "ftmp" from the stack, copy contents of "f" into "ftmp" and insert "ftmp" into the beginning of the fifo (i.e. perform "copy-on-insert").  The size of "ftmp" is also checked and set to target_size, if necessary.  If wait is set to true, will wait until there are frames available in the stack.
+  virtual Frame* read(unsigned short int mstimeout=0);   ///< Pop a frame from the end of the fifo when available
+  virtual void recycle(Frame* f);                        ///< Like FrameFifo::recycle_ but with mutex protection
+  virtual void recycleAll();                             ///< Recycle all frames from fifo back to stack (make a "flush")
+  virtual void dumpStacks();    ///< Dump frames in the stacks
+  virtual void dumpFifo();      ///< Dump frames in the fifo
+  virtual void diagnosis();     ///< Print a resumen of fifo and stack usage
+  bool isEmpty();               ///< Tell if fifo is empty
+};                  
+    
+
+    
+    
+    
 class FrameFilter { 
 
 public: 
@@ -46,6 +118,10 @@ public: // API
     /** Calls this->go(Frame* frame) and then calls the this->next->run(Frame* frame) (if this->next != NULL)
    */
     virtual void run(Frame *frame);
+    
+    virtual void deActivate(){};
+    virtual void sendMeta(){};
+    std::atomic< bool > resetParser { false };
 }; 
 
 /** A "hello world" demo class: prints its own name if verbose is set to true.
@@ -75,6 +151,24 @@ protected:
     
     FILE* fp_out;
     long  tolalMp4Size;
+}; 
+
+
+class TextFrameFilter: public FrameFilter  { 
+
+public:                                                                                
+    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn,  FrameFilter *next = NULL ); 
+     ~TextFrameFilter();
+
+     base::fmp4::ReadMp4 *conn; 
+     
+  
+public:
+    
+    protected:
+    void go(Frame *frame);    
+
+    //std::string name;
 }; 
 
 /** Dump the beginning of Frame's payload into stdout
@@ -424,22 +518,22 @@ public:
  * @ingroup filters_tag
  * @ingroup queues_tag
  */
-//class FifoFrameFilter : public FrameFilter { 
-//
-//public: 
-//    /** Default constructor
-//   * 
-//   * @param name       Name
-//   * @param framefifo  The FrameFifo where the frames are being written
-//   */
-//    FifoFrameFilter(const char *name, FrameFifo *framefifo); ///< Default constructor     
-//
-//protected:
-//    FrameFifo *framefifo;
-//
-//protected:
-//    void go(Frame *frame);
-//}; 
+class FifoFrameFilter : public FrameFilter { 
+
+public: 
+    /** Default constructor
+   * 
+   * @param name       Name
+   * @param framefifo  The FrameFifo where the frames are being written
+   */
+    FifoFrameFilter(const char *name, FrameFifo *framefifo); ///< Default constructor     
+
+protected:
+    FrameFifo *framefifo;
+
+protected:
+    void go(Frame *frame);
+}; 
 
 /** Passes frames to a multiprocessing fifo.
  * 

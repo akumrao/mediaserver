@@ -9,10 +9,11 @@
  */
 
 
-#include "webrtc/frame.h"
+#include "frame.h"
 
+#include <sstream>
 
-
+#include <string.h>
 Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
 
@@ -92,9 +93,7 @@ std::string BasicFrame::dumpPayload() {
 
 
 void BasicFrame::dumpPayloadToFile(std::ofstream& fout) {
-
-
-  //std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout)); // arvind
+//  std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
 }
 
 
@@ -102,6 +101,8 @@ void BasicFrame::reset() {
   Frame::reset();
   codec_id   =AV_CODEC_ID_NONE;
   media_type =AVMEDIA_TYPE_UNKNOWN;
+  
+  payload.clear();
 }
 
 
@@ -156,61 +157,69 @@ void BasicFrame::fillH264Pars() {
 }
 
 
-void BasicFrame::fillAVPacket(AVPacket *avpkt) {
-  avpkt->data         =payload.data(); // +4; that four is just for debugging..
-  avpkt->size         =payload.size(); // -4;
-  avpkt->stream_index =stream_index;
-
-  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
-    avpkt->flags=AV_PKT_FLAG_KEY;
-  }
-
-  // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
+//void BasicFrame::fillAVPacket(AVPacket *avpkt) {
+//  avpkt->data         =payload.data(); // +4; that four is just for debugging..
+//  avpkt->size         =payload.size(); // -4;
+//  avpkt->stream_index =stream_index;
 //
-//  if (mstimestamp>=0) {
-//    avpkt->pts=(int64_t)mstimestamp;
+//  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
+//    avpkt->flags=AV_PKT_FLAG_KEY;
 //  }
-//  else {
-//    avpkt->pts=AV_NOPTS_VALUE;
- // }
+//
+//  // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
+////
+////  if (mstimestamp>=0) {
+////    avpkt->pts=(int64_t)mstimestamp;
+////  }
+////  else {
+////    avpkt->pts=AV_NOPTS_VALUE;
+// // }
+//
+//  // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
+//
+//  avpkt->dts=AV_NOPTS_VALUE; // let muxer set it automagically 
+//}
 
-  // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
 
-  avpkt->dts=AV_NOPTS_VALUE; // let muxer set it automagically 
+//void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
+//  payload.resize(pkt->size);
+//  memcpy(payload.data(),pkt->data,pkt->size);
+//  // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
+////  stream_index=pkt->stream_index;
+//  // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
+// // mstimestamp=(long int)pkt->pts;
+//}
+
+
+void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )
+{
+  payload.resize(size +nalstamp.size());
+  
+  std::copy(nalstamp.begin(),nalstamp.end(),payload.begin());
+  memcpy(payload.data()+nalstamp.size(), buf, size);
 }
 
-
-void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
-  payload.resize(pkt->size);
-  memcpy(payload.data(),pkt->data,pkt->size);
-  // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
+//void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
+//  int out_size;
+//  uint8_t *out;
+//  
+//  av_bitstream_filter_filter(
+//    filter,
+//    codec_ctx,
+//    NULL,
+//    &out,
+//    &out_size,
+//    pkt->data,
+//    pkt->size,
+//    pkt->flags & AV_PKT_FLAG_KEY
+//  );
+//  
+//  payload.resize(out_size);
+//  // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
+//  memcpy(payload.data(),out,out_size);
 //  stream_index=pkt->stream_index;
-  // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
- // mstimestamp=(long int)pkt->pts;
-}
-
-
-void BasicFrame::filterFromAVPacket(AVPacket *pkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter) {
-  int out_size;
-  uint8_t *out;
-  
-  av_bitstream_filter_filter(
-    filter,
-    codec_ctx,
-    NULL,
-    &out,
-    &out_size,
-    pkt->data,
-    pkt->size,
-    pkt->flags & AV_PKT_FLAG_KEY
-  );
-  
-  payload.resize(out_size);
-  // std::cout << "BasicFrame: filterFromAVPacket: " << out_size << " " << (long unsigned)(out) << std::endl; 
-  memcpy(payload.data(),out,out_size);
-  stream_index=pkt->stream_index;
-  mstimestamp=(long int)pkt->pts;
-}
+//  mstimestamp=(long int)pkt->pts;
+//}
 
 
 std::size_t BasicFrame::calcSize() {
@@ -318,7 +327,7 @@ std::string MuxFrame::dumpPayload() {
 
 
 void MuxFrame::dumpPayloadToFile(std::ofstream& fout) {
-    ///std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));  // arvind
+//    std::copy(payload.begin(), payload.end(), std::ostreambuf_iterator<char>(fout));
 }
 
 
@@ -372,13 +381,13 @@ void SetupFrame::reset() {
 
 
 AVMediaFrame::AVMediaFrame() : media_type(AVMEDIA_TYPE_UNKNOWN), codec_id(AV_CODEC_ID_NONE) { // , mediatype(MediaType::none) {
-  av_frame =av_frame_alloc();
+  //av_frame =av_frame_alloc();
 }
 
 
 AVMediaFrame::~AVMediaFrame() {
-  av_frame_free(&av_frame);
-  av_free(av_frame); // needs this as well?
+ // av_frame_free(&av_frame);
+ // av_free(av_frame); // needs this as well?
 }
 
 
@@ -485,7 +494,11 @@ void MarkerFrame::reset() {
     tm_end=false;
 }
     
+
+
+TextFrame::TextFrame() : Frame() {
     
+}
     
     
     

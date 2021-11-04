@@ -9,20 +9,34 @@
 //#include <iterator>
 //#include  <vector>
 
- #include "ff/ff.h"
- #include "ff/mediacapture.h"
-extern "C"
-{
-//#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-}
+
 
 //#include "micro.h"
 #include "codec.h"
 
 #include "constant.h"
 
-/** Enumeration of Frame classes used by Valkka
+enum AVMediaType {
+    AVMEDIA_TYPE_UNKNOWN = -1,  ///< Usually treated as AVMEDIA_TYPE_DATA
+    AVMEDIA_TYPE_VIDEO,
+    AVMEDIA_TYPE_AUDIO,
+    AVMEDIA_TYPE_DATA,          ///< Opaque data information usually continuous
+    AVMEDIA_TYPE_SUBTITLE,
+    AVMEDIA_TYPE_ATTACHMENT,    ///< Opaque data information usually sparse
+    AVMEDIA_TYPE_NB
+};
+
+
+
+enum AVCodecID {
+    AV_CODEC_ID_NONE,
+
+    AV_CODEC_ID_H264,
+    AV_CODEC_ID_PCM_MULAW,
+    AV_CODEC_ID_RV20
+            
+ };
+/** Enumeration of Frame classes 
  * 
  * @ingroup frames_tag
  */
@@ -200,11 +214,13 @@ public:                 // codec-dependent parameters
 public:                  // codec-dependent functions
     void fillPars();     ///< Fill codec-dependent parameters based on the payload
     void fillH264Pars(); ///< Inspects payload and fills BasicFrame::h264_pars;
+    
+    void copyBuf( uint8_t* buf  ,unsigned size );
 
 public:
-    void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
-    void copyFromAVPacket(AVPacket *avpkt);                                                                ///< Copy data from AVPacket structure
-    void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure
+   // void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
+   // void copyFromAVPacket(AVPacket *avpkt);                                                                ///< Copy data from AVPacket structure
+   // void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure  //arvind
 
 public:                                                  // frame serialization
     std::size_t calcSize();                              ///< How much this frame occupies in bytes when serialized
@@ -347,7 +363,7 @@ public:                     // helper objects : values should correspond to memb
     AVCodecID codec_id;     ///< helper object: codec id
 
 public:                // managed objects
-    AVFrame *av_frame; ///< The decoded frame
+    //AVFrame *av_frame; ///< The decoded frame
 };
 
 /** Decoded YUV/RGB frame in FFMpeg format
@@ -416,4 +432,21 @@ public:
     bool tm_start, tm_end; ///< Transmission start / end
 };
 
+
+/** Custom TextFrame Frame
+ * 
+ * Includes codec info and the payload.  Received typically from LiveThread or FileThread.
+ * 
+ * @ingroup frames_tag
+ */
+class TextFrame : public Frame
+{
+
+public:
+    TextFrame();          ///< Default ctor
+    virtual ~TextFrame(){}; ///< Default virtual dtor
+    
+public:                                                
+    std::string txt;
+};
 #endif

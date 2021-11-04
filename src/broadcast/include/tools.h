@@ -1,8 +1,8 @@
 #ifndef TOOLS_HEADER_GUARD 
 #define TOOLS_HEADER_GUARD
 
-//#define BIG_ENDIAN 1
 
+//#define BIG_ENDIAN 1
 //
 #include <chrono>
 #include <cstdint>
