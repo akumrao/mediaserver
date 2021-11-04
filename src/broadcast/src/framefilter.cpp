@@ -164,7 +164,7 @@ void RepeatH264ParsFrameFilter::run(Frame *frame)
 
         BasicFrame *basic_frame = static_cast<BasicFrame *>(frame);
 
-        //if (basic_frame->codec_id == AV_CODEC_ID_H264) // arvind notice
+        if (basic_frame->codec_id == AV_CODEC_ID_H264)
         {
             // H264SliceType::sps, pps, i
             unsigned slice_type = basic_frame->h264_pars.slice_type;
@@ -202,17 +202,17 @@ void RepeatH264ParsFrameFilter::run(Frame *frame)
                 {
                     SDebug << "RepeatH264ParsFrameFilter: re-sending sps & pps" << std::endl;
 
-                   // if ((sps.codec_id != AV_CODEC_ID_NONE) and (pps.codec_id != AV_CODEC_ID_NONE)) //arvind 
+                    if ((sps.codec_id != AV_CODEC_ID_NONE) and (pps.codec_id != AV_CODEC_ID_NONE))
                     { // so, these have been cached correctly
                         sps.mstimestamp = frame->mstimestamp;
                         pps.mstimestamp = frame->mstimestamp;
                         (this->next)->run((Frame *)(&sps));
                         (this->next)->run((Frame *)(&pps));
                     }
-//                    else
-//                    {
-//                        SError << "RepeatH264ParsFrameFilter: re-sending sps & pps required but they're n/a" << std::endl;
-//                    }
+                    else
+                    {
+                        SError << "RepeatH264ParsFrameFilter: re-sending sps & pps required but they're n/a" << std::endl;
+                    }
                 }
                 phase = -1;
             } // KEY
@@ -223,10 +223,10 @@ void RepeatH264ParsFrameFilter::run(Frame *frame)
             std::cout << ">>> RepeatH264ParsFrameFilter: phase=" << phase << std::endl;
 #endif
         }
-//        else  // arvind notice
-//        { // just passthrough
-//            (this->next)->run(frame);
-//        }
+        else
+        { // just passthrough
+            (this->next)->run(frame);
+        }
     }
 }
 

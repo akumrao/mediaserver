@@ -14,12 +14,14 @@
 #include "base/define.h"
 #include "base/test.h"
 #include <thread>
-
 #include "livethread.h"
  #include "Settings.h"
 
+//#include <libavutil/timestamp.h>
+#include <avformat.h>
 
-#define tcprequest true
+
+#define tcprequest false
 
 #include "http/websocket.h"
 

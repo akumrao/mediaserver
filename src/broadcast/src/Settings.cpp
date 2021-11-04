@@ -60,9 +60,9 @@ void Settings::SetConfiguration(json &cnfg)
             
             base::Level ld = base::getLevelFromString(loglevel.c_str());
             
-            //base::Logger::instance().add(new base::ConsoleChannel("mediaserver", ld));
-            base::Logger::instance().add(new base::FileChannel("webrtcserver","/var/log/webrtcserver", ld));
-            base::Logger::instance().setWriter(new base::AsyncLogWriter);
+            base::Logger::instance().add(new base::ConsoleChannel("webrtcserver", ld));
+            //base::Logger::instance().add(new base::FileChannel("webrtcserver","/var/log/webrtcserver", ld));
+           // base::Logger::instance().setWriter(new base::AsyncLogWriter);
             
         }
         

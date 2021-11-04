@@ -8,8 +8,13 @@
 
 #ifdef HAVE_FFMPEG
 
+
+#if MP4File
 #include "ff/ff.h"
 #include "ff/mediacapture.h"
+#endif
+
+
 #include "webrtc/audiopacketmodule.h"
 #include "webrtc/videopacketsource.h"
 
@@ -42,7 +47,10 @@ public:
 
 protected:
 //    PacketStream _stream;
+    #if MP4File
     ff::MediaCapture::Ptr _videoCapture;
+    #endif
+    
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;

@@ -8,9 +8,12 @@
 
 #ifdef HAVE_FFMPEG
 
+#if MP4File
 #include "ff/packet.h"
-
+#endif
 //#include "media/base/videocapturer.h"
+
+#include "base/packet.h"
 #include "media/base/adapted_video_track_source.h"
 #include "rtc_base/timestamp_aligner.h"
 

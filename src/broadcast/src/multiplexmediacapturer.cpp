@@ -3,8 +3,11 @@
 
 #ifdef HAVE_FFMPEG
 
+#if MP4File
 #include "ff/audioresampler.h"
 #include "ff/ffmpeg.h"
+#endif
+
 //#include "ff/realtimepacketqueue.h"
 #include "base/filesystem.h"
 #include "base/logger.h"
@@ -20,19 +23,22 @@ const char kStreamId[] = "stream_id";
 namespace base {
 namespace wrtc {
 
-MultiplexMediaCapturer::MultiplexMediaCapturer()
-    : _videoCapture(std::make_shared<ff::MediaCapture>())
-    , _audioModule(AudioPacketModule::Create()), PlayerID(0)
+MultiplexMediaCapturer::MultiplexMediaCapturer(): 
+#if MP4File
+_videoCapture(std::make_shared<ff::MediaCapture>()),
+#endif
+  _audioModule(AudioPacketModule::Create()), PlayerID(0)
 {
      using std::placeholders::_1;
    // _stream.attachSource(_videoCapture, true);
     // _stream.attach(std::make_shared<av::RealtimePacketQueue<av::MediaPacket>>(0), 5);
     // _stream.attach(std::make_shared<av::RealtimePacketQueue<av::PlanarVideoPacket>>(0), 5);
   //  _stream.emitter += packetSlot(_audioModule.get(), &AudioPacketModule::onAudioCaptured);
-    
+    #if MP4File
     ff::MediaCapture::function_type var = std::bind(&AudioPacketModule::onAudioCaptured , _audioModule.get(), _1);
-
+    
     _videoCapture->cbProcessAudio.push_back(var);
+    #endif
 }
 
 
@@ -43,6 +49,9 @@ MultiplexMediaCapturer::~MultiplexMediaCapturer()
 
 void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string& file,  const std::string& type , bool loop)
 {
+    
+    #if MP4File
+
     // Open the capture file
     _videoCapture->setLoopInput(loop);
     _videoCapture->setLimitFramerate(true);
@@ -70,6 +79,8 @@ void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string&
         // _videoCapture->video()->oparams.width = capture_format.width;
         // _videoCapture->video()->oparams.height = capture_format.height;
     }
+    
+     #endif
 }
 
 
@@ -116,6 +127,9 @@ void MultiplexMediaCapturer::addMediaTracks(
     webrtc::PeerConnectionFactoryInterface* factory,
      webrtc::PeerConnectionInterface* conn)
 {
+
+    SInfo  << "MultiplexMediaCapturer::addMediaTracks" ; 
+    
     // This capturer is multicast, meaning it can be used as the source
     // for multiple Peer objects.
     //
@@ -152,6 +166,7 @@ void MultiplexMediaCapturer::addMediaTracks(
   std::string videoLable = kVideoLabel;
   std::string streamId =  kStreamId;
   
+#if MP4File
   if (_videoCapture->audio())
   {
 
@@ -170,8 +185,9 @@ void MultiplexMediaCapturer::addMediaTracks(
     //stream->AddTrack(audio_track);
     // peer_connection_->AddTransceiver(audio_track);
       conn->AddTrack(audio_track, {streamId});
+      
   } 
-  
+
 
   if (_videoCapture->video())
   {
@@ -193,7 +209,7 @@ void MultiplexMediaCapturer::addMediaTracks(
          video_track->set_enabled(true);
          conn->AddTrack(video_track, {streamId});
     }
-
+#endif
       //stream->AddTrack(video_track);
 
 //      video_track->set_enabled(true);
@@ -210,8 +226,13 @@ void MultiplexMediaCapturer::addMediaTracks(
 
 void MultiplexMediaCapturer::start()
 {
+    #if MP4File
     //_stream.start
     _videoCapture->start();
+    #endif
+    
+    SInfo << "MultiplexMediaCapturer::start()" ;
+            
 }
 
 void MultiplexMediaCapturer::stop()

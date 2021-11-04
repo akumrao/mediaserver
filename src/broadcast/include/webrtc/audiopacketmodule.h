@@ -8,10 +8,12 @@
 
 #ifdef HAVE_FFMPEG
 
+#if MP4File
 #include "ff/ff.h"
 #include "ff/audiobuffer.h"
 #include "ff/packet.h"
-
+#endif
+#include "base/packet.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"

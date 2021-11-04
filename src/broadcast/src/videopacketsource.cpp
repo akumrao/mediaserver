@@ -3,12 +3,12 @@
 #include "webrtc/videopacketsource.h"
 
 #ifdef HAVE_FFMPEG
-
+#if MP4File
 #include "ff/ffmpeg.h"
 #include "ff/videocontext.h"
 #include "ff/videodecoder.h"
 #include "ff/fpscounter.h"
-
+ #endif
 #include "api/video/i420_buffer.h"
 #include "rtc_base/atomic_ops.h"
 #include <chrono>
@@ -112,9 +112,12 @@ void VideoPacketSource::Stop()
 
 int VideoPacketSource::onVideoCaptured(IPacket& pac)
 {
+    
+    SInfo << "ideoPacketSource::onVideoCaptured";
+    
     //if(!IsRunning())
   //  return;
-    
+    #if MP4File
     ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
     
    
@@ -174,7 +177,7 @@ int VideoPacketSource::onVideoCaptured(IPacket& pac)
 	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
      //SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
      OnFrame(Frame);  //arvind
-        
+   #endif     
 
     // OnFrame(webrtc::VideoFrame(
     //     buffer, _rotation,
