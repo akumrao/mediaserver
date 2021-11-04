@@ -1,6 +1,7 @@
 
 
 #include "webrtc/videopacketsource.h"
+#include "webrtc/rawVideoFrame.h"
 
 #ifdef HAVE_FFMPEG
 #if MP4File
@@ -10,6 +11,7 @@
 #include "ff/fpscounter.h"
  #endif
 #include "api/video/i420_buffer.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/atomic_ops.h"
 #include <chrono>
 
@@ -20,9 +22,11 @@ using std::endl;
 
 namespace base {
 namespace wrtc {
+    
 
 
-VideoPacketSource::VideoPacketSource(std::string &playerId):playerId(playerId)
+    
+VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name, fmp4::FrameFilter *next):playerId(playerId), fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
@@ -35,23 +39,23 @@ VideoPacketSource::VideoPacketSource(std::string &playerId):playerId(playerId)
 }
 
 
-VideoPacketSource::VideoPacketSource(const cricket::VideoFormat& captureFormat)
-    : _captureFormat(captureFormat)
-    , _rotation(webrtc::kVideoRotation_0)
-    , _timestampOffset(0)
-    , _nextTimestamp(0)
-//    , _source(nullptr)
-{
-    // Default supported formats. Use SetSupportedFormats to over write.
-    std::vector<cricket::VideoFormat> formats;
-    formats.push_back(_captureFormat);
-    //SetSupportedFormats(formats);
-
-    // formats.push_back(cricket::VideoFormat(1280, 720, _fpsInterval, _codec));
-    // formats.push_back(cricket::VideoFormat(640, 480, _fpsInterval, _codec));
-    // formats.push_back(cricket::VideoFormat(320, 240, _fpsInterval, _codec));
-    // formats.push_back(cricket::VideoFormat(160, 120, _fpsInterval, _codec));
-}
+//VideoPacketSource::VideoPacketSource(const cricket::VideoFormat& captureFormat)
+//    : _captureFormat(captureFormat)
+//    , _rotation(webrtc::kVideoRotation_0)
+//    , _timestampOffset(0)
+//    , _nextTimestamp(0)
+////    , _source(nullptr)
+//{
+//    // Default supported formats. Use SetSupportedFormats to over write.
+//    std::vector<cricket::VideoFormat> formats;
+//    formats.push_back(_captureFormat);
+//    //SetSupportedFormats(formats);
+//
+//    // formats.push_back(cricket::VideoFormat(1280, 720, _fpsInterval, _codec));
+//    // formats.push_back(cricket::VideoFormat(640, 480, _fpsInterval, _codec));
+//    // formats.push_back(cricket::VideoFormat(320, 240, _fpsInterval, _codec));
+//    // formats.push_back(cricket::VideoFormat(160, 120, _fpsInterval, _codec));
+//}
 
 
 VideoPacketSource::~VideoPacketSource()
@@ -110,95 +114,26 @@ void VideoPacketSource::Stop()
 }
 */
 
-int VideoPacketSource::onVideoCaptured(IPacket& pac)
+void VideoPacketSource::run(Frame *frame)
 {
     
-    SInfo << "ideoPacketSource::onVideoCaptured";
+    SInfo << "ideoPacketSource::run";
     
-    //if(!IsRunning())
-  //  return;
-    #if MP4File
-    ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
-    
-   
+    int64_t TimestampUs = rtc::TimeMicros();
 
-    assert(packet.width > 0);
-    assert(packet.height > 0);
+     rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>(frame);
 
-    int adapted_width;
-    int adapted_height;
-    int crop_width;
-    int crop_height;
-    int crop_x;
-    int crop_y;
-    int64_t timestamp;
-   // int64_t translated_camera_time_us;
 
-#if WebRTC_USE_DECODER_PTS
-    // Set the packet timestamp.
-    // Since the stream may not be playing from the beginning we
-    // store the first packet timestamp and subtract it from
-    // subsequent packets.
-    if (!_timestampOffset)
-        _timestampOffset = -packet.time;
-    timestamp = packet.time + _timestampOffset;
-
-    // NOTE: Initial packet time cannot be 0 for some reason.
-    // WebRTC sets the initial packet time to 1000 so we will do the same.
-    timestamp += 1000;
-#else
-     _nextTimestamp += _captureFormat.interval;
-     timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
-#endif
-
-     if (!AdaptFrame(packet.width, packet.height,
-         timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
-         &adapted_width, &adapted_height,
-         &crop_width, &crop_height,
-         &crop_x, &crop_y)) {
-         //LWarn("Adapt frame failed", packet.time)
-         return 0;
-     }
-
-   // int64_t TimestampUs = rtc::TimeMicros();
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Copy(
-            packet.width, packet.height,
-            packet.buffer[0], packet.linesize[0],
-            packet.buffer[1], packet.linesize[1],
-            packet.buffer[2], packet.linesize[2]);
-    
-    
-    webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-		set_video_frame_buffer(buffer).
+	webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+		set_video_frame_buffer(Buffer).
 		set_rotation(webrtc::kVideoRotation_0).
-		set_timestamp_us(timestamp).
+		set_timestamp_us(TimestampUs).
 		build();
 
-	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
-     //SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
-     OnFrame(Frame);  //arvind
-   #endif     
 
-    // OnFrame(webrtc::VideoFrame(
-    //     buffer, _rotation,
-    //     translated_camera_time_us), // timestamp
-    //     packet.width, packet.height);
-
-#if 0 // Old code pre f5297a0
-    cricket::CapturedFrame frame;
-    frame.width = packet.width;
-    frame.height = packet.height;
-    frame.pixel_width = 1;
-    frame.pixel_height = 1;
-    frame.fourcc = cricket::FOURCC_NV12;
-    frame.data = packet.data();
-    frame.data_size = packet.size();
-    // frame.time_stamp = packet.time; // time in microseconds is ignored
-
-    SignalFrameCaptured(this, &frame);
-#endif
+	OnFrame(Frame);  //arvind
     
-    return 1;
+    return ;
 }
 
 /*

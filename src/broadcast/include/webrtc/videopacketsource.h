@@ -16,7 +16,7 @@
 #include "base/packet.h"
 #include "media/base/adapted_video_track_source.h"
 #include "rtc_base/timestamp_aligner.h"
-
+#include "framefilter.h"
 
 namespace base {
 namespace wrtc {
@@ -27,11 +27,24 @@ namespace wrtc {
 /// It's used as the remote video source's `VideoCapturer` so that the remote
 /// video can be used as a `cricket::VideoCapturer` and in that way a remote
 /// video stream can implement the `MediaStreamSourceInterface`.
-class VideoPacketSource : public rtc::AdaptedVideoTrackSource
-{
+class VideoPacketSource : public rtc::AdaptedVideoTrackSource, fmp4::FrameFilter
+{ 
+
+public:                                                                
+      VideoPacketSource(std::string &playerId, const char *name, fmp4::FrameFilter *next = NULL);
+
+protected:
+    void go(Frame *frame)
+    {
+        
+    }
+
 public:
-    VideoPacketSource(std::string &playerId);
-    VideoPacketSource(const cricket::VideoFormat& captureFormat);
+    void run(Frame *frame);
+   
+public:
+  
+   // VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
 
     /// Set the source `av::VideoPacket` emitter.

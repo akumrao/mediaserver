@@ -56,12 +56,13 @@ protected:
     
     
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
-    
+public:    
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
     
-    
-      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
-      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
+ protected:
+     
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
       
     
     int PlayerID;

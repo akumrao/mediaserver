@@ -1,8 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "VideoEncoder.h"
-
-
+#include "webrtc/rawVideoFrame.h"
+//#include "rtc_base/ref_counted_object.h"
+//#include "rtc_base/atomic_ops.h"
 inline webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile, webrtc::H264::Level level)
 {
 	const absl::optional<std::string> profile_string =
@@ -120,8 +121,93 @@ int32_t FVideoEncoder::Release()
 	return 0;
 }
 
-int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& Frame, const std::vector<webrtc::VideoFrameType>* FrameTypes)
+int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector<webrtc::VideoFrameType>* FrameTypes)
 {
+    
+    FRawFrameBuffer* RawFrame = static_cast<FRawFrameBuffer*>(frame.video_frame_buffer().get());
+	// the frame managed to pass encoder queue so disable frame drop notification
+
+    BasicFrame *buf =(BasicFrame*) RawFrame->GetBuffer();
+    
+    
+//    std::vector<byte> sendBuffer;
+//    sendBuffer.resize(curLength);
+//    memcpy(sendBuffer.data(), byteBuffer, curLength);
+//    hr = buffer->Unlock();
+//    if (FAILED(hr)) {
+//      return;
+//    }
+
+    // sendBuffer is not copied here.
+     webrtc::EncodedImage encodedImage(buf->payload.data(), buf->payload.size(), buf->payload.size());
+
+   
+    encodedImage._completeFrame = true;
+    encodedImage._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+    
+    // Scan for and create mark all fragments.
+    webrtc::RTPFragmentationHeader fragmentationHeader;
+    uint32_t fragIdx = 0;
+    for (uint32_t i = 0; i < buf->payload.size() - 5; ++i) {
+      uint8_t* ptr = buf->payload.data() + i;
+      int prefixLengthFound = 0;
+      if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x00 && ptr[3] == 0x01
+        && ((ptr[4] & 0x1f) != 0x09 /* ignore access unit delimiters */)) {
+        prefixLengthFound = 4;
+      } else if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x01
+        && ((ptr[3] & 0x1f) != 0x09 /* ignore access unit delimiters */)) {
+        prefixLengthFound = 3;
+      }
+
+      // Found a key frame, mark is as such in case
+      // MFSampleExtension_CleanPoint wasn't set on the sample.
+      if (prefixLengthFound > 0 && (ptr[prefixLengthFound] & 0x1f) == 0x05) {
+        encodedImage._completeFrame = true;
+        encodedImage._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+      }
+
+      if (prefixLengthFound > 0) {
+        fragmentationHeader.VerifyAndAllocateFragmentationHeader(fragIdx + 1);
+        fragmentationHeader.fragmentationOffset[fragIdx] = i + prefixLengthFound;
+        fragmentationHeader.fragmentationLength[fragIdx] = 0;  // We'll set that later
+        // Set the length of the previous fragment.
+        if (fragIdx > 0) {
+          fragmentationHeader.fragmentationLength[fragIdx - 1] =
+            i - fragmentationHeader.fragmentationOffset[fragIdx - 1];
+        }
+        //fragmentationHeader.fragmentationPlType[fragIdx] = 0;
+        //fragmentationHeader.fragmentationTimeDiff[fragIdx] = 0;
+        ++fragIdx;
+        i += 5;
+      }
+    }
+    // Set the length of the last fragment.
+    if (fragIdx > 0) {
+      fragmentationHeader.fragmentationLength[fragIdx - 1] =
+        buf->payload.size() -
+        fragmentationHeader.fragmentationOffset[fragIdx - 1];
+    }
+
+
+
+        encodedImage.SetTimestamp(frame.timestamp());
+    
+//        encodedImage._encodedWidth = frame.frameWidth;
+       // encodedImage._encodedHeight = frame.frameHeight;
+     
+
+	encodedImage.ntp_time_ms_ = frame.ntp_time_ms();
+	encodedImage.capture_time_ms_ = frame.render_time_ms();
+	encodedImage.rotation_ = frame.rotation();
+	//encodedImage.timing_.encode_start_ms = rtc::TimeMicros() / 1000;
+        
+	  if (Callback != nullptr) {
+		webrtc::CodecSpecificInfo codecSpecificInfo;
+		codecSpecificInfo.codecType = webrtc::kVideoCodecH264;
+		codecSpecificInfo.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
+		Callback->OnEncodedImage(
+		  encodedImage, &codecSpecificInfo, &fragmentationHeader);
+	  }
 	
 	return WEBRTC_VIDEO_CODEC_OK;
 }

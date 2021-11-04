@@ -215,13 +215,13 @@ void MultiplexMediaCapturer::addMediaTracks(
   
   
   
-  if (ffparser)
+  //if (ffparser)
   {
-      using std::placeholders::_1;
+   //   using std::placeholders::_1;
 //      assert(_videoCapture->video());
  //     auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
-       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
+       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd,"VideoCapturer" );
        
     //  ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
 
@@ -274,9 +274,10 @@ void MultiplexMediaCapturer::start()
 
     ffparser->start();
 
+    fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
+    
 
-
-    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, false, fragmp4_muxer, info, txt); // Request livethread to write into filter info
+    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, false, tmpVc , info, txt); // Request livethread to write into filter info
     ffparser->registerStreamCall(*ctx);
     ffparser->playStreamCall(*ctx);
             
