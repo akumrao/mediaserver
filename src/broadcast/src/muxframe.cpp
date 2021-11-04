@@ -9,11 +9,11 @@
  */
 
 
-#include "frame.h"
+#include "muxframe.h"
 
 #include <sstream>
 
-#include <string.h>
+
 Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
 
@@ -157,38 +157,38 @@ void BasicFrame::fillH264Pars() {
 }
 
 
-//void BasicFrame::fillAVPacket(AVPacket *avpkt) {
-//  avpkt->data         =payload.data(); // +4; that four is just for debugging..
-//  avpkt->size         =payload.size(); // -4;
-//  avpkt->stream_index =stream_index;
+void BasicFrame::fillAVPacket(AVPacket *avpkt) {
+  avpkt->data         =payload.data(); // +4; that four is just for debugging..
+  avpkt->size         =payload.size(); // -4;
+  avpkt->stream_index =stream_index;
+
+  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
+    avpkt->flags=AV_PKT_FLAG_KEY;
+  }
+
+  // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
 //
-//  if (codec_id==AV_CODEC_ID_H264 && h264_pars.slice_type==H264SliceType::sps) { // we assume that frames always come in the following sequence: sps, pps, i, etc.
-//    avpkt->flags=AV_PKT_FLAG_KEY;
+//  if (mstimestamp>=0) {
+//    avpkt->pts=(int64_t)mstimestamp;
 //  }
-//
-//  // std::cout << "Frame : useAVPacket : pts =" << pts << std::endl;
-////
-////  if (mstimestamp>=0) {
-////    avpkt->pts=(int64_t)mstimestamp;
-////  }
-////  else {
-////    avpkt->pts=AV_NOPTS_VALUE;
-// // }
-//
-//  // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
-//
-//  avpkt->dts=AV_NOPTS_VALUE; // let muxer set it automagically 
-//}
+//  else {
+//    avpkt->pts=AV_NOPTS_VALUE;
+ // }
+
+  // std::cout << "Frame : useAVPacket : final pts =" << pts << std::endl;
+
+  avpkt->dts=AV_NOPTS_VALUE; // let muxer set it automagically 
+}
 
 
-//void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
-//  payload.resize(pkt->size);
-//  memcpy(payload.data(),pkt->data,pkt->size);
-//  // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
-////  stream_index=pkt->stream_index;
-//  // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
-// // mstimestamp=(long int)pkt->pts;
-//}
+void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
+  payload.resize(pkt->size);
+  memcpy(payload.data(),pkt->data,pkt->size);
+  // TODO: optimally, this would be done only once - in copy-on-write when writing to fifo, at the thread border
+//  stream_index=pkt->stream_index;
+  // frametype=FrameType::h264; // not here .. avpkt carries no information about the codec
+ // mstimestamp=(long int)pkt->pts;
+}
 
 
 void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )

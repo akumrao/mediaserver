@@ -9,6 +9,11 @@
 //#include <iterator>
 //#include  <vector>
 
+// #include "ff/ff.h"
+ //#include "ff/mediacapture.h"
+
+//#include <libavutil/timestamp.h>
+#include "avformat.h"
 
 
 //#include "micro.h"
@@ -16,26 +21,6 @@
 
 #include "constant.h"
 
-enum AVMediaType {
-    AVMEDIA_TYPE_UNKNOWN = -1,  ///< Usually treated as AVMEDIA_TYPE_DATA
-    AVMEDIA_TYPE_VIDEO,
-    AVMEDIA_TYPE_AUDIO,
-    AVMEDIA_TYPE_DATA,          ///< Opaque data information usually continuous
-    AVMEDIA_TYPE_SUBTITLE,
-    AVMEDIA_TYPE_ATTACHMENT,    ///< Opaque data information usually sparse
-    AVMEDIA_TYPE_NB
-};
-
-
-
-enum AVCodecID {
-    AV_CODEC_ID_NONE,
-
-    AV_CODEC_ID_H264,
-    AV_CODEC_ID_PCM_MULAW,
-    AV_CODEC_ID_RV20
-            
- };
 /** Enumeration of Frame classes 
  * 
  * @ingroup frames_tag
@@ -218,8 +203,8 @@ public:                  // codec-dependent functions
     void copyBuf( uint8_t* buf  ,unsigned size );
 
 public:
-   // void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
-   // void copyFromAVPacket(AVPacket *avpkt);                                                                ///< Copy data from AVPacket structure
+    void fillAVPacket(AVPacket *avpkt);                                                                    ///< Copy payload to AVPacket structure
+    void copyFromAVPacket(AVPacket *avpkt);                                                                ///< Copy data from AVPacket structure
    // void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure  //arvind
 
 public:                                                  // frame serialization
