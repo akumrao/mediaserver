@@ -1,0 +1,433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\base64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\datetime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\filesystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\idler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\packetstream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\platform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\random.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\sha1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\signalsHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http_parser\http_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\json\src\configuration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\json\src\json.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\IP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\TcpServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\PortManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\TcpConnection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\UdpSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HTTPResponder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\message.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\url.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\packetizers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\websocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpConn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\cookie.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\httputil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\response.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aac_ac3_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ac3_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ac3tab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aes_ctr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\allcodecs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\allformats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\atomic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\audio_frame_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\audiointerleave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avbuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avfft.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aviobuf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avpacket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avparser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avstring.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bitstream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bitstream_filters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bprint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bsf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\channel_layout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\codec_desc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\color_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\cpu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\crc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\cuvid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\dct.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\dict.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\eval.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\faandct.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\fdctdsp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\fifo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\file_open.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\format.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\frame_thread_encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\h264_mp4toannexb_bsf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\hwcontext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\id3v1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\id3v2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\imgutils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\intmath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\isom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\libfdk-aacdec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\libfdk-aacenc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\live.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\livethread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mathematics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\metadata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mov_chan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenccenc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenchint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg12data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg4_unpack_bframes_bsf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg4audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegaudiodata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegpicture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegutils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideodsp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideoencdsp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\muxframe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\opt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\options_avformat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\os_support.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\parseutils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pixdesc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\profiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\protocols.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread_frame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread_slice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\random_seed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ratecontrol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rational.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\raw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rawutils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rdft.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\reverse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\riff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\riffenc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\samplefmt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\sha.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\stereo3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\timecode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils_avformat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils_avutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\vpcc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\FFMpeg3\mediaserver\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{EA5B8D09-000F-32C7-B9E8-910ED12FC9B4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

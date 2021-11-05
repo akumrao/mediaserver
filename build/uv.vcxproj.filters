@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\fs-poll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\idna.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\inet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\random.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\strscpy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\threadpool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\uv-common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\uv-data-getter-setters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\version.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\async.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\detect-wakeup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\dl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\fs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\fs-event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\getaddrinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\getnameinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\handle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\loop-watcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\pipe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\poll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\process-stdio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\signal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\snprintf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\tcp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\tty.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\udp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\winapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\libuv\src\win\winsock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\FFMpeg3\mediaserver\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{EA5B8D09-000F-32C7-B9E8-910ED12FC9B4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

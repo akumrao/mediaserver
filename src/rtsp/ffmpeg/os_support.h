@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#include <wchar.h>
 #if HAVE_DIRECT_H
 #include <direct.h>
 #endif

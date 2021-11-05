@@ -216,7 +216,7 @@ namespace base
                 worker->obj = this;
                 
 #ifdef _WIN32
-                err = uv_thread_create(&worker->thread, workermain,      (void*)worker);
+                int err = uv_thread_create(&worker->thread, workermain,      (void*)worker);
                 if (err != 0)
                    LError("setup_workers() failed: %s", uv_strerror(err));
 

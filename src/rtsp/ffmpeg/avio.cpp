@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-
+#ifdef _cdecl
+#error "Sanjay"
+#endif
 #include "avstring.h"
 #include "dict.h"
 #include "opt.h"

@@ -1,0 +1,12 @@
+C:/FFMpeg3/mediaserver/build/CMakeFiles/NightlyMemoryCheck.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/Experimental.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/uv_a.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/uv.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/Continuous.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/Nightly.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/main.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/httpStream.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/RUN_TESTS.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/INSTALL.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/ALL_BUILD.dir
+C:/FFMpeg3/mediaserver/build/CMakeFiles/ZERO_CHECK.dir

@@ -1,0 +1,846 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# EHsc for exception. W4 & w for warning levels
+
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build_overrides/build.gni")
+import("//build/config/arm.gni")
+import("//testing/libfuzzer/fuzzer_test.gni")
+
+config("socketio_config") {
+  include_dirs = [ 
+
+  "client/src/base/include", 
+  "client/src/http_parser",
+  "client/src/crypto/include",
+  "client/src/json/include",
+  "client/src/net/include",
+   "client/src/http/include",
+   "client/src/libuv/include",
+   "client/src/libuv/src",
+   "client/src/libuv/src/unix",
+   "client/src/signal/include",
+
+  ]
+
+    if (!is_win) 
+    {
+      cflags = [ "-fexceptions", "-Wno-error" ]
+      cflags_cc = [ "-fexceptions", "-Wno-error" , "-Wno-inconsistent-missing-override",
+        "-Wno-overloaded-virtual"]
+
+
+    }
+    else
+    {
+
+        if (is_clang) {
+            cflags_cc = ["-w",  "/EHsc" , "-Wno-error" , "-Wno-inconsistent-missing-override",
+            "-Wno-overloaded-virtual"]
+        }
+        else
+        {
+           cflags_cc = ["/W0",  "/EHsc"]
+        }
+
+        defines = [  "SCY_WIN",  ]
+
+        libs = [
+      
+        "userenv.lib",
+
+        ]
+
+    }
+
+}
+
+config("socketio_private_config") {
+  defines = [
+    # Prefer alloca() over variable length arrays which are often inefficient;
+    # the opus code will automatically handle this correctly per-platform.
+    #"USE_ALLOCA",
+    #"HAVE_ALLOCA_H",
+  ]
+
+
+ 
+
+  if (is_win) {
+    
+
+  } else {
+   
+  }
+
+
+
+
+  # Note: Do not add any defines or include_dirs to this target, those should all
+  # go in the opus_private_config so they can be shared with intrinsic targets.
+  source_set("socketioset") {
+ 
+    include_dirs = [ 
+
+    "client/src/base/include", 
+    "client/src/http_parser",
+    "client/src/crypto/include",
+    "client/src/json/include",
+    "client/src/net/include",
+     "client/src/http/include",
+     "client/src/libuv/include",
+     "client/src/libuv/src",
+     "client/src/libuv/src/unix",
+     "client/src/signal/include",
+     "//third_party/boringssl/src/include",
+
+    ]
+
+
+    sources = [
+    #"SocketIO.h",
+    #"SocketIO.cpp",
+    "client/src/base/include/base/buffer.h",
+    "client/src/base/include/base/Timer.h",
+    "client/src/base/include/base/sha1.h",
+    "client/src/base/include/base/base64.h",
+    "client/src/base/include/base/packet.h",
+    "client/src/base/include/base/packetstream.h",
+    "client/src/base/include/base/util.h",
+    "client/src/base/include/base/time.h",
+    "client/src/base/include/base/datetime.h",
+    "client/src/base/include/base/error.h",
+    "client/src/base/include/base/byteorder.h",
+    "client/src/base/include/base/uuid.h",
+    "client/src/base/include/base/signalsHandler.h",
+    "client/src/base/include/base/define.h",
+    "client/src/base/include/base/collection.h",
+    "client/src/base/include/base/base.h",
+    "client/src/base/include/base/queue.h",
+
+    "client/src/base/include/base/process.h",
+    "client/src/base/include/base/singleton.h",
+    "client/src/base/include/base/thread.h",
+    "client/src/base/include/base/platform.h",
+    "client/src/base/include/base/interface.h",
+    "client/src/base/include/base/logger.h",
+    "client/src/base/include/base/application.h",
+    "client/src/base/include/base/idler.h",
+    "client/src/base/include/base/filesystem.h",
+    "client/src/base/include/base/packetqueue.h",
+    "client/src/base/include/base/random.h",
+    "client/src/base/include/base/hex.h",
+    "client/src/base/src/util.cpp",
+    "client/src/base/src/process.cpp",
+    "client/src/base/src/logger.cpp",
+    "client/src/base/src/thread.cpp",
+    "client/src/base/src/time.cpp",
+    "client/src/base/src/Timer.cpp",
+    "client/src/base/src/random.cpp",
+    "client/src/base/src/application.cpp",
+    "client/src/base/src/collection.cpp",
+    "client/src/base/src/buffer.cpp",
+    "client/src/base/src/datetime.cpp",
+    "client/src/base/src/filesystem.cpp",
+    "client/src/base/src/packetstream.cpp",
+
+    "client/src/base/src/base64.cpp",
+    "client/src/base/src/idler.cpp",
+    "client/src/base/src/signalsHandler.cpp",
+    "client/src/base/src/platform.cpp",
+    "client/src/base/src/sha1.cpp",
+
+    "client/src/net/include/net/PortManager.h",
+    "client/src/net/include/net/netInterface.h",
+    "client/src/net/include/net/UdpSocket.h",
+    "client/src/net/include/net/IP.h",
+    "client/src/net/include/net/SslConnection.h",
+    "client/src/net/include/net/ssladapter.h",
+    "client/src/net/include/net/TcpServer.h",
+    "client/src/net/include/net/TcpConnection.h",
+    "client/src/net/include/net/dns.h",
+    "client/src/net/src/TcpServer.cpp",
+    "client/src/net/src/PortManager.cpp",
+    "client/src/net/src/SslConnection.cpp",
+    "client/src/net/src/IP.cpp",
+    "client/src/net/src/TcpConnection.cpp",
+    "client/src/net/src/UdpSocket.cpp",
+    "client/src/net/src/ssladapter.cpp",
+
+    "client/src/http/include/http/HTTPResponder.h",
+    "client/src/http/include/http/responder.h",
+    "client/src/http/include/http/request.h",
+    "client/src/http/include/http/util.h",
+    "client/src/http/include/http/message.h",
+    "client/src/http/include/http/packetizers.h",
+    "client/src/http/include/http/url.h",
+    "client/src/http/include/http/client.h",
+    "client/src/http/include/http/websocket.h",
+    "client/src/http/include/http/HttpServer.h",
+    "client/src/http/include/http/HttpsClient.h",
+    "client/src/http/include/http/cookie.h",
+    "client/src/http/include/http/HttpClient.h",
+    "client/src/http/include/http/http.h",
+    "client/src/http/include/http/response.h",
+    "client/src/http/include/http/HttpConn.h",
+    "client/src/http/include/http/HttpsConn.h",
+    "client/src/http/include/http/parser.h",
+    "client/src/http/include/http/form.h",
+
+    "client/src/http/src/HTTPResponder.cpp",
+    "client/src/http/src/client.cpp",
+    "client/src/http/src/httputil.cpp",
+    "client/src/http/src/request.cpp",
+    "client/src/http/src/response.cpp",
+    "client/src/http/src/HttpServer.cpp",
+    "client/src/http/src/HttpsConn.cpp",
+    "client/src/http/src/cookie.cpp",
+    "client/src/http/src/HttpsClient.cpp",
+    "client/src/http/src/HttpConn.cpp",
+    "client/src/http/src/message.cpp",
+    "client/src/http/src/parser.cpp",
+    "client/src/http/src/packetizers.cpp",
+    "client/src/http/src/url.cpp",
+    "client/src/http/src/HttpClient.cpp",
+    "client/src/http/src/websocket.cpp",
+    "client/src/http/src/form.cpp",
+
+
+    "client/src/signal/include/socketio/packet.h",
+    "client/src/signal/include/socketio/socketioClient.h",
+    "client/src/signal/src/socketioClient.cpp",
+    "client/src/signal/src/packet.cpp",
+
+    "client/src/http_parser/http_parser.h",
+    "client/src/http_parser/http_parser.cpp",
+
+    "client/src/json/src/json.cpp",
+    "client/src/json/src/configuration.cpp",
+
+   
+    ]
+
+  
+    #cflags = [ "-fexceptions" ]
+    #cflags_cc = [ "-fexceptions"]
+
+
+    configs += [
+       ":socketio_private_config",
+    ]
+    public_configs = [ ":socketio_config" ]
+
+    }
+
+
+
+    static_library("libuv") {
+ 
+    include_dirs = [ 
+
+     "client/src/libuv/include",
+     "client/src/libuv/src",
+     "client/src/libuv/src/unix",
+ 
+    ]
+
+
+    sources = [
+    "client/src/libuv/src/fs-poll.cpp",
+    "client/src/libuv/src/strscpy.h",
+    "client/src/libuv/src/version.cpp",
+    "client/src/libuv/src/uv-common.h",
+    "client/src/libuv/src/random.cpp",
+    "client/src/libuv/src/uv-data-getter-setters.cpp",
+    "client/src/libuv/src/queue.h",
+    "client/src/libuv/src/heap-inl.h",
+    "client/src/libuv/src/inet.cpp",
+    "client/src/libuv/src/convert..h",
+    "client/src/libuv/src/timer.cpp",
+    "client/src/libuv/src/strscpy.cpp",
+    "client/src/libuv/src/threadpool.cpp",
+    "client/src/libuv/src/uv-common.cpp",
+    ]
+
+    if (!is_win) {
+    sources += [
+      "client/src/libuv/src/unix/async.cpp",
+       "client/src/libuv/src/unix/core.cpp",
+       "client/src/libuv/src/unix/dl.cpp",
+       "client/src/libuv/src/unix/fs.cpp",
+       "client/src/libuv/src/unix/getaddrinfo.cpp",
+       "client/src/libuv/src/unix/getnameinfo.cpp",
+       "client/src/libuv/src/unix/loop-watcher.cpp",
+       "client/src/libuv/src/unix/loop.cpp",
+       "client/src/libuv/src/unix/pipe.cpp",
+       "client/src/libuv/src/unix/poll.cpp",
+       "client/src/libuv/src/unix/process.cpp",
+       "client/src/libuv/src/unix/random-devurandom.cpp",
+       "client/src/libuv/src/unix/signal.cpp",
+       "client/src/libuv/src/unix/stream.cpp",
+       "client/src/libuv/src/unix/tcp.cpp",
+       "client/src/libuv/src/unix/thread.cpp",
+       "client/src/libuv/src/unix/tty.cpp",
+       "client/src/libuv/src/unix/udp.cpp",
+       ]
+
+    }
+    else
+    {
+       sources += [
+       "client/src/libuv/src/win/async.cpp",
+       "client/src/libuv/src/win/core.cpp",
+       "client/src/libuv/src/win/detect-wakeup.cpp",
+       "client/src/libuv/src/win/dl.cpp",
+       "client/src/libuv/src/win/error.cpp",
+       "client/src/libuv/src/win/fs.cpp",
+       "client/src/libuv/src/win/fs-event.cpp",
+       "client/src/libuv/src/win/getaddrinfo.cpp",
+       "client/src/libuv/src/win/getnameinfo.cpp",
+       "client/src/libuv/src/win/handle.cpp",
+       "client/src/libuv/src/win/loop-watcher.cpp",
+       "client/src/libuv/src/win/pipe.cpp",
+       "client/src/libuv/src/win/thread.cpp",
+       "client/src/libuv/src/win/poll.cpp",
+       "client/src/libuv/src/win/process.cpp",
+       "client/src/libuv/src/win/process-stdio.cpp",
+       "client/src/libuv/src/win/signal.cpp",
+       "client/src/libuv/src/win/snprintf.cpp",
+       "client/src/libuv/src/win/stream.cpp",
+       "client/src/libuv/src/win/tcp.cpp",
+       "client/src/libuv/src/win/tty.cpp",
+       "client/src/libuv/src/win/udp.cpp",
+       "client/src/libuv/src/win/util.cpp",
+       "client/src/libuv/src/win/winapi.cpp",
+       "client/src/libuv/src/win/winsock.cpp",
+       "client/src/libuv/src/idna.cpp",
+       ]
+    }
+
+
+    if (is_linux ) {
+
+      sources += [
+
+       "client/src/libuv/src/unix/linux-core.cpp",
+       "client/src/libuv/src/unix/linux-inotify.cpp",
+       "client/src/libuv/src/unix/linux-syscalls.cpp",
+       "client/src/libuv/src/unix/proctitle.cpp",
+       "client/src/libuv/src/unix/random-getrandom.cpp",
+       "client/src/libuv/src/unix/random-sysctl.cpp",
+
+      ]
+
+    }
+
+    if (is_android ) {
+       sources += [
+
+       "client/src/libuv/src/unix/android-ifaddrs.cpp",
+       "client/src/libuv/src/unix/linux-core.cpp",
+       "client/src/libuv/src/unix/linux-inotify.cpp",
+       "client/src/libuv/src/unix/linux-syscalls.cpp",
+       #"client/src/libuv/src/unix/procfs-exepath.cpp",
+       "client/src/libuv/src/unix/pthread-fixes.cpp",
+       "client/src/libuv/src/unix/random-getrandom.cpp",
+       "client/src/libuv/src/unix/random-sysctl.cpp",
+       #"client/src/libuv/src/unix/sysinfo-loadavg.cpp",
+    ]
+
+     libs = [ "log" ]
+    }
+
+
+    configs += [
+       ":socketio_private_config",
+    ]
+    public_configs = [ ":socketio_config" ]
+
+    }
+
+
+
+  executable("testme") {
+    sources = [
+      # sources
+      "main.cpp",
+    ]
+    deps = [
+      ":socketio",
+      ":libuv",
+       "//third_party/boringssl"
+    ]
+    if (is_linux) {
+      cflags = [ "-fexceptions" ]
+    }
+
+      if (is_win) {
+    libs = [
+      "iphlpapi.lib",
+    ]
+    }
+  }
+
+  executable("testhttp") {
+    sources = [
+      "mainhttp.cpp",
+    ]
+    deps = [
+      ":socketioset",
+      ":libuv",
+       "//third_party/boringssl"
+    ]
+    if (is_linux) {
+      cflags = [ "-fexceptions" ]
+    }
+
+      if (is_win) {
+    libs = [
+      "iphlpapi.lib",
+    ]
+    }
+  }
+
+  static_library("socketio") {
+ 
+    sources = [
+    "Signaler.cpp",
+    "Signaler.h",
+    ]
+    deps = [
+      ":socketioset",
+    ]
+   }
+
+  static_library("httpStream") {
+ 
+    include_dirs = [ 
+
+    "client/src/base/include", 
+    "client/src/http_parser",
+    "client/src/crypto/include",
+    "client/src/json/include",
+    "client/src/net/include",
+     "client/src/http/include",
+     "client/src/libuv/include",
+     "client/src/libuv/src",
+     "client/src/libuv/src/unix",
+     "client/src/signal/include",
+     "//third_party/boringssl/src/include",
+
+    ]
+
+
+    sources = [
+    "client/src/base/include/base/buffer.h",
+    "client/src/base/include/base/Timer.h",
+    "client/src/base/include/base/sha1.h",
+    "client/src/base/include/base/base64.h",
+    "client/src/base/include/base/packet.h",
+    "client/src/base/include/base/packetstream.h",
+    "client/src/base/include/base/util.h",
+    "client/src/base/include/base/time.h",
+    "client/src/base/include/base/datetime.h",
+    "client/src/base/include/base/error.h",
+    "client/src/base/include/base/byteorder.h",
+    "client/src/base/include/base/uuid.h",
+    "client/src/base/include/base/signalsHandler.h",
+    "client/src/base/include/base/define.h",
+    "client/src/base/include/base/collection.h",
+    "client/src/base/include/base/base.h",
+    "client/src/base/include/base/queue.h",
+
+    "client/src/base/include/base/process.h",
+    "client/src/base/include/base/singleton.h",
+    "client/src/base/include/base/thread.h",
+    "client/src/base/include/base/platform.h",
+    "client/src/base/include/base/interface.h",
+    "client/src/base/include/base/logger.h",
+    "client/src/base/include/base/application.h",
+    "client/src/base/include/base/idler.h",
+    "client/src/base/include/base/filesystem.h",
+    "client/src/base/include/base/packetqueue.h",
+    "client/src/base/include/base/random.h",
+    "client/src/base/include/base/hex.h",
+    "client/src/base/src/util.cpp",
+    "client/src/base/src/process.cpp",
+    "client/src/base/src/logger.cpp",
+    "client/src/base/src/thread.cpp",
+    "client/src/base/src/time.cpp",
+    "client/src/base/src/Timer.cpp",
+    "client/src/base/src/random.cpp",
+    "client/src/base/src/application.cpp",
+    "client/src/base/src/collection.cpp",
+    "client/src/base/src/buffer.cpp",
+    "client/src/base/src/datetime.cpp",
+    "client/src/base/src/filesystem.cpp",
+    "client/src/base/src/packetstream.cpp",
+
+    "client/src/base/src/base64.cpp",
+    "client/src/base/src/idler.cpp",
+    "client/src/base/src/signalsHandler.cpp",
+    "client/src/base/src/platform.cpp",
+    "client/src/base/src/sha1.cpp",
+
+    "client/src/net/include/net/PortManager.h",
+    "client/src/net/include/net/netInterface.h",
+    "client/src/net/include/net/UdpSocket.h",
+    "client/src/net/include/net/IP.h",
+    "client/src/net/include/net/SslConnection.h",
+    "client/src/net/include/net/ssladapter.h",
+    "client/src/net/include/net/TcpServer.h",
+    "client/src/net/include/net/TcpConnection.h",
+    "client/src/net/include/net/dns.h",
+    "client/src/net/src/TcpServer.cpp",
+    "client/src/net/src/PortManager.cpp",
+    "client/src/net/src/SslConnection.cpp",
+    "client/src/net/src/IP.cpp",
+    "client/src/net/src/TcpConnection.cpp",
+    "client/src/net/src/UdpSocket.cpp",
+    "client/src/net/src/ssladapter.cpp",
+
+    "client/src/http/include/http/HTTPResponder.h",
+    "client/src/http/include/http/responder.h",
+    "client/src/http/include/http/request.h",
+    "client/src/http/include/http/util.h",
+    "client/src/http/include/http/message.h",
+    "client/src/http/include/http/packetizers.h",
+    "client/src/http/include/http/url.h",
+    "client/src/http/include/http/client.h",
+    "client/src/http/include/http/websocket.h",
+    "client/src/http/include/http/HttpServer.h",
+    "client/src/http/include/http/HttpsClient.h",
+    "client/src/http/include/http/cookie.h",
+    "client/src/http/include/http/HttpClient.h",
+    "client/src/http/include/http/http.h",
+    "client/src/http/include/http/response.h",
+    "client/src/http/include/http/HttpConn.h",
+    "client/src/http/include/http/HttpsConn.h",
+    "client/src/http/include/http/parser.h",
+    "client/src/http/include/http/form.h",
+
+
+    "client/src/http/src/HTTPResponder.cpp", 
+    "client/src/http/src/HttpsConn.cpp",  
+    "client/src/http/src/message.cpp",    
+    "client/src/http/src/url.cpp",
+    "client/src/http/src/HttpClient.cpp", 
+    "client/src/http/src/client.cpp", 
+    "client/src/http/src/packetizers.cpp",
+    "client/src/http/src/websocket.cpp",
+   "client/src/http/src/HttpConn.cpp", 
+   "client/src/http/src/cookie.cpp", 
+   "client/src/http/src/parser.cpp",
+   "client/src/http/src/HttpServer.cpp",  
+   "client/src/http/src/form.cpp",    
+   "client/src/http/src/request.cpp",
+   "client/src/http/src/HttpsClient.cpp",  
+   "client/src/http/src/httputil.cpp", 
+   "client/src/http/src/response.cpp",
+
+
+    "client/src/http_parser/http_parser.h",
+    "client/src/http_parser/http_parser.cpp",
+
+    "client/src/json/src/json.cpp",
+    "client/src/json/src/configuration.cpp",
+
+
+    "client/src/rtsp/ffmpeg/mpegaudiodata.h",
+    "client/src/rtsp/ffmpeg/rl.cpp",
+    "client/src/rtsp/ffmpeg/me_cmp.h",
+    "client/src/rtsp/ffmpeg/timestamp.h",
+    "client/src/rtsp/ffmpeg/internal_util.h",
+    "client/src/rtsp/ffmpeg/rational.cpp",
+    "client/src/rtsp/ffmpeg/constant.h",
+    "client/src/rtsp/ffmpeg/ratecontrol.cpp",
+    "client/src/rtsp/ffmpeg/riffenc.cpp",
+    "client/src/rtsp/ffmpeg/intreadwrite.h",
+    "client/src/rtsp/ffmpeg/mov_chan.h",
+    "client/src/rtsp/ffmpeg/color_utils.h",
+    "client/src/rtsp/ffmpeg/parseutils.h",
+    "client/src/rtsp/ffmpeg/put_bits.h",
+    "client/src/rtsp/ffmpeg/avpacket.cpp",
+    "client/src/rtsp/ffmpeg/intmath.cpp",
+    "client/src/rtsp/ffmpeg/vc1_common.h",
+    "client/src/rtsp/ffmpeg/timecode.h",
+    "client/src/rtsp/ffmpeg/avthread.h",
+    "client/src/rtsp/ffmpeg/rl.h",
+    "client/src/rtsp/ffmpeg/rdft.cpp",
+    "client/src/rtsp/ffmpeg/mpeg4audio.cpp",
+    "client/src/rtsp/ffmpeg/bitstream_filters.cpp",
+    "client/src/rtsp/ffmpeg/hpeldsp.h",
+    "client/src/rtsp/ffmpeg/videodsp.h",
+    "client/src/rtsp/ffmpeg/profiles.cpp",
+    "client/src/rtsp/ffmpeg/samplefmt.cpp",
+    "client/src/rtsp/ffmpeg/bprint.h",
+    "client/src/rtsp/ffmpeg/mem_internal.h",
+    "client/src/rtsp/ffmpeg/mpegaudiodata.cpp",
+    "client/src/rtsp/ffmpeg/avtime.cpp",
+    "client/src/rtsp/ffmpeg/aviobuf.cpp",
+    "client/src/rtsp/ffmpeg/muxframe.cpp",
+    "client/src/rtsp/ffmpeg/utils_avformat.cpp",
+    "client/src/rtsp/ffmpeg/audio_frame_queue.h",
+    "client/src/rtsp/ffmpeg/pthread_slice.cpp",
+    "client/src/rtsp/ffmpeg/mpeg4_unpack_bframes_bsf.cpp",
+    "client/src/rtsp/ffmpeg/riff.cpp",
+    "client/src/rtsp/ffmpeg/dct.cpp",
+    "client/src/rtsp/ffmpeg/network.cpp",
+    "client/src/rtsp/ffmpeg/mem.cpp",
+    "client/src/rtsp/ffmpeg/dct.h",
+    "client/src/rtsp/ffmpeg/imgutils.cpp",
+    "client/src/rtsp/ffmpeg/aac_ac3_parser.h",
+    "client/src/rtsp/ffmpeg/mathematics.h",
+    "client/src/rtsp/ffmpeg/cuvid.cpp",
+    "client/src/rtsp/ffmpeg/avstring.cpp",
+    "client/src/rtsp/ffmpeg/hwcontext_cuda.h",
+    "client/src/rtsp/ffmpeg/id3v1.h",
+    "client/src/rtsp/ffmpeg/aes_ctr.h",
+    "client/src/rtsp/ffmpeg/aes_ctr.cpp",
+    "client/src/rtsp/ffmpeg/mpegpicture.cpp",
+    "client/src/rtsp/ffmpeg/mov_chan.cpp",
+    "client/src/rtsp/ffmpeg/id3v2.h",
+    "client/src/rtsp/ffmpeg/libm.h",
+    "client/src/rtsp/ffmpeg/pthread_frame.cpp",
+    "client/src/rtsp/ffmpeg/id3v1.cpp",
+    "client/src/rtsp/ffmpeg/mpegvideodsp.cpp",
+    "client/src/rtsp/ffmpeg/rtp.h",
+    "client/src/rtsp/ffmpeg/metadata.h",
+    "client/src/rtsp/ffmpeg/fifo.cpp",
+    "client/src/rtsp/ffmpeg/mpegvideoencdsp.h",
+    "client/src/rtsp/ffmpeg/metadata.cpp",
+    "client/src/rtsp/ffmpeg/pthread_internal.h",
+    "client/src/rtsp/ffmpeg/fdctdsp.cpp",
+    "client/src/rtsp/ffmpeg/opt.cpp",
+    "client/src/rtsp/ffmpeg/aes_internal.h",
+    "client/src/rtsp/ffmpeg/bswap.h",
+    "client/src/rtsp/ffmpeg/avstring.h",
+    "client/src/rtsp/ffmpeg/opt.h",
+    "client/src/rtsp/ffmpeg/protocols.cpp",
+    "client/src/rtsp/ffmpeg/avutil.h",
+    "client/src/rtsp/ffmpeg/h264_mp4toannexb_bsf.cpp",
+    "client/src/rtsp/ffmpeg/motion_est.h",
+    "client/src/rtsp/ffmpeg/avdevthread.h",
+    "client/src/rtsp/ffmpeg/cpu.h",
+    "client/src/rtsp/ffmpeg/channel_layout.h",
+     "client/src/rtsp/ffmpeg/random_seed.cpp",
+    "client/src/rtsp/ffmpeg/aes.cpp",
+    "client/src/rtsp/ffmpeg/intmath.h",
+    "client/src/rtsp/ffmpeg/pthread.cpp",
+    "client/src/rtsp/ffmpeg/live.cpp",
+    "client/src/rtsp/ffmpeg/ffmath.h",
+    "client/src/rtsp/ffmpeg/rdft.h",
+    "client/src/rtsp/ffmpeg/aes.h",
+    "client/src/rtsp/ffmpeg/avformat.h",
+    "client/src/rtsp/ffmpeg/attributes.h",
+    "client/src/rtsp/ffmpeg/ac3_parser.cpp",
+    "client/src/rtsp/ffmpeg/isom.cpp",
+    "client/src/rtsp/ffmpeg/network.h",
+    "client/src/rtsp/ffmpeg/raw.cpp",
+    "client/src/rtsp/ffmpeg/bsf.h",
+    "client/src/rtsp/ffmpeg/hwcontext_internal.h",
+    "client/src/rtsp/ffmpeg/Settings.cpp",
+    "client/src/rtsp/ffmpeg/eval.h",
+    "client/src/rtsp/ffmpeg/samplefmt.h",
+    "client/src/rtsp/ffmpeg/dv.h",
+    "client/src/rtsp/ffmpeg/reverse.h",
+    "client/src/rtsp/ffmpeg/audiointerleave.cpp",
+    "client/src/rtsp/ffmpeg/blockdsp.h",
+    "client/src/rtsp/ffmpeg/vpcc.h",
+    "client/src/rtsp/ffmpeg/ac3tab.cpp",
+    "client/src/rtsp/ffmpeg/internal_codec.h",
+    "client/src/rtsp/ffmpeg/avfft.cpp",
+    "client/src/rtsp/ffmpeg/hwcontext.h",
+    "client/src/rtsp/ffmpeg/avfft.h",
+    "client/src/rtsp/ffmpeg/aac_ac3_parser.cpp",
+    "client/src/rtsp/ffmpeg/atomic.cpp",
+    "client/src/rtsp/ffmpeg/avbuffer.cpp",
+    "client/src/rtsp/ffmpeg/random_seed.h",
+    "client/src/rtsp/ffmpeg/movenchint.cpp",
+    "client/src/rtsp/ffmpeg/log.cpp",
+    "client/src/rtsp/ffmpeg/color_utils.cpp",
+    "client/src/rtsp/ffmpeg/dct32.h",
+    "client/src/rtsp/ffmpeg/common.h",
+    "client/src/rtsp/ffmpeg/rational.h",
+    "client/src/rtsp/ffmpeg/faandct.h",
+    "client/src/rtsp/ffmpeg/audiointerleave.h",
+    "client/src/rtsp/ffmpeg/mpeg12data.h",
+    "client/src/rtsp/ffmpeg/hwcontext.cpp",
+    "client/src/rtsp/ffmpeg/url.h",
+    "client/src/rtsp/ffmpeg/riff.h",
+    "client/src/rtsp/ffmpeg/codec.h",
+    "client/src/rtsp/ffmpeg/sha.h",
+    "client/src/rtsp/ffmpeg/allformats.cpp",
+    "client/src/rtsp/ffmpeg/fft.h",
+    "client/src/rtsp/ffmpeg/vlc.h",
+    "client/src/rtsp/ffmpeg/frame.h",
+    "client/src/rtsp/ffmpeg/dict.h",
+    "client/src/rtsp/ffmpeg/internal_avformat.h",
+    "client/src/rtsp/ffmpeg/mathematics.cpp",
+    "client/src/rtsp/ffmpeg/audio_frame_queue.cpp",
+    "client/src/rtsp/ffmpeg/qpeldsp.h",
+    "client/src/rtsp/ffmpeg/movenccenc.h",
+    "client/src/rtsp/ffmpeg/atomic_gcc.h",
+    "client/src/rtsp/ffmpeg/pixfmt.h",
+    "client/src/rtsp/ffmpeg/qsort.h",
+    "client/src/rtsp/ffmpeg/utils_avutil.cpp",
+    "client/src/rtsp/ffmpeg/bitstream.cpp",
+    "client/src/rtsp/ffmpeg/vpcc.cpp",
+    "client/src/rtsp/ffmpeg/mpeg4video.h",
+    "client/src/rtsp/ffmpeg/raw.h",
+    "client/src/rtsp/ffmpeg/macros.h",
+    "client/src/rtsp/ffmpeg/reverse.cpp",
+    "client/src/rtsp/ffmpeg/parser.h",
+    "client/src/rtsp/ffmpeg/avcodec.h",
+    "client/src/rtsp/ffmpeg/mpegutils.h",
+    "client/src/rtsp/ffmpeg/log.h",
+    "client/src/rtsp/ffmpeg/atomic.h",
+    "client/src/rtsp/ffmpeg/movenccenc.cpp",
+    "client/src/rtsp/ffmpeg/stereo3d.cpp",
+    "client/src/rtsp/ffmpeg/pixdesc.h",
+    "client/src/rtsp/ffmpeg/options.cpp",
+    "client/src/rtsp/ffmpeg/micro.h",
+    "client/src/rtsp/ffmpeg/parseutils.cpp",
+    "client/src/rtsp/ffmpeg/fifo.h",
+    "client/src/rtsp/ffmpeg/avc.cpp",
+    "client/src/rtsp/ffmpeg/mem.h",
+    "client/src/rtsp/ffmpeg/frame_thread_encoder.cpp",
+    "client/src/rtsp/ffmpeg/mpegvideoencdsp.cpp",
+    "client/src/rtsp/ffmpeg/frame_thread_encoder.h",
+    "client/src/rtsp/ffmpeg/options_table.h",
+    "client/src/rtsp/ffmpeg/fdctdsp.h",
+    "client/src/rtsp/ffmpeg/error_resilience.h",
+    "client/src/rtsp/ffmpeg/movenc.h",
+    "client/src/rtsp/ffmpeg/cpu_internal.h",
+    "client/src/rtsp/ffmpeg/ac3tab.h",
+    "client/src/rtsp/ffmpeg/get_bits.h",
+    "client/src/rtsp/ffmpeg/config.h",
+    "client/src/rtsp/ffmpeg/sha.cpp",
+    "client/src/rtsp/ffmpeg/bytestream.h",
+    "client/src/rtsp/ffmpeg/profiles.h",
+    "client/src/rtsp/ffmpeg/isom.h",
+    "client/src/rtsp/ffmpeg/os_support.h",
+    "client/src/rtsp/ffmpeg/os_support.cpp",
+    "client/src/rtsp/ffmpeg/crc.h",
+    "client/src/rtsp/ffmpeg/ratecontrol.h",
+    "client/src/rtsp/ffmpeg/avio.h",
+    "client/src/rtsp/ffmpeg/error.cpp",
+    "client/src/rtsp/ffmpeg/ac3.h",
+    "client/src/rtsp/ffmpeg/idctdsp.h",
+    "client/src/rtsp/ffmpeg/utils.cpp",
+    "client/src/rtsp/ffmpeg/intfloat.h",
+    "client/src/rtsp/ffmpeg/cpu.cpp",
+    "client/src/rtsp/ffmpeg/avassert.h",
+    "client/src/rtsp/ffmpeg/bsf.cpp",
+    "client/src/rtsp/ffmpeg/spherical.h",
+    "client/src/rtsp/ffmpeg/codec_desc.cpp",
+    "client/src/rtsp/ffmpeg/mpegutils.cpp",
+    "client/src/rtsp/ffmpeg/compat/nvenc/nvEncodeAPI.h",
+    "client/src/rtsp/ffmpeg/compat/w32dlfcn.h",
+    "client/src/rtsp/ffmpeg/compat/cuda/dynlink_loader.h",
+    "client/src/rtsp/ffmpeg/compat/cuda/dynlink_cuda.h",
+    "client/src/rtsp/ffmpeg/compat/cuda/dynlink_nvcuvid.h",
+    "client/src/rtsp/ffmpeg/compat/cuda/dynlink_cuviddec.h",
+    "client/src/rtsp/ffmpeg/h264chroma.h",
+    "client/src/rtsp/ffmpeg/mpegpicture.h",
+    "client/src/rtsp/ffmpeg/pixdesc.cpp",
+    "client/src/rtsp/ffmpeg/flac.h",
+    "client/src/rtsp/ffmpeg/libfdk-aacenc.cpp",
+    "client/src/rtsp/ffmpeg/mathops.h",
+    "client/src/rtsp/ffmpeg/avc.h",
+    "client/src/rtsp/ffmpeg/crc.cpp",
+    "client/src/rtsp/ffmpeg/ac3_parser.h",
+    "client/src/rtsp/ffmpeg/buffer.h",
+    "client/src/rtsp/ffmpeg/stereo3d.h",
+    "client/src/rtsp/ffmpeg/timecode.cpp",
+    "client/src/rtsp/ffmpeg/mux.cpp",
+    "client/src/rtsp/ffmpeg/id3v2.cpp",
+    "client/src/rtsp/ffmpeg/allcodecs.cpp",
+    "client/src/rtsp/ffmpeg/error.h",
+    "client/src/rtsp/ffmpeg/rawutils.cpp",
+    "client/src/rtsp/ffmpeg/dynarray.h",
+    "client/src/rtsp/ffmpeg/format.cpp",
+    "client/src/rtsp/ffmpeg/avparser.cpp",
+    "client/src/rtsp/ffmpeg/avio_internal.h",
+    "client/src/rtsp/ffmpeg/time_internal.h",
+    "client/src/rtsp/ffmpeg/imgutils.h",
+    "client/src/rtsp/ffmpeg/mpegvideo.h",
+    "client/src/rtsp/ffmpeg/pixblockdsp.h",
+    "client/src/rtsp/ffmpeg/mpeg12data.cpp",
+    "client/src/rtsp/ffmpeg/buffer_internal.h",
+    "client/src/rtsp/ffmpeg/libfdk-aacdec.cpp",
+    "client/src/rtsp/ffmpeg/options_avformat.cpp",
+    "client/src/rtsp/ffmpeg/livethread.cpp",
+    "client/src/rtsp/ffmpeg/movenc.cpp",
+    "client/src/rtsp/ffmpeg/dict.cpp",
+    "client/src/rtsp/ffmpeg/channel_layout.cpp",
+    "client/src/rtsp/ffmpeg/imgutils_internal.h",
+    "client/src/rtsp/ffmpeg/bprint.cpp",
+    "client/src/rtsp/ffmpeg/avio.cpp",
+    "client/src/rtsp/ffmpeg/mpeg4audio.h",
+    "client/src/rtsp/ffmpeg/faandct.cpp",
+    "client/src/rtsp/ffmpeg/mpegvideodsp.h",
+    "client/src/rtsp/ffmpeg/hwcontext_cuda_internal.h",
+    "client/src/rtsp/ffmpeg/file_open.cpp",
+    "client/src/rtsp/ffmpeg/eval.cpp",
+ 
+
+   
+    ]
+
+  
+    #cflags = [ "-fexceptions" ]
+    #cflags_cc = [ "-fexceptions"]
+    
+    defines = [  "HTTPSSL",  ]
+
+    configs += [
+       ":socketio_private_config",
+    ]
+    public_configs = [ ":socketio_config" ]
+
+    }
+
+
+   shared_library("signaler") {
+    sources = [
+      # sources
+      "SignalerAPI.cpp",
+      "SignalerAPI.h",
+      "Signaler.cpp",
+    "Signaler.h",
+    ]
+    deps = [
+      ":socketioset",
+      ":libuv",
+       "//third_party/boringssl"
+    ]
+    if (is_linux) {
+      cflags = [ "-fexceptions", "-fdeclspec" ]
+      defines = [  "SHAREDLIB",  ]
+    }
+
+    if (is_android) 
+    {
+      cflags = [ "-fexceptions", "-fdeclspec" ]
+      defines = [  "SHAREDLIB", "WEBRTC_ANDROID", ]
+    }
+
+    if (is_win) {
+     defines = [  "SHAREDLIB",  "WEBRTC_WIN", ]
+    libs = [
+      "iphlpapi.lib",
+    ]
+  }
+
+  }
+
+
+}
+
+
+
+
+

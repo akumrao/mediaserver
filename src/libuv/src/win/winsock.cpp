@@ -142,7 +142,7 @@ int uv_ntstatus_to_winsock_error(NTSTATUS status) {
     case STATUS_PENDING:
       return ERROR_IO_PENDING;
 
-    case STATUS_INVALID_HANDLE:
+    case (NTSTATUS)STATUS_INVALID_HANDLE:
     case STATUS_OBJECT_TYPE_MISMATCH:
       return WSAENOTSOCK;
 
@@ -150,7 +150,7 @@ int uv_ntstatus_to_winsock_error(NTSTATUS status) {
     case STATUS_PAGEFILE_QUOTA:
     case STATUS_COMMITMENT_LIMIT:
     case STATUS_WORKING_SET_QUOTA:
-    case STATUS_NO_MEMORY:
+    case (NTSTATUS)STATUS_NO_MEMORY:
     case STATUS_QUOTA_EXCEEDED:
     case STATUS_TOO_MANY_PAGING_FILES:
     case STATUS_REMOTE_RESOURCES:
@@ -199,7 +199,7 @@ int uv_ntstatus_to_winsock_error(NTSTATUS status) {
       return WSAEMSGSIZE;
 
     case STATUS_BUFFER_TOO_SMALL:
-    case STATUS_ACCESS_VIOLATION:
+    case (NTSTATUS)STATUS_ACCESS_VIOLATION:
       return WSAEFAULT;
 
     case STATUS_DEVICE_NOT_READY:

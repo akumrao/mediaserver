@@ -200,7 +200,11 @@
 #define HAVE_FAST_UNALIGNED 1
 #define HAVE_ALSA_ASOUNDLIB_H 1
 #define HAVE_ALTIVEC_H 0
+#ifdef _MSC_VER
+#define HAVE_ARPA_INET_H 0
+#else
 #define HAVE_ARPA_INET_H 1
+#endif
 #define HAVE_ASM_TYPES_H 1
 #define HAVE_CDIO_PARANOIA_H 0
 #define HAVE_CDIO_PARANOIA_PARANOIA_H 0
@@ -211,14 +215,22 @@
 #define HAVE_DEV_IC_BT8XX_H 0
 #define HAVE_DEV_VIDEO_BKTR_IOCTL_BT848_H 0
 #define HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H 0
+#ifdef _MSC_VER
+#define HAVE_DIRECT_H 1
+#else
 #define HAVE_DIRECT_H 0
+#endif
 #define HAVE_DIRENT_H 1
 #define HAVE_DLFCN_H 1
 #define HAVE_D3D11_H 0
 #define HAVE_DXVA_H 0
 #define HAVE_ES2_GL_H 0
 #define HAVE_GSM_H 0
+#ifdef _MSC_VER
+#define HAVE_IO_H 1
+#else
 #define HAVE_IO_H 0
+#endif
 #define HAVE_MACH_MACH_TIME_H 0
 #define HAVE_MACHINE_IOCTL_BT848_H 0
 #define HAVE_MACHINE_IOCTL_METEOR_H 0
@@ -228,7 +240,11 @@
 #define HAVE_OPENJPEG_2_0_OPENJPEG_H 0
 #define HAVE_OPENJPEG_1_5_OPENJPEG_H 0
 #define HAVE_OPENGL_GL3_H 0
+#ifdef _MSC_VER
+#define HAVE_POLL_H 0
+#else
 #define HAVE_POLL_H 1
+#endif
 #define HAVE_SNDIO_H 1
 #define HAVE_SOUNDCARD_H 0
 #define HAVE_STDATOMIC_H 1
@@ -242,10 +258,19 @@
 #define HAVE_SYS_VIDEOIO_H 0
 #define HAVE_TERMIOS_H 1
 #define HAVE_UDPLITE_H 0
+#ifdef _MSC_VER
+#define HAVE_UNISTD_H 0
+#else
 #define HAVE_UNISTD_H 1
+#endif
 #define HAVE_VALGRIND_VALGRIND_H 0
+#ifdef _MSC_VER
+#define HAVE_WINDOWS_H 1
+#define HAVE_WINSOCK2_H 1
+#else
 #define HAVE_WINDOWS_H 0
 #define HAVE_WINSOCK2_H 0
+#endif
 #define HAVE_INTRINSICS_NEON 0
 #define HAVE_ATANF 1
 #define HAVE_ATAN2F 1
@@ -331,9 +356,15 @@
 #define HAVE_UTGETOSTYPEFROMSTRING 0
 #define HAVE_VIRTUALALLOC 0
 #define HAVE_WGLGETPROCADDRESS 0
+#ifdef _MSC_VER
+#define HAVE_PTHREADS 0
+#define HAVE_OS2THREADS 0
+#define HAVE_W32THREADS 1
+#else
 #define HAVE_PTHREADS 1
 #define HAVE_OS2THREADS 0
 #define HAVE_W32THREADS 0
+#endif
 #define HAVE_AS_DN_DIRECTIVE 0
 #define HAVE_AS_FPU_DIRECTIVE 0
 #define HAVE_AS_FUNC 0
@@ -429,7 +460,11 @@
 #define CONFIG_TRANSCODE_AAC_EXAMPLE 1
 #define CONFIG_TRANSCODING_EXAMPLE 1
 #define CONFIG_BZLIB 0
+#ifdef _MSC_VER
+#define CONFIG_ICONV 0
+#else
 #define CONFIG_ICONV 1
+#endif
 #define CONFIG_LIBXCB 1
 #define CONFIG_LIBXCB_SHM 0
 #define CONFIG_LIBXCB_SHAPE 1
