@@ -6,7 +6,7 @@
     "rtcMaxPort": 12560,
      "rtsp1": "rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
     "rtsp2": "rtsp://localhost:8554/testStream",
-    "logLevel": "info",
+    "logLevel": "debug",
     "logTags": [
       "info"
     ],

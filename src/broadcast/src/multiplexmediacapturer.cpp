@@ -19,12 +19,18 @@
 #include <random>
 
 
+#include "api/media_stream_interface.h"
+#include "api/video/video_sink_interface.h"
+
+
 
 const char kStreamId[] = "stream_id";
 
 namespace base {
 namespace wrtc {
 
+   
+    
 MultiplexMediaCapturer::MultiplexMediaCapturer(): 
 #if MP4File
 _videoCapture(std::make_shared<ff::MediaCapture>()),
@@ -41,6 +47,8 @@ _videoCapture(std::make_shared<ff::MediaCapture>()),
     
     _videoCapture->cbProcessAudio.push_back(var);
     #endif
+
+      local_video_observer_.reset(new VideoObserver());
 }
 
 
@@ -212,6 +220,7 @@ void MultiplexMediaCapturer::addMediaTracks(
          conn->AddTrack(video_track, {streamId});
     }
 #endif
+  
   
   
   

@@ -27,6 +27,26 @@ namespace base {
 namespace wrtc {
 
 
+class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+ public:
+  VideoObserver() {}
+  ~VideoObserver() {}
+  //oid SetVideoCallback(I420FRAMEREADY_CALLBACK callback);
+
+ protected:
+  // VideoSinkInterface implementation
+  void OnFrame(const webrtc::VideoFrame& frame) 
+  {
+      int x = 1;
+  }
+
+ private:
+ 
+  //std::mutex mutex;
+};
+
+    
+    
 class MultiplexMediaCapturer
 {
 public:
@@ -63,7 +83,8 @@ public:
      
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
-      
+    
+     std::unique_ptr<VideoObserver> local_video_observer_;
     
     int PlayerID;
     

@@ -20,7 +20,7 @@
 
 using std::endl;
 
-
+//#define BYPASSGAME 1
 namespace base {
 namespace wrtc {
 
@@ -75,8 +75,13 @@ PeerFactoryContext::PeerFactoryContext(
               webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
               webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
             
-              std::move(VideoEncoderFactoryStrong),
-              //webrtc::CreateBuiltinVideoEncoderFactory(),
+              #if BYPASSGAME
+              webrtc::CreateBuiltinVideoEncoderFactory(), 
+              #else
+                std::move(VideoEncoderFactoryStrong),
+              #endif 
+          
+              //
 
               webrtc::CreateBuiltinVideoDecoderFactory(),
 

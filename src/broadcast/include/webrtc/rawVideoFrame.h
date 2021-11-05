@@ -18,8 +18,10 @@
   class FRawFrameBuffer : public webrtc::VideoFrameBuffer
   {
     public:
-	 FRawFrameBuffer(Frame *frame):frame(frame)
+	 FRawFrameBuffer(Frame *frame, uint frameNo):frameNo(frameNo)
 	{
+              BasicFrame *basic_frame = static_cast<BasicFrame *>(frame);
+              bframe.payload = basic_frame->payload;
 	}
 
 	//
@@ -32,12 +34,12 @@
 
 	virtual int width() const override
 	{
-		return 800;
+		return 720;
 	}
 
 	virtual int height() const override
 	{
-		return 600;
+		return 576;
 	}
 
 	rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override
@@ -49,14 +51,15 @@
 	//
 	// Own methods
 	//
-	Frame* GetBuffer() 
+	BasicFrame& GetBuffer() 
 	{
-		return frame;
+		return bframe;
 	}
 
-	
+        uint frameNo;	
 private:
-	Frame *frame;
+	BasicFrame bframe;
+        
 	
 };
 

@@ -1,6 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+
 #include "VideoEncoder.h"
+#include "base/logger.h"
+
+
 #include "webrtc/rawVideoFrame.h"
 //#include "rtc_base/ref_counted_object.h"
 //#include "rtc_base/atomic_ops.h"
@@ -22,7 +26,8 @@ inline webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile, we
 
 //////////////////////////////////////////////////////////////////////////
 
-
+namespace base {
+namespace wrtc {
 FVideoEncoderFactory::FVideoEncoderFactory()
 {}
 
@@ -36,8 +41,16 @@ std::vector<webrtc::SdpVideoFormat> FVideoEncoderFactory::GetSupportedFormats() 
 	// return { CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1),
 	//	CreateH264Format(webrtc::H264::kProfileConstrainedBaseline, webrtc::H264::kLevel3_1) };
 	// return { CreateH264Format(webrtc::H264::kProfileMain, webrtc::H264::kLevel3_1) };
-	return {CreateH264Format(webrtc::H264::kProfileConstrainedBaseline, webrtc::H264::kLevel5_2)};
+	//return {CreateH264Format(webrtc::H264::kProfileConstrainedBaseline, webrtc::H264::kLevel5_2)};
 	// return { CreateH264Format(webrtc::H264::kProfileHigh, webrtc::H264::kLevel5_1) };
+    
+    //ffprobe -show_streams  for profile and level
+    
+    std::vector<webrtc::SdpVideoFormat> supported_codecs;
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH264CodecName));
+   // supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
+       
+    return supported_codecs;
 }
 
 webrtc::VideoEncoderFactory::CodecInfo
@@ -75,11 +88,11 @@ FVideoEncoder::FVideoEncoder()//:
 //
 //	bControlsQuality = PlayerSession->IsOriginalQualityController();
 //
-//	CodecSpecific.codecType = webrtc::kVideoCodecH264;
-//	// #TODO: Probably smarter setting of `packetization_mode` is required, look at `H264EncoderImpl` ctor
-//	// CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::SingleNalUnit;
-//	CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
-//
+	CodecSpecific.codecType = webrtc::kVideoCodecH264;
+	// #TODO: Probably smarter setting of `packetization_mode` is required, look at `H264EncoderImpl` ctor
+	// CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::SingleNalUnit;
+	CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
+
 //	UE_LOG(PixelStreamer, Log, TEXT("WebRTC VideoEncoder created%s"), bControlsQuality? TEXT(", quality controller"): TEXT(""));
 }
 
@@ -124,22 +137,16 @@ int32_t FVideoEncoder::Release()
 int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector<webrtc::VideoFrameType>* FrameTypes)
 {
     
+           
+    
     FRawFrameBuffer* RawFrame = static_cast<FRawFrameBuffer*>(frame.video_frame_buffer().get());
 	// the frame managed to pass encoder queue so disable frame drop notification
-
-    BasicFrame *buf =(BasicFrame*) RawFrame->GetBuffer();
+    BasicFrame &buf = RawFrame->GetBuffer();
     
+    SDebug << "Encode frame: " << RawFrame->frameNo  << "  size: " <<  buf.payload.size(); 
     
-//    std::vector<byte> sendBuffer;
-//    sendBuffer.resize(curLength);
-//    memcpy(sendBuffer.data(), byteBuffer, curLength);
-//    hr = buffer->Unlock();
-//    if (FAILED(hr)) {
-//      return;
-//    }
-
     // sendBuffer is not copied here.
-     webrtc::EncodedImage encodedImage(buf->payload.data(), buf->payload.size(), buf->payload.size());
+     webrtc::EncodedImage encodedImage(buf.payload.data(), buf.payload.size(), buf.payload.size());
 
    
     encodedImage._completeFrame = true;
@@ -148,8 +155,8 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
     // Scan for and create mark all fragments.
     webrtc::RTPFragmentationHeader fragmentationHeader;
     uint32_t fragIdx = 0;
-    for (uint32_t i = 0; i < buf->payload.size() - 5; ++i) {
-      uint8_t* ptr = buf->payload.data() + i;
+    for (uint32_t i = 0; i < buf.payload.size() - 5; ++i) {
+      uint8_t* ptr = buf.payload.data() + i;
       int prefixLengthFound = 0;
       if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x00 && ptr[3] == 0x01
         && ((ptr[4] & 0x1f) != 0x09 /* ignore access unit delimiters */)) {
@@ -184,32 +191,32 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
     // Set the length of the last fragment.
     if (fragIdx > 0) {
       fragmentationHeader.fragmentationLength[fragIdx - 1] =
-        buf->payload.size() -
+        buf.payload.size() -
         fragmentationHeader.fragmentationOffset[fragIdx - 1];
     }
 
 
 
-        encodedImage.SetTimestamp(frame.timestamp());
-    
-//        encodedImage._encodedWidth = frame.frameWidth;
-       // encodedImage._encodedHeight = frame.frameHeight;
-     
+    encodedImage.SetTimestamp(frame.timestamp());
 
-	encodedImage.ntp_time_ms_ = frame.ntp_time_ms();
-	encodedImage.capture_time_ms_ = frame.render_time_ms();
-	encodedImage.rotation_ = frame.rotation();
-	//encodedImage.timing_.encode_start_ms = rtc::TimeMicros() / 1000;
-        
-	  if (Callback != nullptr) {
-		webrtc::CodecSpecificInfo codecSpecificInfo;
-		codecSpecificInfo.codecType = webrtc::kVideoCodecH264;
-		codecSpecificInfo.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
-		Callback->OnEncodedImage(
-		  encodedImage, &codecSpecificInfo, &fragmentationHeader);
-	  }
+//        encodedImage._encodedWidth = frame.frameWidth;
+   // encodedImage._encodedHeight = frame.frameHeight;
+
+
+    encodedImage.ntp_time_ms_ = frame.ntp_time_ms();
+    encodedImage.capture_time_ms_ = frame.render_time_ms();
+    encodedImage.rotation_ = frame.rotation();
+    //encodedImage.timing_.encode_start_ms = rtc::TimeMicros() / 1000;
+
+    if (Callback != nullptr) {
+          webrtc::CodecSpecificInfo codecSpecificInfo;
+          codecSpecificInfo.codecType = webrtc::kVideoCodecH264;
+          codecSpecificInfo.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
+          Callback->OnEncodedImage(
+            encodedImage, &codecSpecificInfo, &fragmentationHeader);
+    }
 	
-	return WEBRTC_VIDEO_CODEC_OK;
+    return WEBRTC_VIDEO_CODEC_OK;
 }
 
 
@@ -247,3 +254,5 @@ void FVideoEncoder::SetRates(const RateControlParameters& parameters)
 // {
 // 	return true;
 // }
+}// ns webrtc
+}//ns base

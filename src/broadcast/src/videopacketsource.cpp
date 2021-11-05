@@ -19,6 +19,7 @@ using std::endl;
 
 #define WebRTC_USE_DECODER_PTS 1
 
+//#define BYPASSGAME 1
 
 namespace base {
 namespace wrtc {
@@ -114,24 +115,37 @@ void VideoPacketSource::Stop()
 }
 */
 
+
 void VideoPacketSource::run(Frame *frame)
 {
     
-    SInfo << "ideoPacketSource::run";
+  
+    static uint frameNo = 0;
     
     int64_t TimestampUs = rtc::TimeMicros();
+    
+    
+    #if BYPASSGAME
 
-     rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>(frame);
+	rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
+		webrtc::I420Buffer::Create(720,576);
+ 
+	
+     #else
 
-
-	webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+     rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>(frame,frameNo++);
+	
+     #endif
+        
+     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
 		set_video_frame_buffer(Buffer).
 		set_rotation(webrtc::kVideoRotation_0).
 		set_timestamp_us(TimestampUs).
-		build();
+		build(); 
 
-
-	OnFrame(Frame);  //arvind
+     SDebug << "ideoPacketSource::OnFrame";
+       
+     OnFrame(Frame);  //arvind
     
     return ;
 }
