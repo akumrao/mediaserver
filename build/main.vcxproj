@@ -59,25 +59,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\FFMpeg3\mediaserver\build\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">main.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">main</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\FFMpeg3\mediaserver\build\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">main.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">main</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\FFMpeg3\mediaserver\build\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.\build\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">main.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">main</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\FFMpeg3\mediaserver\build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.\build\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">main.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">main</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.exe</TargetExt>
@@ -85,11 +85,11 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\FFMpeg3\mediaserver\src\;C:\FFMpeg3\mediaserver\src\rtsp\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\src\;..\src\rtsp\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -108,10 +108,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;SCY_WIN;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -124,8 +124,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg3/mediaserver/build/Debug/main.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg3/mediaserver/build/Debug/main.pdb</ProgramDataBaseFile>
+      <ImportLibrary>.//Debug/main.lib</ImportLibrary>
+      <ProgramDataBaseFile>.//Debug/main.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -134,7 +134,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -151,10 +151,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SCY_WIN;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -167,8 +167,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg3/mediaserver/build/Release/main.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg3/mediaserver/build/Release/main.pdb</ProgramDataBaseFile>
+      <ImportLibrary>.//Release/main.lib</ImportLibrary>
+      <ProgramDataBaseFile>.//Release/main.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -177,7 +177,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -194,10 +194,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SCY_WIN;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -210,8 +210,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg3/mediaserver/build/MinSizeRel/main.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg3/mediaserver/build/MinSizeRel/main.pdb</ProgramDataBaseFile>
+      <ImportLibrary>.//MinSizeRel/main.lib</ImportLibrary>
+      <ProgramDataBaseFile>.//MinSizeRel/main.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -220,7 +220,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -236,10 +236,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SCY_WIN;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\FFMpeg3\mediaserver\.\src\base\include;C:\FFMpeg3\mediaserver\.\src\http_parser;C:\FFMpeg3\mediaserver\.\src\json\include;C:\FFMpeg3\mediaserver\.\src\net\include;C:\FFMpeg3\mediaserver\.\src\http\include;C:\FFMpeg3\mediaserver\.\src\libuv\include;C:\FFMpeg3\mediaserver\.\src\libuv\src;C:\FFMpeg3\mediaserver\.\src\signal\include;C:\FFMpeg3\mediaserver\.\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -252,8 +252,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg3/mediaserver/build/RelWithDebInfo/main.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg3/mediaserver/build/RelWithDebInfo/main.pdb</ProgramDataBaseFile>
+      <ImportLibrary>.//RelWithDebInfo/main.lib</ImportLibrary>
+      <ProgramDataBaseFile>.//RelWithDebInfo/main.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -261,11 +261,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\FFMpeg3\mediaserver\CMakeLists.txt">
+    <CustomBuild Include="..\CMakeLists.txt">
       <StdOutEncoding>UTF-8</StdOutEncoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/FFMpeg3/mediaserver/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule ../CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/FFMpeg3/mediaserver -BC:/FFMpeg3/mediaserver/build --check-stamp-file C:/FFMpeg3/mediaserver/build/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S../ -B./ --check-stamp-file .//CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -273,12 +273,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/FFMpeg3/mediaserver/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule ../CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/FFMpeg3/mediaserver -BC:/FFMpeg3/mediaserver/build --check-stamp-file C:/FFMpeg3/mediaserver/build/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S../ -B./ --check-stamp-file .//CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -286,12 +286,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule C:/FFMpeg3/mediaserver/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule ../CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/FFMpeg3/mediaserver -BC:/FFMpeg3/mediaserver/build --check-stamp-file C:/FFMpeg3/mediaserver/build/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S../ -B./ --check-stamp-file .//CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -299,12 +299,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule C:/FFMpeg3/mediaserver/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule ../CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/FFMpeg3/mediaserver -BC:/FFMpeg3/mediaserver/build --check-stamp-file C:/FFMpeg3/mediaserver/build/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S../ -B./ --check-stamp-file .//CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -312,162 +312,162 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;C:\FFMpeg3\mediaserver\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\FFMpeg3\mediaserver\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeCXXCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeRCCompiler.cmake;.\build\CMakeFiles\3.20.21032501-MSVC_2\CMakeSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeDependentOption.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTest.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestTargets.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\CTestUseLaunchers.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\DartConfiguration.tcl.in;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\GNUInstallDirs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.20\Modules\WriteBasicConfigVersionFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\FFMpeg3\mediaserver\mainhttp.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\Timer.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\application.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\base64.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\buffer.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\collection.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\datetime.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\filesystem.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\idler.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\logger.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\packetstream.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\platform.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\process.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\random.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\sha1.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\signalsHandler.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\test.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\thread.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\time.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\base\src\util.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http_parser\http_parser.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\json\src\configuration.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\json\src\json.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\IP.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\TcpServer.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\PortManager.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\TcpConnection.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\net\src\UdpSocket.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HTTPResponder.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\message.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\url.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpClient.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\client.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\packetizers.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\websocket.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpConn.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\cookie.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\parser.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\HttpServer.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\form.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\request.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\httputil.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\http\src\response.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aac_ac3_parser.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ac3_parser.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ac3tab.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aes.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aes_ctr.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\allcodecs.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\allformats.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\atomic.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\audio_frame_queue.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\audiointerleave.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avbuffer.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avfft.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avio.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\aviobuf.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avpacket.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avparser.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avstring.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\avtime.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bitstream.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bitstream_filters.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bprint.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\bsf.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\channel_layout.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\codec_desc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\color_utils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\cpu.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\crc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\cuvid.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\dct.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\dict.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\error.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\eval.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\faandct.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\fdctdsp.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\fifo.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\file_open.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\format.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\frame_thread_encoder.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\h264_mp4toannexb_bsf.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\hwcontext.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\id3v1.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\id3v2.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\imgutils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\intmath.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\isom.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\libfdk-aacdec.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\libfdk-aacenc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\live.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\livethread.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\log.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mathematics.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mem.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\metadata.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mov_chan.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenccenc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\movenchint.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg12data.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg4_unpack_bframes_bsf.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpeg4audio.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegaudiodata.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegpicture.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegutils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideodsp.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideoencdsp.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mux.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\src\muxframe.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\network.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\opt.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\options.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\options_avformat.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\os_support.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\parseutils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pixdesc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\profiles.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\protocols.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread_frame.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\pthread_slice.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\random_seed.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\ratecontrol.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rational.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\raw.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rawutils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rdft.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\reverse.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\riff.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\riffenc.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\rl.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\samplefmt.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\sha.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\stereo3d.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\timecode.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils_avformat.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\utils_avutil.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\vpcc.cpp" />
+    <ClCompile Include="..\mainhttp.cpp" />
+    <ClCompile Include="..\src\base\src\Timer.cpp" />
+    <ClCompile Include="..\src\base\src\application.cpp" />
+    <ClCompile Include="..\src\base\src\base64.cpp" />
+    <ClCompile Include="..\src\base\src\buffer.cpp" />
+    <ClCompile Include="..\src\base\src\collection.cpp" />
+    <ClCompile Include="..\src\base\src\datetime.cpp" />
+    <ClCompile Include="..\src\base\src\filesystem.cpp" />
+    <ClCompile Include="..\src\base\src\idler.cpp" />
+    <ClCompile Include="..\src\base\src\logger.cpp" />
+    <ClCompile Include="..\src\base\src\packetstream.cpp" />
+    <ClCompile Include="..\src\base\src\platform.cpp" />
+    <ClCompile Include="..\src\base\src\process.cpp" />
+    <ClCompile Include="..\src\base\src\random.cpp" />
+    <ClCompile Include="..\src\base\src\sha1.cpp" />
+    <ClCompile Include="..\src\base\src\signalsHandler.cpp" />
+    <ClCompile Include="..\src\base\src\test.cpp" />
+    <ClCompile Include="..\src\base\src\thread.cpp" />
+    <ClCompile Include="..\src\base\src\time.cpp" />
+    <ClCompile Include="..\src\base\src\util.cpp" />
+    <ClCompile Include="..\src\http_parser\http_parser.cpp" />
+    <ClCompile Include="..\src\json\src\configuration.cpp" />
+    <ClCompile Include="..\src\json\src\json.cpp" />
+    <ClCompile Include="..\src\net\src\IP.cpp" />
+    <ClCompile Include="..\src\net\src\TcpServer.cpp" />
+    <ClCompile Include="..\src\net\src\PortManager.cpp" />
+    <ClCompile Include="..\src\net\src\TcpConnection.cpp" />
+    <ClCompile Include="..\src\net\src\UdpSocket.cpp" />
+    <ClCompile Include="..\src\http\src\HTTPResponder.cpp" />
+    <ClCompile Include="..\src\http\src\message.cpp" />
+    <ClCompile Include="..\src\http\src\url.cpp" />
+    <ClCompile Include="..\src\http\src\HttpClient.cpp" />
+    <ClCompile Include="..\src\http\src\client.cpp" />
+    <ClCompile Include="..\src\http\src\packetizers.cpp" />
+    <ClCompile Include="..\src\http\src\websocket.cpp" />
+    <ClCompile Include="..\src\http\src\HttpConn.cpp" />
+    <ClCompile Include="..\src\http\src\cookie.cpp" />
+    <ClCompile Include="..\src\http\src\parser.cpp" />
+    <ClCompile Include="..\src\http\src\HttpServer.cpp" />
+    <ClCompile Include="..\src\http\src\form.cpp" />
+    <ClCompile Include="..\src\http\src\request.cpp" />
+    <ClCompile Include="..\src\http\src\httputil.cpp" />
+    <ClCompile Include="..\src\http\src\response.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\aac_ac3_parser.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\ac3_parser.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\ac3tab.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\aes.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\aes_ctr.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\allcodecs.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\allformats.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\atomic.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\audio_frame_queue.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\audiointerleave.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avbuffer.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avfft.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avio.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\aviobuf.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avpacket.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avparser.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avstring.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\avtime.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\bitstream.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\bitstream_filters.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\bprint.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\bsf.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\channel_layout.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\codec_desc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\color_utils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\cpu.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\crc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\cuvid.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\dct.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\dict.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\error.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\eval.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\faandct.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\fdctdsp.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\fifo.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\file_open.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\format.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\frame_thread_encoder.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\h264_mp4toannexb_bsf.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\hwcontext.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\id3v1.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\id3v2.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\imgutils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\intmath.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\isom.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\libfdk-aacdec.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\libfdk-aacenc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\live.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\livethread.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\log.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mathematics.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mem.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\metadata.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mov_chan.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\movenc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\movenccenc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\movenchint.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpeg12data.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpeg4_unpack_bframes_bsf.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpeg4audio.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpegaudiodata.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpegpicture.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpegutils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpegvideodsp.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mpegvideoencdsp.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\mux.cpp" />
+    <ClCompile Include="..\src\rtsp\src\muxframe.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\network.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\opt.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\options.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\options_avformat.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\os_support.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\parseutils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\pixdesc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\profiles.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\protocols.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\pthread.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\pthread_frame.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\pthread_slice.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\random_seed.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\ratecontrol.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\rational.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\raw.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\rawutils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\rdft.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\reverse.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\riff.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\riffenc.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\rl.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\samplefmt.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\sha.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\stereo3d.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\timecode.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\utils.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\utils_avformat.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\utils_avutil.cpp" />
+    <ClCompile Include="..\src\rtsp\ffmpeg\vpcc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\FFMpeg3\mediaserver\build\ZERO_CHECK.vcxproj">
+    <ProjectReference Include=".\build\ZERO_CHECK.vcxproj">
       <Project>{66C0F3BB-FFFB-362D-9A12-F91171286216}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\FFMpeg3\mediaserver\build\uv_a.vcxproj">
+    <ProjectReference Include=".\build\uv_a.vcxproj">
       <Project>{019CF432-E2D9-3BAD-B956-4EC5A4A5C7C7}</Project>
       <Name>uv_a</Name>
     </ProjectReference>

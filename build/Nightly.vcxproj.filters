@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\FFMpeg3\mediaserver\build\CMakeFiles\2678158fbcde09485be63a154cc51d5b\Nightly.rule">
+    <CustomBuild Include=".\build\CMakeFiles\2678158fbcde09485be63a154cc51d5b\Nightly.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="C:\FFMpeg3\mediaserver\CMakeLists.txt" />
+    <CustomBuild Include="..\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\FFMpeg3\mediaserver\build\CMakeFiles\Nightly" />
+    <None Include=".\build\CMakeFiles\Nightly" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
