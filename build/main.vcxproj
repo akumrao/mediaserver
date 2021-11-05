@@ -428,7 +428,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideodsp.cpp" />
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mpegvideoencdsp.cpp" />
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mux.cpp" />
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\muxframe.cpp" />
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\src\muxframe.cpp" />
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\network.cpp" />
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\opt.cpp" />
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\options.cpp" />

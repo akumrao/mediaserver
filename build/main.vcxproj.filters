@@ -331,7 +331,7 @@
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\mux.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\muxframe.cpp">
+    <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\src\muxframe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\FFMpeg3\mediaserver\src\rtsp\ffmpeg\network.cpp">
