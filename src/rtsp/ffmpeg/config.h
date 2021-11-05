@@ -200,7 +200,7 @@
 #define HAVE_FAST_UNALIGNED 1
 #define HAVE_ALSA_ASOUNDLIB_H 1
 #define HAVE_ALTIVEC_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_ARPA_INET_H 0
 #else
 #define HAVE_ARPA_INET_H 1
@@ -215,7 +215,7 @@
 #define HAVE_DEV_IC_BT8XX_H 0
 #define HAVE_DEV_VIDEO_BKTR_IOCTL_BT848_H 0
 #define HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_DIRECT_H 1
 #else
 #define HAVE_DIRECT_H 0
@@ -226,7 +226,7 @@
 #define HAVE_DXVA_H 0
 #define HAVE_ES2_GL_H 0
 #define HAVE_GSM_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_IO_H 1
 #else
 #define HAVE_IO_H 0
@@ -240,7 +240,7 @@
 #define HAVE_OPENJPEG_2_0_OPENJPEG_H 0
 #define HAVE_OPENJPEG_1_5_OPENJPEG_H 0
 #define HAVE_OPENGL_GL3_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_POLL_H 0
 #else
 #define HAVE_POLL_H 1
@@ -249,7 +249,12 @@
 #define HAVE_SOUNDCARD_H 0
 #define HAVE_STDATOMIC_H 1
 #define HAVE_SYS_MMAN_H 1
+#ifdef _WIN32
+#define HAVE_SYS_PARAM_H 0
+#else
 #define HAVE_SYS_PARAM_H 1
+#endif
+
 #define HAVE_SYS_RESOURCE_H 1
 #define HAVE_SYS_SELECT_H 1
 #define HAVE_SYS_SOUNDCARD_H 1
@@ -258,13 +263,13 @@
 #define HAVE_SYS_VIDEOIO_H 0
 #define HAVE_TERMIOS_H 1
 #define HAVE_UDPLITE_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_UNISTD_H 0
 #else
 #define HAVE_UNISTD_H 1
 #endif
 #define HAVE_VALGRIND_VALGRIND_H 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_WINDOWS_H 1
 #define HAVE_WINSOCK2_H 1
 #else
@@ -305,12 +310,20 @@
 #define HAVE_ALIGNED_MALLOC 0
 #define HAVE_ARC4RANDOM 0
 #define HAVE_CLOCK_GETTIME 1
+#ifdef _WIN32
+#define HAVE_CLOSESOCKET 1
+#else
 #define HAVE_CLOSESOCKET 0
+#endif
 #define HAVE_COMMANDLINETOARGVW 0
 #define HAVE_COTASKMEMFREE 0
 #define HAVE_CRYPTGENRANDOM 0
 #define HAVE_DLOPEN 1
+#ifdef _WIN32
+#define HAVE_FCNTL 0
+#else
 #define HAVE_FCNTL 1
+#endif
 #define HAVE_FLT_LIM 1
 #define HAVE_FORK 1
 #define HAVE_GETADDRINFO 1
@@ -321,7 +334,11 @@
 #define HAVE_GETPROCESSTIMES 0
 #define HAVE_GETRUSAGE 1
 #define HAVE_GETSYSTEMTIMEASFILETIME 0
+#ifdef _WIN32
+#define HAVE_GETTIMEOFDAY 0
+#else
 #define HAVE_GETTIMEOFDAY 1
+#endif
 #define HAVE_GLOB 1
 #define HAVE_GLXGETPROCADDRESS 0
 #define HAVE_GMTIME_R 1
@@ -339,11 +356,20 @@
 #define HAVE_MKSTEMP 1
 #define HAVE_MMAP 1
 #define HAVE_MPROTECT 1
+#ifdef _WIN32
+#define HAVE_NANOSLEEP 0
+#else
 #define HAVE_NANOSLEEP 1
+#endif
 #define HAVE_PEEKNAMEDPIPE 0
 #define HAVE_POSIX_MEMALIGN 1
 #define HAVE_PTHREAD_CANCEL 1
+#ifdef _WIN32
+#define HAVE_SCHED_GETAFFINITY 0
+#else
 #define HAVE_SCHED_GETAFFINITY 1
+#endif
+
 #define HAVE_SETCONSOLETEXTATTRIBUTE 0
 #define HAVE_SETCONSOLECTRLHANDLER 0
 #define HAVE_SETMODE 0
@@ -351,12 +377,17 @@
 #define HAVE_SLEEP 0
 #define HAVE_STRERROR_R 1
 #define HAVE_SYSCONF 1
-#define HAVE_SYSCTL 1
+#ifdef _WIN32
+#define HAVE_USLEEP 0
+#define HAVE_SYSCTL 0
+#else
 #define HAVE_USLEEP 1
+#define HAVE_SYSCTL 1
+#endif
 #define HAVE_UTGETOSTYPEFROMSTRING 0
 #define HAVE_VIRTUALALLOC 0
 #define HAVE_WGLGETPROCADDRESS 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define HAVE_PTHREADS 0
 #define HAVE_OS2THREADS 0
 #define HAVE_W32THREADS 1
@@ -460,7 +491,7 @@
 #define CONFIG_TRANSCODE_AAC_EXAMPLE 1
 #define CONFIG_TRANSCODING_EXAMPLE 1
 #define CONFIG_BZLIB 0
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define CONFIG_ICONV 0
 #else
 #define CONFIG_ICONV 1

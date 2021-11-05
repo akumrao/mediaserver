@@ -264,11 +264,23 @@ int av_dict_get_string(const AVDictionary *m, char **buffer,
 int avpriv_dict_set_timestamp(AVDictionary **dict, const char *key, int64_t timestamp)
 {
     time_t seconds = timestamp / 1000000;
-    struct tm *ptm, tmbuf;
+#ifdef _WIN32
+    struct tm tmbuf;
+    errno_t errCode;
+    errCode = gmtime_s(&tmbuf, &seconds);
+    if (errCode == 0)
+#else
+    struct tm* ptm, tmbuf;
     ptm = gmtime_r(&seconds, &tmbuf);
-    if (ptm) {
+    if (ptm)
+#endif
+    {
         char buf[32];
+#ifdef _WIN32
+        if (!strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", (struct tm const*)&tmbuf))
+#else
         if (!strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", ptm))
+#endif
             return AVERROR_EXTERNAL;
         av_strlcatf(buf, sizeof(buf), ".%06dZ", (int)(timestamp % 1000000));
         return av_dict_set(dict, key, buf, 0);

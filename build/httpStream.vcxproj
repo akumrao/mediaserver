@@ -77,7 +77,7 @@
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\src\rtsp\ffmpeg\;..\src\;..\src\rtsp\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\src\rtsp\ffmpeg\;..\src\;..\src\rtsp\include;..\src\libavutil;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
