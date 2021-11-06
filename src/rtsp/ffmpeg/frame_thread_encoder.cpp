@@ -17,7 +17,12 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#ifdef HAVE_PTHREADS
 #include <pthread.h>
+#else
+#include "compat/w32pthreads.h"
+#endif
+
 #include "frame_thread_encoder.h"
 
 #include "fifo.h"

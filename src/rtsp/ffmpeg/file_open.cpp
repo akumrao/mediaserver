@@ -111,7 +111,7 @@ int avpriv_tempfile(const char *prefix, char **filename, int log_offset, void *l
     void *ptr= tempnam(NULL, prefix);
     if(!ptr)
         ptr= tempnam(".", prefix);
-    *filename = av_strdup(ptr);
+    *filename = av_strdup((const char*)ptr);
 #undef free
     free(ptr);
 #else

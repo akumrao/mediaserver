@@ -353,7 +353,11 @@
 #define HAVE_MACH_ABSOLUTE_TIME 0
 #define HAVE_MAPVIEWOFFILE 0
 #define HAVE_MEMALIGN 1
+#ifdef _WIN32
+#define HAVE_MKSTEMP 0
+#else
 #define HAVE_MKSTEMP 1
+#endif
 #define HAVE_MMAP 1
 #define HAVE_MPROTECT 1
 #ifdef _WIN32
