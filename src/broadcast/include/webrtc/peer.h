@@ -7,6 +7,10 @@
 
 #include "api/jsep.h"
 #include <json/json.hpp>
+
+#include "api/media_stream_interface.h"
+#include "api/video/video_sink_interface.h"
+
 using json = nlohmann::json;
 
 namespace base {
@@ -14,6 +18,23 @@ namespace wrtc {
 
 
 class PeerManager;
+
+
+class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+ public:
+  VideoObserver() {}
+  ~VideoObserver() {}
+  //void SetVideoCallback(I420FRAMEREADY_CALLBACK callback);
+
+ protected:
+  // VideoSinkInterface implementation
+  void OnFrame(const webrtc::VideoFrame& frame);
+  
+
+ private:
+  //I420FRAMEREADY_CALLBACK OnI420FrameReady = nullptr;
+//  std::mutex mutex;
+};
 
 
 class Peer : public webrtc::PeerConnectionObserver,
@@ -105,6 +126,12 @@ protected:
    // webrtc::FakeConstraints _constraints;
 public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
+    
+    
+    std::unique_ptr<VideoObserver> remote_video_observer_;
+
+    webrtc::MediaStreamInterface* remote_stream_{nullptr};
+  
 
     bool hasIceLiteOffer{false};
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;

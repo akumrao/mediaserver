@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 
 
     // Setup WebRTC environment
-    rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // LS_VERBOSE, LS_INFO, LS_ERROR
+    rtc::LogMessage::LogToDebug(rtc::LS_INFO); // LS_VERBOSE, LS_INFO, LS_ERROR
     // rtc::LogMessage::LogTimestamps();
     // rtc::LogMessage::LogThreads();
 
@@ -56,11 +56,11 @@ int main(int argc, char** argv) {
 
     base::wrtc::Signaler sig;
 
-    sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+   // sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
     
     //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
-    //sig.startStreaming("", "/var/tmp/songs/test.mp3", true); // single file play in loop, this feauture migt be broken.
+    sig.startStreaming("", "/var/tmp/test.mp4", "mp4", true); // single file play in loop, this feauture migt be broken.
     
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
@@ -76,6 +76,9 @@ int main(int argc, char** argv) {
 
     LTrace("app.run() run start")
     app.run();
+    
+    sig.bye();
+     
     LTrace("app.run() is over")
     rtc::CleanupSSL();
     Logger::destroy();

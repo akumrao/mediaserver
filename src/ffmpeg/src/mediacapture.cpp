@@ -291,12 +291,15 @@ namespace base {
 
                 LInfo( "looping back");
 
-              close();
+              
 
-
-              openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
-               if(fileNo == files.size() )
-                   fileNo = 0;
+              if(!_looping && files.size())
+              {
+                  close();
+                openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
+                 if(fileNo == files.size() )
+                     fileNo = 0;
+              }
 
               if(!_looping && !files.size())
                   break;

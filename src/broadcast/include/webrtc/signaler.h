@@ -21,7 +21,7 @@ namespace base {
 
             void startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping);
             void connect(const std::string& host, const uint16_t port, const std::string room);
-
+             void bye(); 
         protected:
 
             /// PeerManager interface
@@ -39,7 +39,7 @@ namespace base {
             void onPeerConnected(std::string& peerID);
             void onPeerMessage(std::string &name , json const& m);
             void onPeerDiconnected(std::string& peerID);
-
+                
 
 
 

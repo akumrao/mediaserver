@@ -14,7 +14,27 @@ using std::endl;
 namespace base {
 namespace wrtc {
 
+
+void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
+
  
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer(
+      frame.video_frame_buffer());
+
+  if (buffer->type() != webrtc::VideoFrameBuffer::Type::kI420A) {
+    rtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer =
+        buffer->ToI420();
+
+  } else {
+    // The buffer has alpha channel.
+    webrtc::I420ABufferInterface* i420a_buffer = buffer->GetI420A();
+
+    
+  }
+  
+   SInfo << "widht " <<  frame.width() << " height " << frame.height();
+   
+}
 
 cricket::Candidate CreateLocalUdpCandidate(
 	const rtc::SocketAddress& address) {
@@ -138,6 +158,11 @@ Peer::~Peer()
 
 void Peer::createConnection()
 {
+    remote_video_observer_.reset(new VideoObserver());
+    
+    //remote_video_observer_->SetVideoCallback(callback);
+    
+    
     assert(_context->factory);
     _peerConnection = _context->factory->CreatePeerConnection(_config, nullptr, nullptr, this);
 
@@ -173,7 +198,7 @@ void Peer::createOffer()
              
      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 
-    options.offer_to_receive_audio = true;
+    options.offer_to_receive_audio = false;
     options.offer_to_receive_video = true;
 
 
@@ -268,6 +293,14 @@ void Peer::OnRenegotiationNeeded()
 
 void Peer::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
+    
+    RTC_LOG(INFO) << __FUNCTION__ << " " << stream->id();
+    remote_stream_ = stream;
+    if (remote_video_observer_ && !remote_stream_->GetVideoTracks().empty()) {
+      remote_stream_->GetVideoTracks()[0]->AddOrUpdateSink(
+          remote_video_observer_.get(), rtc::VideoSinkWants());
+    }
+  
     LInfo(_peerid, ": OnAddStream")
     // proxy to deprecated OnAddStream method
     OnAddStream(stream.get());

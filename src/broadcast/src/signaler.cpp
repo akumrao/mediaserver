@@ -48,11 +48,21 @@ namespace base {
             m["desc"] = desc;
             m["from"] = conn->peerid();
             m["to"]= conn->peerid();
+            m["room"] =  "foo";
             // smpl::Message m({ type, {
             //     { wrtc::kSessionDescriptionTypeName, type },
             //     { wrtc::kSessionDescriptionSdpName, sdp} }
             // });
 
+            postMessage(m);
+        }
+        
+        void Signaler::bye() 
+        {
+            json m;
+            m[wrtc::kSessionDescriptionTypeName] = "bye";
+        
+            m["room"] =  "foo";
             postMessage(m);
         }
 
@@ -69,6 +79,7 @@ namespace base {
             m["candidate"] = desc;
             m["from"] = conn->peerid();
             m["to"]= conn->peerid();
+            m["room"] =  "foo";
 
             // smpl::Message m({ "candidate", {
             //     { wrtc::kCandidateSdpMidName, mid },
@@ -98,11 +109,11 @@ namespace base {
             // Create the media stream and attach decoder
             // output to the peer connection
             conn->createConnection();
-            _capturer.addMediaTracks(_context.factory, conn->_peerConnection);
+         //   _capturer.addMediaTracks(_context.factory, conn->_peerConnection);
 
             // Send the Offer SDP
             
-            conn->createOffer();
+          //  conn->createOffer();
 
             wrtc::PeerManager::add(peerID, conn);
         }
@@ -139,31 +150,35 @@ namespace base {
                 SError << " On Peer message is missing SDP type";
             }
             
-            if (m.find("room") != m.end()) {
-                room = m["room"].get<std::string>();
-            }
-            else
-            {
-                SError << " On Peer message is missing room id ";
-                return;
-            }
-            
-             if (m.find("user") != m.end()) {
-                user = m["user"].get<std::string>();
-            }
-            else
-            {
-                SWarn << " On Peer message is missing user name ";
-            }
+//            if (m.find("room") != m.end()) {
+//                room = m["room"].get<std::string>();
+//            }
+//            else
+//            {
+//                SError << " On Peer message is missing room id ";
+//                return;
+//            }
+//            
+//             if (m.find("user") != m.end()) {
+//                user = m["user"].get<std::string>();
+//            }
+//            else
+//            {
+//                SWarn << " On Peer message is missing user name ";
+//            }
 
             LInfo("Peer message: ", from, " ", type )
 
             if (std::string("offer") == type) {
 
-                onPeerConnected(from);
+                 onPeerConnected(from);
+                 
+                recvSDP(from, m["desc"]); 
                 
             } else if (std::string("answer") == type) {
-                recvSDP(from, m["desc"]);
+                
+               recvSDP(from, m["desc"]); 
+                
             } else if (std::string("candidate") == type) {
                 recvCandidate(from, m["candidate"]);
             } else if (std::string("mute") == type) {
@@ -222,8 +237,10 @@ namespace base {
 
         void Signaler::postMessage(const json& m) {
 
+            
+            
             LInfo("postMessage", cnfg::stringify(m));
-            socket->emit("message", m);
+            socket->emit("sfu-message", m);
         }
 
         void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
@@ -264,6 +281,33 @@ namespace base {
                    // LTrace("Another peer made a request to join room " + room)
                     //LTrace("This peer is the initiator of room " + room + "!")
                     isChannelReady = true;
+           
+
+                    
+
+                }));
+                
+               socket->on("joined", Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
+                    LTrace(cnfg::stringify(data));
+                   // LTrace("Another peer made a request to join room " + room)
+                    //LTrace("This peer is the initiator of room " + room + "!")
+                    isChannelReady = true;
+                   
+                    std::string room =  data[0].get<std::string>();
+                     std::string from =  data[1].get<std::string>();
+                    json m;
+
+                    m[wrtc::kSessionDescriptionTypeName] = "offer";
+                    m["desc"] = "sessionDescription";
+                    m["from"] =from;
+                    m["room"]= room;
+            // smpl::Message m({ type, {
+            //     { wrtc::kSessionDescriptionTypeName, type },
+            //     { wrtc::kSessionDescriptionSdpName, sdp} }
+            // });
+
+                        postMessage(m);
+                    
 
                 }));
 
@@ -292,8 +336,8 @@ namespace base {
    
                 }));
 
-                socket->emit("CreateSFU");
-
+               // socket->emit("got user media");
+               socket->emit("create or join", json("foo") );     
 
             }));
 
