@@ -2,6 +2,7 @@
 
 #include "webrtc/videopacketsource.h"
 #include "webrtc/rawVideoFrame.h"
+#include "webrtc/peermanager.h"
 
 #ifdef HAVE_FFMPEG
 #if MP4File
@@ -27,7 +28,7 @@ namespace wrtc {
 
 
     
-VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name, fmp4::FrameFilter *next):playerId(playerId), fmp4::FrameFilter(name, next)
+VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),playerId(playerId), fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
@@ -116,7 +117,7 @@ void VideoPacketSource::Stop()
 */
 
 
-void VideoPacketSource::run(Frame *frame)
+void VideoPacketSource::run(fmp4::Frame *frame)
 {
     
   
@@ -130,12 +131,52 @@ void VideoPacketSource::run(Frame *frame)
 	rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
 		webrtc::I420Buffer::Create(720,576);
  
-	
      #else
 
-     rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>(frame,frameNo++);
+        
+//        if (wrtc::PeerManager::exists(playerId)) {
+//                LDebug("Peer already has session: ")
+//                return;
+//            }
+//
+//        auto conn = wrtc::PeerManager::get(playerId);
+//        if (conn)
+//        {
+//          //  conn->push(playerId)  ;
+//        }
+         fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
+         fmp4::BasicFrame *bframe = new  fmp4::BasicFrame();
+         bframe->payload = basic_frame->payload;
+         bframe->codec_id = basic_frame->codec_id; 
+         bframe->fillPars();
+         
+         
+             
+       if ( bframe->h264_pars.frameType == H264SframeType::i && bframe->h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+       {
+           frameNo = 1;
+           peer->pushFrame(bframe);
+       }
+       else if (bframe->h264_pars.slice_type == H264SliceType::sps ||  bframe->h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+       {
+          peer->pushFrame(bframe);
+       }
+       else if(frameNo )
+       {
+           peer->pushFrame(bframe);
+       }else
+       {
+           return;      
+       }
+        
+   
+        rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>(peer,frameNo);
 	
      #endif
+
+    
+                
+     
         
      webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
 		set_video_frame_buffer(Buffer).

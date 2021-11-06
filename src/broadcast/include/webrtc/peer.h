@@ -4,6 +4,9 @@
 
 
 #include "webrtc/peerfactorycontext.h"
+#include "muxframe.h"
+
+#include <mutex>
 
 #include "api/jsep.h"
 #include <json/json.hpp>
@@ -102,9 +105,22 @@ protected:
     std::string _token;
     Mode _mode;
     webrtc::PeerConnectionInterface::RTCConfiguration _config;
+    
+    
+   // fmp4::BasicFrame * pop( );
+    
+    std::queue<base::fmp4::BasicFrame *> bframe ;
+    
+    std::mutex lock_;
+    
+    
    // webrtc::FakeConstraints _constraints;
 public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
+   
+    void pushFrame(base::fmp4::BasicFrame *p);
+    
+    fmp4::BasicFrame * popFrame( );
 
     bool hasIceLiteOffer{false};
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;

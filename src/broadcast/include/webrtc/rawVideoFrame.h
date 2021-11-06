@@ -13,16 +13,19 @@
 
 #ifndef RAWVIDEOFRAME_H
 #define RAWVIDEOFRAME_H
-#include "muxframe.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "webrtc/peer.h"
+#include <assert.h> 
+
+
+namespace base {
+namespace wrtc {
+    
 
   class FRawFrameBuffer : public webrtc::VideoFrameBuffer
   {
     public:
-	 FRawFrameBuffer(Frame *frame, uint frameNo):frameNo(frameNo)
-	{
-              BasicFrame *basic_frame = static_cast<BasicFrame *>(frame);
-              bframe.payload = basic_frame->payload;
-	}
+	 FRawFrameBuffer(wrtc::Peer *peer, uint frameNo);
 
 	//
 	// webrtc::VideoFrameBuffer interface
@@ -51,17 +54,27 @@
 	//
 	// Own methods
 	//
-	BasicFrame& GetBuffer() 
+	  wrtc::Peer * GetPlayer() 
 	{
-		return bframe;
+		return peer;
 	}
+        
+//        void push( BasicFrame & f );
+//        
+//        BasicFrame&  pop();
+        
+      
 
         uint frameNo;	
 private:
-	BasicFrame bframe;
+    
+        wrtc::Peer *peer;
+	//BasicFrame bframe;
         
 	
 };
+
+} } // namespace wrtc
 
 
 #endif /* RAWVIDEOFRAME_H */

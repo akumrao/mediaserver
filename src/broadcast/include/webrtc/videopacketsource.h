@@ -14,6 +14,7 @@
 //#include "media/base/videocapturer.h"
 
 #include "base/packet.h"
+#include "webrtc/peer.h"
 #include "media/base/adapted_video_track_source.h"
 #include "rtc_base/timestamp_aligner.h"
 #include "framefilter.h"
@@ -31,19 +32,19 @@ class VideoPacketSource : public rtc::AdaptedVideoTrackSource, fmp4::FrameFilter
 { 
 
 public:                                                                
-      VideoPacketSource(std::string &playerId, const char *name, fmp4::FrameFilter *next = NULL);
+      VideoPacketSource(std::string &playerId, const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next = NULL);
 
 protected:
-    void go(Frame *frame)
+    void go(fmp4::Frame *frame)
     {
         
     }
 
 public:
-    void run(Frame *frame);
+    void run(fmp4::Frame  *frame);
    
 public:
-  
+    wrtc::Peer *peer;
    // VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
 

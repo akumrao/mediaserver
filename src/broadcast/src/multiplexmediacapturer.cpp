@@ -135,7 +135,7 @@ rtc::scoped_refptr<AudioPacketModule> MultiplexMediaCapturer::getAudioModule()
 
 void MultiplexMediaCapturer::addMediaTracks(
     webrtc::PeerConnectionFactoryInterface* factory,
-     webrtc::PeerConnectionInterface* conn)
+     webrtc::PeerConnectionInterface* conn , wrtc::Peer *peer)
 {
 
     SInfo  << "MultiplexMediaCapturer::addMediaTracks" ; 
@@ -230,7 +230,7 @@ void MultiplexMediaCapturer::addMediaTracks(
 //      assert(_videoCapture->video());
  //     auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
-       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd,"VideoCapturer" );
+       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd,"VideoCapturer" , peer);
        
     //  ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
 
@@ -294,6 +294,12 @@ void MultiplexMediaCapturer::start()
 
 void MultiplexMediaCapturer::stop()
 {
+    
+    video_track.release();
+    video_track = nullptr;
+    VideoCapturer.release();
+    VideoCapturer = nullptr;
+               
   // _stream.stop();
     //_videoCapture->stop();
     SInfo << "MultiplexMediaCapturer::stop()" ;
@@ -303,7 +309,6 @@ void MultiplexMediaCapturer::stop()
     ffparser->deregisterStreamCall(*ctx);
     ffparser->stop();
     ffparser->join();
-
 
 
     delete ffparser;

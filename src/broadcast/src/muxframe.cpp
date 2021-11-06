@@ -13,6 +13,9 @@
 
 #include <sstream>
 
+namespace base {
+namespace fmp4 {
+    
 
 Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
@@ -500,7 +503,8 @@ TextFrame::TextFrame() : Frame() {
     
 }
     
-    
+}
+}
     
     
     

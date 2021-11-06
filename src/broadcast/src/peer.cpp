@@ -173,7 +173,7 @@ void Peer::createOffer()
              
      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 
-    options.offer_to_receive_audio = true;
+    options.offer_to_receive_audio = false;
     options.offer_to_receive_video = true;
 
 
@@ -372,7 +372,30 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
  
 }
 
+void Peer::pushFrame( fmp4::BasicFrame *f)
+{
+    lock_.lock();
+    
+    bframe.push(f);
+    
+    lock_.unlock();
+}
 
+fmp4::BasicFrame* Peer::popFrame( )
+{
+    lock_.lock();
+     
+    
+    fmp4::BasicFrame *f  = bframe.front();
+     
+    bframe.pop();
+    
+    lock_.unlock();
+    
+    return f;
+}
+
+ 
 void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
 {
     LInfo(_peerid, ": Set local description")

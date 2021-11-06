@@ -13,9 +13,15 @@
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "media/base/h264_profile_level_id.h"
+#include "framefilter.h"
+
+
+
 
 namespace base {
 namespace wrtc {
+    
+class FrameFilter;
 
 class FVideoEncoder : public webrtc::VideoEncoder
 {
@@ -81,6 +87,8 @@ private:
 	//FThreadSafeBool bControlsQuality = false;
 	webrtc::VideoBitrateAllocation LastBitrate;
 	uint32_t LastFramerate = 0;
+        
+        fmp4::FrameFilter *info;
 };
 
 class FVideoEncoderFactory : public webrtc::VideoEncoderFactory

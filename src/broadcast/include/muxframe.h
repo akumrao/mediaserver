@@ -4,7 +4,17 @@
 
 #include <iostream>
 #include  <vector>
+#include "avformat.h"
 
+
+//#include "micro.h"
+#include "codec.h"
+
+#include "constant.h"
+
+namespace base {
+namespace fmp4 {
+    
 //#include <algorithm>
 //#include <iterator>
 //#include  <vector>
@@ -13,13 +23,7 @@
  //#include "ff/mediacapture.h"
 
 //#include <libavutil/timestamp.h>
-#include "avformat.h"
 
-
-//#include "micro.h"
-#include "codec.h"
-
-#include "constant.h"
 
 /** Enumeration of Frame classes 
  * 
@@ -434,4 +438,6 @@ public:
 public:                                                
     std::string txt;
 };
+
+}}
 #endif

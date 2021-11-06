@@ -6,6 +6,11 @@
 
 
 #include "webrtc/rawVideoFrame.h"
+#include "muxer.h"
+
+
+
+
 //#include "rtc_base/ref_counted_object.h"
 //#include "rtc_base/atomic_ops.h"
 inline webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile, webrtc::H264::Level level)
@@ -93,6 +98,8 @@ FVideoEncoder::FVideoEncoder()//:
 	// CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::SingleNalUnit;
 	CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
 
+        info = new fmp4::InfoFrameFilter("arvind", nullptr);
+        
 //	UE_LOG(PixelStreamer, Log, TEXT("WebRTC VideoEncoder created%s"), bControlsQuality? TEXT(", quality controller"): TEXT(""));
 }
 
@@ -140,13 +147,37 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
            
     
     FRawFrameBuffer* RawFrame = static_cast<FRawFrameBuffer*>(frame.video_frame_buffer().get());
-	// the frame managed to pass encoder queue so disable frame drop notification
-    BasicFrame &buf = RawFrame->GetBuffer();
+   
+    wrtc::Peer *peer =  RawFrame->GetPlayer();
+   
+    fmp4::BasicFrame *buf = peer->popFrame();
     
-    SDebug << "Encode frame: " << RawFrame->frameNo  << "  size: " <<  buf.payload.size(); 
+ 
+   
+	// the frame managed to pass encoder queue so disable frame drop notification
+   // = RawFrame->GetBuffer();
+    
+   if ( buf->h264_pars.frameType == H264SframeType::i && buf->h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+   {
+       
+       
+       info->run(buf);
+       
+       SDebug << " Key frame " ; 
+       
+   }
+   if (buf->h264_pars.slice_type == H264SliceType::sps ||  buf->h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+   {
+        info->run(buf);
+       SDebug << " SPS or PPS " ; 
+     
+   }
+  
+  
+ 
     
     // sendBuffer is not copied here.
-     webrtc::EncodedImage encodedImage(buf.payload.data(), buf.payload.size(), buf.payload.size());
+    webrtc::EncodedImage encodedImage(buf->payload.data(), buf->payload.size(), buf->payload.size());
 
    
     encodedImage._completeFrame = true;
@@ -155,8 +186,8 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
     // Scan for and create mark all fragments.
     webrtc::RTPFragmentationHeader fragmentationHeader;
     uint32_t fragIdx = 0;
-    for (uint32_t i = 0; i < buf.payload.size() - 5; ++i) {
-      uint8_t* ptr = buf.payload.data() + i;
+    for (uint32_t i = 0; i < buf->payload.size() - 5; ++i) {
+      uint8_t* ptr = buf->payload.data() + i;
       int prefixLengthFound = 0;
       if (ptr[0] == 0x00 && ptr[1] == 0x00 && ptr[2] == 0x00 && ptr[3] == 0x01
         && ((ptr[4] & 0x1f) != 0x09 /* ignore access unit delimiters */)) {
@@ -171,6 +202,9 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
       if (prefixLengthFound > 0 && (ptr[prefixLengthFound] & 0x1f) == 0x05) {
         encodedImage._completeFrame = true;
         encodedImage._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+        
+        SDebug << " Key frame " ; 
+        
       }
 
       if (prefixLengthFound > 0) {
@@ -191,7 +225,7 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
     // Set the length of the last fragment.
     if (fragIdx > 0) {
       fragmentationHeader.fragmentationLength[fragIdx - 1] =
-        buf.payload.size() -
+        buf->payload.size() -
         fragmentationHeader.fragmentationOffset[fragIdx - 1];
     }
 
@@ -209,6 +243,9 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
     //encodedImage.timing_.encode_start_ms = rtc::TimeMicros() / 1000;
 
     if (Callback != nullptr) {
+        
+           SDebug << "Encode frame: " << RawFrame->frameNo  << "  size: " <<  buf->payload.size(); 
+           
           webrtc::CodecSpecificInfo codecSpecificInfo;
           codecSpecificInfo.codecType = webrtc::kVideoCodecH264;
           codecSpecificInfo.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;

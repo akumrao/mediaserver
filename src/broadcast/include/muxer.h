@@ -149,6 +149,7 @@ if strcmp(name, "moof") == 0 {
 */
 
 bool moofHasFirstSampleFlag(uint8_t* data);
-    }
+
+}
 }
 #endif

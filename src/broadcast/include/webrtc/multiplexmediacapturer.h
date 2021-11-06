@@ -58,7 +58,7 @@ public:
     std::string random_string();
 
     void addMediaTracks(webrtc::PeerConnectionFactoryInterface* factory,
-                        webrtc::PeerConnectionInterface* conn);
+                        webrtc::PeerConnectionInterface* conn, wrtc::Peer *peer);
 
     void start();
     void stop();
