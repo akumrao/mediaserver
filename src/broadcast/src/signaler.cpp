@@ -30,7 +30,7 @@ namespace base {
             
              SInfo << "Open  " << dir <<  "/" <<  file;
                      
-            _capturer.openFile(dir,file, type, looping);
+        //    _capturer.openFile(dir,file, type, looping);
            //  _capturer.start();  // enable for rapid testing
         }
 
