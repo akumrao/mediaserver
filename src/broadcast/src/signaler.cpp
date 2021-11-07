@@ -80,7 +80,7 @@ namespace base {
             postMessage(m);
         }
 
-        void Signaler::onPeerConnected(std::string& peerID) {
+        void Signaler::onPeerConnected(std::string& peerID , int cam) {
 
             LDebug("Peer connected: ", peerID)
 
@@ -90,7 +90,7 @@ namespace base {
             }
 
             // Create the Peer Peer
-            auto conn = new wrtc::Peer(this, &_context, peerID, "", wrtc::Peer::Offer);
+            auto conn = new wrtc::Peer(this, &_context, cam, peerID, "", wrtc::Peer::Offer);
            // conn->constraints().SetMandatoryReceiveAudio(false);
            // conn->constraints().SetMandatoryReceiveVideo(false);
            // conn->constraints().SetAllowDtlsSctpDataChannels();
@@ -118,6 +118,8 @@ namespace base {
             std::string room;
             std::string to;
             std::string user;
+            
+            int cam =0;
 	 
             if (m.find("to") != m.end()) {
                 to = m["to"].get<std::string>();
@@ -155,12 +157,17 @@ namespace base {
             {
                 SWarn << " On Peer message is missing user name ";
             }
+            
+            if (m.find("cam") != m.end()) {
+                std::string camT = m["cam"].get<std::string>();
+                cam = std::stoi(camT);
+            }
 
             LInfo("Peer message: ", from, " ", type )
 
             if (std::string("offer") == type) {
 
-                onPeerConnected(from);
+                onPeerConnected(from, cam);
                 
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);
@@ -205,18 +212,18 @@ namespace base {
 
         void Signaler::onStable(wrtc::Peer* conn) {
             LInfo("Start FFMPEG Capture")
-            _capturer.start();
+            _capturer.start( conn->getCam());
         }
 
         void Signaler::onClosed(wrtc::Peer* conn) {
             LInfo("stop FFMPEG Capture")
-            _capturer.stop();
+            _capturer.stop(conn->getCam());
             wrtc::PeerManager::onClosed(conn);
         }
 
         void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
             LInfo("onFailure stop FFMPEG Capture")
-            _capturer.stop();
+            _capturer.stop(conn->getCam());
             wrtc::PeerManager::onFailure(conn, error);
         }
 

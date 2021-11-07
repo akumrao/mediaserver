@@ -30,7 +30,7 @@ public:
     };
 
     Peer(PeerManager* manager,
-         PeerFactoryContext* context,
+         PeerFactoryContext* context, int cam, 
          const std::string& peerid,
          const std::string& token,
          Mode mode);
@@ -70,6 +70,8 @@ public:
     std::string token() const;
     
     void mute( const json& message);
+    
+    int getCam( ){return cam;}
      
     //webrtc::FakeConstraints& constraints();
     webrtc::PeerConnectionFactoryInterface* factory() const;
@@ -99,6 +101,7 @@ protected:
     virtual rtc::RefCountReleaseStatus Release() const override { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
 
 protected:
+    int  cam;
     PeerManager* _manager;
     PeerFactoryContext* _context;
     std::string _peerid;
@@ -125,6 +128,8 @@ public:
     bool hasIceLiteOffer{false};
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
     //std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
+    
+   
 };
 
 

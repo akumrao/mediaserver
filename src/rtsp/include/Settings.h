@@ -27,8 +27,7 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
-                std::string rtsp1;
-                std::string rtsp2;
+                json  rtsp;
                 json listenIps;
                 
 	};

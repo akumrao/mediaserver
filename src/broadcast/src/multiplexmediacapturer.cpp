@@ -260,7 +260,7 @@ void MultiplexMediaCapturer::addMediaTracks(
 }
 
 
-void MultiplexMediaCapturer::start()
+void MultiplexMediaCapturer::start( int cam )
 {
     #if MP4File
     //_stream.start
@@ -285,14 +285,16 @@ void MultiplexMediaCapturer::start()
 
     fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
     
+    std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
+            
 
-    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, false, tmpVc , info, txt); // Request livethread to write into filter info
+    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, false, tmpVc , info, txt); // Request livethread to write into filter info
     ffparser->registerStreamCall(*ctx);
     ffparser->playStreamCall(*ctx);
             
 }
 
-void MultiplexMediaCapturer::stop()
+void MultiplexMediaCapturer::stop(int cam)
 {
                  
   // _stream.stop();

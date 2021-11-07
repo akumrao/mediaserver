@@ -44,13 +44,11 @@ void Settings::SetConfiguration(json &cnfg)
             Settings::configuration.rtcMaxPort = cnfg["rtcMaxPort"].get<uint16_t>();
         }
         
-        if (cnfg.find("rtsp1") != cnfg.end()) {
-            Settings::configuration.rtsp1 = cnfg["rtsp1"].get<std::string>();
+        if (cnfg.find("rtsp") != cnfg.end()) {
+            Settings::configuration.rtsp = cnfg["rtsp"];
         }
         
-        if (cnfg.find("rtsp2") != cnfg.end()) {
-            Settings::configuration.rtsp2 = cnfg["rtsp2"].get<std::string>();
-        }
+      
             
         if (cnfg.find("logLevel") != cnfg.end()) {   // trace, debug, info, warn
             //TBD // Move logger setting from main to here
