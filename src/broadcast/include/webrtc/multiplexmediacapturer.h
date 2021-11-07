@@ -20,30 +20,30 @@
 
 #include "api/peer_connection_interface.h"
 
-#include "livethread.h"
+
 
 
 namespace base {
 namespace wrtc {
 
 
-class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
- public:
-  VideoObserver() {}
-  ~VideoObserver() {}
-  //oid SetVideoCallback(I420FRAMEREADY_CALLBACK callback);
-
- protected:
-  // VideoSinkInterface implementation
-  void OnFrame(const webrtc::VideoFrame& frame) 
-  {
-      int x = 1;
-  }
-
- private:
- 
-  //std::mutex mutex;
-};
+//class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+// public:
+//  VideoObserver() {}
+//  ~VideoObserver() {}
+//  //oid SetVideoCallback(I420FRAMEREADY_CALLBACK callback);
+//
+// protected:
+//  // VideoSinkInterface implementation
+//  void OnFrame(const webrtc::VideoFrame& frame) 
+//  {
+//      int x = 1;
+//  }
+//
+// private:
+// 
+//  //std::mutex mutex;
+//};
 
     
     
@@ -77,30 +77,26 @@ protected:
     
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
 public:    
-    rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
+    
+     std::map< int ,  rtc::scoped_refptr<VideoPacketSource> > VideoCapturer;
     
  protected:
      
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
     
-     std::unique_ptr<VideoObserver> local_video_observer_;
+     std::map< int,  rtc::scoped_refptr<webrtc::VideoTrackInterface> > video_track;
+    
+     //std::unique_ptr<VideoObserver> local_video_observer_;
     
     int PlayerID;
     
     
-     
-     fmp4::LiveThread  *ffparser{nullptr};
+
 
      
  private:
      
-     fmp4::DummyFrameFilter *fragmp4_filter{nullptr};
-     fmp4::FrameFilter *fragmp4_muxer{nullptr};;
-     fmp4::FrameFilter *info{nullptr};;
-     fmp4::FrameFilter *txt{nullptr};;
-     fmp4::LiveConnectionContext *ctx{nullptr};;
-     int slot{1};        
+       
      std::string fileName;
 };
 

@@ -40,31 +40,31 @@ namespace base {
 
            // self = this;
 
-	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
-            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
-
-            info = new InfoFrameFilter("info", nullptr);
-
-            txt = new TextFrameFilter("txt", this);
-            
-
-            #if FILEPARSER
-            ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
-
-            ffparser->start();
-            #else
-            ffparser = new LiveThread("live");
-            
-            ffparser->start();
-            
+//	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+//            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+//
+//            info = new InfoFrameFilter("info", nullptr);
+//
+//            txt = new TextFrameFilter("txt", this);
+//            
+//
+//            #if FILEPARSER
+//            ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
+//
+//            ffparser->start();
+//            #else
+//            ffparser = new LiveThread("live");
+//            
+//            ffparser->start();
+//            
+//          
+//            
+//            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
+//            ffparser->registerStreamCall(*ctx);
+//            ffparser->playStreamCall(*ctx);
           
-            
-            ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
-            ffparser->registerStreamCall(*ctx);
-            ffparser->playStreamCall(*ctx);
-          
 
-           #endif
+  //         #endif
 
 
             
@@ -97,96 +97,96 @@ namespace base {
 
         void  ReadMp4::on_read(net::Listener* connection, const char* msg, size_t len) {
 
-            //connection->send("arvind", 6 );
-   
-            
-             std::string got = std::string(msg, len);
-             SInfo << "restart  " << got;
-                
-              #if FILEPARSER
-
-              if( got == "reset")
-              ffparser->reset();  
-            
-              #else
-
-               if( got == "reset")
-               {
-                    //SInfo  << "reset";
-                   // fragmp4_muxer->resetParser = true ;//  
-               }
-               else
-               {
-                   if( !strncmp(msg,"rtsp",4 ) && critical_sec++ == 0  )
-                   {
-                        broadcast("reset" , 5, false);
-
-                        ffparser->stopStreamCall(*ctx);
-
-                        ffparser->deregisterStreamCall(*ctx);
-                        
-
-                      //  fragmp4_muxer->resetParser = true ;
-
-                        Settings::configuration.rtsp2 = got;
-
-                        ffparser->stop();
-                        ffparser->join();
-                        
-
-
-                        delete ffparser;
-                        delete ctx;
-                        delete fragmp4_filter;
-                        delete fragmp4_muxer;
-                        delete info;
-                        delete txt;
-                        
-                        fragmp4_filter = new DummyFrameFilter("fragmp4", this);
-                        fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
-
-                        info = new InfoFrameFilter("info", nullptr);
-
-                        txt = new TextFrameFilter("txt", this);
-                        
-                        ffparser = new LiveThread("live");
-                        
-                        ffparser->start();
-                        
-                      
-                        
-                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
-                        ffparser->registerStreamCall(*ctx);
-                        ffparser->playStreamCall(*ctx);
-
-
-
-
-                        // SInfo <<  "slot " <<  ++slot ;
-
-
-                        // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
-                        // ffparser->registerStreamCall(*ctx);
-                        // ffparser->playStreamCall(*ctx);
-                        
-                        critical_sec =0;
-                   }
-                 
-                   
-               }
-             
-             
-              #endif
-
-                
-//                else if( got == "mute")
-//                    ffparser->restart(true);
-//                else if( got == "unmute")
-//                    ffparser->restart(false);   
-//                else if( got  == "hd")
-//		    ffparser->resHD(true);
-//	        else if (got == "cif")
-//		   ffparser->resHD(false);
+//            //connection->send("arvind", 6 );
+//   
+//            
+//             std::string got = std::string(msg, len);
+//             SInfo << "restart  " << got;
+//                
+//              #if FILEPARSER
+//
+//              if( got == "reset")
+//              ffparser->reset();  
+//            
+//              #else
+//
+//               if( got == "reset")
+//               {
+//                    //SInfo  << "reset";
+//                   // fragmp4_muxer->resetParser = true ;//  
+//               }
+//               else
+//               {
+//                   if( !strncmp(msg,"rtsp",4 ) && critical_sec++ == 0  )
+//                   {
+//                        broadcast("reset" , 5, false);
+//
+//                        ffparser->stopStreamCall(*ctx);
+//
+//                        ffparser->deregisterStreamCall(*ctx);
+//                        
+//
+//                      //  fragmp4_muxer->resetParser = true ;
+//
+//                        Settings::configuration.rtsp2 = got;
+//
+//                        ffparser->stop();
+//                        ffparser->join();
+//                        
+//
+//
+//                        delete ffparser;
+//                        delete ctx;
+//                        delete fragmp4_filter;
+//                        delete fragmp4_muxer;
+//                        delete info;
+//                        delete txt;
+//                        
+//                        fragmp4_filter = new DummyFrameFilter("fragmp4", this);
+//                        fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+//
+//                        info = new InfoFrameFilter("info", nullptr);
+//
+//                        txt = new TextFrameFilter("txt", this);
+//                        
+//                        ffparser = new LiveThread("live");
+//                        
+//                        ffparser->start();
+//                        
+//                      
+//                        
+//                        ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
+//                        ffparser->registerStreamCall(*ctx);
+//                        ffparser->playStreamCall(*ctx);
+//
+//
+//
+//
+//                        // SInfo <<  "slot " <<  ++slot ;
+//
+//
+//                        // ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp2, 1, tcprequest, fragmp4_muxer, info); // Request livethread to write into filter info
+//                        // ffparser->registerStreamCall(*ctx);
+//                        // ffparser->playStreamCall(*ctx);
+//                        
+//                        critical_sec =0;
+//                   }
+//                 
+//                   
+//               }
+//             
+//             
+//              #endif
+//
+//                
+////                else if( got == "mute")
+////                    ffparser->restart(true);
+////                else if( got == "unmute")
+////                    ffparser->restart(false);   
+////                else if( got  == "hd")
+////		    ffparser->resHD(true);
+////	        else if (got == "cif")
+////		   ffparser->resHD(false);
 
 
         }

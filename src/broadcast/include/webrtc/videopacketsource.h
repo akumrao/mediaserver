@@ -19,6 +19,8 @@
 #include "rtc_base/timestamp_aligner.h"
 #include "framefilter.h"
 
+#include "livethread.h"
+
 namespace base {
 namespace wrtc {
 
@@ -32,7 +34,7 @@ class VideoPacketSource : public rtc::AdaptedVideoTrackSource, fmp4::FrameFilter
 { 
 
 public:                                                                
-      VideoPacketSource(std::string &playerId, const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next = NULL);
+      VideoPacketSource(const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next = NULL);
 
 protected:
     void go(fmp4::Frame *frame)
@@ -45,6 +47,7 @@ public:
    
 public:
     wrtc::Peer *peer;
+   
    // VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
 
@@ -83,6 +86,17 @@ protected:
     AVPacket *videopkt{nullptr};   
     AVFrame *avframe;
     AVCodecParserContext *parser;
+    
+    
+         
+     fmp4::LiveThread  *ffparser{nullptr};
+    
+     fmp4::DummyFrameFilter *fragmp4_filter{nullptr};
+     fmp4::FrameFilter *fragmp4_muxer{nullptr};;
+     fmp4::FrameFilter *info{nullptr};;
+     fmp4::FrameFilter *txt{nullptr};;
+     fmp4::LiveConnectionContext *ctx{nullptr};;
+     int slot{1};    
 };
 
 

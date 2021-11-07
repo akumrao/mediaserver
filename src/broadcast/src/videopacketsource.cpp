@@ -26,7 +26,8 @@ extern "C"
 }
 
 
-
+#include "muxer.h"
+ #include "Settings.h"
 
 using std::endl;
 
@@ -40,7 +41,7 @@ namespace wrtc {
 
 
     
-VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),playerId(playerId), fmp4::FrameFilter(name, next)
+VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
@@ -50,6 +51,9 @@ VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  w
     std::vector<cricket::VideoFormat> formats;
     formats.push_back(_captureFormat);
    // SetSupportedFormats(formats);
+    
+    
+          
     
     if ((videopkt = av_packet_alloc()) == NULL) {
                 fprintf(stderr, "av_packet_alloc failed.\n");
@@ -94,9 +98,28 @@ VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  w
 	}
         
         
-      //  arams.encoder = avcodec_get_name(cdc_ctx->codec_id);
-      //const char *pixelFmt = av_get_pix_fmt_name(cdc_ctx->pix_fmt);
      
+        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", nullptr);
+        fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+        info = new fmp4::InfoFrameFilter("info", nullptr);
+
+        txt = new fmp4::TextFrameFilter("txt", nullptr);
+
+
+        ffparser = new fmp4::LiveThread("live");
+
+        ffparser->start();
+
+       // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
+
+        int cam = peer->getCam();
+        std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
+
+
+        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, false, this , info, txt); // Request livethread to write into filter info
+        ffparser->registerStreamCall(*ctx);
+        ffparser->playStreamCall(*ctx);
     
         
       
@@ -131,6 +154,22 @@ VideoPacketSource::~VideoPacketSource()
 	//avformat_free_context(fmt_ctx);
 
 
+            
+    ffparser->stopStreamCall(*ctx);
+
+    ffparser->deregisterStreamCall(*ctx);
+    ffparser->stop();
+    ffparser->join();
+
+
+    delete ffparser;
+    delete ctx;
+    delete fragmp4_filter;
+    delete fragmp4_muxer;
+    delete info;
+    delete txt;
+    
+            
 
 	av_frame_free(&avframe);
 	av_packet_free(&videopkt);

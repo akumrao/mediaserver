@@ -8,8 +8,7 @@
 #include "ff/ffmpeg.h"
 #endif
 
-#include "muxer.h"
- #include "Settings.h"
+
 
 #include "base/filesystem.h"
 #include "base/logger.h"
@@ -48,7 +47,7 @@ _videoCapture(std::make_shared<ff::MediaCapture>()),
     _videoCapture->cbProcessAudio.push_back(var);
     #endif
 
-      local_video_observer_.reset(new VideoObserver());
+//      local_video_observer_.reset(new VideoObserver());
 }
 
 
@@ -230,19 +229,26 @@ void MultiplexMediaCapturer::addMediaTracks(
 //      assert(_videoCapture->video());
  //     auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
-       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd,"VideoCapturer" , peer);
+      
+      int cam = peer->getCam();
+      if( VideoCapturer.find(cam) == VideoCapturer.end())
+      {
+         VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , peer);
+         
+          video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
+      }
        
+      
     //  ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
 
     //  _videoCapture->cbProcessVideo.push_back(var);
       
 
       
-      if(!video_track)
-        video_track =     factory->CreateVideoTrack(videoLable, VideoCapturer);
-        
-         video_track->set_enabled(true);
-         conn->AddTrack(video_track, {streamId});
+     
+         video_track[cam]->set_enabled(true);
+         conn->AddTrack(video_track[cam], {streamId});
+      
     }        
           
           
@@ -270,27 +276,7 @@ void MultiplexMediaCapturer::start( int cam )
     SInfo << "MultiplexMediaCapturer::start()" ;
     
     
-    
-    fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", nullptr);
-    fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
-
-    info = new fmp4::InfoFrameFilter("info", nullptr);
-
-    txt = new fmp4::TextFrameFilter("txt", nullptr);
-
-
-    ffparser = new fmp4::LiveThread("live");
-
-    ffparser->start();
-
-    fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
-    
-    std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
-            
-
-    ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, false, tmpVc , info, txt); // Request livethread to write into filter info
-    ffparser->registerStreamCall(*ctx);
-    ffparser->playStreamCall(*ctx);
+   
             
 }
 
@@ -301,28 +287,15 @@ void MultiplexMediaCapturer::stop(int cam)
     //_videoCapture->stop();
      SInfo << "MultiplexMediaCapturer::stop()" ;
     
-     ffparser->stopStreamCall(*ctx);
 
-    ffparser->deregisterStreamCall(*ctx);
-    ffparser->stop();
-    ffparser->join();
-
-
-    delete ffparser;
-    delete ctx;
-    delete fragmp4_filter;
-    delete fragmp4_muxer;
-    delete info;
-    delete txt;
-    
-    
-  
-    video_track.release();
-    video_track = nullptr;
-    
-   
-    VideoCapturer.release();
-    VideoCapturer = nullptr;
+//    
+//  
+//    video_track.release();
+//    video_track = nullptr;
+//    
+//   
+//    VideoCapturer.release();
+//    VideoCapturer = nullptr;
     
 }
 
