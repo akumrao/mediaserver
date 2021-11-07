@@ -294,15 +294,10 @@ void MultiplexMediaCapturer::start()
 
 void MultiplexMediaCapturer::stop()
 {
-    
-    video_track.release();
-    video_track = nullptr;
-    VideoCapturer.release();
-    VideoCapturer = nullptr;
-               
+                 
   // _stream.stop();
     //_videoCapture->stop();
-    SInfo << "MultiplexMediaCapturer::stop()" ;
+     SInfo << "MultiplexMediaCapturer::stop()" ;
     
      ffparser->stopStreamCall(*ctx);
 
@@ -317,6 +312,16 @@ void MultiplexMediaCapturer::stop()
     delete fragmp4_muxer;
     delete info;
     delete txt;
+    
+    
+  
+    video_track.release();
+    video_track = nullptr;
+    
+   
+    VideoCapturer.release();
+    VideoCapturer = nullptr;
+    
 }
 
 

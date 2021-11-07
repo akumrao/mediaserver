@@ -98,7 +98,7 @@ FVideoEncoder::FVideoEncoder()//:
 	// CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::SingleNalUnit;
 	CodecSpecific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
 
-        info = new fmp4::InfoFrameFilter("arvind", nullptr);
+        //info = new fmp4::InfoFrameFilter("arvind", nullptr);
         
 //	UE_LOG(PixelStreamer, Log, TEXT("WebRTC VideoEncoder created%s"), bControlsQuality? TEXT(", quality controller"): TEXT(""));
 }
@@ -161,14 +161,14 @@ int32_t FVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector
    {
        
        
-       info->run(buf);
+//       info->run(buf);
        
        SDebug << " Key frame " ; 
        
    }
    if (buf->h264_pars.slice_type == H264SliceType::sps ||  buf->h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
    {
-        info->run(buf);
+      //  info->run(buf);
        SDebug << " SPS or PPS " ; 
      
    }

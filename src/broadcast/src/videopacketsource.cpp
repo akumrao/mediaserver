@@ -16,6 +16,18 @@
 #include "rtc_base/atomic_ops.h"
 #include <chrono>
 
+extern "C"
+{
+//#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/parseutils.h>
+}
+
+
+
+
 using std::endl;
 
 #define WebRTC_USE_DECODER_PTS 1
@@ -38,6 +50,56 @@ VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  w
     std::vector<cricket::VideoFormat> formats;
     formats.push_back(_captureFormat);
    // SetSupportedFormats(formats);
+    
+    if ((videopkt = av_packet_alloc()) == NULL) {
+                fprintf(stderr, "av_packet_alloc failed.\n");
+                //goto ret3;
+                return;
+       }
+            
+        av_init_packet(videopkt );
+     
+     
+     
+     	if ((codec = avcodec_find_decoder(AV_CODEC_ID_H264)) == NULL)
+    	{
+    		SError<<  "avcodec_find_decoder failed";
+    		
+    	}
+            
+    	if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL)
+    	{
+                SError<<  "avcodec_alloc_context3 failed";
+    	
+    	}
+            int ret ;
+    	if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
+    	{
+    		SError<<  "avcodec_open2 failed";
+      
+    	}
+            
+            if ((avframe = av_frame_alloc()) == NULL)
+    	{
+                SError<<  "av_frame_alloc failed";
+    	
+    	}
+            
+   
+            
+        if ((parser = av_parser_init(codec->id)) == NULL)
+	{
+		
+	    SError<<  "av_parser_init failed";
+	}
+        
+        
+      //  arams.encoder = avcodec_get_name(cdc_ctx->codec_id);
+      //const char *pixelFmt = av_get_pix_fmt_name(cdc_ctx->pix_fmt);
+     
+    
+        
+      
 }
 
 
@@ -63,6 +125,20 @@ VideoPacketSource::VideoPacketSource(std::string &playerId, const char *name,  w
 VideoPacketSource::~VideoPacketSource()
 {
     LDebug(": Destroying")
+    
+    	//avformat_close_input(&fmt_ctx);
+
+	//avformat_free_context(fmt_ctx);
+
+
+
+	av_frame_free(&avframe);
+	av_packet_free(&videopkt);
+
+	avcodec_close(cdc_ctx);
+	avcodec_free_context(&cdc_ctx);
+
+
 }
 
 
@@ -124,12 +200,84 @@ void VideoPacketSource::run(fmp4::Frame *frame)
     static uint frameNo = 0;
     
     int64_t TimestampUs = rtc::TimeMicros();
-    
+     fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
     
     #if BYPASSGAME
 
-	rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
-		webrtc::I420Buffer::Create(720,576);
+	//rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
+	//	webrtc::I420Buffer::Create(720,576);
+    
+        
+             int ret = 0;
+             int got_picture = 0;
+             
+            // basic_frame->fillAVPacket(videopkt);
+             
+             if ((ret = av_parser_parse2(parser, cdc_ctx, &videopkt->data, &videopkt->size,
+                            basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+                        SError << "av_parser_parse2 failed" ;;
+                        //goto ret8;
+       
+               }
+             
+//                printf("[Packet]Size:%6d\t", videopkt->size);
+//                    switch (parser->pict_type) {
+//                        case AV_PICTURE_TYPE_I: printf("Type:I\t");
+//                            break;
+//                        case AV_PICTURE_TYPE_P: printf("Type:P\t");
+//                            break;
+//                        case AV_PICTURE_TYPE_B: printf("Type:B\t");
+//                            break;
+//                        default: printf("Type:Other\t");
+//                            break;
+//                    };
+//                    printf("Number:%4d\n", parser->output_picture_number);
+//                    
+//		
+			
+
+             if (videopkt->size > 0)
+             ret = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, videopkt);
+             if (ret < 0) {
+                
+                fmp4::InfoFrameFilter tmp("VideoPacketSource", nullptr);
+                tmp.run( basic_frame);
+                SError << "Decode Error" ;
+                
+                
+                return ;
+            }
+            if (got_picture) {
+                
+                
+                //const char *pixelFmt = av_get_pix_fmt_name(cdc_ctx->pix_fmt);
+                
+                //const char *pixelFm2t = av_get_pix_fmt_name((AVPixelFormat)avframe->format);
+                
+
+              //  SInfo << "Found Frame" ;
+                
+                rtc::scoped_refptr<webrtc::I420Buffer> Buffer = webrtc::I420Buffer::Copy(
+                avframe->width, avframe->height,
+                avframe->data[0],avframe->linesize[0],
+                avframe->data[1], avframe->linesize[1],
+                avframe->data[2], avframe->linesize[2]);
+    
+    
+                webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+		set_video_frame_buffer(Buffer).
+		set_rotation(webrtc::kVideoRotation_0).
+		set_timestamp_us(TimestampUs).
+		build(); 
+
+               // SDebug << "ideoPacketSource::OnFrame";
+
+                OnFrame(Frame);  //arvind
+    
+                return;
+                
+            }
+                    
  
      #else
 
@@ -144,7 +292,7 @@ void VideoPacketSource::run(fmp4::Frame *frame)
 //        {
 //          //  conn->push(playerId)  ;
 //        }
-         fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
+        
          fmp4::BasicFrame *bframe = new  fmp4::BasicFrame();
          bframe->payload = basic_frame->payload;
          bframe->codec_id = basic_frame->codec_id; 
@@ -178,15 +326,15 @@ void VideoPacketSource::run(fmp4::Frame *frame)
                 
      
         
-     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-		set_video_frame_buffer(Buffer).
-		set_rotation(webrtc::kVideoRotation_0).
-		set_timestamp_us(TimestampUs).
-		build(); 
-
-     SDebug << "ideoPacketSource::OnFrame";
-       
-     OnFrame(Frame);  //arvind
+//     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+//		set_video_frame_buffer(Buffer).
+//		set_rotation(webrtc::kVideoRotation_0).
+//		set_timestamp_us(TimestampUs).
+//		build(); 
+//
+//     SDebug << "ideoPacketSource::OnFrame";
+//       
+//     OnFrame(Frame);  //arvind
     
     return ;
 }

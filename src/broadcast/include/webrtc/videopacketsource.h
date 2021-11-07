@@ -76,6 +76,13 @@ protected:
     int64_t _timestampOffset;
     int64_t _nextTimestamp;
    // std::function<void(ff::PlanarVideoPacket& packet)>   _source;
+    
+    
+    AVCodec *codec{nullptr};
+    AVCodecContext *cdc_ctx;
+    AVPacket *videopkt{nullptr};   
+    AVFrame *avframe;
+    AVCodecParserContext *parser;
 };
 
 

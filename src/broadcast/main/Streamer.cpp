@@ -91,7 +91,10 @@ int main(int argc, char** argv) {
             
     //Logger::instance().add(ch);
    
-    
+     av_register_all();
+    // init network
+     avformat_network_init();
+     avcodec_register_all();
        
     //Logger::instance().add(new FileChannel("mediaserver","/var/log/mediaserver", Level::Info));
    // Logger::instance().setWriter(new AsyncLogWriter);

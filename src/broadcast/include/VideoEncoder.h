@@ -88,8 +88,7 @@ private:
 	webrtc::VideoBitrateAllocation LastBitrate;
 	uint32_t LastFramerate = 0;
         
-        fmp4::FrameFilter *info;
-};
+   };
 
 class FVideoEncoderFactory : public webrtc::VideoEncoderFactory
 {
