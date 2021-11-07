@@ -18,8 +18,13 @@
  #include "Settings.h"
 
 //#include <libavutil/timestamp.h>
-#include <avformat.h>
-
+//#include <avformat.h>
+extern "C"
+{
+//#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+//#include <libavcodec/avcodec.h>
+}
 
 #define tcprequest false
 

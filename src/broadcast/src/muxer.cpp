@@ -7,10 +7,17 @@
 
 //#include <libavutil/timestamp.h>
  
- #include "avformat.h"
- #include "avcodec.h"
- #include "channel_layout.h"
+// #include "avformat.h"
+// #include "avcodec.h"
+// #include "channel_layout.h"
   
+extern "C"
+{
+//#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
+
  /*
 
   H.264 comes in a variety of stream formats. One variation is called "Annex B".

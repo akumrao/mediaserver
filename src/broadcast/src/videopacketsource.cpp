@@ -20,7 +20,7 @@ using std::endl;
 
 #define WebRTC_USE_DECODER_PTS 1
 
-//#define BYPASSGAME 1
+#define BYPASSGAME 1
 
 namespace base {
 namespace wrtc {

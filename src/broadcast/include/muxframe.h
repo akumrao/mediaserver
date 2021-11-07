@@ -4,8 +4,13 @@
 
 #include <iostream>
 #include  <vector>
-#include "avformat.h"
 
+extern "C"
+{
+//#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
 
 //#include "micro.h"
 #include "codec.h"

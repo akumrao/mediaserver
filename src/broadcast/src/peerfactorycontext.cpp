@@ -20,7 +20,7 @@
 
 using std::endl;
 
-//#define BYPASSGAME 1
+#define BYPASSGAME 1
 namespace base {
 namespace wrtc {
 
