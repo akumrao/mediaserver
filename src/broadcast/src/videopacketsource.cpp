@@ -283,7 +283,6 @@ void VideoPacketSource::run(fmp4::Frame *frame)
                 tmp.run( basic_frame);
                 SError << "Decode Error" ;
                 
-                
                 return ;
             }
             if (got_picture) {

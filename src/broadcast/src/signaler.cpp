@@ -6,7 +6,7 @@
 #include "webrtc/multiplexmediacapturer.h"
 #include "webrtc/videopacketsource.h"
 #include "webrtc/signaler.h"
-//#include "api/mediastreamtrackproxy.h"
+#include "Settings.h"
 
 
 using std::endl;
@@ -150,17 +150,22 @@ namespace base {
                 return;
             }
             
-             if (m.find("user") != m.end()) {
-                user = m["user"].get<std::string>();
-            }
-            else
-            {
-                SWarn << " On Peer message is missing user name ";
-            }
+//             if (m.find("user") != m.end()) {
+//                user = m["user"].get<std::string>();
+//            }
+//            else
+//            {
+//                SWarn << " On Peer message is missing user name ";
+//            }
             
             if (m.find("cam") != m.end()) {
                 std::string camT = m["cam"].get<std::string>();
                 cam = std::stoi(camT);
+                if( cam >= Settings::configuration.rtsp.size())
+                {
+                    cam = 0;
+                }
+                
             }
 
             LInfo("Peer message: ", from, " ", type )

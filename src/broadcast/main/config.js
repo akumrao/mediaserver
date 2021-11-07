@@ -5,9 +5,11 @@
     "rtcMinPort": 11501,
     "rtcMaxPort": 12560,
      "rtsp": [
-      "rtsp://localhost:8554/testStream",
+      "rtsp://root:60056006@10.86.8.16:560/axis-media/media.amp?videocodec=h264&resolution=768x576&fps=25",
+      "rtsp://admin:247Supp0rt!@10.86.7.224:557/RTSP2HLS/media.smp",
       "rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
-      "rtsp://localhost:8554/testStream"
+      "rtsp://localhost:8554/testStream",
+      "rtsp://192.168.0.19:9554/testStream"
       ],
     "logLevel": "debug",
     "logTags": [

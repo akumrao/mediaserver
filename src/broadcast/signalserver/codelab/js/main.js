@@ -66,7 +66,7 @@ socket.on('joined', function(room, id, numClients) {
     // disable  send message 
      sendMessage ({
       room: roomId,
-       cam: number,
+       cam: number.toString(),
       type: 'offer',
       desc:'sessionDescription'
     });
