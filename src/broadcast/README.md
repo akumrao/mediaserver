@@ -15,7 +15,7 @@ do it
 
 for h264 to enable for decoding
 
-./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac  --enable-libmp3lame   --enable-nonfree --enable-libx264 --enable-libopenh264
+./configure --disable-yasm --enable-shared   --enable-debug=2 --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac    --enable-nonfree --enable-libx264 --enable-libopenh264
 
 
 gn gen out/m84 --args='is_debug=true symbol_level=2 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true proprietary_codecs=true ffmpeg_branding="Chrome"'
@@ -23,6 +23,12 @@ gn gen out/m84 --args='is_debug=true symbol_level=2 is_component_build=false is_
 
 
 apt-get install -y libx264-dev
+apt-get install -y  nasm
+git clone    https://github.com/cisco/openh264 
+
+git checkout v1.5.0
+make -j8
+
 
 wget https://downloads.sourceforge.net/lame/lame-3.100.tar.gz && \
 tar xvf lame-3.100.tar.gz && cd lame-3.100 && \
