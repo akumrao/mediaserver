@@ -9,7 +9,7 @@
       "rtsp://admin:247Supp0rt!@10.86.7.224:557/RTSP2HLS/media.smp",
       "rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
       "rtsp://localhost:8554/testStream",
-      "rtsp://192.168.0.19:9554/testStream"
+      "rtsp://localhost:9554/testStream"
       ],
     "logLevel": "debug",
     "logTags": [
