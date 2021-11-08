@@ -32,3 +32,12 @@ ffmpeg -i /var/tmp/test.mp3 -ar 48000 -ac 2 -f s16le out.pcm
 -ac 1: the number of channels is 1
 
 
+
+avcodec_find_decoder_by_name , do not find decoder with id  avcodec_find_decoder(AV_CODEC_ID_H264);
+
+
+And there is no h264_videotoolbox decoder, only encoder. To list decoders/encoders available:
+
+ffmpeg -encoders
+ffmpeg -decoders
+
