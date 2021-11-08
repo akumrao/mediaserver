@@ -1,0 +1,1433 @@
+
+#include "livethread.h"
+//#include "logging.h"
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <iterator>
+#include "base/logger.h"
+
+// #define RECONNECT_VERBOSE   // by default, disable
+// #define LIVE_SIGNAL_FRAMES // experimental
+
+using namespace std::chrono_literals;
+using std::this_thread::sleep_for; 
+
+namespace base {
+namespace fmp4 {
+    
+    
+  namespace Timeout { ///< Various thread timeouts in milliseconds
+  const static long unsigned thread       =250; // Timeout::thread
+  const static long unsigned livethread   =250; // Timeout::livethread
+  const static long unsigned avthread     =250; // Timeout::avthread
+  const static long unsigned openglthread =250; // Timeout::openglthread
+  const static long unsigned fswriterthread = 250; // Timeout::fswriterthread
+  const static long unsigned fsreaderthread = 250; // Timeout::fswriterthread
+  const static long unsigned filecachethread = 1000; // Timeout::cachethread
+  // const static long unsigned filecachethread = 500; // Timeout::cachethread
+  const static long unsigned usbthread    =250; // Timeout::usbthread
+  const static long int filethread        =2000; // Timeout::filethread
+  const static long int fdwritethread        =250; // Timeout::filethread
+}
+
+    
+    static const SlotNumber I_MAX_SLOTS = 255;
+    
+void setLiveOutPacketBuffermaxSize(unsigned i) {
+  OutPacketBuffer::maxSize = i;  
+}                                               
+
+
+LiveFifo::LiveFifo(const char* name, FrameFifoContext ctx) : FrameFifo(name, ctx) {
+}
+
+LiveFifo::~LiveFifo() {
+}
+
+
+void LiveFifo::setLiveThread(void *live_thread) { // we need the LiveThread so we can call one of its methods..
+    this->live_thread=live_thread;
+}
+
+
+bool LiveFifo::writeCopy(Frame* f, bool wait) {
+    bool do_notify=false;
+    bool ok=false;
+    
+    if (isEmpty()) { // triggerGotFrames => gotFramesEvent => readFrameFifoTask (this one re-registers itself if there are frames in the queue - if queue empty, must be re-registered here)
+        do_notify=true; 
+    }
+    
+    ok=FrameFifo::writeCopy(f,wait);
+    
+    ///*
+    if (ok and do_notify) {
+        ((LiveThread*)live_thread)->triggerGotFrames();
+    }
+    //*/
+    /*
+     *  if (ok) {
+     *    ((LiveThread*)live_thread)->triggerGotFrames();
+}
+*/
+    
+    return ok;
+    
+    /*
+     *  if (FrameFifo::writeCopy(f,wait)) {
+     *    ((LiveThread*)live_thread)->triggerNextFrame();
+}
+*/
+}
+
+
+
+
+#define TIMESTAMP_CORRECTOR // keep this always defined
+
+/*
+ * #ifdef TIMESTAMP_CORRECTOR
+ * // filterchain: {FrameFilter: inputfilter} --> {TimestampFrameFilter: timestampfilter} --> {FrameFilter: framefilter}
+ * Connection::Connection(UsageEnvironment& env, const std::string address, SlotNumber slot, FrameFilter& framefilter, long unsigned int msreconnect) : env(env), address(address), slot(slot), framefilter(framefilter), msreconnect(msreconnect), is_playing(false), frametimer(0), timestampfilter("timestamp_filter",&framefilter), inputfilter("input_filter",slot,&timestampfilter)
+ * #else
+ * // filterchain: {FrameFilter: inputfilter} --> {FrameFilter: framefilter}
+ * Connection::Connection(UsageEnvironment& env, const std::string address, SlotNumber slot, FrameFilter& framefilter, long unsigned int msreconnect) : env(env), address(address), slot(slot), framefilter(framefilter), msreconnect(msreconnect), is_playing(false), frametimer(0), timestampfilter("timestamp_filter",&framefilter), inputfilter("input_filter",slot,&framefilter)
+ * #endif
+ */
+
+/*
+ * #ifdef TIMESTAMP_CORRECTOR
+ * // filterchain: {FrameFilter: inputfilter} --> {TimestampFrameFilter: timestampfilter} --> {FrameFilter: framefilter}
+ * Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(env), ctx(ctx), is_playing(false), frametimer(0), timestampfilter("timestamp_filter",ctx.framefilter), inputfilter("input_filter",ctx.slot,&timestampfilter)
+ * #else
+ * // filterchain: {FrameFilter: inputfilter} --> {FrameFilter: framefilter}
+ * Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(env), ctx(ctx), is_playing(false), frametimer(0), timestampfilter("timestamp_filter",NULL), inputfilter("input_filter",slot,ctx.framefilter)
+ * #endif
+ * {
+ *  if (ctx.msreconnect>0 and ctx.msreconnect<=Timeout::livethread) {
+ *   SError << "Connection: constructor: your requested reconnection time is less than equal to the LiveThread timeout.  You will get problems" ;
+ *  }  
+ * };
+ */
+
+
+Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(env), ctx(ctx), is_playing(false), frametimer(0), pendingtimer(0) {
+    if       (ctx.time_correction==TimeCorrectionType::none) {
+        // no timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> ctx.framefilter
+//        timestampfilter    = new TimestampFrameFilter2("timestampfilter", NULL); // dummy
+
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
+          txt = ctx.txt;
+    }
+    else if  (ctx.time_correction==TimeCorrectionType::dummy) {
+        // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
+        //timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
+        //repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
+      //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
+           txt = ctx.txt;
+    }
+    else { // smart corrector
+        // brute-force timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> {DummyTimestampFrameFilter: timestampfilter} --> ctx.framefilter
+      //  timestampfilter    = new TimestampFrameFilter2("smart_timestamp_filter", ctx.framefilter);
+      //  repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
+       // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
+          fragmp4_muxer        = ctx.framefilter;
+          info = ctx.info;
+           txt = ctx.txt;
+    }
+}
+
+
+Connection::~Connection() {
+//    delete timestampfilter;
+//    delete inputfilter;
+//    delete repeat_sps_filter;
+};
+
+void Connection::reStartStream() {
+    stopStream();
+    playStream();
+}
+
+void Connection::reStartStreamIf() {
+}
+
+SlotNumber Connection::getSlot() {
+    return ctx.slot;
+};
+
+bool Connection::isClosed() {
+    return true;
+}
+
+void Connection::forceClose() {
+}
+
+
+
+
+// Outbound::Outbound(UsageEnvironment &env, FrameFifo &fifo, SlotNumber slot, const std::string adr, const unsigned short int portnum, const unsigned char ttl) : env(env), fifo(fifo), slot(slot), adr(adr), portnum(portnum), ttl(ttl) {}
+Outbound::Outbound(UsageEnvironment &env, FrameFifo &fifo, LiveOutboundContext &ctx) : env(env), fifo(fifo), ctx(ctx), setup_ok(false), at_setup(false) {}
+Outbound::~Outbound() {}
+
+void Outbound::reinit() {
+    setup_ok =false;
+    at_setup =false;
+    // deallocate session and subsessions
+}
+
+void Outbound::handleFrame(Frame* f) {
+    /* 
+     * 
+     * The session and subsession setup/reinit logic.
+     * The idea is, that we first receive N setup frames.  One for each substream.
+     * Once there are no more setup frames coming, we close up the setup and start accepting payload
+     * 
+     * at_setup  = doing setup
+     * setup_ok  = did setup and got first payload frame
+     * start with at_setup, setup_ok = false
+     * 
+     * if (setup frame):
+     *  if (setup_ok): REINIT
+     *    call reinit:
+     *      at_setup=false
+     *      setup_ok=false
+     *      deallocate
+     *    
+     *  if (not at_setup): INIT
+     *    starting setup again..  create session
+     *  
+     *  create next subsession (according to subsession_index)
+     *  check if subsession_index has been used .. reinit if necessary
+     *  at_setup=true
+     *  
+     * else:
+     *  if (at_setup): CLOSE SETUP
+     *    were doing setup, but a payload frame arrived.  Close setup
+     *    prepare everything for payload frames
+     *    setup_ok=true
+     *    
+     *  if (not setup_ok):
+     *    do nothing
+     *  else:
+     *    write payload
+     */
+    
+//    int subsession_index =f->subsession_index; // alias
+//    
+//    if ( subsession_index>=2) { // subsession_index too big
+//        return;
+//    }
+//    
+//    if (f->getFrameClass()==FrameClass::setup) { // SETUP FRAME
+//        if (setup_ok) { // REINIT
+//            reinit();
+//        } // REINIT
+//        
+//        if (at_setup==false) { // INIT
+//            // create Session
+//            at_setup=true;
+//        } // INIT
+//        
+//        // ** create here a Subsession into subsession_index
+//        // ** check first that it's not already occupied..
+//    }
+//    else { // PAYLOAD FRAME
+//        if (at_setup) { // CLOSE SETUP
+//            // ** do whatever necessary to close up the setup
+//            setup_ok=true; 
+//        } // CLOSE SETUP
+//        
+//        if (setup_ok==false) {
+//            // ** setup has not been started yet .. write an error message?
+//        }
+//        else {
+//            // ** write payload
+//        }
+//    } // PAYLOAD FRAME
+}
+
+
+
+// RTSPConnection::RTSPConnection(UsageEnvironment& env, const std::string address, SlotNumber slot, FrameFilter& framefilter, long unsigned int msreconnect) : Connection(env, address, slot, framefilter, msreconnect), livestatus(LiveStatus::none) {};
+
+RTSPConnection::RTSPConnection(UsageEnvironment& env, LiveConnectionContext& ctx) : Connection(env, ctx), livestatus(LiveStatus::none) {};
+
+
+RTSPConnection::~RTSPConnection() {
+    // delete client;
+}
+
+/* default copy constructor good enough ..
+ * RTSPConnection(const RTSPConnection &cp) : env(cp.env), address(cp.address), slot(cp.slot), framefilter(cp.framefilter)  { 
+ * }
+ */
+
+
+void RTSPConnection::playStream() {
+    if (is_playing) {
+       // SDebug << "RTSPConnection : playStream : stream already playing" ;
+    }
+    else {
+        // Here we are a part of the live555 event loop (this is called from periodicTask => handleSignals => stopStream => this method)
+        livestatus=LiveStatus::pending;
+        frametimer=0;
+        SInfo<< "RTSPConnection : playStream " << ctx.address;
+        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, txt, &livestatus);
+        if (ctx.request_multicast)   { client->requestMulticast();      }
+        if (ctx.request_tcp)         { client->requestTCP(); SInfo<< " TCP RTP "; }
+        if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
+        if (ctx.reordering_time>0)   { client->setReorderingTime(ctx.reordering_time); } // WARNING: in microseconds!
+        SInfo << "RTSPConnection : playStream : name " << client->name() ;
+        client->sendDescribeCommand(MSRTSPClient::continueAfterDESCRIBE);
+    }
+    is_playing=true; // in the sense that we have requested a play .. and that the event handlers will try to restart the play infinitely..
+}
+
+
+void RTSPConnection::stopStream() {
+    // Medium* medium;
+    // HashTable* htable;
+    // Here we are a part of the live555 event loop (this is called from periodicTask => handleSignals => stopStream => this method)
+    SInfo<< "RTSPConnection : stopStream" ;
+    if (is_playing) {
+        // before the RTSPClient instance destroyed itself (!) it modified the value of livestatus
+        if (livestatus==LiveStatus::closed) { // so, we need this to avoid calling Media::close on our RTSPClient instance
+            SDebug << "RTSPConnection : stopStream: already shut down" ;
+        }
+        else if (livestatus==LiveStatus::pending) { // the event-loop-callback system has not yet decided what to do with this stream ..
+            SDebug << "RTSPConnection : stopStream: pending" ;
+            // we could do .. env.taskScheduler().unscheduleDelayedTask(...);
+            // .. this callback chain exits by itself.  However, we'll get problems if we delete everything before that
+            // .. this happens typically, when the DESCRIBE command has been set and we're waiting for the reply.
+            // an easy solution: set the timeout (i.e. the interval we can send messages to the thread) larger than the time it takes wait for the describe response
+            // but what if the user sends lots of stop commands to the signal queue ..?
+            // TODO: add counter for pending events .. wait for pending events, etc .. ?
+            // better idea: allow only one play/stop command per stream per handleSignals interval
+            // possible to wait until handleSignals has been called
+        }
+        else {
+            MSRTSPClient::shutdownStream(client, 1); // sets LiveStatus to closed
+            SDebug << "RTSPConnection : stopStream: shut down" ;
+        }
+    }
+    else {
+        SDebug << "RTSPConnection : stopStream : stream was not playing" ;
+    }
+    is_playing=false;
+}
+
+
+void RTSPConnection::reStartStreamIf() {
+    if (ctx.msreconnect<=0) { // don't attempt to reconnect
+        return;
+    }
+    
+    STrace << "RTSPConnection: status: " << int(livestatus) ;
+
+    if (livestatus==LiveStatus::pending or livestatus==LiveStatus::closed) { // stream trying to connect .. waiting for tcp socket most likely
+        SDebug << "RTSPConnection: reStartStreamIf: pending" ;
+        // frametimer=frametimer+Timeout::livethread;
+        pendingtimer=pendingtimer+Timeout::livethread;
+        if (pendingtimer >= ctx.msreconnect) {
+            #ifdef LIVE_SIGNAL_FRAMES
+            OfflineSignalContext signal_ctx = OfflineSignalContext();
+            SignalFrame signalframe = SignalFrame();
+            put_signal_context(&signalframe, signal_ctx, SignalType::offline);
+            SDebug << "RTSPConnection: restartStreamIf: pending: sending signal frame for slot " << ctx.slot ;
+            ctx.framefilter->run(&signalframe);
+            #endif
+            pendingtimer=0;
+        }
+        return;
+    }
+
+    pendingtimer=0;
+    
+    if (livestatus==LiveStatus::alive) { // alive
+        // std::cout << "RTSPConnection: reStartStreamIf: alive" ;
+        if (client->scs.gotFrame()) { // there has been frames .. all is well
+            client->scs.clearFrame(); // reset the watch flag
+            frametimer=0;
+        }
+        else {
+            frametimer=frametimer+Timeout::livethread;
+        }
+    } // alive
+    else if (livestatus==LiveStatus::closed) {
+          SInfo << "RTSPConnection: reStartStreamIf: closed" ;
+          frametimer=frametimer+Timeout::livethread;
+    }
+    else {
+       SError << "RTSPConnection: restartStreamIf called without client";
+        return;
+    }
+    
+    #ifdef RECONNECT_VERBOSE
+    std::cout << "RTSPConnection: frametimer=" << frametimer ;
+    #endif
+    
+    if (frametimer>=ctx.msreconnect) {
+        // std::cout << "RTSPConnection: reStartStreamIf: msreconnect" ;
+         SInfo << "RTSPConnection: restartStreamIf: restart at slot " << ctx.slot ;
+        
+        if (livestatus==LiveStatus::alive) {
+            #ifdef LIVE_SIGNAL_FRAMES
+            // inform downstream that this stream is offline
+            OfflineSignalContext signal_ctx = OfflineSignalContext();
+            SignalFrame signalframe = SignalFrame();
+            put_signal_context(&signalframe, signal_ctx, SignalType::offline);
+            SDebug << "RTSPConnection: restartStreamIf: sending signal frame for slot " << ctx.slot ;
+            ctx.framefilter->run(&signalframe);
+            #endif
+
+             SInfo << "RTSPConnection: restartStreamIf: sending signal frame for slot " << ctx.slot ;
+            stopStream();
+        }
+        if (livestatus==LiveStatus::closed) {
+            is_playing=false; // just to get playStream running ..
+            playStream();
+        } // so, the stream might be left to the pending state
+    }
+}
+
+bool RTSPConnection::isClosed() { // not pending or playing
+    return (livestatus==LiveStatus::closed or livestatus==LiveStatus::none); // either closed or not initialized at all
+}
+
+void RTSPConnection::forceClose() {
+    MSRTSPClient::shutdownStream(client, 1);
+}
+
+
+//SDPConnection::SDPConnection(UsageEnvironment& env, const std::string address, SlotNumber slot, FrameFilter& framefilter) : Connection(env, address, slot, framefilter, 0) {};
+
+SDPConnection::SDPConnection(UsageEnvironment& env, LiveConnectionContext& ctx) : Connection(env, ctx) {};
+
+
+SDPConnection :: ~SDPConnection() {
+}
+
+void SDPConnection :: playStream() {
+    // great no-brainer example! https://stackoverflow.com/questions/32475317/how-to-open-the-local-sdp-file-by-live555
+    MediaSession* session = NULL;
+    // MediaSubsession* subsession = NULL;
+    // bool ok;
+    std::string sdp;
+    std::ifstream infile;
+    // unsigned cc;
+    scs =NULL;
+    is_playing=false;
+    
+    infile.open(ctx.address.c_str());
+    
+    /* 
+     * https://cboard.cprogramming.com/cplusplus-programming/69272-reading-whole-file-w-ifstream.html
+     * http://en.cppreference.com/w/cpp/io/manip
+     * https://stackoverflow.com/questions/7443787/using-c-ifstream-extraction-operator-to-read-formatted-data-from-a-file
+     * 
+     */
+    
+    if (infile.is_open())
+    {
+        infile >> std::noskipws;
+        sdp.assign( std::istream_iterator<char>(infile),std::istream_iterator<char>() );
+        infile.close();
+        SInfo << "SDPConnection: reading sdp file: " << sdp ;
+    }
+    else {
+       SError << "SDPConnection: FATAL! Unable to open file " << ctx.address ;
+        return;
+    }
+    
+    session = MediaSession::createNew(env, sdp.c_str());
+    if (session == NULL)
+    {
+        env << "SDPConnection: Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
+        return;
+    }
+    
+    is_playing=true;
+    scs =new StreamClientState();
+    scs->session=session;
+    scs->iter = new MediaSubsessionIterator(*scs->session);
+    scs->subsession_index=0;
+    // ok=true;
+    while ((scs->subsession = scs->iter->next()) != NULL) 
+    {
+        if (!scs->subsession->initiate(0))
+        {
+            env << "SDPConnection: Failed to initiate the \"" << *scs->subsession << "\" subsession: " << env.getResultMsg() << "\n";
+            // ok=false;
+        }
+        else
+        {
+            // subsession->sink = DummySink::createNew(*env, *subsession, filename);
+            env << "SDPConnection: Creating data sink for subsession \"" << *scs->subsession << "\" \n";
+            // subsession->sink= FrameSink::createNew(env, *subsession, inputfilter, cc, ctx.address.c_str());
+            scs->subsession->sink= FrameSink::createNew(env, *scs, fragmp4_muxer, info , txt, ctx.address.c_str());
+            if (scs->subsession->sink == NULL)
+            {
+                env << "SDPConnection: Failed to create a data sink for the \"" << *scs->subsession << "\" subsession: " << env.getResultMsg() << "\n";
+                // ok=false;
+            }
+            else
+            {
+                // adjust receive buffer size and reordering treshold time if requested
+                if (scs->subsession->rtpSource() != NULL) {
+                    if (ctx.reordering_time>0) {
+                        scs->subsession->rtpSource()->setPacketReorderingThresholdTime(ctx.reordering_time);
+                        SInfo << "SDPConnection:  packet reordering time now " << ctx.reordering_time << " microseconds " ;
+                    }
+                    if (ctx.recv_buffer_size>0) {
+                        int socketNum = scs->subsession->rtpSource()->RTPgs()->socketNum();
+                        unsigned curBufferSize = getReceiveBufferSize(env, socketNum);
+                        unsigned newBufferSize = setReceiveBufferTo  (env, socketNum, ctx.recv_buffer_size);
+                        SInfo << "SDPConnection:  receiving socket size changed from " << curBufferSize << " to " << newBufferSize ;
+                    }
+                }
+                
+                scs->subsession->sink->startPlaying(*scs->subsession->rtpSource(), NULL, NULL);
+            }
+        }
+        scs->subsession_index++;
+    }
+    
+    /*
+     *  if (ok) {
+     *    is_playing=true;
+}
+else {
+    // Medium::close(scs.session);
+}
+*/
+}
+
+
+void SDPConnection :: stopStream() {
+    // Medium* medium;
+    SInfo<< "SDPConnection : stopStream" ;
+    if (scs!=NULL) {
+        scs->close();
+        delete scs;
+        scs=NULL;
+    }
+    is_playing=false;
+    
+}
+
+
+
+SDPOutbound::SDPOutbound(UsageEnvironment& env, FrameFifo &fifo, LiveOutboundContext& ctx) : Outbound(env,fifo,ctx) {
+//    streams.resize(2, NULL); // we'll be ready for two media streams
+}
+
+void SDPOutbound::reinit() {
+    setup_ok =false;
+    at_setup =false;
+    // deallocate session and subsessions
+//    for (auto it=streams.begin(); it!=streams.end(); ++it) {
+//        if (*it!=NULL) {
+//            delete *it;
+//            *it=NULL;
+//        }
+//    }
+}
+
+void SDPOutbound::handleFrame(Frame *f) {
+    
+     SError << "should never be called "; 
+     
+//    int subsession_index =f->subsession_index; // alias
+//    
+//    if (subsession_index>=streams.size()) { // subsession_index too big
+//       SError << "SDPOutbound :"<<ctx.address<<" : handleFrame :  substream index overlow : "<<subsession_index<<"/"<<streams.size();
+//        fifo.recycle(f); // return frame to the stack - never forget this!
+//        return;
+//    }
+//    
+//    if (f->getFrameClass()==FrameClass::setup) { // SETUP FRAME
+//        SetupFrame* setupframe = static_cast<SetupFrame*>(f);
+//        
+//        if (setup_ok) { // REINIT
+//            reinit();
+//        } // REINIT
+//        
+//        if (at_setup==false) { // INIT
+//            // create Session
+//            at_setup=true;
+//        } // INIT
+//        
+//        // ** create here a Subsession into subsession_index
+//        // ** check first that it's not already occupied..
+//        if (streams[subsession_index]!=NULL) {
+//            SDebug << "SDPOutbound:"<<ctx.address <<" : handleFrame : stream reinit at subsession " << subsession_index ;
+//            delete streams[subsession_index];
+//            streams[subsession_index]=NULL;
+//        }
+//        
+//        SDebug << "SDPOutbound:"<<ctx.address <<" : handleFrame : registering stream to subsession index " <<subsession_index;
+//        switch (setupframe->codec_id) { // NEW_CODEC_DEV // when adding new codecs, make changes here: add relevant stream per codec
+//            case AV_CODEC_ID_H264:
+//                streams[subsession_index]=new H264Stream(env, fifo, ctx.address, ctx.portnum, ctx.ttl);
+//                streams[subsession_index]->startPlaying();
+//                break;
+//            default:
+//                //TODO: implement VoidStream
+//                // streams[subsession_index]=new VoidStream(env, const char* adr, unsigned short int portnum, const unsigned char ttl=255);
+//                break;
+//        } // switch
+//        
+//        fifo.recycle(f); // return frame to the stack - never forget this!
+//    } // SETUP FRAME
+//    else { // PAYLOAD FRAME
+//        if (at_setup) { // CLOSE SETUP
+//            // ** do whatever necessary to close up the setup
+//            setup_ok=true;
+//        } // CLOSE SETUP
+//        
+//        if (setup_ok==false) {
+//            // ** setup has not been started yet .. write an error message?
+//            fifo.recycle(f); // return frame to the stack - never forget this!
+//        }
+//        else { // WRITE PAYLOAD
+//            if (streams[subsession_index]==NULL) { // invalid subsession index
+//                SInfo << "SDPOutbound:"<<ctx.address <<" : handleFrame : no stream was registered for " << subsession_index ;
+//                fifo.recycle(f); // return frame to the stack - never forget this!
+//            }
+//            else if (f->getFrameClass()==FrameClass::none) { // void frame, do nothing
+//                fifo.recycle(f); // return frame to the stack - never forget this!
+//            }
+//            else { // send frame
+//                streams[subsession_index]->handleFrame(f); // its up to the stream instance to call recycle
+//            } // send frame
+//        } // WRITE PAYLOAD
+//    } // PAYLOAD FRAME
+}
+
+
+SDPOutbound::~SDPOutbound() {
+    reinit();
+}
+
+
+
+RTSPOutbound::RTSPOutbound(UsageEnvironment& env, RTSPServer &server, FrameFifo &fifo, LiveOutboundContext& ctx) : Outbound(env,fifo,ctx), server(server), media_session(NULL) {
+//    media_subsessions.resize(2, NULL); 
+}
+
+
+void RTSPOutbound::reinit() {
+    setup_ok =false;
+    at_setup =false;
+    // deallocate session and subsessions
+    /*
+     *  for (auto it=media_subsessions.begin(); it!=media_subsessions.end(); ++it) {
+     *    if (*it!=NULL) {
+     *      delete *it;
+     *it=NULL;
+}
+}
+*/
+    // this should do the trick .. ?
+    if (media_session!=NULL) {
+        #ifdef STREAM_SEND_DEBUG
+        std::cout << "RTSPOutbound: reinit: closing media_session" ;
+        #endif
+        // Medium::close(media_session); // NOT like this!
+        // media_session->setDoneFlag(); // that tricky inner event loop.. // nopes .. that would be the subsession
+        // TODO: create ServerMediaSubsessionIterator and call setDoneFlag for each subsession
+        server.removeServerMediaSession(media_session); // this is the correct way..
+        // media_session=NULL;
+        #ifdef STREAM_SEND_DEBUG
+        std::cout << "RTSPOutbound: reinit: media_session closed" ;
+        #endif
+    }
+    
+//    for (auto it=media_subsessions.begin(); it!=media_subsessions.end(); ++it) {
+//        *it=NULL;
+ //   }
+}
+
+
+void RTSPOutbound::handleFrame(Frame *f) {
+    
+    SError << "should never be called "; //arvind
+    
+//    int subsession_index =f->subsession_index; // alias
+//    
+//    if (subsession_index>=media_subsessions.size()) { // subsession_index too big
+//       SError << "RTSPOutbound :"<<ctx.address<<" : handleFrame :  substream index overlow : "<<subsession_index<<"/"<<media_subsessions.size();
+//        fifo.recycle(f); // return frame to the stack - never forget this!
+//        return;
+//    }
+//    
+//    if (f->getFrameClass()==FrameClass::setup) { // SETUP FRAME
+//        SetupFrame* setupframe = static_cast<SetupFrame*>(f);
+//        
+//        if (setup_ok) { // REINIT
+//            SDebug << "RTSPOutbound:"<<ctx.address <<" : handleFrame : stream reinit " ;
+//            reinit();
+//        } // REINIT
+//        
+//        if (at_setup==false) { // INIT
+//            #ifdef STREAM_SEND_DEBUG
+//            std::cout << "RTSPOutbound: handleFrame: creating ServerMediaSession" ;
+//            #endif
+//            // create Session
+//            char const* descriptionString ="Session streamed by Valkka";
+//            char const* stream_name       =ctx.address.c_str();
+//            media_session = ServerMediaSession::createNew(env, stream_name, stream_name, descriptionString);
+//            at_setup=true;
+//        } // INIT
+//        
+//        // ** create here a Subsession into subsession_index
+//        // ** check first that it's not already occupied..
+//        if (media_subsessions[subsession_index]!=NULL) {
+//            SDebug << "RTSPOutbound:"<<ctx.address <<" : handleFrame : can't reinit substream" ;
+//        }
+//        
+//        switch (setupframe->codec_id) { // NEW_CODEC_DEV // when adding new codecs, make changes here: add relevant stream per codec
+//            case AV_CODEC_ID_H264:
+//                #ifdef STREAM_SEND_DEBUG
+//                std::cout << "RTSPOutbound: handleFrame: creating H264ServerMediaSubsession" ;
+//                #endif
+//                media_subsessions[subsession_index]=H264ServerMediaSubsession::createNew(env, fifo, false); //last: re-use-first-source
+//                media_session->addSubsession(media_subsessions[subsession_index]); 
+//                break;
+//                
+//                /*
+//                 *      char const* streamName = "h264ESVideoTest";
+//                 *      char const* inputFileName = "test.264";
+//                 *      ServerMediaSession* sms
+//                 *        = ServerMediaSession::createNew(*env, streamName, streamName,
+//                 *                                        descriptionString);
+//                 *      sms->addSubsession(H264VideoFileServerMediaSubsession
+//                 *                        ::createNew(*env, inputFileName, reuseFirstSource));
+//                 *      rtspServer->addServerMediaSession(sms);
+//                 * 
+//                 *      announceStream(rtspServer, sms, streamName, inputFileName);
+//                 */
+//                
+//                default:
+//                    //TODO: implement VoidStream
+//                    break;
+//        } // switch
+//        fifo.recycle(f); // return frame to the stack - never forget this!
+//        
+//    }
+//    else { // PAYLOAD FRAME
+//        if (at_setup) { // CLOSE SETUP
+//            #ifdef STREAM_SEND_DEBUG
+//            std::cout << "RTSPOutbound: handleFrame: closing setup: subsession_index=" << subsession_index ;
+//            #endif
+//            // ** do whatever necessary to close up the setup
+//            server.addServerMediaSession(media_session);
+//            setup_ok=true; 
+//            at_setup=false;
+//            #ifdef STREAM_SEND_DEBUG
+//            char* url = server.rtspURL(media_session);
+//            std::cout << "RTSPOutbound: handleFrame: stream address: " << url ;
+//            delete[] url;
+//            #endif
+//        } // CLOSE SETUP
+//        
+//        if (setup_ok==false) {
+//            #ifdef STREAM_SEND_DEBUG
+//            std::cout << "RTSPOutbound: handleFrame: got payload but never setup: subsession_index=" << subsession_index ;
+//            #endif
+//            // ** setup has not been started yet .. write an error message?
+//            fifo.recycle(f); // return frame to the stack - never forget this!
+//        }
+//        
+//        if (media_subsessions[subsession_index]==NULL) {
+//            SInfo << "RTSPOutbound:"<<ctx.address <<" : handleFrame : no stream registered for " << subsession_index ;
+//            fifo.recycle(f); // return frame to the stack - never forget this!
+//        }
+//        else if (f->getFrameClass()==FrameClass::none) { // void frame, do nothing
+//            fifo.recycle(f); // return frame to the stack - never forget this!
+//        }
+//        else {
+//            // ** write payload
+//            #ifdef STREAM_SEND_DEBUG
+//            std::cout << "RTSPOutbound: handleFrame: payload=" << *f ;
+//            #endif
+//            
+//            //TODO: we don't know what live555 event loop has been up to.. it may have closed the whole subsession..!
+//            media_subsessions[subsession_index]->handleFrame(f);
+//        }
+//    } // PAYLOAD FRAME
+//    
+}
+
+
+RTSPOutbound::~RTSPOutbound() {
+    reinit();
+}
+
+
+
+LiveThread::LiveThread(const char* name, FrameFifoContext fifo_ctx) :  infifo(name, fifo_ctx), infilter(name, &infifo), exit_requested(false), authDB(NULL), server(NULL) {
+    scheduler = BasicTaskScheduler::createNew();
+    env       = BasicUsageEnvironment::createNew(*scheduler);
+    eventLoopWatchVariable = 0;
+    // this->slots_.resize(n_max_slots,NULL); // Reserve 256 slots!
+    this->slots_.resize    (I_MAX_SLOTS+1,NULL);
+    this->out_slots_.resize(I_MAX_SLOTS+1,NULL);
+    
+    scheduler->scheduleDelayedTask(Timeout::livethread*4000,(TaskFunc*)(LiveThread::periodicTask),(void*)this); //arvind this migth be enabled
+    
+    // testing event triggers..
+    event_trigger_id_hello_world   = env->taskScheduler().createEventTrigger(this->helloWorldEvent);
+    event_trigger_id_frame_arrived = env->taskScheduler().createEventTrigger(this->frameArrivedEvent);
+    event_trigger_id_got_frames    = env->taskScheduler().createEventTrigger(this->gotFramesEvent);
+    
+    infifo.setLiveThread((void*)this);
+    fc=0;
+}
+
+
+LiveThread::~LiveThread() {
+    unsigned short int i;
+    Connection* connection;
+    
+    SInfo<< "LiveThread: destructor: " ;
+    
+   // stopCall(); // stop if not stopped ..
+    
+    stop();
+    
+    for (std::vector<Connection*>::iterator it = slots_.begin(); it != slots_.end(); ++it) {
+        connection=*it;
+        if (!connection) {
+        }
+        else {
+            SInfo<< "LiveThread: destructor: connection ptr : "<< connection ;
+            SInfo<< "LiveThread: destructor: removing connection at slot " << connection->getSlot() ;
+            delete connection;
+        }
+    }
+    
+    if (server!=NULL) {
+        Medium::close(server); // cstructed and dtructed outside the event loop
+    }
+    
+    bool deleted =env->reclaim(); // ok.. this works.  I forgot to close the RTSPServer !
+    SInfo<< "LiveThread: deleted BasicUsageEnvironment?: " << deleted ;
+    
+//    if (!deleted) {
+//        SInfo << "LiveThread: WARNING: could not delete BasicUsageEnvironment" ;
+//    }
+    
+    /* // can't do this .. the destructor is protected
+     *  if (!deleted) { // die, you bastard!
+     *    delete env;
+}
+*/
+    delete scheduler; 
+}
+// 
+void LiveThread::preRun() {
+    exit_requested=false;
+}
+
+void LiveThread::postRun() {
+}
+
+void LiveThread::sendSignal(LiveSignalContext signal_ctx) {
+    std::unique_lock<std::mutex> lk(this->m);
+    this->signal_fifo.push_back(signal_ctx);
+}
+
+
+void LiveThread::checkAlive() {
+    // std::cout << "LiveThread: checkAlive" ;
+    Connection *connection;
+    for (std::vector<Connection*>::iterator it = slots_.begin(); it != slots_.end(); ++it) {
+        connection=*it;
+        if (connection!=NULL) {
+            if (connection->is_playing) {
+                connection->reStartStreamIf();
+            }
+        }
+    }
+}
+
+
+void LiveThread::handlePending() {
+    Connection* connection;
+    auto it=pending.begin();
+    while (it!=pending.end()) {
+        connection=*it;
+        if (connection->is_playing) { // this has been scheduled for termination, without calling stop stream
+            connection->stopStream();
+        }
+        if (connection->isClosed()) {
+            SInfo<< "LiveThread: handlePending: deleting a closed stream at slot " << connection->getSlot() ;
+            it=pending.erase(it);
+            delete connection;
+        }
+        else {
+            it++;
+        }
+    }
+}
+
+
+void LiveThread::closePending() { // call only after handlePending
+    Connection* connection;
+    for (auto it=pending.begin(); it!=pending.end(); ++it) {
+        connection=*it;
+        connection->forceClose();
+        delete connection;
+    }
+}
+
+
+void LiveThread::handleSignals() {
+    std::unique_lock<std::mutex> lk(this->m);
+    unsigned short int i;
+    LiveConnectionContext connection_ctx;
+    LiveOutboundContext   out_ctx;
+    
+    
+    // if (signal_fifo.empty()) {return;}
+    
+    // handle pending signals from the signals fifo
+    for (auto it = signal_fifo.begin(); it != signal_fifo.end(); ++it) { // it == pointer to the actual object (struct LiveSignalContext)
+        
+        switch (it->signal) {
+            case LiveSignal::exit:
+                
+                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
+                    connection_ctx.slot=i;
+                    deregisterStream(connection_ctx);
+                }
+                
+                for(i=0;i<=I_MAX_SLOTS;i++) { // stop and deregister all streams
+                    out_ctx.slot=i;
+                    deregisterOutbound(out_ctx);
+                }
+                
+                 this->eventLoopWatchVariable=1;
+                exit_requested=true;
+                break;
+                // inbound streams
+            case LiveSignal::register_stream:
+                this->registerStream(*(it->connection_context));
+                break;
+            case LiveSignal::deregister_stream:
+                this->deregisterStream(*(it->connection_context));
+                break;
+            case LiveSignal::play_stream:
+                this->playStream(*(it->connection_context));
+                break;
+            case LiveSignal::stop_stream:
+                this->stopStream(*(it->connection_context));
+                break;
+                // outbound streams
+            case LiveSignal::register_outbound:
+                this->registerOutbound(*(it->outbound_context));
+                break;
+            case LiveSignal::deregister_outbound:
+                // std::cout << "LiveThread : handleSignals : deregister_outbound" ;
+                this->deregisterOutbound(*(it->outbound_context));
+                break;
+            default:
+                std::cout << "LiveThread : handleSignals : unknown signal " << int(it->signal) ;
+                break;
+        }
+    }
+    
+    signal_fifo.clear();
+}
+
+
+void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
+    int i;
+    int subsession_index;
+    Outbound* outbound;
+//    Stream* stream;
+    
+    if (safeGetOutboundSlot(f->n_slot,outbound)>0) { // got frame
+        #ifdef STREAM_SEND_DEBUG
+        std::cout << "LiveThread : "<< this->name <<" : handleFrame : accept frame "<<*f ;
+        #endif
+        outbound->handleFrame(f); // recycling handled deeper in the code
+    } 
+    else {
+        #ifdef STREAM_SEND_DEBUG
+        std::cout << "LiveThread : "<< this->name <<" : handleFrame : discard frame "<<*f ;
+        #endif
+        infifo.recycle(f);
+    }
+}
+
+void LiveThread::stop(bool flag)
+{
+    eventLoopWatchVariable = 1;
+
+    Thread::stop(flag);
+}
+
+void LiveThread::run() {
+    SInfo << " run : live555 loop start " ;
+    env->taskScheduler().doEventLoop(&eventLoopWatchVariable);
+    SInfo << " run : live555 loop exit " ;
+}
+
+
+/*
+ * void LiveThread::resetConnectionContext_() {
+ * this->connection_ctx.connection_type=LiveThread::LiveConnectionType::none;
+ * this->connection_ctx.address        =std::string();
+ * this->connection_ctx.slot           =0;
+ * }
+ */
+
+
+int LiveThread::safeGetSlot(SlotNumber slot, Connection*& con) { // -1 = out of range, 0 = free, 1 = reserved // &* = modify pointer in-place
+    Connection* connection;
+    SInfo<< "LiveThread: safeGetSlot" ;
+    
+    if (slot>I_MAX_SLOTS) {
+       SError << "LiveThread: safeGetSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" ;
+        return -1;
+    }
+    
+    try {
+        connection=this->slots_[slot];
+    }
+    catch (std::out_of_range) {
+        SDebug << "LiveThread: safeGetSlot : slot " << slot << " is out of range! " ;
+        con=NULL;
+        return -1;
+    }
+    if (!connection) {
+        SInfo<< "LiveThread: safeGetSlot : nothing at slot " << slot ;
+        con=NULL;
+        return 0;
+    }
+    else {
+        SDebug << "LiveThread: safeGetSlot : returning " << slot ;
+        con=connection;
+        return 1;
+    }
+}
+
+
+int LiveThread::safeGetOutboundSlot(SlotNumber slot, Outbound*& outbound) { // -1 = out of range, 0 = free, 1 = reserved // &* = modify pointer in-place
+    Outbound* out_;
+    SInfo<< "LiveThread: safeGetOutboundSlot" ;
+    
+    if (slot>I_MAX_SLOTS) {
+       SError << "LiveThread: safeGetOutboundSlot: WARNING! Slot number overfow : increase I_MAX_SLOTS in sizes.h" ;
+        return -1;
+    }
+    
+    try {
+        out_=this->out_slots_[slot];
+    }
+    catch (std::out_of_range) {
+        SDebug << "LiveThread: safeGetOutboundSlot : slot " << slot << " is out of range! " ;
+        outbound=NULL;
+        return -1;
+    }
+    if (!out_) {
+        SDebug << "LiveThread: safeGetOutboundSlot : nothing at slot " << slot ;
+        outbound=NULL;
+        return 0;
+    }
+    else {
+        SDebug << "LiveThread: safeGetOutboundSlot : returning " << slot ;
+        outbound=out_;
+        return 1;
+    }
+}
+
+
+void LiveThread::registerStream(LiveConnectionContext &connection_ctx) {
+    // semantics:
+    // register   : create RTSP/SDPConnection object into the slots_ vector
+    // play       : create RTSPClient object in the Connection object .. start the callback chain describe => play, etc.
+    // stop       : start shutting down by calling shutDownStream .. destruct the RTSPClient object
+    // deregister : stop (if playing), and destruct RTSP/SDPConnection object from the slots_ vector
+    Connection* connection;
+    SInfo<< "LiveThread: registerStream" ;
+    switch (safeGetSlot(connection_ctx.slot,connection)) {
+        case -1: // out of range
+            break;
+            
+        case 0: // slot is free
+            switch (connection_ctx.connection_type) {
+                
+                case LiveConnectionType::rtsp:
+                    // this->slots_[connection_ctx.slot] = new RTSPConnection(*(this->env), connection_ctx.address, connection_ctx.slot, *(connection_ctx.framefilter), connection_ctx.msreconnect);
+                    this->slots_[connection_ctx.slot] = new RTSPConnection(*(this->env), connection_ctx);
+                    SDebug << "LiveThread: registerStream : rtsp stream registered at slot " << connection_ctx.slot << " with ptr " << this->slots_[connection_ctx.slot] ;
+                    // this->slots_[connection_ctx.slot]->playStream(); // not here ..
+                    break;
+                    
+                case LiveConnectionType::sdp:
+                    // this->slots_[connection_ctx.slot] = new SDPConnection(*(this->env), connection_ctx.address, connection_ctx.slot, *(connection_ctx.framefilter));
+                    this->slots_[connection_ctx.slot] = new SDPConnection(*(this->env), connection_ctx);
+                    SDebug << "LiveThread: registerStream : sdp stream registered at slot "  << connection_ctx.slot << " with ptr " << this->slots_[connection_ctx.slot] ;
+                    // this->slots_[connection_ctx.slot]->playStream(); // not here ..
+                    break;
+                    
+                default:
+                    SInfo << "LiveThread: registerStream : no such LiveConnectionType" ;
+                    break;
+            } // switch connection_ctx.connection_type
+            
+            break;
+            
+                case 1: // slot is reserved
+                    SInfo << "LiveThread: registerStream : slot " << connection_ctx.slot << " is reserved! " ;
+                    break;
+    } // safeGetSlot(connection_ctx.slot,connection)
+    
+}
+
+
+void LiveThread::deregisterStream(LiveConnectionContext &connection_ctx) {
+    Connection* connection;
+    SInfo<< "LiveThread: deregisterStream" ;
+    switch (safeGetSlot(connection_ctx.slot,connection)) {
+        case -1: // out of range
+            break;
+        case 0: // slot is free
+            SInfo<< "LiveThread: deregisterStream : nothing at slot " << connection_ctx.slot ;
+            break;
+        case 1: // slot is reserved
+            SInfo << "LiveThread: deregisterStream : de-registering " << connection_ctx.slot ;
+            if (connection->is_playing) {
+                connection->stopStream();
+            }
+            if (!connection->isClosed()) { // didn't close correctly .. queue for stopping
+                SDebug << "LiveThread: deregisterStream : queing for stopping: " << connection_ctx.slot ;
+                pending.push_back(connection);
+            }
+            else {
+                delete connection;
+            }
+            this->slots_[connection_ctx.slot]=NULL; // case 1
+            break;
+    } // switch
+}
+
+
+void LiveThread::playStream(LiveConnectionContext &connection_ctx) {
+    Connection* connection;
+    SInfo<< "LiveThread: playStream" ;  
+    switch (safeGetSlot(connection_ctx.slot,connection)) {
+        case -1: // out of range
+            break;
+        case 0: // slot is free
+            SInfo << "LiveThread: playStream : nothing at slot " << connection_ctx.slot ;
+            break;
+        case 1: // slot is reserved
+            SInfo << "LiveThread: playStream : playing.. " << connection_ctx.slot ;
+            connection->playStream();
+            break;
+    }
+}
+
+
+void LiveThread::stopStream(LiveConnectionContext &connection_ctx) {
+    Connection* connection;
+    SInfo<< "LiveThread: stopStream" ;
+    switch (safeGetSlot(connection_ctx.slot,connection)) {
+        case -1: // out of range
+            break;
+        case 0: // slot is free
+            SInfo << "LiveThread: stopStream : nothing at slot " << connection_ctx.slot ;
+            break;
+        case 1: // slot is reserved
+            SDebug << "LiveThread: stopStream : stopping.. " << connection_ctx.slot ;
+            connection->stopStream();
+            break;
+    }
+}
+
+
+void LiveThread::registerOutbound(LiveOutboundContext &outbound_ctx) {
+    Outbound* outbound;
+    switch (safeGetOutboundSlot(outbound_ctx.slot,outbound)) {
+        case -1: // out of range
+            break;
+        case 0: // slot is free
+            switch (outbound_ctx.connection_type) {
+                
+                case LiveConnectionType::sdp:
+                    // this->out_slots_[outbound_ctx.slot] = new SDPOutbound(*env, infifo, outbound_ctx.slot, outbound_ctx.address, outbound_ctx.portnum, outbound_ctx.ttl);
+                    this->out_slots_[outbound_ctx.slot] = new SDPOutbound(*env, infifo, outbound_ctx);
+                    SDebug << "LiveThread: "<<" registerOutbound : sdp stream registered at slot "  << outbound_ctx.slot << " with ptr " << this->out_slots_[outbound_ctx.slot] ;
+                    //std::cout << "LiveThread : registerOutbound : " << this->out_slots_[2] ;
+                    break;
+                    
+                case LiveConnectionType::rtsp:
+                    if (!server) {
+                       SError << "LiveThread: registerOutbound: no RTSP server initialized" ;
+                    }
+                    else {
+                        this->out_slots_[outbound_ctx.slot] = new RTSPOutbound(*env, *server, infifo, outbound_ctx);
+                        SDebug << "LiveThread: "<<" registerOutbound : rtsp stream registered at slot "  << outbound_ctx.slot << " with ptr " << this->out_slots_[outbound_ctx.slot] ;
+                    }
+                    break;
+                    
+                default:
+                    SInfo << "LiveThread: "<<" registerOutbound : no such LiveConnectionType" ;
+                    break;
+            } // switch outbound_ctx.connection_type
+            break;
+            
+                case 1: // slot is reserved
+                    SInfo << "LiveThread: "<<" registerOutbound : slot " << outbound_ctx.slot << " is reserved! " ;
+                    break;
+    }
+}
+
+
+void LiveThread::deregisterOutbound(LiveOutboundContext &outbound_ctx) {
+    Outbound* outbound;
+    //std::cout << "LiveThread : deregisterOutbound" ;
+    //std::cout << "LiveThread : deregisterOutbound : " << this->out_slots_[2] ;
+    switch (safeGetOutboundSlot(outbound_ctx.slot,outbound)) {
+        case -1: // out of range
+            break;
+        case 0: // slot is free
+            SInfo<< "LiveThread: deregisterOutbound : nothing at slot " << outbound_ctx.slot ;
+            break;
+        case 1: // slot is reserved
+            SDebug << "LiveThread: deregisterOutbound : de-registering " << outbound_ctx.slot ;
+            // TODO: what else?
+            delete outbound;
+            this->out_slots_[outbound_ctx.slot]=NULL;
+            break;
+    }
+}
+
+
+void LiveThread::periodicTask(void* cdata) {
+    LiveThread* livethread = (LiveThread*)cdata;
+    STrace<< "LiveThread: periodicTask" ;
+    livethread->handlePending(); // remove connections that were pending closing, but are ok now
+    // std::cout << "LiveThread: periodicTask: pending streams " << livethread->pending.size() ;
+    // stopCall => handleSignals => loop over deregisterStream => stopStream
+    // if isClosed, then delete the connection, otherwise put into the pending list
+    
+    if (livethread->pending.empty() and livethread->exit_requested) {
+        SInfo<< "LiveThread: periodicTask: exit: nothing pending" ;
+        livethread->eventLoopWatchVariable=1;
+    }
+    else if (livethread->exit_requested) { // tried really hard to close everything in a clean way .. but sockets etc. might still be hanging 
+        SInfo<< "LiveThread: periodicTask: exit: closePending" ;
+        livethread->closePending(); // eh.. we really hope the eventloop just exits and does nothing else: some MSRTSPClient pointers have been nulled and these might be used in the callbacks
+        livethread->eventLoopWatchVariable=1; 
+    }
+    
+    if (!livethread->exit_requested) {
+        livethread->checkAlive();
+        livethread->handleSignals(); // WARNING: sending commands to live555 must be done within the event loop
+        livethread->scheduler->scheduleDelayedTask(Timeout::livethread*4000,(TaskFunc*)(LiveThread::periodicTask),(void*)livethread); // re-schedule itself
+    }
+}
+
+
+
+// *** API ***
+
+void LiveThread::registerStreamCall(LiveConnectionContext &connection_ctx) {
+    LiveSignalContext signal_ctx = {LiveSignal::register_stream, &connection_ctx, NULL};
+    sendSignal(signal_ctx);
+}
+
+void LiveThread::deregisterStreamCall(LiveConnectionContext &connection_ctx) {
+    LiveSignalContext signal_ctx = {LiveSignal::deregister_stream, &connection_ctx, NULL};
+    sendSignal(signal_ctx);
+}
+
+
+void LiveThread::playStreamCall(LiveConnectionContext &connection_ctx) {
+    LiveSignalContext signal_ctx = {LiveSignal::play_stream, &connection_ctx, NULL};
+    sendSignal(signal_ctx);
+}
+
+void LiveThread::stopStreamCall(LiveConnectionContext &connection_ctx) {
+    LiveSignalContext signal_ctx = {LiveSignal::stop_stream, &connection_ctx, NULL};
+    sendSignal(signal_ctx);
+}
+
+
+void LiveThread::registerOutboundCall(LiveOutboundContext &outbound_ctx) {
+    LiveSignalContext signal_ctx = {LiveSignal::register_outbound, NULL, &outbound_ctx};
+    sendSignal(signal_ctx);
+}
+
+
+void LiveThread::deregisterOutboundCall(LiveOutboundContext &outbound_ctx) {
+    // std::cout << "LiveThread : deregisterOutboundCall" ;
+    LiveSignalContext signal_ctx = {LiveSignal::deregister_outbound, NULL, &outbound_ctx};
+    sendSignal(signal_ctx);
+}
+
+
+void LiveThread::requestStopCall() {
+//    threadlogger.log(LogLevel::crazy) << "LiveThread: requestStopCall: "<< this->name <<std::endl;
+//    if (!this->has_thread) { return; } // thread never started
+ //   if (stop_requested) { return; } // can be requested only once
+//    stop_requested = true;
+    
+    LiveSignalContext signal_ctx;
+    signal_ctx.signal=LiveSignal::exit;
+    
+   // threadlogger.log(LogLevel::crazy) << "LiveThread: sending exit signal "<< this->name <<std::endl;
+    this->sendSignal(signal_ctx);
+}
+
+
+
+/*
+ * LiveFifo &LiveThread::getFifo() {
+ *  return infifo;
+ * }
+ */
+
+
+FifoFrameFilter &LiveThread::getFrameFilter() {
+    return infilter;
+}
+
+
+void LiveThread::setRTSPServer(int portnum) {
+    authDB =NULL;
+        
+    server = RTSPServer::createNew(*env, portnum, authDB); // like in the test programs, this is instantiated outside the event loop
+    if (server == NULL) {
+        *env << "Failed to create live RTSP server: " << env->getResultMsg() << "\n";
+        SError << "Failed to create live RTSP server: " << env->getResultMsg();
+    }
+    
+    /* // rtsp server
+     *   
+     *  registerOutboundCall(LiveOutboundContext)
+     *  LiveOutboundContext .. has slot number and framefilter
+     *  LiveOutboundContext registered to out_slots_
+     *  
+     *  Frame is read from the inbound fifo .. a frame with slot 3 is found .. out_slots[3] has an Outbound instance.
+     *  .. so, that should be an RTSPOutbound instance.
+     *  RTSPOutbound is first in an uninitialized state .. when it gets config frames, should create server media session
+     *  and add subsessions into it
+     *  RTSPOutbound should be resettable as well
+     *  Like this:
+     *  
+     *  ServerMediaSession* sms
+     *      = ServerMediaSession::createNew(*env, streamName, streamName,
+     *				      descriptionString);
+     *    sms->addSubsession(H264VideoFileServerMediaSubsession
+     *		       ::createNew(*env, inputFileName, reuseFirstSource));
+     *    rtspServer->addServerMediaSession(sms);
+     *    
+     *    
+     *  "H264VideoFileServerMediaSubsession" has "createNewStreamSource" that returns a FramedSource
+     *  .. that is instantiated at constructor time .. or instantiated after rtsp negotiation?
+     *  "createRTPSink" is called at rtsp negotiation with the FramedSource as its argument..?
+     *  
+     *  Outbound has Stream instances.  
+     *  Each Stream has RTPSink (depends on the stream type, say H264VideoRTPSink), RTCPInstance, Groupsock
+     *  and
+     *  FramedSource and a BufferSource instance (BufferSource has an internal fifo)
+     *  
+     *  payload frame arrives .. RTSPOutbound .. choose corrent stream, write to Stream's BufferSource 
+     *  
+     *  ==> we just need to define "createNewStreamSource" and see that "createNewRTPSink" returns H264VideoRTPSink
+     *  
+     *  So, for SDP, we create the RTPSink, RTCPInstance & Groupsock ourselves.  For RTSP they're given by the server.
+     *  
+     *  
+     *  Outbound::handleFrame .. when init frame arrives, calls Stream::startPlaying 
+     */
+}
+
+
+void LiveThread::helloWorldEvent(void* clientData) {
+    // this is the event identified by event_trigger_id_hello_world
+    std::cout << "Hello world from a triggered event!" ;
+}
+
+
+void LiveThread::frameArrivedEvent(void* clientData) {
+    Frame* f;
+    LiveThread *thread = (LiveThread*)clientData;
+    // this is the event identified by event_trigger_id_frame
+    // std::cout << "LiveThread : frameArrived : New frame has arrived!" ;
+    f=thread->infifo.read(1); // this should not block..
+    thread->fc+=1;
+    std::cout << "LiveThread: frameArrived: frame count=" << thread->fc << " : " << *f ;
+    // std::cout << "LiveThread : frameArrived : frame :" << *f ;
+    thread->infifo.recycle(f);
+}
+
+
+void LiveThread::gotFramesEvent(void* clientData) { // registers a periodic task to the event loop
+    #ifdef STREAM_SEND_DEBUG
+    std::cout << "LiveThread: gotFramesEvent " ;
+    #endif
+    LiveThread *thread = (LiveThread*)clientData;
+    thread->scheduler->scheduleDelayedTask(0,(TaskFunc*)(LiveThread::readFrameFifoTask),(void*)thread); 
+}
+
+
+void LiveThread::readFrameFifoTask(void* clientData) {
+    Frame* f;
+    LiveThread *thread = (LiveThread*)clientData;
+    #ifdef STREAM_SEND_DEBUG
+    std::cout << "LiveThread: readFrameFifoTask: read" ;
+    thread->infifo.diagnosis();
+    #endif
+    if (thread->infifo.isEmpty()) { // this task has been scheduled too many times .. nothing yet to read from the fifo
+        std::cout << "LiveThread: readFrameFifoTask: underflow" ;
+        return; 
+    }
+    f=thread->infifo.read(); // this blocks
+    thread->fc+=1;
+    #ifdef STREAM_SEND_DEBUG
+    std::cout << "LiveThread: readFrameFifoTask: frame count=" << thread->fc << " : " << *f ;
+    #endif
+    
+    thread->handleFrame(f);
+    // thread->infifo.recycle(f); // recycling is handled deeper in the code
+    
+    ///*
+    if (thread->infifo.isEmpty()) { // no more frames for now ..
+    }
+    else {
+        thread->scheduler->scheduleDelayedTask(0,(TaskFunc*)(LiveThread::readFrameFifoTask),(void*)thread); // re-registers itself
+    }
+    //*/
+    
+}
+
+
+void LiveThread::testTrigger() {
+    // http://live-devel.live555.narkive.com/MSFiseCu/problem-with-triggerevent
+    scheduler->triggerEvent(event_trigger_id_hello_world,(void*)(NULL));
+}
+
+
+void LiveThread::triggerGotFrames() {
+    #ifdef STREAM_SEND_DEBUG
+    std::cout << "LiveThread: triggerGotFrames" ;
+    #endif
+    // scheduler->triggerEvent(event_trigger_id_frame_arrived,(void*)(this));
+    scheduler->triggerEvent(event_trigger_id_got_frames,(void*)(this)); 
+}
+
+
+}
+}
