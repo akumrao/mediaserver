@@ -64,6 +64,26 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
         av_init_packet(videopkt );
      
      
+             
+    //ffmpeg -decoders
+    
+    /*
+        VFS..D h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
+        V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
+        V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
+    */            
+        codec = avcodec_find_decoder_by_name("h264_cuvid");
+
+        if(!codec)
+           codec = avcodec_find_decoder_by_name("libopenh264");
+
+        if(!codec)
+          codec = avcodec_find_decoder_by_name("h264");
+
+        if(!codec)
+        codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+
+  
      
      	if ((codec = avcodec_find_decoder(AV_CODEC_ID_H264)) == NULL)
     	{
@@ -76,7 +96,12 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
                 SError<<  "avcodec_alloc_context3 failed";
     	
     	}
-            int ret ;
+        
+        if(codec->capabilities & CODEC_CAP_TRUNCATED) {
+            cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
+        }
+        
+        int ret ;
     	if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
     	{
     		SError<<  "avcodec_open2 failed";
