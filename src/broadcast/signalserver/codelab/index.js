@@ -31,7 +31,7 @@ let io;
 
 
 
-console.log("https://localhost:8080/");
+console.log("https://localhost/");
 
 let serverSocketid =null;
 

@@ -27,7 +27,7 @@ extern "C"
 
 
 #include "muxer.h"
- #include "Settings.h"
+#include "Settings.h"
 
 using std::endl;
 
@@ -38,7 +38,7 @@ using std::endl;
 namespace base {
 namespace wrtc {
     
-
+#define tcprequest true
 
     
 VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),fmp4::FrameFilter(name, next)
@@ -108,13 +108,11 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
       
     	}
             
-            if ((avframe = av_frame_alloc()) == NULL)
+        if ((avframe = av_frame_alloc()) == NULL)
     	{
                 SError<<  "av_frame_alloc failed";
-    	
     	}
             
-   
             
         if ((parser = av_parser_init(codec->id)) == NULL)
 	{
@@ -142,7 +140,7 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
         std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
 
 
-        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, false, this , info, txt); // Request livethread to write into filter info
+        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, tcprequest, this , info, txt); // Request livethread to write into filter info
         ffparser->registerStreamCall(*ctx);
         ffparser->playStreamCall(*ctx);
     
@@ -178,33 +176,61 @@ VideoPacketSource::~VideoPacketSource()
 
 	//avformat_free_context(fmt_ctx);
 
-
-            
-    ffparser->stopStreamCall(*ctx);
-
-    ffparser->deregisterStreamCall(*ctx);
-    ffparser->stop();
-    ffparser->join();
-
-
-    delete ffparser;
-    delete ctx;
-    delete fragmp4_filter;
-    delete fragmp4_muxer;
-    delete info;
-    delete txt;
-    
-            
-
-	av_frame_free(&avframe);
-	av_packet_free(&videopkt);
-
-	avcodec_close(cdc_ctx);
-	avcodec_free_context(&cdc_ctx);
+    stopParser();
 
 
 }
 
+void VideoPacketSource::stopParser()
+{
+    SInfo << "stopParser";
+    if(ffparser)
+    {
+        if(ffparser)
+        {
+            ffparser->stopStreamCall(*ctx);
+
+            ffparser->deregisterStreamCall(*ctx);
+            ffparser->stop();
+            ffparser->join();
+
+
+            delete ffparser;
+            ffparser =nullptr;
+            
+            if(ctx)
+            delete ctx;
+            ctx = nullptr;
+            
+            if(fragmp4_filter)        
+             delete fragmp4_filter;
+            fragmp4_filter = nullptr;
+            
+            if(fragmp4_muxer)
+            delete fragmp4_muxer;
+            fragmp4_muxer = nullptr;
+            
+            if(info)
+            delete info;
+            info = nullptr;
+            
+            if(txt)
+            delete txt;
+            txt = nullptr;
+        }
+
+
+
+        av_frame_free(&avframe);
+        av_packet_free(&videopkt);
+
+        avcodec_close(cdc_ctx);
+        avcodec_free_context(&cdc_ctx);
+    
+    }
+
+    
+}
 
 //void VideoPacketSource::setPacketSource(PacketSignal* source)
 //{
@@ -443,13 +469,19 @@ bool VideoPacketSource::IsScreencast() const
 */
 
 
-void VideoPacketSource::AddRef() const {
-  rtc::AtomicOps::Increment(&ref_count_);  //arvind
+void VideoPacketSource::myAddRef()  {
+   
+  const int count =   rtc::AtomicOps::Increment(&ref_count_);  //arvind
+  SInfo << "VideoPacketSource::AddRef()" << count;
+  
 }
 
-rtc::RefCountReleaseStatus VideoPacketSource::Release() const {
-   const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind
+rtc::RefCountReleaseStatus VideoPacketSource::myRelease()  {
+   const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind 
+   SInfo << "VideoPacketSource::Release()" << count;
+  
    if (count == 0) {
+      stopParser(); 
      return rtc::RefCountReleaseStatus::kDroppedLastRef;
    }
   return rtc::RefCountReleaseStatus::kOtherRefsRemained;

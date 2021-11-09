@@ -62,8 +62,8 @@ public:
 
     /// cricket::VideoCapturer implementation.
 
- void AddRef() const override;
-    rtc::RefCountReleaseStatus Release() const override;
+    void myAddRef();
+    rtc::RefCountReleaseStatus myRelease();
     SourceState state() const override;
     bool remote() const override;
     bool is_screencast() const override;
@@ -87,7 +87,7 @@ protected:
     AVFrame *avframe;
     AVCodecParserContext *parser;
     
-    
+    void stopParser();
          
      fmp4::LiveThread  *ffparser{nullptr};
     

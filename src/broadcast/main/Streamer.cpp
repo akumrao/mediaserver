@@ -32,7 +32,7 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 8080 //443
+#define SERVER_PORT 443
 #define JOIN_ROOM  "foo"        
 
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     
     //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
-    sig.startStreaming("", "/var/tmp/test.mp4", "mp4", true); // single file play in loop, this feauture migt be broken.
+    //sig.startStreaming("", "/var/tmp/test.mp4", "mp4", true); // single file play in loop, this feauture migt be broken.
     
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
