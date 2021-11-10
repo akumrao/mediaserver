@@ -23,11 +23,38 @@ gn gen out/m84 --args='is_debug=true symbol_level=2 is_component_build=false is_
 
 
 apt-get install -y libx264-dev
+
+
 apt-get install -y  nasm
 git clone    https://github.com/cisco/openh264 
 
 git checkout v1.5.0
 make -j8
+
+
+// do not give prefix path
+
+git clone    https://github.com/mirror/x264.git 
+
+./configure   --disable-opencl --enable-static
+make -j8
+make install
+
+./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect
+
+
+
+./configure --prefix=/export/views/video/ffmpeg \
+--extra-version=patrickz --disable-debug --disable-shared --enable-static \
+--disable-doc --enable-gpl  --enable-nonfree --enable-version3 \
+--pkg-config-flags="--static" \
+--enable-libx264 \
+--extra-cflags="-I--prefix=/export/views/video/ffmpeg/include -static" \
+--extra-ldflags="-L--prefix=/export/views/video/ffmpeg/lib -static" 
+
+
+
+./configure --prefix=/export/views/video/ffmpeg --enable-shared
 
 
 wget https://downloads.sourceforge.net/lame/lame-3.100.tar.gz && \

@@ -2,6 +2,7 @@
 ### CUSTOMIZE BELOW HERE #######################################################
 
 LIVE555_ROOT = /workspace/live
+FFMPEG_ROOT = /export/views/video/ffmpeg
 
 CC	= gcc
 CXX     = g++
@@ -13,10 +14,10 @@ CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialize
 CPPFLAGS   := -I../../json/include/   -I../include -I../../signal/include -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ -I../webrtc/include  -DOPENSSL_IS_BORINGSSL -DWEBRTC_POSIX  -DWEBRTC_INCLUDE_DIRS=/workspace/webrtc_android/src  -I${LIVE555_ROOT}/liveMedia/include -I${LIVE555_ROOT}/groupsock/include -I${LIVE555_ROOT}/BasicUsageEnvironment/include -I${LIVE555_ROOT}/UsageEnvironment/include  \
                -I/workspace/webrtc_android/src/ -I/workspace/webrtc_android/src/third_party/abseil-cpp 
 LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
-#/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
-LDLIBS    := -lpthread -lm -ldl -lavformat  -lavcodec -lavutil
 
-SLIBS     := /workspace/webrtc_android/src/out/m75/obj/libwebrtc.a ${LIVE555_ROOT}/liveMedia/libliveMedia.a  ${LIVE555_ROOT}/groupsock/libgroupsock.a   ${LIVE555_ROOT}/BasicUsageEnvironment/libBasicUsageEnvironment.a  ${LIVE555_ROOT}/UsageEnvironment/libUsageEnvironment.a
+LDLIBS    := -lpthread -lm -ldl -lx264 -lz -lfdk-aac 
+
+SLIBS     := /workspace/webrtc_android/src/out/m84/obj/libwebrtc.a  ${FFMPEG_ROOT}/libavformat/libavformat.a  ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${LIVE555_ROOT}/liveMedia/libliveMedia.a  ${LIVE555_ROOT}/groupsock/libgroupsock.a   ${LIVE555_ROOT}/BasicUsageEnvironment/libBasicUsageEnvironment.a  ${LIVE555_ROOT}/UsageEnvironment/libUsageEnvironment.a
 
 
 
