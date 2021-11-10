@@ -11,7 +11,7 @@
       "rtsp://localhost:8554/testStream",
       "rtsp://localhost:9554/testStream"
       ],
-    "logLevel": "debug",
+    "logLevel": "info",
     "logTags": [
       "info"
     ],
