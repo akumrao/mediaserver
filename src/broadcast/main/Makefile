@@ -17,7 +17,7 @@ LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 
 LDLIBS    := -lpthread -lm -ldl -lx264 -lz -lfdk-aac 
 
-SLIBS     := /workspace/webrtc_android/src/out/m84/obj/libwebrtc.a  ${FFMPEG_ROOT}/libavformat/libavformat.a  ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${LIVE555_ROOT}/liveMedia/libliveMedia.a  ${LIVE555_ROOT}/groupsock/libgroupsock.a   ${LIVE555_ROOT}/BasicUsageEnvironment/libBasicUsageEnvironment.a  ${LIVE555_ROOT}/UsageEnvironment/libUsageEnvironment.a
+SLIBS     := /workspace/webrtc_android/src/out/m84/obj/libwebrtc.a  ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libswresample/libswresample.a ${LIVE555_ROOT}/liveMedia/libliveMedia.a  ${LIVE555_ROOT}/groupsock/libgroupsock.a   ${LIVE555_ROOT}/BasicUsageEnvironment/libBasicUsageEnvironment.a  ${LIVE555_ROOT}/UsageEnvironment/libUsageEnvironment.a
 
 
 

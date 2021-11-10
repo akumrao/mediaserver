@@ -31,7 +31,7 @@ git clone    https://github.com/cisco/openh264
 git checkout v1.5.0
 make -j8
 
-
+****************************************************************** to compile ffmpeg in static mode**************************************
 // do not give prefix path
 
 git clone    https://github.com/mirror/x264.git 
@@ -40,9 +40,12 @@ git clone    https://github.com/mirror/x264.git
 make -j8
 make install
 
-./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect
+
+cd /export/views/video/ffmpeg
+./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma
 
 
+***********************************************************************************************************************
 
 ./configure --prefix=/export/views/video/ffmpeg \
 --extra-version=patrickz --disable-debug --disable-shared --enable-static \
