@@ -11,7 +11,7 @@
 
 #include "ffparse.h"
 #include <thread>
-
+#include "intreadwrite.h"
 
 
 // #include "ff/ff.h"
@@ -41,6 +41,255 @@ extern "C"
 
 #define IOBUFSIZE 40960
 //40960*6
+
+
+/////////////////////////////////// h264 parser//////////////////////////////////////////////
+
+#define HAVE_FAST_UNALIGNED 1
+
+#define HAVE_FAST_64BIT 1
+
+enum {
+    H264_NAL_SLICE           = 1,
+    H264_NAL_DPA             = 2,
+    H264_NAL_DPB             = 3,
+    H264_NAL_DPC             = 4,
+    H264_NAL_IDR_SLICE       = 5,
+    H264_NAL_SEI             = 6,
+    H264_NAL_SPS             = 7,
+    H264_NAL_PPS             = 8,
+    H264_NAL_AUD             = 9,
+    H264_NAL_END_SEQUENCE    = 10,
+    H264_NAL_END_STREAM      = 11,
+    H264_NAL_FILLER_DATA     = 12,
+    H264_NAL_SPS_EXT         = 13,
+    H264_NAL_AUXILIARY_SLICE = 19,
+};
+
+typedef struct H2645NAL {
+    uint8_t *rbsp_buffer;
+    unsigned int rbsp_buffer_size;
+
+    int size;
+    const uint8_t *data;
+
+    /**
+     * Size, in bits, of just the data, excluding the stop bit and any trailing
+     * padding. I.e. what HEVC calls SODB.
+     */
+    int size_bits;
+
+    int raw_size;
+    const uint8_t *raw_data;
+
+  //  GetBitContext gb;
+
+    /**
+     * NAL unit type
+     */
+    int type;
+
+    /**
+     * HEVC only, nuh_temporal_id_plus_1 - 1
+     */
+    int temporal_id;
+
+    int skipped_bytes;
+    int skipped_bytes_pos_size;
+    int *skipped_bytes_pos;
+    /**
+     * H.264 only, nal_ref_idc
+     */
+    int ref_idc;
+} H2645NAL;
+
+
+static inline int get_nalsize(int nal_length_size, const uint8_t *buf,
+                              int buf_size, int *buf_index, void *logctx)
+{
+    int i, nalsize = 0;
+
+    if (*buf_index >= buf_size - nal_length_size) {
+        // the end of the buffer is reached, refill it
+        return AVERROR(EAGAIN);
+    }
+
+    for (i = 0; i < nal_length_size; i++)
+        nalsize = ((unsigned)nalsize << 8) | buf[(*buf_index)++];
+    if (nalsize <= 0 || nalsize > buf_size - *buf_index) {
+        av_log(logctx, AV_LOG_ERROR,
+               "Invalid NAL unit size (%d > %d).\n", nalsize, buf_size - *buf_index);
+        return AVERROR_INVALIDDATA;
+    }
+    return nalsize;
+}
+
+
+
+const uint8_t *avpriv_find_start_code(const uint8_t * p,
+                                      const uint8_t *end,
+                                      uint32_t * state)
+{
+    int i;
+
+    assert(p <= end);
+    if (p >= end)
+        return end;
+
+    for (i = 0; i < 3; i++) {
+        uint32_t tmp = *state << 8;
+        *state = tmp + *(p++);
+        if (tmp == 0x100 || p == end)
+            return p;
+    }
+
+    while (p < end) {
+        if      (p[-1] > 1      ) p += 3;
+        else if (p[-2]          ) p += 2;
+        else if (p[-3]|(p[-1]-1)) p++;
+        else {
+            p++;
+            break;
+        }
+    }
+
+    p = FFMIN(p, end) - 4;
+    *state = AV_RB32(p);
+
+    return p + 4;
+}
+
+static inline int find_start_code(const uint8_t *buf, int buf_size,
+                           int buf_index, int next_avc)
+{
+    uint32_t state = -1;
+
+    buf_index = avpriv_find_start_code(buf + buf_index, buf + next_avc + 1, &state) - buf - 1;
+
+    return FFMIN(buf_index, buf_size);
+}
+
+#define MAX_MBPAIR_SIZE (256*1024) // a tighter bound could be calculated if someone cares about a few bytes
+
+int ff_h2645_extract_rbsp(const uint8_t *src, int length,
+                          H2645NAL *nal, int small_padding)
+{
+    int i, si, di;
+    uint8_t *dst;
+    int64_t padding = small_padding ? 0 : MAX_MBPAIR_SIZE;
+
+    nal->skipped_bytes = 0;
+#define STARTCODE_TEST                                                  \
+        if (i + 2 < length && src[i + 1] == 0 && src[i + 2] <= 3) {     \
+            if (src[i + 2] != 3 && src[i + 2] != 0) {                   \
+                /* startcode, so we must be past the end */             \
+                length = i;                                             \
+            }                                                           \
+            break;                                                      \
+        }
+#if HAVE_FAST_UNALIGNED
+#define FIND_FIRST_ZERO                                                 \
+        if (i > 0 && !src[i])                                           \
+            i--;                                                        \
+        while (src[i])                                                  \
+            i++
+#if HAVE_FAST_64BIT
+    for (i = 0; i + 1 < length; i += 9) {
+        if (!((~AV_RN64A(src + i) &
+               (AV_RN64A(src + i) - 0x0100010001000101ULL)) &
+              0x8000800080008080ULL))
+            continue;
+        FIND_FIRST_ZERO;
+        STARTCODE_TEST;
+        i -= 7;
+    }
+#else
+    for (i = 0; i + 1 < length; i += 5) {
+        if (!((~AV_RN32A(src + i) &
+               (AV_RN32A(src + i) - 0x01000101U)) &
+              0x80008080U))
+            continue;
+        FIND_FIRST_ZERO;
+        STARTCODE_TEST;
+        i -= 3;
+    }
+#endif /* HAVE_FAST_64BIT */
+#else
+    for (i = 0; i + 1 < length; i += 2) {
+        if (src[i])
+            continue;
+        if (i > 0 && src[i - 1] == 0)
+            i--;
+        STARTCODE_TEST;
+    }
+#endif /* HAVE_FAST_UNALIGNED */
+
+    if (i >= length - 1 && small_padding) { // no escaped 0
+        nal->data     =
+        nal->raw_data = src;
+        nal->size     =
+        nal->raw_size = length;
+        return length;
+    } else if (i > length)
+        i = length;
+
+    av_fast_padded_malloc(&nal->rbsp_buffer, &nal->rbsp_buffer_size,
+                          length + padding);
+    if (!nal->rbsp_buffer)
+        return AVERROR(ENOMEM);
+
+    dst = nal->rbsp_buffer;
+
+    memcpy(dst, src, i);
+    si = di = i;
+    while (si + 2 < length) {
+        // remove escapes (very rare 1:2^22)
+        if (src[si + 2] > 3) {
+            dst[di++] = src[si++];
+            dst[di++] = src[si++];
+        } else if (src[si] == 0 && src[si + 1] == 0 && src[si + 2] != 0) {
+            if (src[si + 2] == 3) { // escape
+                dst[di++] = 0;
+                dst[di++] = 0;
+                si       += 3;
+
+                if (nal->skipped_bytes_pos) {
+                    nal->skipped_bytes++;
+                    if (nal->skipped_bytes_pos_size < nal->skipped_bytes) {
+                        nal->skipped_bytes_pos_size *= 2;
+                        assert(nal->skipped_bytes_pos_size >= nal->skipped_bytes);
+                        av_reallocp_array(&nal->skipped_bytes_pos,
+                                nal->skipped_bytes_pos_size,
+                                sizeof(*nal->skipped_bytes_pos));
+                        if (!nal->skipped_bytes_pos) {
+                            nal->skipped_bytes_pos_size = 0;
+                            return AVERROR(ENOMEM);
+                        }
+                    }
+                    if (nal->skipped_bytes_pos)
+                        nal->skipped_bytes_pos[nal->skipped_bytes-1] = di - 1;
+                }
+                continue;
+            } else // next start code
+                goto nsc;
+        }
+
+        dst[di++] = src[si++];
+    }
+    while (si < length)
+        dst[di++] = src[si++];
+
+nsc:
+    memset(dst + di, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+
+    nal->data = dst;
+    nal->size = di;
+    nal->raw_data = src;
+    nal->raw_size = si;
+    return si;
+}
+
+/*888************************************ h264 end */
 
 namespace base {
     namespace fmp4 {
@@ -538,10 +787,12 @@ namespace base {
 
         
         bool FFParse::parseH264Header() {
-            int ret = 0;
+            //int ret = 0;
            // AVCodec *codec = NULL;
           //  AVCodecContext *cdc_ctx = NULL;
             AVPacket *pkt = NULL;
+            
+            H2645NAL nal = { NULL };
 
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
           
@@ -557,7 +808,7 @@ namespace base {
             setupframe.mstimestamp          = CurrentTime_milliseconds();
             // send setup frame
             
-            //info->run(&setupframe);
+            info->run(&setupframe);
             fragmp4_muxer->run(&setupframe);
 
   
@@ -596,28 +847,77 @@ namespace base {
             cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
             cur_ptr = in_buffer;
 
+            int buf_index, next_avc;
+            
+            buf_index     = 0;
+            next_avc      =  cur_size;
+    
+           int state = -1;
 
-            while (cur_size > 0)
+            while (true)
             {
+                
+             //    ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+                 
+              //  const SPS *sps;
+                 int src_length, consumed, nalsize = 0;
 
-
-                 ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
-                 if (ret < 4) {
-                    cur_ptr += 1;
-                    cur_size -= 1;
-                    continue;
+                if (buf_index >= next_avc) {
+                    nalsize = get_nalsize(4, cur_ptr, cur_size, &buf_index, nullptr);
+                    if (nalsize < 0)
+                        break;
+                    next_avc = buf_index + nalsize;
+                } else {
+                    buf_index = find_start_code(cur_ptr, cur_size, buf_index, next_avc);
+                    if (buf_index >= cur_size)
+                        break;
+                    if (buf_index >= next_avc)
+                        continue;
                 }
+                src_length = next_avc - buf_index;
+
+                state = cur_ptr[buf_index];
+                switch (state & 0x1f) {
+                case H264_NAL_SLICE:
+                case H264_NAL_IDR_SLICE:
+                    // Do not walk the whole buffer just to decode slice header
+                    if ((state & 0x1f) == H264_NAL_IDR_SLICE || ((state >> 5) & 0x3) == 0) {
+                        /* IDR or disposable slice
+                         * No need to decode many bytes because MMCOs shall not be present. */
+                        if (src_length > 60)
+                            src_length = 60;
+                    } else {
+                        /* To decode up to MMCOs */
+                        if (src_length > 1000)
+                            src_length = 1000;
+                    }
+                    break;
+                }
+                
+                consumed = ff_h2645_extract_rbsp(cur_ptr + buf_index, src_length, &nal, 1);
+                if (consumed < 0)
+                        break;
+
+                buf_index += consumed;;
 
 
-                // avcodec_decode_video2
+//                 ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+//                 if (ret < 4) {
+//                    cur_ptr += 1;
+//                    cur_size -= 1;
+//                    continue;
+//                }
+//
+//
+//                // avcodec_decode_video2
+//
+//                cur_ptr += ret;
+//                cur_size -= ret;
 
-                cur_ptr += ret;
-                cur_size -= ret;
+ //               if (pkt->size == 0)
+ //                   continue;
 
-                if (pkt->size == 0)
-                    continue;
-
-                basicvideoframe.copyFromAVPacket(pkt);
+                basicvideoframe.copyBuf((u_int8_t*) nal.data , nal.size);
 
 
                 basicvideoframe.mstimestamp = startTime ;
@@ -626,20 +926,29 @@ namespace base {
                 if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::sps) //AUD Delimiter
                 {
                       foundsps = true;
+                      
+                      info->run(&basicvideoframe);
+
+                     fragmp4_muxer->run(&basicvideoframe);
+                
                 }
 
                 else if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::pps) //AUD Delimiter
                 {
                       foundpps = true;
-                }
-                else
-                {
-                    continue;
-                }
+                      
+                      info->run(&basicvideoframe);
 
-                //info->run(&basicvideoframe);
+                    fragmp4_muxer->run(&basicvideoframe);
+                
+                }
+               
+                
+                
+                
+                 
 
-                fragmp4_muxer->run(&basicvideoframe);
+                
 
 
                 basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
@@ -650,7 +959,7 @@ namespace base {
                     break;
             }
 
-
+            av_freep(&nal.rbsp_buffer);
         
             free(in_buffer);
             av_packet_free(&pkt);
@@ -663,7 +972,7 @@ namespace base {
         
         void FFParse::parseH264Content() {
             AVPacket *videopkt = NULL;
-             int ret = 0;
+             //int ret = 0;
             if ((videopkt = av_packet_alloc()) == NULL) {
                 fprintf(stderr, "av_packet_alloc failed.\n");
                 //goto ret3;
@@ -690,32 +999,98 @@ namespace base {
             int cur_videosize=0;
 
             long framecount =0;
+            
+             int buf_index, next_avc;
+            
+            int state = -1;
+            
+            H2645NAL nal = { NULL };
 
             while (!stopped() && keeprunning) {
                  uint64_t currentTime =  CurrentTime_microseconds();
                 if (cur_videosize > 0) {
 
-                    ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
-                    if (ret < 4) {
-                        cur_videoptr += 1;
-                        cur_videosize -= 1;
+                    
+                int src_length, consumed, nalsize = 0;
+
+                if (buf_index >= next_avc) {
+                    nalsize = get_nalsize(4, cur_videoptr, cur_videosize, &buf_index, nullptr);
+                    if (nalsize < 0)
+                        break;
+                    next_avc = buf_index + nalsize;
+                } else {
+                    buf_index = find_start_code(cur_videoptr, cur_videosize, buf_index, next_avc);
+                    if (buf_index >= cur_videosize)
+                        break;
+                    if (buf_index >= next_avc)
                         continue;
+                }
+                src_length = next_avc - buf_index;
+
+                state = cur_videoptr[buf_index];
+                switch (state & 0x1f) {
+                case H264_NAL_SLICE:
+                case H264_NAL_IDR_SLICE:
+                    // Do not walk the whole buffer just to decode slice header
+                    if ((state & 0x1f) == H264_NAL_IDR_SLICE || ((state >> 5) & 0x3) == 0) {
+                        /* IDR or disposable slice
+                         * No need to decode many bytes because MMCOs shall not be present. */
+                        if (src_length > 60)
+                            src_length = 60;
+                    } else {
+                        /* To decode up to MMCOs */
+                        if (src_length > 1000)
+                            src_length = 1000;
                     }
+                    break;
+                }
+                
+                consumed = ff_h2645_extract_rbsp(cur_videoptr + buf_index, src_length, &nal, 1);
+                if (consumed < 0)
+                        break;
+
+                buf_index += consumed;;
 
 
-                    // avcodec_decode_video2
+//                 ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
+//                 if (ret < 4) {
+//                    cur_ptr += 1;
+//                    cur_size -= 1;
+//                    continue;
+//                }
+//
+//
+//                // avcodec_decode_video2
+//
+//                cur_ptr += ret;
+//                cur_size -= ret;
 
-                    cur_videoptr += ret;
-                    cur_videosize -= ret;
+ //               if (pkt->size == 0)
+ //                   continue;
 
-                    if (videopkt->size == 0)
-                        continue;
+                basicvideoframe.copyBuf((u_int8_t*) nal.data , nal.size);
+                
+//                    ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
+//                    if (ret < 4) {
+//                        cur_videoptr += 1;
+//                        cur_videosize -= 1;
+//                        continue;
+//                    }
+//
+//
+//                    // avcodec_decode_video2
+//
+//                    cur_videoptr += ret;
+//                    cur_videosize -= ret;
+//
+//                    if (videopkt->size == 0)
+//                        continue;
 
                     //Some Info from AVCodecParserContext
 
                     //SInfo << "    PTS=" << pkt->pts << ", DTS=" << pkt->dts << ", Duration=" << pkt->duration << ", KeyFrame=" << ((pkt->flags & AV_PKT_FLAG_KEY) ? 1 : 0) << ", Corrupt=" << ((pkt->flags & AV_PKT_FLAG_CORRUPT) ? 1 : 0) << ", StreamIdx=" << pkt->stream_index << ", PktSize=" << pkt->size;
                     // BasicFrame        basicframe;
-                    basicvideoframe.copyFromAVPacket(videopkt);
+                   // basicvideoframe.copyFromAVPacket(videopkt);
                     basicvideoframe.mstimestamp = startTime +  framecount;
                     basicvideoframe.fillPars();
 
@@ -736,7 +1111,7 @@ namespace base {
 
                     framecount++;
 
-                   // info->run(&basicvideoframe);
+                    info->run(&basicvideoframe);
 
                     fragmp4_muxer->run(&basicvideoframe);
 
@@ -760,13 +1135,19 @@ namespace base {
                     if (cur_videosize == 0)
                         break;
                     cur_videoptr = in_videobuffer;
-                    }
+                    
+                    buf_index     = 0;
+                    next_avc      =  cur_videosize;
+                    state = -1;
+            
+                    
+                }
             }
 
             av_packet_free(&videopkt);
 
             free(in_videobuffer);
-
+            av_freep(&nal.rbsp_buffer);
         }
         
        void FFParse::parseMuxContent() 
@@ -894,7 +1275,7 @@ namespace base {
 
                        videoframecount++;
 
-                      // info->run(&basicvideoframe);
+                       info->run(&basicvideoframe);
 
                        fragmp4_muxer->run(&basicvideoframe);
                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());

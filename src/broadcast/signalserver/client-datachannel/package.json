@@ -1,7 +1,11 @@
 {
   "name": "webrtc-codelab",
   "version": "0.0.1",
-  "description": "WebRTC codelab",
+  "description": "WebRTC streaming",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+  },
   "dependencies": {
     "express": "^4.17.1",
     "h264-profile-level-id": "^1.0.1",

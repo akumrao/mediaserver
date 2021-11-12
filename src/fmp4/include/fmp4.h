@@ -29,7 +29,9 @@
 #include <atomic>
 
 #define AUDIOFILE  "./hindi.pcm"               
-#define VIDEOFILE  "./test.264"
+#define VIDEOFILE  "/var/tmp/videos/test1.264"
+
+//data/videos/test.a264"
 
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"
