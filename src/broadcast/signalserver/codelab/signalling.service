@@ -1,0 +1,14 @@
+[Unit]
+Description=signalling server
+Documentation=https://xxx.com
+After=network.target
+
+[Service]
+Environment=NODE_PORT=3001
+Type=simple
+User=root
+ExecStart=/usr/bin/node /workspace/mediaserver/src/broadcast/signalserver/codelab/index.js 
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

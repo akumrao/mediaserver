@@ -33,7 +33,8 @@ make -j8
 
 ****************************************************************** to compile ffmpeg in static mode**************************************
 // do not give prefix path
-
+apt-get install -y  nasm
+apt-get remove  libx264-dev
 git clone    https://github.com/mirror/x264.git 
 
 ./configure   --disable-opencl --enable-static

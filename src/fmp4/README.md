@@ -241,6 +241,15 @@ The IDR frames are introduced to avoid any distortions in the video when you wan
  NALU type=1 is splice. There are three coding modes for splice. I_slice, P_slice, B_slice, and I-frames are divided and stored in splice when coding. 
 
 
+NALU Start Codes
+A NALU does not contain is its size. Therefore simply concatenating the NALUs to create a stream will not work because you will not know where one stops and the next begins.
+
+The Annex B specification solves this by requiring ‘Start Codes’ to precede each NALU. A start code is 2 or 3 0x00 bytes followed with a 0x01 byte. e.g. 0x000001 or 0x00000001.
+
+The 4 byte variation is useful for transmission over a serial connection as it is trivial to byte align the stream by looking for 31 zero bits followed by a one. If the next bit is 0 (because every NALU starts with a 0 bit), it is the start of a NALU. The 4 byte variation is usually only used for signaling random access points in the stream such as a SPS PPS AUD and IDR Where as the 3 byte variation is used everywhere else to save space.
+
+
+
 The full name of GOP is the Group of picture image group, that is, the distance between two I frames. The larger the GOP value, the P between I frame rates The greater the number of frames and B frames, the finer the image quality. If the GOP is 120, if the resolution is 720P, and the frame rate is 60, then the time for two I frames is 120/60=2s.
 
 
