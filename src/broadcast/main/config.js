@@ -4,13 +4,13 @@
     "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
     "rtcMinPort": 11501,
     "rtcMaxPort": 12560,
-     "rtsp": [
-      "rtsp://root:60056006@10.86.8.16:560/axis-media/media.amp?videocodec=h264&resolution=768x576&fps=25",
-      "rtsp://admin:247Supp0rt!@10.86.7.224:557/RTSP2HLS/media.smp",
-      "rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
-      "rtsp://localhost:8554/testStream",
-      "rtsp://localhost:9554/testStream"
-      ],
+      "rtsp":{
+      "cam0":"rtsp://root:60056006@10.86.8.16:560/axis-media/media.amp?videocodec=h264&resolution=768x576&fps=25",
+      "cam1":"rtsp://admin:247Supp0rt!@10.86.7.224:557/RTSP2HLS/media.smp",
+      "cam2":"rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
+      "cam3":"rtsp://localhost:8554/testStream",
+      "cam4":"rtsp://localhost:9554/testStream"
+    },
     "logLevel": "info",
     "logTags": [
       "info"

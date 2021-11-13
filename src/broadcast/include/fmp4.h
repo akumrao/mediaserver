@@ -27,7 +27,7 @@
 #include "muxer.h"
 
 #include <atomic>
-
+#include "json/json.h"
 
 #define AUDIOFILE  "/workspace/mediaserver/src/rtsp/main/hindi.pcm"               
 #define VIDEOFILE   "/workspace/mediaserver/src/rtsp/main/test.264"
@@ -48,6 +48,80 @@ class TextFrameFilter;
 class ReadMp4;  
 class LiveConnectionContext;
 class FFParse;
+
+
+
+ class BasicResponder : public net::ServerResponder
+        /// Basic server responder (make echo?)
+{
+public:
+
+    BasicResponder(net::HttpBase* conn) :
+    net::ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
+        ;
+        LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response) ;
+    
+
+};
+
+class HttpResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
+{
+public:
+
+    HttpResponder(net::HttpBase* conn) :
+    net::ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
+        ;
+        LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response);
+    
+    void onPayload(const std::string& /* body */); 
+    
+     json settingCam{ nullptr};
+             
+};
+        
+
+ class StreamingResponderFactory1 : public net::ServerConnectionFactory {
+        public:
+
+            net::ServerResponder* createResponder(net::HttpBase* conn) {
+
+                auto& request = conn->_request;
+
+                // Log incoming requests
+              //  STrace << "Incoming connection from " << ": Request:\n" << request << std::endl;
+
+                SDebug << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+
+                // Handle websocket connections
+                if (request.getMethod() == "POST") {
+                    return new HttpResponder(conn);
+                } else {
+                    return new BasicResponder(conn);
+                }
+
+
+            }
+
+ };
+
+
 
  class ReadMp4: public Thread, public net::HttpServer 
  {

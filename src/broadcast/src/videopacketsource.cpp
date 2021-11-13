@@ -137,8 +137,8 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
        // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
 
         int cam = peer->getCam();
-        std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
-
+        std::string camNo = "cam"+ std::to_string(cam);
+        std::string add =  Settings::configuration.rtsp[camNo].get<std::string>();
 
         ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, tcprequest, this , info, txt); // Request livethread to write into filter info
         ffparser->registerStreamCall(*ctx);
