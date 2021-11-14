@@ -1,0 +1,17 @@
+[Unit]
+Description=webrtcserver
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/workspace/mediaserver/src/broadcast/main
+ExecStart=/workspace/mediaserver/src/broadcast/main/runWebrtc
+#ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

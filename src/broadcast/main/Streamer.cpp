@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     
     
     
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 1111, new fmp4::StreamingResponderFactory1()  );
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 8080, new fmp4::StreamingResponderFactory1()  );
      
     
 
