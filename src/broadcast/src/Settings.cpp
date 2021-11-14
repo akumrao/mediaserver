@@ -8,6 +8,7 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
+#define LOGGING_LOG_TO_FILE 1
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
@@ -58,9 +59,12 @@ void Settings::SetConfiguration(json &cnfg)
             
             base::Level ld = base::getLevelFromString(loglevel.c_str());
             
-           // base::Logger::instance().add(new base::ConsoleChannel("webrtcserver", ld));
+#if	LOGGING_LOG_TO_FILE
             base::Logger::instance().add(new base::FileChannel("webrtcserver","/var/log/webrtcserver", ld));
             base::Logger::instance().setWriter(new base::AsyncLogWriter);
+#else
+            base::Logger::instance().add(new base::ConsoleChannel("webrtcserver", ld));
+#endif
             
         }
         
@@ -209,3 +213,4 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
 	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
+#undef LOGGING_LOG_TO_FILE
