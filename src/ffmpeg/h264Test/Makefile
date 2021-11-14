@@ -1,11 +1,10 @@
 ### CUSTOMIZE BELOW HERE #######################################################
-
 FFMPEG_ROOT = /export/views/video/ffmpeg
 
 CC	= gcc
 CXX     = g++
-TARGET=h264decoder # define the name of the executable
-SOURCES=$(wildcard *.cpp  )
+TARGET=fmp4 # define the name of the executable
+SOURCES=$(wildcard *.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized 
 
@@ -14,14 +13,9 @@ CPPFLAGS   := -I../../json/include/ -I../../ffmpeg/include -I../../signal/includ
 LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
 
-LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto  -lm -ldl -lz -lfdk-aac 
+LDLIBS    := -lpthread -lm -ldl -lm -ldl -lz -lfdk-aac 
 
 SLIBS     := ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a
-
-
-
-
-#SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
 
 
 ################################################################################
@@ -46,4 +40,3 @@ clean:
 
 ################################################################################
 ################################################################################
-
