@@ -54,13 +54,13 @@ bool H264_Decoder::load(std::string filepath, float fps) {
         V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
         V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
     */            
-  codec = avcodec_find_decoder_by_name("h264_cuvid");
- 
-  if(!codec)
-     codec = avcodec_find_decoder_by_name("libopenh264");
-  
-  if(!codec)
-    codec = avcodec_find_decoder_by_name("h264");
+//  codec = avcodec_find_decoder_by_name("h264_cuvid");
+// 
+//  if(!codec)
+//     codec = avcodec_find_decoder_by_name("libopenh264");
+//  
+//  if(!codec)
+//    codec = avcodec_find_decoder_by_name("h264");
  
   if(!codec)
   codec = avcodec_find_decoder(AV_CODEC_ID_H264);

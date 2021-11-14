@@ -52,7 +52,7 @@ class H264_Decoder {
   void decodeFrame(uint8_t* data, int size);                                             /* decode a frame we read from the buffer */
 
  public:
-  AVCodec* codec;                                                                        /* the AVCodec* which represents the H264 decoder */
+  AVCodec* codec{nullptr};                                                                        /* the AVCodec* which represents the H264 decoder */
   AVCodecContext* codec_context;                                                         /* the context; keeps generic state */
   AVCodecParserContext* parser;                                                          /* parser that is used to decode the h264 bitstream */
   AVFrame* picture;                                                                      /* will contain a decoded picture */
