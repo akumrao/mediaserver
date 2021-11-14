@@ -36,6 +36,53 @@ namespace base {
 
     namespace fmp4 {
 
+
+         void BasicResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+
+            const char *msg = "Post with Json is allowed";
+            response.setContentLength( strlen(msg)); // headers will be auto flushed
+            connection()->send((const char *)msg , strlen(msg));
+            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        }
+        
+        
+         void HttpResponder::onPayload(const std::string&  body )
+         {
+            
+              
+              
+             try
+             {
+                settingCam = json::parse(body.c_str());
+                
+                Settings::configuration.rtsp = settingCam["rtsp"];
+                
+                SInfo << "reconfigure Camera settings " << body << std::endl;
+             }
+             catch(...)
+             {
+                 settingCam = nullptr;
+             }
+                  
+              
+              
+         }
+        void HttpResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            std::string msg;
+            if( settingCam != nullptr)
+                msg = "Success";
+            else
+                msg = "failure";
+                
+            response.setContentLength( msg.length()); // headers will be auto flushed
+            connection()->send((const char *)msg.c_str() , msg.length());
+            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        }
+
+
         ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
 
            // self = this;

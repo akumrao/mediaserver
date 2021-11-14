@@ -201,6 +201,9 @@ namespace base {
         void HttpConnection::on_payload(const char* data, size_t len){
 
            this->listener->on_read(this, data,len );
+           
+            if (_responder)
+                _responder->onPayload( std::string( data,len ));
         }
 
         void HttpConnection::onComplete() {

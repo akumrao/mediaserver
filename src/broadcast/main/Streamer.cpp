@@ -14,6 +14,7 @@
 #include "base/idler.h"
 #include "base/logger.h"
 #include "Settings.h"
+#include "fmp4.h"
 #include "json/configuration.h"
 #include "rtc_base/ssl_adapter.h"
 #include "webrtc/signaler.h"
@@ -141,6 +142,12 @@ int main(int argc, char** argv) {
     
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
+    
+    
+    
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 1111, new fmp4::StreamingResponderFactory1()  );
+     
+    
 
     // test._capturer.start();
 
@@ -163,6 +170,11 @@ int main(int argc, char** argv) {
     LTrace("app.run() is over")
     rtc::CleanupSSL();
     Logger::destroy();
+    
+    readmp4->stop();
+        
+    readmp4->shutdown();
+    
    });
 
     return 0;
