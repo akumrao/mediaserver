@@ -1055,7 +1055,7 @@ int main(int argc, char *argv[]) {
     is = av_mallocz(sizeof (VideoState));
 
     if (argc < 2) {
-        fprintf(stderr, "Usage: test <file>\n");
+        fprintf(stderr, "Usage: test <file bunny mp4 with both audio and video>\n");
         exit(1);
     }
     // Register all formats and codecs

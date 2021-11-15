@@ -19,7 +19,7 @@ EXE:=tutorial01.out tutorial02.out tutorial03.out tutorial04.out\
 # $@ is the target name
 #
 all: 
-	gcc -g -o tutorial07 tutorial07.c -lavformat -lavcodec -lswscale -lavutil -lswresample -lz -lm -ldl `sdl2-config --cflags --libs`
+	gcc -g -o  ffmpegPlayer ffmpegPlayer.c -lavformat -lavcodec -lswscale -lavutil -lswresample -lz -lm -ldl `sdl2-config --cflags --libs`
 
 dirs:
 	mkdir -p obj
