@@ -563,7 +563,7 @@ void alloc_picture(void *userdata) {
     VideoState *is = (VideoState *) userdata;
     VideoPicture *vp;
     float aspect_ratio;
-    int w, h, x, y;
+    int w, h;//, x, y;
     int scr_w, scr_h;
     int i;
 
@@ -586,13 +586,13 @@ void alloc_picture(void *userdata) {
     }
     SDL_GetWindowSize(screen, &scr_w, &scr_h);
     h = scr_h;
-    w = ((int) rint(h * aspect_ratio)) & -3;
-    if (w > scr_w) {
-        w = scr_w;
-        h = ((int) rint(w / aspect_ratio)) & -3;
-    }
-    x = (scr_w - w) / 2;
-    y = (scr_h - h) / 2;
+    w = scr_w ;//  ((int) rint(h * aspect_ratio)) & -3;
+//    if (w > scr_w) {
+//        w = scr_w;
+//        h = ((int) rint(w / aspect_ratio)) & -3;
+//    }
+//    x = (scr_w - w) / 2;
+//    y = (scr_h - h) / 2;
     printf("screen final size: %dx%d\n", w, h);
 
     vp->texture = SDL_CreateTexture(
@@ -696,9 +696,9 @@ int queue_picture(VideoState *is, AVFrame *pFrame, double pts) {
 
         uint8_t buf[128];  //arvind
 
-       snprintf(buf, sizeof(buf), "%s", (char *)av_x_if_null(av_get_sample_fmt_name(*(enum AVSampleFormat *)is->video_ctx->pix_fmt), "none"));
-       printf( "decoded frame forat %s \n",  buf);
-            fflush(stdout);
+      // snprintf(buf, sizeof(buf), "%s", (char *)av_x_if_null(av_get_sample_fmt_name(*(enum AVSampleFormat *)is->video_ctx->pix_fmt), "none"));
+       //printf( "decoded frame forat %s \n",  buf);
+       //     fflush(stdout);
     
 
         {
@@ -882,11 +882,10 @@ int stream_component_open(VideoState *is, int stream_index) {
 
           //  snprintf(buf, sizeof(buf), "%s", (char *) );
 
-            const char *tmpCodec = av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt);
-            
-       
-            printf( "decoded frame forat %s \n",  av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt));
-            fflush(stdout);
+           // const char *tmpCodec = av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt);
+                   
+         //   printf( "decoded frame forat %s \n",  av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt));
+           // fflush(stdout);
             
             packet_queue_init(&is->videoq);
             is->video_tid = SDL_CreateThread(video_thread, "video_thread", is);
