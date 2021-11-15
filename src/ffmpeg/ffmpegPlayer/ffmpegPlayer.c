@@ -37,6 +37,7 @@
 #include <libavutil/opt.h>
 #include <libavutil/time.h>
 
+
 #include <SDL.h>
 #include <SDL_thread.h>
 
@@ -138,6 +139,7 @@ typedef struct VideoState {
     AVIOContext *io_context;
     struct SwsContext *sws_ctx;
     struct SwsContext *sws_ctx_audio;
+    
 } VideoState;
 
 enum {
@@ -629,7 +631,7 @@ void alloc_picture(void *userdata) {
 int queue_picture(VideoState *is, AVFrame *pFrame, double pts) {
 
     VideoPicture *vp;
-    int dst_pix_fmt;
+   // int dst_pix_fmt;
     AVPicture pict;
 
     /* wait until we have space for a new pic */
@@ -676,7 +678,7 @@ int queue_picture(VideoState *is, AVFrame *pFrame, double pts) {
 
         vp->pts = pts;
 
-        dst_pix_fmt = AV_PIX_FMT_YUV420P;
+       // dst_pix_fmt = AV_PIX_FMT_YUV420P;
         /* point pict at the queue */
 
 
@@ -687,13 +689,28 @@ int queue_picture(VideoState *is, AVFrame *pFrame, double pts) {
         pict.linesize[0] = vp->width;
         pict.linesize[1] = vp->uvPitch;
         pict.linesize[2] = vp->uvPitch;
+        
+//       av_get_pix_fmt_name((AVPixelFormat)pFrame->format);         
+        // arvind
+       // if(pFrame->format)
 
-        // Convert the image into YUV format that SDL uses
-        sws_scale(is->sws_ctx, (uint8_t const * const *) pFrame->data,
-                pFrame->linesize, 0, is->video_ctx->height,
-                pict.data, pict.linesize);
+        uint8_t buf[128];  //arvind
 
-        vp->pts = pts;
+       snprintf(buf, sizeof(buf), "%s", (char *)av_x_if_null(av_get_sample_fmt_name(*(enum AVSampleFormat *)is->video_ctx->pix_fmt), "none"));
+       printf( "decoded frame forat %s \n",  buf);
+            fflush(stdout);
+    
+
+        {
+            
+            // Convert the image into YUV format that SDL uses
+            sws_scale(is->sws_ctx, (uint8_t const * const *) pFrame->data,
+                    pFrame->linesize, 0, is->video_ctx->height,
+                    pict.data, pict.linesize);
+
+            vp->pts = pts;
+        
+        }
 
 
         /* now we inform our display thread that we have a pic ready */
@@ -747,6 +764,9 @@ int video_thread(void *arg) {
         pts = 0;
 
         // Decode video frame
+
+        is->video_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        
         avcodec_decode_video2(is->video_ctx, pFrame, &frameFinished, packet);
 
         if ((pts = av_frame_get_best_effort_timestamp(pFrame)) == AV_NOPTS_VALUE) {
@@ -756,6 +776,7 @@ int video_thread(void *arg) {
 
         // Did we get a video frame?
         if (frameFinished) {
+            
             pts = synchronize_video(is, pFrame, pts);
             if (queue_picture(is, pFrame, pts) < 0) {
                 break;
@@ -818,6 +839,12 @@ int stream_component_open(VideoState *is, int stream_index) {
         return -1;
     }
 
+    is->audio_st = NULL ;
+    is->audio_ctx = NULL ;
+    
+    is->video_st = NULL ;
+    is->video_ctx = NULL ;
+            
     switch (codecCtx->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
             is->audioStream = stream_index;
@@ -851,6 +878,16 @@ int stream_component_open(VideoState *is, int stream_index) {
             is->frame_last_delay = 40e-3;
             is->video_current_pts_time = av_gettime();
 
+           // uint8_t buf[128];  //arvind
+
+          //  snprintf(buf, sizeof(buf), "%s", (char *) );
+
+            const char *tmpCodec = av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt);
+            
+       
+            printf( "decoded frame forat %s \n",  av_get_pix_fmt_name((enum AVPixelFormat)is->video_ctx->pix_fmt));
+            fflush(stdout);
+            
             packet_queue_init(&is->videoq);
             is->video_tid = SDL_CreateThread(video_thread, "video_thread", is);
             is->sws_ctx = sws_getContext(is->video_ctx->width, is->video_ctx->height,
@@ -872,8 +909,14 @@ int decode_interrupt_cb(void *opaque) {
 
 void freeFFMpeg(VideoState *is) {
 
-    SDL_PauseAudio(1); /* start audio playing.  if flase*/
-    SDL_CloseAudio();
+    printf("free freeFFMpeg and close \n");
+    fflush(stdout);
+
+    if(is->audio_ctx)
+    {
+        SDL_PauseAudio(1); /* start audio playing.  if flase*/
+        SDL_CloseAudio();
+    }
 
 
     avcodec_close(is->video_ctx);
@@ -1045,7 +1088,8 @@ void stream_seek(VideoState *is, int64_t pos, int rel) {
         is->seek_req = 1;
     }
 }
-
+// /var/tmp/test.264
+//  /data/videos/test.mp4
 int main(int argc, char *argv[]) {
 
     SDL_Event event;
