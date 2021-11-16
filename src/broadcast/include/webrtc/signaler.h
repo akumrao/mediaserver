@@ -36,7 +36,7 @@ namespace base {
             void postMessage(const json& m);
             //void syncMessage(const ipc::Action& action);
 
-            void onPeerConnected(std::string& peerID, int cam);
+            void onPeerConnected(std::string& peerID,  std::string &cam);
             void onPeerMessage(std::string &name , json const& m);
             void onPeerDiconnected(std::string& peerID);
 

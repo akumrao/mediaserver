@@ -230,7 +230,7 @@ void MultiplexMediaCapturer::addMediaTracks(
  //     auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
       
-      int cam = peer->getCam();
+      std::string &cam = peer->getCam();
       if( VideoCapturer.find(cam) == VideoCapturer.end())
       {
          VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , peer);
@@ -271,7 +271,7 @@ void MultiplexMediaCapturer::addMediaTracks(
 }
 
 
-void MultiplexMediaCapturer::start( int cam )
+void MultiplexMediaCapturer::start( std::string & cam )
 {
     #if MP4File
     //_stream.start
@@ -285,7 +285,7 @@ void MultiplexMediaCapturer::start( int cam )
             
 }
 
-void MultiplexMediaCapturer::stop(int cam)
+void MultiplexMediaCapturer::stop(std::string & cam )
 {
                  
   // _stream.stop();
@@ -294,7 +294,7 @@ void MultiplexMediaCapturer::stop(int cam)
      
 
        
-     std::map< int,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
+     std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
      it=video_track.find(cam);
      if( it != video_track.end())
      {
@@ -306,7 +306,7 @@ void MultiplexMediaCapturer::stop(int cam)
          video_track.erase(it);
          if(rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease())
          {
-             std::map< int ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
+             std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
              vsItr=VideoCapturer.find(cam);
              if( vsItr != VideoCapturer.end())
              {

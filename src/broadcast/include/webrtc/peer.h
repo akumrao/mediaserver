@@ -30,7 +30,7 @@ public:
     };
 
     Peer(PeerManager* manager,
-         PeerFactoryContext* context, int cam, 
+         PeerFactoryContext* context, std::string &cam, 
          const std::string& peerid,
          const std::string& token,
          Mode mode);
@@ -71,7 +71,7 @@ public:
     
     void mute( const json& message);
     
-    int getCam( ){return cam;}
+    std::string& getCam( ){return cam;}
      
     //webrtc::FakeConstraints& constraints();
     webrtc::PeerConnectionFactoryInterface* factory() const;
@@ -101,7 +101,7 @@ protected:
     virtual rtc::RefCountReleaseStatus Release() const override { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
 
 protected:
-    int  cam;
+     std::string  cam;
     PeerManager* _manager;
     PeerFactoryContext* _context;
     std::string _peerid;

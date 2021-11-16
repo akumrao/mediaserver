@@ -80,7 +80,7 @@ namespace base {
             postMessage(m);
         }
 
-        void Signaler::onPeerConnected(std::string& peerID , int cam) {
+        void Signaler::onPeerConnected(std::string& peerID ,  std::string &cam) {
 
             LDebug("Peer connected: ", peerID)
 
@@ -119,7 +119,7 @@ namespace base {
             std::string to;
             std::string user;
             
-            int cam =0;
+            std::string camT;
 	 
             if (m.find("to") != m.end()) {
                 to = m["to"].get<std::string>();
@@ -159,11 +159,11 @@ namespace base {
 //            }
             
             if (m.find("cam") != m.end()) {
-                std::string camT = m["cam"].get<std::string>();
-                cam = std::stoi(camT);
-                if( cam >= Settings::configuration.rtsp.size())
+               camT = m["cam"].get<std::string>();
+               // cam = std::stoi(camT);
+                if( Settings::configuration.rtsp.find(camT) == Settings::configuration.rtsp.end()  )
                 {
-                    cam = 0;
+                    camT = Settings::configuration.rtsp.begin().key();
                 }
                 
             }
@@ -172,7 +172,7 @@ namespace base {
 
             if (std::string("offer") == type) {
 
-                onPeerConnected(from, cam);
+                onPeerConnected(from, camT);
                 
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);

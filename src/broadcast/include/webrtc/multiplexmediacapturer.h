@@ -60,8 +60,8 @@ public:
     void addMediaTracks(webrtc::PeerConnectionFactoryInterface* factory,
                         webrtc::PeerConnectionInterface* conn, wrtc::Peer *peer);
 
-    void start(int cam );
-    void stop(int cam);
+    void start(std::string & cam );
+    void stop(std::string & cam );
 
     rtc::scoped_refptr<AudioPacketModule> getAudioModule();
     //VideoPacketSource* createVideoSource();
@@ -78,13 +78,13 @@ protected:
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
 public:    
     
-     std::map< int ,  rtc::scoped_refptr<VideoPacketSource> > VideoCapturer;
+     std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > VideoCapturer;
     
  protected:
      
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
     
-     std::map< int,  rtc::scoped_refptr<webrtc::VideoTrackInterface> > video_track;
+     std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> > video_track;
     
      //std::unique_ptr<VideoObserver> local_video_observer_;
     
