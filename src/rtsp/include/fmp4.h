@@ -25,7 +25,7 @@
 #include "http/HttpClient.h"
 #include "http/HttpServer.h" 
 #include "muxer.h"
-
+#include "filethread.h"
 #include <atomic>
 
 
@@ -35,7 +35,7 @@
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
 
-//#define FILEPARSER 1
+#define FILEPARSER 2
 
 namespace base {
 namespace fmp4 {
@@ -72,8 +72,10 @@ class FFParse;
      std::vector<uint8_t> outputData;
      bool looping{true};
      
-      #if FILEPARSER
+      #if FILEPARSER ==1
          FFParse  *ffparser;
+      #elif FILEPARSER ==2
+        FileThread  *ffparser;
       #else
         LiveThread  *ffparser;
       #endif

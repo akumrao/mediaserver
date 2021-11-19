@@ -45,11 +45,23 @@ namespace base {
 
             txt = new TextFrameFilter("txt", this);
             
+            
+             #if FILEPARSER ==1
+                 ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
 
-            #if FILEPARSER
-            ffparser = new FFParse(AUDIOFILE, VIDEOFILE,  fragmp4_muxer, info, txt );
-
-            ffparser->start();
+                ffparser->start();
+             #elif FILEPARSER ==2
+               
+                ffparser = new FileThread("live");
+            
+                ffparser->start();
+            
+          
+            
+                ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
+                ffparser->registerStreamCall(*ctx);
+                ffparser->playStreamCall(*ctx);
+           
             #else
             ffparser = new LiveThread("live");
             
@@ -88,10 +100,12 @@ namespace base {
              std::string got = std::string(msg, len);
              SInfo << "restart  " << got;
                 
-              #if FILEPARSER
+               #if FILEPARSER ==1
 
               if( got == "reset")
               ffparser->reset();  
+             
+              #elif FILEPARSER ==2
             
               #else
 
