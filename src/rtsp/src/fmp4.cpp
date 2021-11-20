@@ -52,15 +52,13 @@ namespace base {
                 ffparser->start();
              #elif FILEPARSER ==2
                
-                ffparser = new FileThread("live");
-            
-                ffparser->start();
-            
-          
-            
+                ffparser = new FileThread("file");
+                          
                 ctx = new LiveConnectionContext(LiveConnectionType::rtsp, Settings::configuration.rtsp1, slot, tcprequest, fragmp4_muxer, info, txt); // Request livethread to write into filter info
                 ffparser->registerStreamCall(*ctx);
                 ffparser->playStreamCall(*ctx);
+                
+                 ffparser->start();
            
             #else
             ffparser = new LiveThread("live");

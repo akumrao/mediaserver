@@ -2,6 +2,7 @@
 #define FILETHREAD_HEADER_GUARD
 
 
+#include "fileH264.h"
 
 #include "live.h"
 //#include "liveserver.h"
@@ -155,7 +156,7 @@ public:
   
   
 private:
-  MSRTSPClient* client; ///< MSRTSPClient defines the behaviour (i.e. event registration and callbacks) of the RTSP client (see \ref live_tag)
+  VideoFrameSink* client; ///< MSRTSPClient defines the behaviour (i.e. event registration and callbacks) of the RTSP client (see \ref live_tag)
   LiveStatus livestatus;    ///< Reference of this variable is passed to MSRTSPClient.  We can see outside of the live555 callback chains if VideoConnection::client has deallocated itself
   
 public:

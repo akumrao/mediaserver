@@ -273,14 +273,12 @@ void VideoConnection::playStream() {
         // Here we are a part of the live555 event loop (this is called from periodicTask => handleSignals => stopStream => this method)
         livestatus=LiveStatus::pending;
         frametimer=0;
+        VideoClientState scs;
+                
         SInfo<< "VideoConnection : playStream " << ctx.address;
-        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, txt, &livestatus);
-        if (ctx.request_multicast)   { client->requestMulticast();      }
-        if (ctx.request_tcp)         { client->requestTCP(); SInfo<< " TCP RTP "; }
-        if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
-        if (ctx.reordering_time>0)   { client->setReorderingTime(ctx.reordering_time); } // WARNING: in microseconds!
-        SInfo << "VideoConnection : playStream : name " << client->name() ;
-        client->sendDescribeCommand(MSRTSPClient::continueAfterDESCRIBE);
+        client = VideoFrameSink::createNew(env, scs , fragmp4_muxer, info, txt, "/var/tmp/test.264");
+
+       
     }
     is_playing=true; // in the sense that we have requested a play .. and that the event handlers will try to restart the play infinitely..
 }
@@ -308,7 +306,7 @@ void VideoConnection::stopStream() {
             // possible to wait until handleSignals has been called
         }
         else {
-            MSRTSPClient::shutdownStream(client, 1); // sets LiveStatus to closed
+            //VideoFrameSink::shutdownStream(client, 1); // sets LiveStatus to closed   // arvind write code for the same
             SDebug << "VideoConnection : stopStream: shut down" ;
         }
     }
@@ -397,7 +395,7 @@ bool VideoConnection::isClosed() { // not pending or playing
 }
 
 void VideoConnection::forceClose() {
-    MSRTSPClient::shutdownStream(client, 1);
+   // MSRTSPClient::shutdownStream(client, 1);
 }
 
 
@@ -986,6 +984,11 @@ void FileThread::deregisterStreamCall(LiveConnectionContext &connection_ctx) {
 void FileThread::playStreamCall(LiveConnectionContext &connection_ctx) {
     LiveSignalContext signal_ctx = {LiveSignal::play_stream, &connection_ctx, NULL};
     sendSignal(signal_ctx);
+    
+    //registerOutbound( );
+    
+    // playStream(connection_ctx);
+    
 }
 
 void FileThread::stopStreamCall(LiveConnectionContext &connection_ctx) {
