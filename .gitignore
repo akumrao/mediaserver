@@ -1,2 +1,35 @@
-#add all object files 
+# gitignore for C++
+# Compiled Object files
+*.slo
+*.lo
 *.o
+
+#diff tool files
+*.bak
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Visual Studio Files
+Debug
+Release
+*.suo
+*.csproj.user
+*.vbproj.user
+*.vcxproj.user
+ipch
+*sdf
+*.db
+*.rule
+*.obj
+*.tlog
+*.tcl
+*.log
+*.lastbuildstate
+.vs/

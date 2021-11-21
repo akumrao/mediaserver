@@ -108,11 +108,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\CMakeLists.txt" />
+    <CustomBuild Include=".\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{EA5B8D09-000F-32C7-B9E8-910ED12FC9B4}</UniqueIdentifier>
+      <UniqueIdentifier>{E98A1A49-D8A0-33A0-98DD-A51C1CBF6F30}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
