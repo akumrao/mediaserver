@@ -35,7 +35,7 @@
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
 
-#define FILEPARSER 2
+#define FILEPARSER 3
 
 namespace base {
 namespace fmp4 {

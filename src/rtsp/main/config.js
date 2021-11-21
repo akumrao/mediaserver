@@ -4,7 +4,7 @@
     "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
     "rtcMinPort": 11501,
     "rtcMaxPort": 12560,
-     "rtsp1": "rtsp://root:60056006@10.86.8.16:606/axis-media/media.amp",
+     "rtsp1": "rtsp://root:60056006@10.86.8.16:560/axis-media/media.amp?videocodec=h264&resolution=768x576&fps=25",
     "rtsp2": "rtsp://localhost:8554/testStream",
     "logLevel": "info",
     "logTags": [

@@ -116,7 +116,7 @@ namespace base {
                {
                    if( !strncmp(msg,"rtsp",4 ) && critical_sec++ == 0  )
                    {
-                        broadcast("reset" , 5, false);
+                        broadcast("reset" , 5, false, false);
 
                         ffparser->stopStreamCall(*ctx);
 
