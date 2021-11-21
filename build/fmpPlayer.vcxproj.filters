@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\ffmpeg\ffmpegPlayer\ffmpegPlayer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{949C01BA-241B-41B0-9A31-5538F8A2A308}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
