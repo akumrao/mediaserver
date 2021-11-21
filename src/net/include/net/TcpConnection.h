@@ -113,6 +113,8 @@ namespace base
             void OnUvWrite(int status,onSendCallback cb);
 
             void send(const char* data, size_t len) override ;
+            
+            int write_queue_size();
 
         protected:
             // Passed by argument.

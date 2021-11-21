@@ -3,6 +3,7 @@
 #include "constant.h"
 #include "tools.h"
 #include "base/logger.h"
+#include <thread>
 
 #define SEND_PARAMETER_SETS // keep this always defined
  static const unsigned LIVE_GET_PARAMETER_PING = 50;
@@ -256,9 +257,27 @@ void VideoFrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncated
 
    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
    {
-       info->run(&basicframe);
-        fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-        basicframe.payload.resize(basicframe.payload.capacity());
+        if(!foundsps ||!foundpps )
+        {
+            info->run(&basicframe);
+            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+            basicframe.payload.resize(basicframe.payload.capacity());
+        
+        }
+        
+       if(!foundsps && basicframe.h264_pars.slice_type == H264SliceType::sps  )
+       {    
+           foundsps  = true;
+           
+       }
+       
+       if(!foundpps && basicframe.h264_pars.slice_type == H264SliceType::pps  )
+       {    
+           foundpps  = true;
+           
+       }
+               
+      
    }
    else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
         //info->run(&basicframe);
@@ -266,7 +285,7 @@ void VideoFrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncated
    }
    else
    {
-        info->run(&basicframe);
+        //info->run(&basicframe);
         fragmp4_muxer->run(&basicframe); // starts the frame filter chain
         basicframe.payload.resize(basicframe.payload.capacity());
         
@@ -341,7 +360,14 @@ Boolean VideoFrameSink::continuePlaying() {
   if (fSource == NULL) return False; // sanity check (should not happen)
   // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
   // fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
+  uint64_t currentTime =  CurrentTime_microseconds();
+  
   fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
+  
+  
+  uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                    std::this_thread::sleep_for(std::chrono::microseconds(300000 - deltaTimeMillis));
+  
   return True;
 }
 

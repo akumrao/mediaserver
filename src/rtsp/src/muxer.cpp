@@ -892,6 +892,8 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             if (strncmp(boxname, "moof", 4) == 0) {
                 metap->is_first = moofHasFirstSampleFlag(internal_frame.payload.data());
                 //#ifdef MUXPARSE
+                
+               internal_frame.is_first =  metap->is_first;
                 STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
                 // #endif
             }

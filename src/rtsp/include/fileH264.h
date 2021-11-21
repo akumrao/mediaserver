@@ -124,6 +124,12 @@ public:
   VideoClientState &scs; 
   
   H264VideoStreamFramer* videoSource;
+  
+   bool foundsps{false};
+   bool foundpps{false};
+            
+  
+  
 };
 
 }
