@@ -121,11 +121,15 @@ namespace base {
             
         }
         
-        void WebSocketConnection::push( const char* data, size_t len, bool binary)
+        void WebSocketConnection::push( const char* data, size_t len, bool binary, bool is_first )
         { 
             dummy_mutex.lock();
             
-            dummy_queue.push(std::make_pair(binary,  std::string(data, len )));
+            Store store;
+            store.binary = binary;
+            store.buff =  std::string(data, len );
+             store.isFirstFrame = is_first;
+            dummy_queue.push(store);
             
             dummy_mutex.unlock();
         }
@@ -141,15 +145,33 @@ namespace base {
             
           //  SInfo << "WebSocketConnection " <<    uv_thread_self();
             
+            
+             //net::HttpConnection* cn = (net::HttpConnection*)connection;
+                
+            int qsize =  ((net::HttpConnection*)_connection)->write_queue_size();
+           
             while(dummy_queue.size())
-            {   std::pair< bool, std::string > tmp;
+            {  
+                Store tmp;
                 dummy_mutex.lock();
             
                 tmp = dummy_queue.front();
                 dummy_queue.pop();
-                 dummy_mutex.unlock();
-                if(tmp.second.length())
-                send(&tmp.second[0],tmp.second.length() , tmp.first);
+                dummy_mutex.unlock();
+                 
+               if( (!dropping && qsize < 27621) ||  (dropping &&  qsize < 27621 && tmp.isFirstFrame ) )
+               {
+                    if(tmp.buff.length())
+                    send(&tmp.buff[0],tmp.buff.length() , tmp.binary);
+                    
+                    dropping = false;
+               }
+               else
+               {
+                   dropping = true;
+                   SInfo << "dropping frame, storage queueze " <<  dummy_queue.size() << " pending Queue Size "  <<   qsize;
+                   
+               }
             }
             
             

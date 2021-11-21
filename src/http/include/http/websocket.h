@@ -242,7 +242,7 @@ namespace base {
             
             void dummy_timer_cb();
             
-            void push( const char* data, size_t len, bool binary);
+            void push( const char* data, size_t len, bool binary, bool is_first);
             //
             /// Client side
 
@@ -279,7 +279,16 @@ namespace base {
             
             Timer dummy_timer{ nullptr};
             std::mutex dummy_mutex;
-            std::queue< std::pair< bool, std::string >> dummy_queue;
+            
+            struct Store{
+                
+                bool binary;
+                std::string buff;  
+                bool isFirstFrame;
+            };
+            std::queue< Store> dummy_queue;
+            
+            bool dropping{false};
         };
 
 
