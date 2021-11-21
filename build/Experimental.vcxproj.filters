@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include=".\CMakeFiles\2678158fbcde09485be63a154cc51d5b\Experimental.rule">
+    <CustomBuild Include="..\CMakeFiles\579a8a47c09c15bab065dbcb7bff9065\Experimental.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
     <CustomBuild Include="..\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".\CMakeFiles\Experimental" />
+    <None Include="..\CMakeFiles\Experimental" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{E1C5FC92-7955-33D9-86EC-4A329BBC9C9C}</UniqueIdentifier>
+      <UniqueIdentifier>{C8C3A654-6916-344D-A298-C5587008F528}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
