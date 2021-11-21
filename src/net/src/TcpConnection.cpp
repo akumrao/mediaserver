@@ -100,7 +100,10 @@ namespace base {
         
        int TcpConnectionBase::write_queue_size()
        {
+           if( uvHandle != nullptr) 
            return this->uvHandle->write_queue_size;
+           
+           return 0;
        }
 
         TcpConnectionBase::~TcpConnectionBase() {
