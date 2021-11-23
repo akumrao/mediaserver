@@ -209,7 +209,13 @@ public:
    // void filterFromAVPacket(AVPacket *avpkt, AVCodecContext *codec_ctx, AVBitStreamFilterContext *filter); ///< Copy data from AVPacket structure  //arvind
 
 public:                                                  // frame serialization
-    std::size_t calcSize();                              ///< How much this frame occupies in bytes when serialized
+    std::size_t calcSize();
+    
+    int fps{0};
+    int width{0};
+    int height{0};
+    
+    ///< How much this frame occupies in bytes when serialized
    // bool dump(IdNumber device_id, RaWriter &raw_writer); ///< Write the frame to filestream with a certain device id
    // IdNumber read(RawReader &raw_reader);                ///< Read the frame from filestream.  Returns device id
 };

@@ -277,7 +277,7 @@ void VideoConnection::playStream() {
                 
         SInfo<< "VideoConnection : playStream " << ctx.address;
         client = VideoFrameSink::createNew(env, scs , fragmp4_muxer, info, txt, "/var/tmp/test.264");
-       // client = VideoFrameSink::createNew(env, scs , fragmp4_muxer, info, txt, "/var/tmp/videos/testb.264");
+       // client = VideoFrameSink::createNew(env, scs , fragmp4_muxer, info, txt, "/var/tmp/videos/test1.264");
 
        
     }

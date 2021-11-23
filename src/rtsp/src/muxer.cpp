@@ -161,14 +161,14 @@ void MuxFrameFilter::initMux() {
                 AVStream *av_stream;
 
                 av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
-                av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
-                av_codec_context->height = 576;
+                av_codec_context->width = width; // dummy values .. otherwise mkv muxer refuses to co-operate
+                av_codec_context->height = height;
                 av_codec_context->bit_rate = 1024 * 1024;
 
 
                 AVRational tb;
                 tb.num = 1;
-                tb.den = STREAM_FRAME_RATE;
+                tb.den =fps;
                                 
                 av_codec_context->time_base = tb;//  (AVRational){ 1, STREAM_FRAME_RATE };
 
@@ -392,11 +392,13 @@ void MuxFrameFilter::closeMux() {
 }
 
 void MuxFrameFilter::deActivate() {
+    
+    SInfo << "deActivate";
+    
     if (initialized) {
         av_write_trailer(av_format_context);
         closeMux();
         av_dict_free(&av_dict);
-
 
 
         streams.clear();
@@ -439,6 +441,8 @@ void MuxFrameFilter::go(Frame* frame) {
 
     // make a copy of the setup frames ..
        if (frame->type() == "SetupFrame") { // SETUPFRAME
+           
+           
         SetupFrame *setupframe = static_cast<SetupFrame*> (frame);
         if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
             if (setupframe->stream_index > 1) {
@@ -503,7 +507,11 @@ void MuxFrameFilter::go(Frame* frame) {
 #ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
 #endif
-                  
+                    
+                    fps = basicframe->fps;
+                    width= basicframe->width;
+                    height = basicframe->height;
+                    
                     extradata_videoframe.payload.insert(
                             extradata_videoframe.payload.end(),
                             basicframe->payload.begin(),

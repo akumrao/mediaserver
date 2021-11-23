@@ -71,16 +71,18 @@ private:
     
   public:
     
-int fHNumber {264}; // 264 or 265   
-Boolean CpbDpbDelaysPresentFlag{0};
-Boolean pic_struct_present_flag{0};
+    int fHNumber {264}; // 264 or 265   
+    Boolean CpbDpbDelaysPresentFlag{0};
+    Boolean pic_struct_present_flag{0};
 
-unsigned cpb_removal_delay_length_minus1{23};
-unsigned dpb_output_delay_length_minus1{23};
+    unsigned cpb_removal_delay_length_minus1{23};
+    unsigned dpb_output_delay_length_minus1{23};
 
-double DeltaTfiDivisor{2.0};
+    double DeltaTfiDivisor{2.0};
 
-  
+    int fps{0};
+    int width{0};
+    int height{0};
     
 
 };

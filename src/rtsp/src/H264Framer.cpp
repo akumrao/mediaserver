@@ -317,12 +317,16 @@ void H264Framer::analyze_seq_parameter_set_data(u_int8_t const* nalUnitOrig, uns
         unsigned pic_width_in_mbs_minus1 = bv.get_expGolomb();
         DEBUG_PRINT(pic_width_in_mbs_minus1);
 
-        printf("width %d \n", (pic_width_in_mbs_minus1 + 1) *16);
+        width= (pic_width_in_mbs_minus1 + 1) *16;
+        //printf("width %d \n", width );
+        
 
         unsigned pic_height_in_map_units_minus1 = bv.get_expGolomb();
         DEBUG_PRINT(pic_height_in_map_units_minus1);
+        
+        height = (pic_height_in_map_units_minus1 + 1) *16;
 
-        printf("height %d \n", (pic_height_in_map_units_minus1 + 1) *16);
+        //printf("height %d \n", height);
 
         Boolean frame_mbs_only_flag = bv.get1BitBoolean();
         DEBUG_PRINT(frame_mbs_only_flag);
@@ -344,5 +348,36 @@ void H264Framer::analyze_seq_parameter_set_data(u_int8_t const* nalUnitOrig, uns
             DEBUG_TAB;
             analyze_vui_parameters(bv, num_units_in_tick, time_scale);
         }
+        
+        
+        if (time_scale > 0 && num_units_in_tick > 0) 
+        {
+            fps = time_scale / (DeltaTfiDivisor * num_units_in_tick);
+            
+          
+        }
+                            
     }
+    
+    
 }
+
+
+/*
+  
+unsigned num_units_in_tick, time_scale;
+
+H264VideoStreamFramer obj;
+obj.analyze_seq_parameter_set_data(pbuf, 35, num_units_in_tick, time_scale);
+//  analyze_seq_parameter_set_data(buffer,sz, num_units_in_tick, time_scale);
+if (time_scale > 0 && num_units_in_tick > 0) {
+    int fFrameRate = time_scale / (obj.DeltaTfiDivisor * num_units_in_tick);
+
+    cout << "SPS processed frame rate " << fFrameRate << endl;
+
+
+}  
+ 
+ 
+ 
+ */
