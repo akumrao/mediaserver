@@ -97,7 +97,25 @@ void afterPlaying(void* clientData) {
 void VideoFrameSink::Play()
 {
      ByteStreamFileSource* fileSource  = ByteStreamFileSource::createNew(env, fStreamId);
+     
+   /*  
+    std::string tmp =  "/var/tmp/videos/test1.264";
    
+    
+    
+    std::string tmp1 =  "/var/tmp/test.264";
+     
+    
+    static int nCount = 0;
+   
+    if( nCount++ % 2 == 0 )
+    fStreamId = strDup((char*)tmp.c_str());
+    else
+    fStreamId = strDup((char*)tmp1.c_str());    
+   */ 
+     
+    
+    
     if (fileSource == NULL) {
     env << "Unable to open file \"" << fStreamId
          << "\" as a byte-stream file source\n";
@@ -396,9 +414,12 @@ Boolean VideoFrameSink::continuePlaying() {
   
   fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
   
-  
+  if(fps)
+  {
   uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
-                    std::this_thread::sleep_for(std::chrono::microseconds(300000 - deltaTimeMillis));
+    //std::this_thread::sleep_for(std::chrono::microseconds(300000 - deltaTimeMillis));
+  std::this_thread::sleep_for(std::chrono::microseconds((1000000 / fps) - deltaTimeMillis));
+  }
   
   return True;
 }
