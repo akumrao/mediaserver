@@ -68,6 +68,9 @@
 #define FF_QUIT_EVENT (SDL_USEREVENT + 2)
 #define VIDEO_PICTURE_QUEUE_SIZE 1
 #define DEFAULT_AV_SYNC_TYPE AV_SYNC_VIDEO_MASTER
+#define DllExport   __declspec( dllexport )
+
+DllExport int player_Start(char* filePath);
 
 typedef struct PacketQueue {
     AVPacketList *first_pkt, *last_pkt;
@@ -1091,127 +1094,13 @@ void stream_seek(VideoState *is, int64_t pos, int rel) {
 //  /data/videos/test.mp4
 int main(int argc, char *argv[]) {
 
-    SDL_Event event;
-
-    VideoState *is;
-
-    is = av_mallocz(sizeof (VideoState));
-
     if (argc < 2) {
         fprintf(stderr, "Usage: test <file bunny mp4 with both audio and video>\n");
         exit(1);
     }
-    // Register all formats and codecs
-    av_register_all();
-    // init network
-    avformat_network_init();
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
-        fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
-        exit(1);
-    }
-
-    // Make a screen to put our video
-    /* #ifndef __DARWIN__ */
-    /* screen = SDL_SetVideoMode(640, 480, 0, 0); */
-    /* #else */
-    /* screen = SDL_SetVideoMode(640, 480, 24, 0); */
-    /* #endif */
-    screen = SDL_CreateWindow(
-            "FFmpeg Tutorial",
-            SDL_WINDOWPOS_UNDEFINED,
-            SDL_WINDOWPOS_UNDEFINED,
-            /* 1280, */
-            /* 640, */
-            640,
-            /* pCodecCtx->width, */
-            /* 800, */
-            /* 480, */
-            480,
-            /* pCodecCtx->height, */
-            0
-            );
-    if (!screen) {
-        fprintf(stderr, "SDL: could not set video mode - exiting\n");
-        exit(1);
-    }
-
-    renderer = SDL_CreateRenderer(screen, -1, 0);
-    if (!renderer) {
-        fprintf(stderr, "SDL: could not create renderer - exiting\n");
-        exit(1);
-    }
-    screen_mutex = SDL_CreateMutex();
-
-    av_strlcpy(is->filename, argv[1], sizeof (is->filename));
-
-    is->pictq_mutex = SDL_CreateMutex();
-    is->pictq_cond = SDL_CreateCond();
-
-    schedule_refresh(is, 40);
-
-    is->av_sync_type = DEFAULT_AV_SYNC_TYPE;
-    is->parse_tid = SDL_CreateThread(decode_thread, "video_thread", is);
-    if (!is->parse_tid) {
-        av_free(is);
-        return -1;
-    }
-
-    av_init_packet(&flush_pkt);
-    flush_pkt.data = (unsigned char *) "FLUSH";
-
-    for (;;) {
-        double incr, pos;
-        SDL_WaitEvent(&event);
-        switch (event.type) {
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        incr = -10.0;
-                        goto do_seek;
-                    case SDLK_RIGHT:
-                        incr = 10.0;
-                        goto do_seek;
-                    case SDLK_UP:
-                        incr = 60.0;
-                        goto do_seek;
-                    case SDLK_DOWN:
-                        incr = -60.0;
-                        goto do_seek;
-do_seek:
-                        if (global_video_state) {
-                            pos = get_master_clock(global_video_state);
-                            pos += incr;
-                            stream_seek(global_video_state, (int64_t) (pos * AV_TIME_BASE), incr);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case FF_QUIT_EVENT:
-            case SDL_QUIT:
-                is->quit = 1;
-                /*
-                 * If the video has finished playing, then both the picture and
-                 * audio queues are waiting for more data.  Make them stop
-                 * waiting and terminate normally.
-                 */
-                SDL_CondSignal(is->audioq.cond);
-                SDL_CondSignal(is->videoq.cond);
-                SDL_Quit();
-                exit(0);
-                break;
-            case FF_ALLOC_EVENT:
-                alloc_picture(event.user.data1);
-                break;
-            case FF_REFRESH_EVENT:
-                video_refresh_timer(event.user.data1);
-                break;
-            default:
-                break;
-        }
-    }
+    player_Start((char*)argv[1]);
+ 
     return 0;
 }
 
@@ -1304,4 +1193,129 @@ int decode_frame_from_packet(VideoState *is, AVFrame decoded_frame) {
     av_freep(&dst_data);
 
     return dst_bufsize;
+}
+
+
+int player_Start(char* filePath)
+{
+    SDL_Event event;
+    VideoState* is;
+    is = av_mallocz(sizeof(VideoState));
+
+    // Register all formats and codecs
+    av_register_all();
+    // init network
+    avformat_network_init();
+
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
+        fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    // Make a screen to put our video
+    /* #ifndef __DARWIN__ */
+    /* screen = SDL_SetVideoMode(640, 480, 0, 0); */
+    /* #else */
+    /* screen = SDL_SetVideoMode(640, 480, 24, 0); */
+    /* #endif */
+    screen = SDL_CreateWindow(
+        "FFmpeg Tutorial",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        /* 1280, */
+        /* 640, */
+        640,
+        /* pCodecCtx->width, */
+        /* 800, */
+        /* 480, */
+        480,
+        /* pCodecCtx->height, */
+        0
+    );
+    if (!screen) {
+        fprintf(stderr, "SDL: could not set video mode - exiting\n");
+        exit(1);
+    }
+
+    renderer = SDL_CreateRenderer(screen, -1, 0);
+    if (!renderer) {
+        fprintf(stderr, "SDL: could not create renderer - exiting\n");
+        exit(1);
+    }
+    screen_mutex = SDL_CreateMutex();
+
+    av_strlcpy(is->filename, filePath, sizeof(is->filename));
+
+    is->pictq_mutex = SDL_CreateMutex();
+    is->pictq_cond = SDL_CreateCond();
+
+    schedule_refresh(is, 40);
+
+    is->av_sync_type = DEFAULT_AV_SYNC_TYPE;
+    is->parse_tid = SDL_CreateThread(decode_thread, "video_thread", is);
+    if (!is->parse_tid) {
+        av_free(is);
+        return -1;
+    }
+
+    av_init_packet(&flush_pkt);
+    flush_pkt.data = (unsigned char*)"FLUSH";
+
+    for (;;) {
+        double incr, pos;
+        SDL_WaitEvent(&event);
+        switch (event.type) {
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.sym) {
+            case SDLK_LEFT:
+                incr = -10.0;
+                goto do_seek;
+            case SDLK_RIGHT:
+                incr = 10.0;
+                goto do_seek;
+            case SDLK_UP:
+                incr = 60.0;
+                goto do_seek;
+            case SDLK_DOWN:
+                incr = -60.0;
+                goto do_seek;
+            do_seek:
+                if (global_video_state) {
+                    pos = get_master_clock(global_video_state);
+                    pos += incr;
+                    stream_seek(global_video_state, (int64_t)(pos * AV_TIME_BASE), incr);
+                }
+                break;
+            default:
+                break;
+            }
+            break;
+        case FF_QUIT_EVENT:
+        case SDL_QUIT:
+            is->quit = 1;
+            /*
+             * If the video has finished playing, then both the picture and
+             * audio queues are waiting for more data.  Make them stop
+             * waiting and terminate normally.
+             */
+            SDL_CondSignal(is->audioq.cond);
+            SDL_CondSignal(is->videoq.cond);
+            SDL_Quit();
+            exit(0);
+            break;
+        case FF_ALLOC_EVENT:
+            alloc_picture(event.user.data1);
+            break;
+        case FF_REFRESH_EVENT:
+            video_refresh_timer(event.user.data1);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+DllExport void player_Stop()
+{
+
 }
