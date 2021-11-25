@@ -70,7 +70,8 @@
 #define DEFAULT_AV_SYNC_TYPE AV_SYNC_VIDEO_MASTER
 #define DllExport   __declspec( dllexport )
 
-DllExport int player_Start(char* filePath);
+DllExport int  fmpPlayer_Start(char* filePath);
+DllExport void fmpPlayer_Stop();
 
 typedef struct PacketQueue {
     AVPacketList *first_pkt, *last_pkt;
@@ -157,7 +158,7 @@ SDL_Renderer *renderer = NULL;
 
 /* Since we only have one decoding thread, the Big Struct
    can be global in case we need it. */
-VideoState *global_video_state;
+VideoState *global_video_state= NULL;
 AVPacket flush_pkt;
 
 void packet_queue_init(PacketQueue *q) {
@@ -1099,8 +1100,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    player_Start((char*)argv[1]);
- 
+    fmpPlayer_Start((char*)argv[1]);
+    Sleep(200000);
     return 0;
 }
 
@@ -1195,12 +1196,25 @@ int decode_frame_from_packet(VideoState *is, AVFrame decoded_frame) {
     return dst_bufsize;
 }
 
+int Player_Thread(void* arg);
 
-int player_Start(char* filePath)
+int fmpPlayer_Start(char* filePath)
 {
-    SDL_Event event;
     VideoState* is;
     is = av_mallocz(sizeof(VideoState));
+    av_strlcpy(is->filename, filePath, sizeof(is->filename));
+    //av_strlcpy(is->filename, "C:\\SW\\FFMpegBin\\bin\\test1.264", sizeof(is->filename));
+
+    SDL_Thread*  pPlayerThreadId = SDL_CreateThread(Player_Thread, "Player_Thread", is);
+    if (pPlayerThreadId)
+        return 0;
+    return -1;
+}
+
+int Player_Thread(void* arg)
+{
+    SDL_Event event;
+    VideoState* is = (VideoState*)arg;
 
     // Register all formats and codecs
     av_register_all();
@@ -1219,7 +1233,7 @@ int player_Start(char* filePath)
     /* screen = SDL_SetVideoMode(640, 480, 24, 0); */
     /* #endif */
     screen = SDL_CreateWindow(
-        "FFmpeg Tutorial",
+        "Player",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         /* 1280, */
@@ -1243,9 +1257,6 @@ int player_Start(char* filePath)
         exit(1);
     }
     screen_mutex = SDL_CreateMutex();
-
-    av_strlcpy(is->filename, filePath, sizeof(is->filename));
-
     is->pictq_mutex = SDL_CreateMutex();
     is->pictq_cond = SDL_CreateCond();
 
@@ -1313,9 +1324,16 @@ int player_Start(char* filePath)
             break;
         }
     }
+    return 0;
 }
 
-DllExport void player_Stop()
+void fmpPlayer_Stop()
 {
+    if (global_video_state)
+        global_video_state->quit = 1;
+    SDL_Event sdlevent;
+    sdlevent.type = FF_QUIT_EVENT;
+    //sdlevent.key.keysym.sym = SDLK_1;
 
+    SDL_PushEvent(&sdlevent);
 }
