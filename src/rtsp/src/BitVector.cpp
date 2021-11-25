@@ -1,6 +1,6 @@
 
 
-#include "BitVector.hh"
+#include "BitVector.h"
 
 BitVector::BitVector(unsigned char* baseBytePtr,
 		     unsigned baseBitOffset,
