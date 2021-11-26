@@ -1,32 +1,10 @@
 
-// https://github.com/monday0rsunday/ffmpeg-tutorial
-//https://gist.github.com/MarcoQin/d7d935e87a44410966ed8cad066953bc#file-ffmpeg_tutorial05-c
-//http://dranger.com/ffmpeg/tutorial01.html
-//https://github.com/monday0rsunday/ffmpeg-tutorial
-// tutorial05.c
-// A pedagogical video player that really works!
-//
-// Code based on FFplay, Copyright (c) 2003 Fabrice Bellard,
-// and a tutorial by Martin Bohme (boehme@inb.uni-luebeckREMOVETHIS.de)
-// Tested on Gentoo, CVS version 5/01/07 compiled with GCC 4.1.1
-// With updates from https://github.com/chelyaev/ffmpeg-tutorial
-// Updates tested on:
-// LAVC 54.59.100, LAVF 54.29.104, LSWS 2.1.101, SDL 1.2.15
-// on GCC 4.7.2 in Debian February 2015
-// Use
-//
-//gcc -g -o tutorial07 tutorial07.c -lavformat -lavcodec -lswscale -lavutil -lswresample -lz -lm -ldl `sdl2-config --cflags --libs`
-// to build (assuming libavformat and libavcodec are correctly installed,
-// and assuming you have sdl-config. Please refer to SDL docs for your installation.)
-//
-// Run using
-// tutorial07 myvideofile.mpg
-//
+// Player to play media use ffmpeg libraries
+// Run using Player <mediaFile> 
 // to play the video.
 
 //#define outsamplingRate 48000
 #define outsamplingRate 44100
-
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -1333,7 +1311,6 @@ void fmpPlayer_Stop()
         global_video_state->quit = 1;
     SDL_Event sdlevent;
     sdlevent.type = FF_QUIT_EVENT;
-    //sdlevent.key.keysym.sym = SDLK_1;
 
     SDL_PushEvent(&sdlevent);
 }
