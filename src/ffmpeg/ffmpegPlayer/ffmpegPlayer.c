@@ -403,7 +403,7 @@ int audio_decode_frame(VideoState *is, double *pts_ptr) {
         is->audio_pkt_data = pkt->data;
         is->audio_pkt_size = pkt->size;
         /* if update, update the audio clock w/pts */
-        if (pkt->pts != AV_NOPTS_VALUE) {
+        if ( is->audio_st && pkt->pts != AV_NOPTS_VALUE) {
             is->audio_clock = av_q2d(is->audio_st->time_base) * pkt->pts;
         }
     }
@@ -839,11 +839,11 @@ int stream_component_open(VideoState *is, int stream_index) {
         return -1;
     }
 
-    is->audio_st = NULL ;
-    is->audio_ctx = NULL ;
+    //is->audio_st = NULL ;
+    //is->audio_ctx = NULL ;
     
-    is->video_st = NULL ;
-    is->video_ctx = NULL ;
+   // is->video_st = NULL ;
+    //is->video_ctx = NULL ;
             
     switch (codecCtx->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
