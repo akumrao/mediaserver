@@ -407,7 +407,7 @@ int audio_decode_frame(VideoState *is, double *pts_ptr) {
         is->audio_pkt_data = pkt->data;
         is->audio_pkt_size = pkt->size;
         /* if update, update the audio clock w/pts */
-        if (pkt->pts != AV_NOPTS_VALUE) {
+        if (pkt->pts != AV_NOPTS_VALUE && is->audio_st) {
             is->audio_clock = av_q2d(is->audio_st->time_base) * pkt->pts;
         }
     }
