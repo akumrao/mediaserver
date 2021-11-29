@@ -128,7 +128,12 @@ namespace base {
             Store store;
             store.binary = binary;
             store.buff =  std::string(data, len );
-             store.isFirstFrame = is_first;
+            store.isFirstFrame = is_first;
+            
+            if (is_first && !first_frame)
+              first_frame = true; 
+
+            if (first_frame)
             dummy_queue.push(store);
             
             dummy_mutex.unlock();

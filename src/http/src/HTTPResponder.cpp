@@ -185,8 +185,13 @@ namespace base {
                 }
                 
                 );
-                                
-                closure->con->tcpsend( res.c_str(), res.size(), cb );
+                
+                try {
+                    closure->con->tcpsend(res.c_str(), res.size(), cb);
+                } catch (...) 
+                {
+                  SError  << " after_render closure->con->tcpsend(res.c_str(), res.size(), cb)" ;
+                }
 
              //   client->write_req.data = closure;
 

@@ -213,6 +213,7 @@ var hiddenInput = undefined;
                     }
                 }
                 else if (pass < 3) {
+                    console.log("got frame " + name );
                     return;
                 }
 
@@ -220,26 +221,33 @@ var hiddenInput = undefined;
                 if ((name=="moof") ) {
                     if (hasFirstSampleFlag(memview)) {
                        
-                        //console.log("got that special moof");
+                        console.log("got that special moof");
+
+			  if (queue.length  >  30 ) 
+                          {
+                         
+                             queue = [];
+
+                           }
                     }
                     
                 }
 
                 
-                // keep the latency to minimum
-                if(videoObj && source_buffer)
-                {
-                    let latest = videoObj.duration;
-                    if ((videoObj.duration >= buffering_sec) && 
-                        ((latest - videoObj.currentTime) > buffering_sec_seek)) {
-                        console.log("seek from ", videoObj.currentTime, " to ", latest);
-                        df = (videoObj.duration - videoObj.currentTime); // this much away from the last available frame
-                        if ((df > buffering_sec_seek)) {
-                            seek_to = videoObj.duration - buffering_sec_seek_distance;
-                            videoObj.currentTime = seek_to;
-                            }
-                    }
-                }
+                // // keep the latency to minimum
+                // if(videoObj && source_buffer)
+                // {
+                //     let latest = videoObj.duration;
+                //     if ((videoObj.duration >= buffering_sec) && 
+                //         ((latest - videoObj.currentTime) > buffering_sec_seek)) {
+                //         console.log("seek from ", videoObj.currentTime, " to ", latest);
+                //         df = (videoObj.duration - videoObj.currentTime); // this much away from the last available frame
+                //         if ((df > buffering_sec_seek)) {
+                //             seek_to = videoObj.duration - buffering_sec_seek_distance;
+                //             videoObj.currentTime = seek_to;
+                //             }
+                //     }
+                // }
 
                 queue.push(arr); // add to the end
                 if (verbose) { console.log("queue push:", queue.length); }
