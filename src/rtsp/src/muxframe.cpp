@@ -9,10 +9,13 @@
  */
 
 
-#include "frame.h"
+#include "muxframe.h"
 
 #include <sstream>
 
+namespace base {
+namespace fmp4 {
+    
 
 Frame::Frame() : n_slot(0),  mstimestamp(0), stream_index(-1) {
 }
@@ -191,7 +194,7 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
 }
 
 
-void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )
+void BasicFrame::copyBuf( uint8_t* buf , unsigned size )
 {
   payload.resize(size +nalstamp.size());
   
@@ -500,7 +503,8 @@ TextFrame::TextFrame() : Frame() {
     
 }
     
-    
+}
+}
     
     
     

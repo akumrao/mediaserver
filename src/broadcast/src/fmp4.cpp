@@ -238,7 +238,7 @@ namespace base {
 
         }
     
-        void ReadMp4::broadcast(const char * data, int size, bool binary   )
+        void ReadMp4::broadcast(const char * data, int size, bool binary, bool is_first  )
         {
            // conn->send( data, size, binary    );
             static int noCon =0;
@@ -252,9 +252,13 @@ namespace base {
 
             for (auto* connection :  this->GetConnections())
             {
+                net::HttpConnection* cn = (net::HttpConnection*)connection;
+                
+
+                
                  net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
                  if(con)
-                 con->push(data ,size, binary, false);
+                 con->push(data ,size, binary, is_first );
             }
 
         

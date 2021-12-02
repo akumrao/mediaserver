@@ -73,7 +73,7 @@ void DummyFrameFilter::go(Frame *frame) {
         #endif
         
         if(conn)
-         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true );
+         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->is_first );
         
         STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
@@ -100,7 +100,7 @@ void TextFrameFilter::go(Frame *frame) {
        SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
         
       if(conn)
-         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false );
+         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false, false );
    
 }
 

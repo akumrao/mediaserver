@@ -441,8 +441,6 @@ void MuxFrameFilter::go(Frame* frame) {
 
     // make a copy of the setup frames ..
        if (frame->type() == "SetupFrame") { // SETUPFRAME
-           
-           
         SetupFrame *setupframe = static_cast<SetupFrame*> (frame);
         if (setupframe->sub_type == SetupFrameType::stream_init) { // INIT
             if (setupframe->stream_index > 1) {
@@ -918,10 +916,12 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->slot = internal_frame.n_slot;
 
             if (strncmp(boxname, "ftyp", 4) == 0) {
+                internal_frame.is_first = true;
                 me->ftyp_frame = internal_frame;
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
             } else if (strncmp(boxname, "moov",4) == 0) {
+                internal_frame.is_first = true;
                 me->moov_frame= internal_frame;
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;

@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     
     base::cnfg::Configuration config;
 
-    config.load("/workspace/mediaserver/src/rtsp/main/config.js");
+    config.load("./config.js");
   
     json cnfg;
    
