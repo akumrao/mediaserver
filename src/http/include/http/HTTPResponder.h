@@ -40,21 +40,19 @@ namespace base {
             void onRequest(net::Request& request, net::Response& response) ;
         };
 
+        class render_baton;
         class HttpResponder : public ServerResponder
         /// Basic server responder (make echo?)
         {
         public:
 
-            HttpResponder(net::HttpBase* conn) :
-            ServerResponder(conn) {
-                STrace << "BasicResponder" << std::endl;
-            }
+            HttpResponder(net::HttpBase* conn) ;
+            
+            ~HttpResponder();
 
-            virtual void onClose() {
-                ;
-                LDebug("On close")
-
-            }
+            virtual void onClose(); 
+            
+            render_baton *closure {nullptr};
 
             void onRequest(net::Request& request, net::Response& response);
         };

@@ -142,6 +142,18 @@ class ReadMp4;
     FrameFilter *txt;
     
     //std::string fileName;
+
+   
+    bool foundsps{false};
+    bool foundpps{false};
+  
+
+    int fps{0};
+    int width{0};
+    int height{0};
+    
+  
+    //H264Framer obj;
     
  #if 0   
     /* Add an output stream. */
