@@ -2,7 +2,7 @@
 #define file_HEADER_GUARD
 
 #include "livedep.h"
-#include "frame.h"
+#include "muxframe.h"
 //#include "framefifo.h"
 #include "framefilter.h"
 

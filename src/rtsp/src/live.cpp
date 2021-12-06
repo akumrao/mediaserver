@@ -618,7 +618,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
    if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
    {
         fragmp4_muxer->sendMeta();
-        fragmp4_muxer->resetParser = false;
+        //fragmp4_muxer->resetParser = false;
    }
 
    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter

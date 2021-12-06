@@ -99,18 +99,18 @@ void VideoFrameSink::Play()
      ByteStreamFileSource* fileSource  = ByteStreamFileSource::createNew(env, fStreamId);
      
      
-    std::string tmp =  "/var/tmp/videos/test1.264";
+    // std::string tmp =  "/var/tmp/videos/test1.264";
    
     
-    std::string tmp1 =  "/var/tmp/test.264";
+    // std::string tmp1 =  "/var/tmp/test.264";
      
     
-    static int nCount = 0;
+    // static int nCount = 0;
    
-    if( nCount++ % 2 == 0 )
-    fStreamId = strDup((char*)tmp.c_str());
-    else
-    fStreamId = strDup((char*)tmp1.c_str());    
+    // if( nCount++ % 2 == 0 )
+    // fStreamId = strDup((char*)tmp.c_str());
+    // else
+    // fStreamId = strDup((char*)tmp1.c_str());    
    
      
     
