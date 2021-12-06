@@ -844,7 +844,7 @@ namespace base {
            
            AVRational  videotimebase;//= (AVRational){ 1, };
            videotimebase.num = 1;
-           videotimebase.den = STREAM_FRAME_RATE;
+           videotimebase.den = 25;
 
            AVRational  audiotimebase ;//= (AVRational){ 1,SAMPLINGRATE };
            audiotimebase.num = 1;

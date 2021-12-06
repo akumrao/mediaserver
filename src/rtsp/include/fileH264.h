@@ -2,11 +2,11 @@
 #define file_HEADER_GUARD
 
 #include "livedep.h"
-#include "frame.h"
+#include "muxframe.h"
 //#include "framefifo.h"
 #include "framefilter.h"
 
-//#include "logging.h"
+#include "H264Framer.h"
 
 
 namespace base {
@@ -125,8 +125,15 @@ public:
   
   H264VideoStreamFramer* videoSource;
   
-   bool foundsps{false};
-   bool foundpps{false};
+  bool foundsps{false};
+  bool foundpps{false};
+  
+  int fps{0};
+  int width{0};
+  int height{0};
+    
+  
+  H264Framer obj;
             
   
   

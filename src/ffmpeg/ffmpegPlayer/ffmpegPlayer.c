@@ -151,6 +151,7 @@ enum {
 SDL_Window *screen = NULL;
 SDL_mutex *screen_mutex;
 SDL_Renderer *renderer = NULL;
+static SDL_AudioDeviceID audio_dev;
 
 /* Since we only have one decoding thread, the Big Struct
    can be global in case we need it. */
@@ -403,7 +404,7 @@ int audio_decode_frame(VideoState *is, double *pts_ptr) {
         is->audio_pkt_data = pkt->data;
         is->audio_pkt_size = pkt->size;
         /* if update, update the audio clock w/pts */
-        if (pkt->pts != AV_NOPTS_VALUE) {
+        if ( is->audio_st && pkt->pts != AV_NOPTS_VALUE) {
             is->audio_clock = av_q2d(is->audio_st->time_base) * pkt->pts;
         }
     }
@@ -826,7 +827,9 @@ int stream_component_open(VideoState *is, int stream_index) {
         wanted_spec.callback = audio_callback;
         wanted_spec.userdata = is;
 
-        if (SDL_OpenAudio(&wanted_spec, &spec) < 0) {
+        //if (SDL_OpenAudio(&wanted_spec, &spec) < 0) {
+		audio_dev = SDL_OpenAudioDevice(NULL, 0, &wanted_spec, &spec, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+		if (audio_dev < 0) {
             fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
             return -1;
         }
@@ -839,11 +842,11 @@ int stream_component_open(VideoState *is, int stream_index) {
         return -1;
     }
 
-    is->audio_st = NULL ;
-    is->audio_ctx = NULL ;
+    //is->audio_st = NULL ;
+    //is->audio_ctx = NULL ;
     
-    is->video_st = NULL ;
-    is->video_ctx = NULL ;
+   // is->video_st = NULL ;
+    //is->video_ctx = NULL ;
             
     switch (codecCtx->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
@@ -867,7 +870,7 @@ int stream_component_open(VideoState *is, int stream_index) {
 
             memset(&is->audio_pkt, 0, sizeof (is->audio_pkt));
             packet_queue_init(&is->audioq);
-            SDL_PauseAudio(0);
+			SDL_PauseAudioDevice(audio_dev, 0);
             break;
         case AVMEDIA_TYPE_VIDEO:
             is->videoStream = stream_index;
@@ -913,8 +916,8 @@ void freeFFMpeg(VideoState *is) {
 
     if(is->audio_ctx)
     {
-        SDL_PauseAudio(1); /* start audio playing.  if flase*/
-        SDL_CloseAudio();
+        SDL_PauseAudioDevice(audio_dev, 1); /* start audio playing.  if flase*/
+        SDL_CloseAudioDevice(audio_dev);
     }
 
 

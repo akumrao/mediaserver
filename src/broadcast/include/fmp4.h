@@ -165,7 +165,7 @@ public:
      std::atomic<int> critical_sec{0};
  public:
      
-     void broadcast(const char * data, int size, bool binary  );
+     void broadcast(const char * data, int size, bool binary,  bool is_first  );
      void on_read(net::Listener* connection, const char* msg, size_t len) ;
      
 //    virtual void onConnect(    int socketID                        );

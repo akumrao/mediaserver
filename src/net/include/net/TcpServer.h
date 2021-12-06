@@ -17,7 +17,7 @@
 #include <string>
 #include <unordered_set>
 
-//#include <mutex>
+#include <mutex>
 
 namespace base
 {
@@ -136,7 +136,7 @@ namespace base
             int child_worker_count{0};
             
             
-            //std::mutex g_num_mutex2;
+            std::mutex con_mutex;
             
         };
 

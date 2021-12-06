@@ -56,7 +56,7 @@ namespace base {
                 
                 //#if 0
                 std::string filepath(".");
-               // std::string filepath("/workspace/mediaserver/src/rtsp/main");
+                //std::string filepath("/workspace/mediaserver/src/rtsp/main");
                 filepath += closure->path;
                 
                 
@@ -169,23 +169,24 @@ namespace base {
                 rep << closure->result;
                 std::string res = rep.str();
 
-               // SDebug << res;
+               // SInfo << res;
 
                 //uv_buf_t resbuf;
               //  resbuf.base = (char *) res.c_str();
                // resbuf.len = res.size();
              
-                auto cb =  onSendCallback([closure ](bool sent)
+                auto cb =  onSendCallback([&closure ](bool sent)
                 {
                     if (sent)
                     {
                         closure->con->Close();
-                        delete closure;
+                       // delete closure; //Sanjay modified for preventing excption double delete in queue
+                      //  closure = NULL;
                     }
                 }
                 
                 );
-                                
+                  
                 closure->con->tcpsend( res.c_str(), res.size(), cb );
 
              //   client->write_req.data = closure;
@@ -214,6 +215,35 @@ namespace base {
             connection()->send((const char *) "hello universe", 14);
             connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
         }
+        
+        
+        
+       HttpResponder::HttpResponder(net::HttpBase* conn) : ServerResponder(conn) 
+       {
+            closure = new render_baton();
+           
+            SInfo << "HttpResponder()" <<  this;
+                
+       }
+          
+        HttpResponder::~HttpResponder() 
+       {
+            SInfo << "~HttpResponder()" <<  this;
+            if(closure)
+            delete closure;
+                    
+           closure = nullptr;
+                    
+       }
+        
+        
+        void  HttpResponder::onClose() {
+            
+            SInfo << "onClose close  render_baton " << closure ;
+           
+         
+           // SInfo << ": onClose:\n" ;
+        }
 
         void HttpResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
@@ -224,7 +254,7 @@ namespace base {
             auto& request1 = connection()->_request;
 
             // Log incoming requests
-            SDebug << ": response:\n" << response << std::endl;
+            SInfo << ": response:\n" << response ;
 
 
             //  response.setContentLength(14); // headers will be auto flushed
@@ -244,9 +274,11 @@ namespace base {
            file_to_open = request1.getURI();
 #endif
 
-            SDebug << "Response file Path: " << file_to_open << std::endl;
+            SInfo << "Response file Path: " << file_to_open << std::endl;
 
-            render_baton *closure = new render_baton();
+            
+            
+            SInfo << "open render_baton " << closure ;
             
             
             closure->path = file_to_open;

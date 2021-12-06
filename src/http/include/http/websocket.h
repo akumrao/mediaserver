@@ -289,6 +289,7 @@ namespace base {
             std::queue< Store> dummy_queue;
             
             bool dropping{false};
+            bool first_frame{false};
         };
 
 

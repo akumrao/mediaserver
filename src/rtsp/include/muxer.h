@@ -1,7 +1,7 @@
 #ifndef muxer_HEADER_GUARD
 #define muxer_HEADER_GUARD
 
-#include "frame.h"
+#include "muxframe.h"
 //#include "constant.h"
 #include "framefilter.h"
 #include <condition_variable>
@@ -9,7 +9,7 @@
 #include <chrono>
  
 
-#define STREAM_FRAME_RATE 25 
+//#define STREAM_FRAME_RATE 25 
 #define SAMPLINGRATE 44100
 #define AUDIOSAMPLE 1024
 
@@ -44,6 +44,10 @@ protected:
     
 public: // so that child static methods can access..
     uint32_t missing, ccf;
+    
+  int fps{0};
+  int width{0};
+  int height{0};
     
 protected: //libav stuff
     AVFormatContext               *av_format_ctx;

@@ -97,7 +97,24 @@ void afterPlaying(void* clientData) {
 void VideoFrameSink::Play()
 {
      ByteStreamFileSource* fileSource  = ByteStreamFileSource::createNew(env, fStreamId);
+     
+     
+    // std::string tmp =  "/var/tmp/videos/test1.264";
    
+    
+    // std::string tmp1 =  "/var/tmp/test.264";
+     
+    
+    // static int nCount = 0;
+   
+    // if( nCount++ % 2 == 0 )
+    // fStreamId = strDup((char*)tmp.c_str());
+    // else
+    // fStreamId = strDup((char*)tmp1.c_str());    
+   
+     
+    
+    
     if (fileSource == NULL) {
     env << "Unable to open file \"" << fStreamId
          << "\" as a byte-stream file source\n";
@@ -113,6 +130,48 @@ void VideoFrameSink::Play()
     env << "Beginning to read from file...\n";
     
     this->startPlaying(*videoSource, afterPlaying, this);
+    
+    
+    const char* codec_name= "H264";
+
+    SInfo << "VideoFrameSink: constructor: codec_name =" << codec_name << ", subsession_index =" << subsession_index << std::endl;
+
+    foundsps = false;
+    foundpps = false;        
+    // https://ffmpeg.org/doxygen/3.0/avcodec_8h_source.html
+    if (strcmp(codec_name, "H264") == 0) { // NEW_CODEC_DEV // when adding new codecs, make changes here
+
+        fragmp4_muxer->deActivate();
+
+        // WARNING: force subsession index to 0
+        subsession_index = 0;
+
+        SDebug << "VideoFrameSink: init H264 Frame" << std::endl;
+        // prepare payload frame
+        basicframe.media_type = AVMEDIA_TYPE_VIDEO;
+        basicframe.codec_id = AV_CODEC_ID_H264;
+        basicframe.stream_index = subsession_index;
+        // prepare setup frame
+        setupframe.sub_type = SetupFrameType::stream_init;
+        setupframe.media_type = AVMEDIA_TYPE_VIDEO;
+        setupframe.codec_id = AV_CODEC_ID_H264; // what frame types are to be expected from this stream
+        setupframe.stream_index = subsession_index;
+        setupframe.mstimestamp = CurrentTime_milliseconds();
+        // send setup frame
+        //info->run(&setupframe);
+        fragmp4_muxer->run(&setupframe);
+        //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
+    } else {
+        SInfo << "VideoFrameSink: constructor: codec_name =" << codec_name << " not supported yet" << std::endl;
+        return; // no return here!  You won't do sendParameteSets() ..!
+    }
+            
+    
+    
+    
+    
+    
+    
 }
 
 VideoFrameSink::VideoFrameSink(UsageEnvironment& env, VideoClientState& scs,  FrameFilter* fragmp4_muxer, FrameFilter *info, FrameFilter *txt, char const* streamId) : env(env), MediaSink(env), scs(scs), fragmp4_muxer(fragmp4_muxer),info(info),txt(txt), on(true), fSubsession(*(scs.subsession))
@@ -131,42 +190,6 @@ VideoFrameSink::VideoFrameSink(UsageEnvironment& env, VideoClientState& scs,  Fr
  
  
   
-  const char* codec_name= "H264";
-  
-  SInfo<< "VideoFrameSink: constructor: codec_name ="<< codec_name << ", subsession_index ="<<subsession_index <<std::endl;
- 
-  
-  
-  // https://ffmpeg.org/doxygen/3.0/avcodec_8h_source.html
-  if (strcmp(codec_name,"H264")==0) 
-  { // NEW_CODEC_DEV // when adding new codecs, make changes here
-
-    fragmp4_muxer->deActivate();
-
-    // WARNING: force subsession index to 0
-    subsession_index = 0;
-
-   SDebug << "VideoFrameSink: init H264 Frame"<<std::endl;
-    // prepare payload frame
-    basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
-    basicframe.codec_id             =AV_CODEC_ID_H264;
-    basicframe.stream_index     =subsession_index;
-    // prepare setup frame
-    setupframe.sub_type             =SetupFrameType::stream_init;
-    setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
-    setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
-    setupframe.stream_index     = subsession_index;
-    setupframe.mstimestamp      = CurrentTime_milliseconds();
-    // send setup frame
-    //info->run(&setupframe);
-    fragmp4_muxer->run(&setupframe);
-    //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
-  }
-  else 
-  {
-     SInfo<< "VideoFrameSink: constructor: codec_name ="<< codec_name << " not supported yet" <<std::endl;
-     return; // no return here!  You won't do sendParameteSets() ..!
-  }
   
   // some beautiful day enable audio.  At the moment, it messes up some things (for example, re-transmitting streams, etc.)
   
@@ -257,23 +280,49 @@ void VideoFrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncated
 
    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
    {
-        if(!foundsps ||!foundpps )
-        {
-            info->run(&basicframe);
-            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-            basicframe.payload.resize(basicframe.payload.capacity());
-        
-        }
-        
-       if(!foundsps && basicframe.h264_pars.slice_type == H264SliceType::sps  )
+                       
+       unsigned num_units_in_tick, time_scale;
+
+     
+        //  analyze_seq_parameter_set_data(buffer,sz, num_units_in_tick, time_scale);
+         
+       
+       if( !foundsps &&  basicframe.h264_pars.slice_type == H264SliceType::sps  )
        {    
+           
+           obj.analyze_seq_parameter_set_data(fReceiveBuffer , frameSize, num_units_in_tick, time_scale);
+       
+           fps = obj.fps ;
+           height = obj.height;        
+           width = obj.width;        
+                   
+           
+           
+           basicframe.fps = obj.fps ;
+           basicframe.height = obj.height;        
+           basicframe.width = obj.width;
+           
+           SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
+                   
+           info->run(&basicframe);
+           fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+           basicframe.payload.resize(basicframe.payload.capacity());
+           
            foundsps  = true;
            
        }
        
-       if(!foundpps && basicframe.h264_pars.slice_type == H264SliceType::pps  )
+       if( !foundpps &&  basicframe.h264_pars.slice_type == H264SliceType::pps  )
        {    
-           foundpps  = true;
+          
+           
+            SInfo <<  " Got PPS fps ";
+            
+            info->run(&basicframe);
+            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+            basicframe.payload.resize(basicframe.payload.capacity());
+            
+             foundpps  = true;
            
        }
                
@@ -364,9 +413,12 @@ Boolean VideoFrameSink::continuePlaying() {
   
   fSource->getNextFrame(fReceiveBuffer, DUMMY_SINK_RECEIVE_BUFFER_SIZE, afterGettingFrame, this, onSourceClosure, this);
   
-  
+  if(fps)
+  {
   uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
-                    std::this_thread::sleep_for(std::chrono::microseconds(300000 - deltaTimeMillis));
+    //std::this_thread::sleep_for(std::chrono::microseconds(300000 - deltaTimeMillis));
+  std::this_thread::sleep_for(std::chrono::microseconds((1000000 / fps) - deltaTimeMillis));
+  }
   
   return True;
 }

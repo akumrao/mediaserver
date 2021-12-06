@@ -161,14 +161,14 @@ void MuxFrameFilter::initMux() {
                 AVStream *av_stream;
 
                 av_codec_context = avcodec_alloc_context3(avcodec_find_decoder(codec_id));
-                av_codec_context->width = 720; // dummy values .. otherwise mkv muxer refuses to co-operate
-                av_codec_context->height = 576;
+                av_codec_context->width = width; // dummy values .. otherwise mkv muxer refuses to co-operate
+                av_codec_context->height = height;
                 av_codec_context->bit_rate = 1024 * 1024;
 
 
                 AVRational tb;
                 tb.num = 1;
-                tb.den = STREAM_FRAME_RATE;
+                tb.den =fps;
                                 
                 av_codec_context->time_base = tb;//  (AVRational){ 1, STREAM_FRAME_RATE };
 
@@ -392,11 +392,13 @@ void MuxFrameFilter::closeMux() {
 }
 
 void MuxFrameFilter::deActivate() {
+    
+    SInfo << "deActivate";
+    
     if (initialized) {
         av_write_trailer(av_format_context);
         closeMux();
         av_dict_free(&av_dict);
-
 
 
         streams.clear();
@@ -503,7 +505,11 @@ void MuxFrameFilter::go(Frame* frame) {
 #ifdef MUXSTATE
                     std::cout << "MuxFrameFilter: go: state: appending extradata" << std::endl;
 #endif
-                  
+                    
+                    fps = basicframe->fps;
+                    width= basicframe->width;
+                    height = basicframe->height;
+                    
                     extradata_videoframe.payload.insert(
                             extradata_videoframe.payload.end(),
                             basicframe->payload.begin(),
@@ -910,10 +916,12 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->slot = internal_frame.n_slot;
 
             if (strncmp(boxname, "ftyp", 4) == 0) {
+                internal_frame.is_first = true;
                 me->ftyp_frame = internal_frame;
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
             } else if (strncmp(boxname, "moov",4) == 0) {
+                internal_frame.is_first = true;
                 me->moov_frame= internal_frame;
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;

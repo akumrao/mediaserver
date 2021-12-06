@@ -7,7 +7,7 @@
  * (at your option) any later version.
  *
  */
-
+// code changes are copied from libuv test-ipc-send-recv.c
 
 #include "net/TcpServer.h"
 #include "base/logger.h"
@@ -32,12 +32,16 @@ namespace base
     {
 
         static void after_pipe_write(uv_write_t* req, int status) {
-
-                free(req->data);
+	 #ifdef _WIN32 
+              //  free(req->data);
                // free_write_req(req);
               //  uv_close((uv_handle_t*) req->handle, nullptr);
                
                 free(req);
+         #else
+          free(req->data);
+          free(req); 
+         #endif
                 return;
         }
         
@@ -61,6 +65,12 @@ namespace base
    
         void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
             
+        
+
+            if (nread == UV_EOF || nread == UV_ECONNABORTED) {
+                return;
+            }
+
             if (nread < 0) {
                 if (nread != UV_EOF)
                     fprintf(stderr, "Read error %s\n", uv_err_name(nread));
@@ -69,10 +79,18 @@ namespace base
             }
 
             uv_pipe_t *pipe = (uv_pipe_t*) q;
-            if (!uv_pipe_pending_count(pipe)) {
-                fprintf(stderr, "No pending count\n");
-                return;
-            }
+
+	    uv_handle_type pending;	
+            do
+            {
+                 if (!uv_pipe_pending_count(pipe))
+               {
+                  SError <<   "No pending count";
+                  return;
+                }
+
+             pending = uv_pipe_pending_type(pipe);
+               
 
             child_worker *tmp = (child_worker*) pipe->data;
 
@@ -82,21 +100,12 @@ namespace base
             free(buf->base);
            // SDebug <<  "on_new_worker_connection  loppworker" << tmp->loppworker    <<  "  threadid "  <<  tmp->thread;
                     
-           tmp->obj->worker_connection(tmp->loppworker, q);
-           
-          //  g_num_mutex1.unlock();
+               tmp->obj->worker_connection(tmp->loppworker, q);
+            } while (uv_pipe_pending_count(pipe) > 0);
 
-//            uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
-//            uv_tcp_init(tmp->loppworker, client); //arvind
-//            if (uv_accept(q, (uv_stream_t*) client) == 0) {
-//                SDebug << __func__;
-//                uv_os_fd_t fd;
-//                uv_fileno((const uv_handle_t*) client, &fd);
-//                fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
-//                uv_read_start((uv_stream_t*) client, alloc_buffer_worker, echo_read);  // arvind
-//            } else {
-//                uv_close((uv_handle_t*) client, NULL);
-//            }
+
+
+
         }
         
         void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
@@ -114,15 +123,15 @@ namespace base
 
           
 
-          err = uv_pipe_init(handle->loop, &tmp->channelqueue, 1);
-        err = uv_accept((uv_stream_t*)handle, (uv_stream_t*)&tmp->channelqueue);
+         err = uv_pipe_init(handle->loop, &tmp->channelqueue, 1);
+         err = uv_accept((uv_stream_t*)handle /*queue */, (uv_stream_t*)&tmp->channelqueue);
           ASSERT(err == 0);
 
           //send_recv_start();
 
-          tmp->channelqueue.data = tmp;
+         tmp->channelqueue.data = tmp;
 
-          err = uv_read_start((uv_stream_t*)&tmp->channelqueue,  alloc_buffer_worker,  on_new_worker_connection);  // arvind
+         err = uv_read_start((uv_stream_t*)&tmp->channelqueue,  alloc_buffer_worker,  on_new_worker_connection);  // arvind
           if (err != 0)
             LError("workermain() failed: %s", uv_strerror(err));
 
@@ -139,7 +148,7 @@ namespace base
 
 
    #ifdef _WIN32 
-            err = uv_pipe_init(tmp->loppworker, &tmp->queue, 0 /* ipc */);
+            err = uv_pipe_init(tmp->loppworker, &tmp->queue, 0 /* ipc */);   //listen
             if (err != 0)
               LError("workermain() failed: %s", uv_strerror(err));
 
@@ -157,9 +166,13 @@ namespace base
             err = uv_listen((uv_stream_t*)&tmp->queue, SOMAXCONN, listen_cb);
             ASSERT(err == 0);
 
-             if (err != 0)
+            if (err != 0)
               LError("workermain() failed: %s", uv_strerror(err));
+             
+             int r = uv_loop_close(tmp->loppworker);// for windows close
 
+             uv_run(tmp->loppworker, UV_RUN_DEFAULT);
+		
 #else
   	    err = uv_pipe_init(tmp->loppworker, &tmp->queue, 1/* ipc */);
             err = uv_pipe_open(&tmp->queue, tmp->fds[1]);
@@ -170,8 +183,9 @@ namespace base
 	    if (err != 0)
               LError("workermain() failed: %s", uv_strerror(err));
 
+	    uv_run(tmp->loppworker, UV_RUN_DEFAULT);
+
 #endif
-            uv_run(tmp->loppworker, UV_RUN_DEFAULT);
             
             SDebug << "close workermain ";
 
@@ -468,7 +482,9 @@ namespace base
                 if (UserOnNewTcpConnection(connection))
                 {
                        SDebug << "TcpServerBase new connection "  << connection;
+                    con_mutex.lock();
                     this->connections.insert(connection);
+                    con_mutex.unlock();
                 }
                 else
                     delete connection;
@@ -522,8 +538,10 @@ namespace base
             // Notify the subclass and delete the connection if not accepted by the subclass.
             if (UserOnNewTcpConnection(connection))
             {
-                   SDebug << "TcpServerBase new connection "  << connection;
+                SDebug << "TcpServerBase new connection "  << connection;
+                con_mutex.lock();
                 this->connections.insert(connection);
+                con_mutex.unlock();
             }
             else
                 delete connection;
@@ -534,16 +552,17 @@ namespace base
             
             SDebug << " TcpConnectionBase close "  << connection;
               
-
-            // Remove the TcpConnectionBase from the set.
-            if( this->connections.find(connection) != this->connections.end() )
-            {
-                this->connections.erase(connection);
-                // Notify the subclass.
+            con_mutex.lock();
+            // // Remove the TcpConnectionBase from the set.
+             if( this->connections.find(connection) != this->connections.end() )
+             {
                  UserOnTcpConnectionClosed(connection);
-                // Delete it.
-                delete connection;
-            }
+                 this->connections.erase(connection);
+                 // Notify the subclass.
+                 // Delete it.
+                 delete connection;
+             }
+            con_mutex.unlock();
         }
         
         uv_tcp_t* TcpServerBase::BindTcp(std::string &ip, int port) {
@@ -585,7 +604,7 @@ namespace base
         }
 
         /******************************************************************************************************************/
-        static constexpr size_t MaxTcpConnectionsPerServer{ 1000};
+        static constexpr size_t MaxTcpConnectionsPerServer{ 4000};
 
         /* Instance methods. */
 

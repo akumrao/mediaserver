@@ -65,7 +65,13 @@ namespace base {
                 return;
             }
             
-             _parser.parse((const char*) data, len);
+           try {
+              _parser.parse((const char*)data, len);
+            }
+           catch(...) {
+           
+               SInfo << "Excetion at parser ";
+           }
              
           //  if(!wsAdapter)
            // this->listener->on_read(this, data, len);

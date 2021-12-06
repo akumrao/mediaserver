@@ -2,7 +2,7 @@
 ### CUSTOMIZE BELOW HERE #######################################################
 
 LIVE555_ROOT = /workspace/live
-FFMPEG_ROOT = /export/views/video/ffmpeg
+FFMPEG_ROOT = /workspace/ffmpeg
 
 CC	= gcc
 CXX     = g++

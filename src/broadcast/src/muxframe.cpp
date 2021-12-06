@@ -194,7 +194,7 @@ void BasicFrame::copyFromAVPacket(AVPacket *pkt) {
 }
 
 
-void BasicFrame::copyBuf( u_int8_t* buf , unsigned size )
+void BasicFrame::copyBuf( uint8_t* buf , unsigned size )
 {
   payload.resize(size +nalstamp.size());
   
