@@ -505,27 +505,10 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   
   
   // https://ffmpeg.org/doxygen/3.0/avcodec_8h_source.html
-  if (strcmp(codec_name,"H264")==0) { // NEW_CODEC_DEV // when adding new codecs, make changes here
+  if (strcmp(codec_name,"H264")==0) 
+  { // NEW_CODEC_DEV // when adding new codecs, make changes here
 
-    fragmp4_muxer->deActivate();
-
-    // WARNING: force subsession index to 0
-    subsession_index = 0;
-
-   SDebug << "FrameSink: init H264 Frame"<<std::endl;
-    // prepare payload frame
-    basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
-    basicframe.codec_id             =AV_CODEC_ID_H264;
-    basicframe.stream_index     =subsession_index;
-    // prepare setup frame
-    setupframe.sub_type             =SetupFrameType::stream_init;
-    setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
-    setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
-    setupframe.stream_index     = subsession_index;
-    setupframe.mstimestamp      = CurrentTime_milliseconds();
-    // send setup frame
-    //info->run(&setupframe);
-    fragmp4_muxer->run(&setupframe);
+      parseH264Header();
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
   else 
@@ -584,6 +567,46 @@ void FrameSink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned
 // If you don't want to see debugging output for each received frame, then comment out the following line:
 // #define DEBUG_PRINT_EACH_RECEIVED_FRAME 1
 
+
+bool FrameSink::parseH264Header() 
+{
+    int ret = 0;
+   // AVCodec *codec = NULL;
+  //  AVCodecContext *cdc_ctx = NULL;
+    fragmp4_muxer->deActivate();
+    foundsps = false;
+    foundpps = false;
+
+    AVPacket *pkt = NULL;
+
+    SetupFrame        setupframe;  ///< This frame is used to send subsession information
+
+    subsession_index = 0;
+
+    basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
+    basicframe.codec_id             =AV_CODEC_ID_H264;
+    basicframe.stream_index     =subsession_index;
+    // prepare setup frame
+    setupframe.sub_type             =SetupFrameType::stream_init;
+    setupframe.media_type           =AVMEDIA_TYPE_VIDEO;
+    setupframe.codec_id             =AV_CODEC_ID_H264;   // what frame types are to be expected from this stream
+    setupframe.stream_index     = subsession_index;
+    setupframe.mstimestamp      = CurrentTime_milliseconds();
+    // send setup frame
+
+    info->run(&setupframe);
+    fragmp4_muxer->run(&setupframe);
+
+    //cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
+    //cur_ptr = in_buffer;
+
+//           avcodec_close(cdc_ctx);
+//            avcodec_free_context(&cdc_ctx);
+    return  true;
+
+}
+        
+        
 void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
   // We've just received a frame of data.  (Optionally) print out information about it:
 #ifdef DEBUG_PRINT_EACH_RECEIVED_FRAME
@@ -615,29 +638,85 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
  // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
   
    scs.setFrame();
-   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
-   {
+   
+    if ( foundsps && foundpps && basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+    {
         fragmp4_muxer->sendMeta();
-        //fragmp4_muxer->resetParser = false;
-   }
+       // fragmp4_muxer->resetParser = false;
+    }
 
-   if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
-   {
-       //info->run(&basicframe);
-       basicframe.payload.resize(basicframe.payload.capacity());
-   }
-   else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
-        //info->run(&basicframe);
+    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+    {
+
+       unsigned num_units_in_tick, time_scale;
+
+
+        if(  basicframe.h264_pars.slice_type == H264SliceType::sps  )
+        {    
+            obj.analyze_seq_parameter_set_data(fReceiveBuffer , frameSize, num_units_in_tick, time_scale);
+
+            if (fps != obj.fps || width != obj.width || height != obj.height)
+            {
+                parseH264Header();
+                SInfo <<  " Got SPS fps "  << obj.fps << " width "  << obj.width  <<  " height " << obj.height ;
+            }
+
+           //uint8_t *p = videopkt->data +4;
+
+
+            if (!foundpps)
+            {
+                fps = obj.fps;
+                height = obj.height;
+                width = obj.width;
+
+                basicframe.fps = obj.fps;
+                basicframe.height = obj.height;
+                basicframe.width = obj.width;
+
+                // SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
+
+                info->run(&basicframe);
+                fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+                basicframe.payload.resize(basicframe.payload.capacity());
+            }
+
+           foundsps  = true;
+
+        }
+
+        if( !foundpps &&  basicframe.h264_pars.slice_type == H264SliceType::pps  )
+        {    
+
+
+           // SInfo <<  " Got PPS fps ";
+
+            info->run(&basicframe);
+            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+            basicframe.payload.resize(basicframe.payload.capacity());
+
+             foundpps  = true;
+
+
+        }
+
+
+    }
+    else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
+    //info->run(&basicframe);
         basicframe.payload.resize(basicframe.payload.capacity());
-   }
-   else
-   {
-        //info->run(&basicframe);
+    }
+    else if (foundsps && foundpps  )
+    {
+    //info->run(&basicframe);
         fragmp4_muxer->run(&basicframe); // starts the frame filter chain
         basicframe.payload.resize(basicframe.payload.capacity());
-        
-   }
-                    
+
+        // framecount++;
+
+    }
+
+                
   
   // flag that indicates that we got a frame
   
@@ -687,6 +766,58 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
                     
   
   scs.setFrame(); // flag that indicates that we got a frame
+  
+  
+  if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+  {
+                       
+       unsigned num_units_in_tick, time_scale;
+
+     
+        //  analyze_seq_parameter_set_data(buffer,sz, num_units_in_tick, time_scale);
+         
+       
+       if( !foundsps &&  basicframe.h264_pars.slice_type == H264SliceType::sps  )
+       {    
+           
+           obj.analyze_seq_parameter_set_data(fReceiveBuffer , frameSize, num_units_in_tick, time_scale);
+       
+           fps = obj.fps ;
+           height = obj.height;        
+           width = obj.width;        
+                   
+           
+           
+           basicframe.fps = obj.fps ;
+           basicframe.height = obj.height;        
+           basicframe.width = obj.width;
+           
+           SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
+                   
+           info->run(&basicframe);
+           fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+           basicframe.payload.resize(basicframe.payload.capacity());
+           
+           foundsps  = true;
+           
+       }
+       
+       if( !foundpps &&  basicframe.h264_pars.slice_type == H264SliceType::pps  )
+       {    
+          
+           
+            SInfo <<  " Got PPS fps ";
+            
+            info->run(&basicframe);
+            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+            basicframe.payload.resize(basicframe.payload.capacity());
+            
+             foundpps  = true;
+           
+       }
+      
+   }
+  
   
   // std::cerr << "BufferSource: IN0: " << basicframe ;
   //info->run(&basicframe);

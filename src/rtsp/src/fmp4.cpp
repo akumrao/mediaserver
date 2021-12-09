@@ -110,7 +110,7 @@ namespace base {
                if( got == "reset")
                {
                     //SInfo  << "reset";
-                    fragmp4_muxer->resetParser = true ;//  
+                    //fragmp4_muxer->resetParser = true ;//  
                }
                else
                {
@@ -123,7 +123,7 @@ namespace base {
                         ffparser->deregisterStreamCall(*ctx);
                         
 
-                        fragmp4_muxer->resetParser = true ;
+                        //fragmp4_muxer->resetParser = true ;
 
                         Settings::configuration.rtsp2 = got;
 
