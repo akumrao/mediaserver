@@ -1,3 +1,8 @@
+/*  For testing reset api use Postman
+ * https://web.postman.co/workspace/My-Workspace~292b44c7-cae4-44d6-8253-174622f0233e/request/create?requestId=e6995876-3b8c-4b7e-b170-83a733a631db
+ */
+
+
 #include "Settings.h"
 #include "base/error.h"
 #include "base/logger.h"
@@ -13,7 +18,7 @@
 
 struct Settings::Configuration Settings::configuration;
 
-
+std::mutex Settings::mutexNode;
 
 /* Class methods. */
 
@@ -213,4 +218,76 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
 	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
+
+
+void Settings::postNode(json &node ) // complete json
+{
+    mutexNode.lock();
+          
+    Settings::configuration.rtsp = node ;
+    
+    mutexNode.unlock();
+     
+}
+
+bool Settings::putNode(json &node , std::vector<std::string> & vec )  // only one node
+{
+    bool ret = false;
+          
+    json rtsp =  Settings::configuration.rtsp["rtsp"] ;
+    
+    for (auto& [key, value] : node.items())
+    {
+       
+       if (rtsp.find(key) != rtsp.end()) 
+       {
+           
+            mutexNode.lock();
+            rtsp[key] = value;
+            mutexNode.unlock();
+            vec.push_back(key);
+            ret = true;
+       }
+    }
+    
+    return ret;
+     
+}
+
+
+bool Settings::deleteNode(json &node , std::vector<std::string> & vec  ) 
+{
+    bool ret = false;
+          
+    json rtsp =  Settings::configuration.rtsp["rtsp"] ;
+    
+    for (auto& [key, value] : node.items())
+    {
+      
+       if (rtsp.find(key) != rtsp.end()) 
+       {
+            mutexNode.lock();
+            rtsp.erase(key);
+            mutexNode.unlock();
+            vec.push_back(key);
+            ret = true;
+       }
+       
+    }
+    
+    return ret;
+     
+}
+
+std::string Settings::getNode() 
+{
+    
+    std::string ret;
+    mutexNode.lock();
+    ret =  Settings::configuration.rtsp.dump(4) ;
+    mutexNode.unlock();
+    return ret;  
+}
+
+
 #undef LOGGING_LOG_TO_FILE

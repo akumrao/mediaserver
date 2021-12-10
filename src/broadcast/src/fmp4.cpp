@@ -6,8 +6,9 @@
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
+  for testing reset api use Postman
+ * https://web.postman.co/workspace/My-Workspace~292b44c7-cae4-44d6-8253-174622f0233e/request/create?requestId=e6995876-3b8c-4b7e-b170-83a733a631db
  */
-
 
 #include "fmp4.h"
 
@@ -47,28 +48,25 @@ namespace base {
         }
         
         
-         void HttpResponder::onPayload(const std::string&  body )
+         void HttpPostResponder::onPayload(const std::string&  body )
          {
-            
-              
-              
+             
              try
              {
                 settingCam = json::parse(body.c_str());
                 
-                Settings::configuration.rtsp = settingCam["rtsp"];
-                
+                Settings::postNode( settingCam);
+               
                 SInfo << "reconfigure Camera settings " << body << std::endl;
              }
              catch(...)
              {
                  settingCam = nullptr;
              }
-                  
-              
               
          }
-        void HttpResponder::onRequest(net::Request& request, net::Response& response) {
+
+        void HttpPostResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
             
             std::string msg;
@@ -81,7 +79,98 @@ namespace base {
             connection()->send((const char *)msg.c_str() , msg.length());
             connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
         }
+        
+        
+        
+        void HttpPutResponder::onPayload(const std::string&  body )
+        {
 
+            try
+            {
+                settingCam = json::parse(body.c_str());
+                
+                ret = Settings::putNode( settingCam, vec);
+                
+                SInfo << "Add single Camera " << body << std::endl;
+             }
+             catch(...)
+             {
+                 settingCam = nullptr;
+             }
+              
+         }
+
+        void HttpPutResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            std::string msg;
+            if( settingCam != nullptr && ret)
+                msg = "Success";
+            else
+                msg = "failure";
+                
+            response.setContentLength( msg.length()); // headers will be auto flushed
+            connection()->send((const char *)msg.c_str() , msg.length());
+            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        }
+        
+        
+       void HttpGetResponder::onPayload(const std::string&  body )
+       {
+            SInfo << "get Camera settings " << body << std::endl;
+           
+
+              
+        }
+
+        void HttpGetResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            std::string msg;
+
+            msg =  Settings::getNode();
+                    
+            response.setContentLength( msg.length()); // headers will be auto flushed
+            connection()->send((const char *)msg.c_str() , msg.length());
+            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        }
+        
+ 
+        
+       void HttDeleteResponder::onPayload(const std::string&  body )
+       {
+           
+            try
+            {
+                settingCam = json::parse(body.c_str());
+                
+                ret = Settings::deleteNode( settingCam, vec);
+                
+                SInfo << "reconfigure Camera settings " << body << std::endl;
+             }
+             catch(...)
+             {
+                 settingCam = nullptr;
+             }
+              
+         }
+
+        void HttDeleteResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            std::string msg;
+            if( settingCam != nullptr && ret)
+            {
+                msg = "Success";
+            }
+            else
+                msg = "failure";
+                
+            response.setContentLength( msg.length()); // headers will be auto flushed
+            connection()->send((const char *)msg.c_str() , msg.length());
+            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        }
+        
 
         ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
 

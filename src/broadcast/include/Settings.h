@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 #include <json/json.hpp>
+#include <mutex>          // std::mutex
+
+
+
 using json = nlohmann::json;
 
 class Settings
@@ -46,6 +50,17 @@ public:
 
 private:
 	
+public:
+    
+    static void postNode(json &node ) ;
+    
+    static bool deleteNode(json &node, std::vector<std::string> & vec ) ;
+    
+    static std::mutex  mutexNode;
+    
+    static std::string  getNode();
+   
+    static bool putNode(json &node, std::vector<std::string> & vec  ) ;
 };
 
 #endif

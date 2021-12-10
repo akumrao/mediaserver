@@ -62,7 +62,6 @@ public:
     }
 
     virtual void onClose() {
-        ;
         LDebug("On close")
 
     }
@@ -72,18 +71,69 @@ public:
 
 };
 
-class HttpResponder : public net::ServerResponder
+class HttpPostResponder : public net::ServerResponder
 /// Basic server responder (make echo?)
 {
 public:
 
-    HttpResponder(net::HttpBase* conn) :
+    HttpPostResponder(net::HttpBase* conn) :
     net::ServerResponder(conn) {
         STrace << "BasicResponder" << std::endl;
     }
 
     virtual void onClose() {
-        ;
+        LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response);
+    
+    void onPayload(const std::string& /* body */); 
+    
+     json settingCam{ nullptr};
+             
+};
+
+
+class HttpPutResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
+{
+public:
+
+    HttpPutResponder(net::HttpBase* conn) :
+    net::ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
+        LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response);
+    
+    void onPayload(const std::string& /* body */); 
+    
+    json settingCam{ nullptr};
+    
+    std::vector<std::string>  vec;
+    bool ret{false};
+             
+};
+
+
+
+class HttpGetResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
+{
+public:
+
+    HttpGetResponder(net::HttpBase* conn) :
+    net::ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
         LDebug("On close")
 
     }
@@ -96,6 +146,32 @@ public:
              
 };
         
+class HttDeleteResponder : public net::ServerResponder
+/// Basic server responder (make echo?)
+{
+public:
+
+    HttDeleteResponder(net::HttpBase* conn) :
+    net::ServerResponder(conn) {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
+         LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response);
+    
+    void onPayload(const std::string& /* body */); 
+    
+    json settingCam{ nullptr};
+    
+    std::vector<std::string>  vec;
+    bool ret{false};
+             
+};
+
 
  class StreamingResponderFactory1 : public net::ServerConnectionFactory {
         public:
@@ -111,8 +187,18 @@ public:
 
                 // Handle websocket connections
                 if (request.getMethod() == "POST") {
-                    return new HttpResponder(conn);
-                } else {
+                    return new HttpPostResponder(conn);
+                }
+                else if (request.getMethod() == "PUT") {
+                    return new HttpPutResponder(conn);
+                }
+                else if (request.getMethod() == "GET") {
+                    return new HttpGetResponder(conn);
+                }
+                else if (request.getMethod() == "DELETE") {
+                    return new HttDeleteResponder(conn);
+                }  
+                else {
                     return new BasicResponder(conn);
                 }
 
