@@ -508,9 +508,23 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   if (strcmp(codec_name,"H264")==0) 
   { // NEW_CODEC_DEV // when adding new codecs, make changes here
 
-      parseH264Header();
+    //  parseH264Header();
+      
+    fragmp4_muxer->deActivate();
+    foundsps = false;
+    foundpps = false;
+
+
+
+
+    basicframe.media_type           =AVMEDIA_TYPE_VIDEO;
+    basicframe.codec_id             =AV_CODEC_ID_H264;
+    basicframe.stream_index     =subsession_index;
+    // prepare setup frame
+      
+      
       #ifdef SEND_PARAMETER_SETS
-        sendParameterSets();
+       // sendParameterSets();
     #endif
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
