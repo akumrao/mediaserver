@@ -234,12 +234,12 @@ bool Settings::putNode(json &node , std::vector<std::string> & vec )  // only on
 {
     bool ret = false;
           
-    json rtsp =  Settings::configuration.rtsp["rtsp"] ;
+    json &rtsp =  Settings::configuration.rtsp ;
     
     for (auto& [key, value] : node.items())
     {
        
-       if (rtsp.find(key) != rtsp.end()) 
+       if (rtsp.find(key) == rtsp.end()) 
        {
            
             mutexNode.lock();
@@ -259,7 +259,7 @@ bool Settings::deleteNode(json &node , std::vector<std::string> & vec  )
 {
     bool ret = false;
           
-    json rtsp =  Settings::configuration.rtsp["rtsp"] ;
+    json &rtsp =  Settings::configuration.rtsp;
     
     for (auto& [key, value] : node.items())
     {

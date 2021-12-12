@@ -40,7 +40,6 @@ namespace wrtc {
     
 #define tcprequest true
 
-    
 VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
@@ -137,13 +136,13 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
        // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
 
         std::string  cam = peer->getCam();
-        std::string add =  Settings::configuration.rtsp[cam].get<std::string>();
+        std::string add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
 
-        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, tcprequest, this , info, txt); // Request livethread to write into filter info
+        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
         ffparser->registerStreamCall(*ctx);
         ffparser->playStreamCall(*ctx);
     
-        
+        Settings::configuration.rtsp[cam]["state"]="streaming";
       
 }
 
@@ -187,6 +186,10 @@ void VideoPacketSource::stopParser()
     {
         if(ffparser)
         {
+            
+            
+            Settings::configuration.rtsp[ctx->cam]["state"]="stopped";
+              
             ffparser->stopStreamCall(*ctx);
 
             ffparser->deregisterStreamCall(*ctx);

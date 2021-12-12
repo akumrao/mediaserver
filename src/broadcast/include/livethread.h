@@ -74,9 +74,9 @@ enum class LiveConnectionType {
   */  
 struct LiveConnectionContext {                                                                        
   /** Default constructor */
-  LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot,                  
+  LiveConnectionContext(LiveConnectionType ct, std::string address, SlotNumber slot, std::string &cam,                 
                         bool request_tcp, FrameFilter* framefilter, FrameFilter* info, FrameFilter *txt) :                                                   
-  connection_type(ct), address(address), slot(slot), framefilter(framefilter),info(info), txt(txt), msreconnect(10000),       
+  connection_type(ct), address(address), slot(slot), cam(cam), framefilter(framefilter),info(info), txt(txt), msreconnect(10000),       
   request_multicast(false), request_tcp(request_tcp), recv_buffer_size(0), reordering_time(0),              
   time_correction(TimeCorrectionType::smart)                                                          
   {}                                                                                                  
@@ -91,6 +91,9 @@ struct LiveConnectionContext {
   FrameFilter*       framefilter;       ///< The frames are feeded into this FrameFilter      
   FrameFilter* info;
   FrameFilter *txt;
+  
+  std::string cam;
+  
   long unsigned int  msreconnect;       ///< If stream has delivered nothing during this many milliseconds, reconnect 
   bool               request_multicast; ///< Request multicast in the rtsp negotiation or not         
   bool               request_tcp;       ///< Request interleaved rtsp streaming or not                
