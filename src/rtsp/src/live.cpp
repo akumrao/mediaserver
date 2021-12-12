@@ -509,6 +509,9 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   { // NEW_CODEC_DEV // when adding new codecs, make changes here
 
       parseH264Header();
+      #ifdef SEND_PARAMETER_SETS
+        sendParameterSets();
+    #endif
     //setReceiveBuffer(DEFAULT_PAYLOAD_SIZE_H264); // sets nbuf
   }
   else 
@@ -545,9 +548,7 @@ FrameSink::FrameSink(UsageEnvironment& env, StreamClientState& scs,  FrameFilter
   }
   */
   
-#ifdef SEND_PARAMETER_SETS
-  sendParameterSets();
-#endif
+
   
  SDebug << "FrameSink: constructor: internal_frame= "<< basicframe <<std::endl;
 }
