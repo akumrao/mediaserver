@@ -353,8 +353,10 @@ void H264Framer::analyze_seq_parameter_set_data(u_int8_t const* nalUnitOrig, uns
         if (time_scale > 0 && num_units_in_tick > 0) 
         {
             fps = time_scale / (DeltaTfiDivisor * num_units_in_tick);
-            
-          
+        }
+        else
+        {
+            fps = 25;
         }
                             
     }
