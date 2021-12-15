@@ -41,8 +41,8 @@ void H264Framer::profile_tier_level(BitVector& bv, unsigned max_sub_layers_minus
     }
 }
 
-unsigned H264Framer::removeH264or5EmulationBytes(u_int8_t* to, unsigned toMaxSize,
-        u_int8_t const* from, unsigned fromSize) {
+unsigned H264Framer::removeH264or5EmulationBytes(uint8_t* to, unsigned toMaxSize,
+        uint8_t const* from, unsigned fromSize) {
     unsigned toSize = 0;
     unsigned i = 0;
     while (i < fromSize && toSize + 1 < toMaxSize) {
@@ -60,16 +60,16 @@ unsigned H264Framer::removeH264or5EmulationBytes(u_int8_t* to, unsigned toMaxSiz
     return toSize;
 }
 
-void H264Framer::removeEmulationBytes(u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit, u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize) {
+void H264Framer::removeEmulationBytes(uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit, uint8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize) {
 
     nalUnitCopySize = removeH264or5EmulationBytes(nalUnitCopy, maxSize, nalUnitOrig, numBytesInNALunit);
 }
 
-void H264Framer::analyze_video_parameter_set_data(u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) {
+void H264Framer::analyze_video_parameter_set_data(uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) {
     num_units_in_tick = time_scale = 0; // default values
 
     // Begin by making a copy of the NAL unit data, removing any 'emulation prevention' bytes:
-    u_int8_t vps[VPS_MAX_SIZE];
+    uint8_t vps[VPS_MAX_SIZE];
     unsigned vpsSize;
     removeEmulationBytes(nalUnitOrig, numBytesInNALunit, vps, sizeof vps, vpsSize);
 
@@ -229,11 +229,11 @@ void H264Framer::analyze_vui_parameters(BitVector& bv,
     DEBUG_PRINT(pic_struct_present_flag);
 }
 
-void H264Framer::analyze_seq_parameter_set_data(u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) {
+void H264Framer::analyze_seq_parameter_set_data(uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) {
     num_units_in_tick = time_scale = 0; // default values
 
     // Begin by making a copy of the NAL unit data, removing any 'emulation prevention' bytes:
-    u_int8_t sps[SPS_MAX_SIZE];
+    uint8_t sps[SPS_MAX_SIZE];
     unsigned spsSize;
     removeEmulationBytes(nalUnitOrig, numBytesInNALunit, sps, sizeof sps, spsSize);
 

@@ -544,10 +544,15 @@ namespace base {
         }
 
         
-        bool FFParse::parseH264Header() {
+        bool FFParse::parseH264Header() 
+        {
             int ret = 0;
            // AVCodec *codec = NULL;
           //  AVCodecContext *cdc_ctx = NULL;
+            fragmp4_muxer->deActivate();
+            foundsps = false;
+            foundpps = false;
+
             AVPacket *pkt = NULL;
 
             SetupFrame        setupframe;  ///< This frame is used to send subsession information
@@ -568,102 +573,18 @@ namespace base {
             fragmp4_muxer->run(&setupframe);
 
   
-            if ((pkt = av_packet_alloc()) == NULL) {
-                fprintf(stderr, "av_packet_alloc failed.\n");
-                //goto ret3;
-                return false;
-            }
-
-            
-             if (fseek(fileVideo, 0, SEEK_END))
-               return false;
-            long fileSize = (long)ftell(fileVideo);
-            if (fileSize < 0)
-                return false;
-            if (fseek(fileVideo, 0, SEEK_SET))
-                return false;
-    
-            //SInfo << "H264 file Size " << fileSize;
-          
-
-           // av_init_packet(pkt);
-
-            const int in_buffer_size=fileSize;
-            unsigned char *in_buffer = (unsigned char*)malloc(in_buffer_size + AV_INPUT_BUFFER_PADDING_SIZE);
-            unsigned char *cur_ptr;
-            int cur_size;
-            
-            startTime=    setupframe.mstimestamp;
-            //long int deltatime =   1000000/25;  //25 frames persecs
-
            
-            bool foundsps = false;
-            bool foundpps =false;
-            
-            cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
-            cur_ptr = in_buffer;
 
+            //cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
+            //cur_ptr = in_buffer;
 
-            while (cur_size > 0)
-            {
-
-
-                 ret = get_nal_size( cur_ptr, cur_size, &pkt->data, &pkt->size);
-                 if (ret < 4) {
-                    cur_ptr += 1;
-                    cur_size -= 1;
-                    continue;
-                }
-
-
-                // avcodec_decode_video2
-
-                cur_ptr += ret;
-                cur_size -= ret;
-
-                if (pkt->size == 0)
-                    continue;
-
-                basicvideoframe.copyFromAVPacket(pkt);
-
-
-                basicvideoframe.mstimestamp = startTime ;
-                basicvideoframe.fillPars();
-
-                if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::sps) //AUD Delimiter
-                {
-                      foundsps = true;
-                }
-
-                else if(  basicvideoframe.h264_pars.slice_type ==  H264SliceType::pps) //AUD Delimiter
-                {
-                      foundpps = true;
-                }
-                else
-                {
-                    continue;
-                }
-
-                //info->run(&basicvideoframe);
-
-                fragmp4_muxer->run(&basicvideoframe);
-
-
-                basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
-
-                //std::this_thread::sleep_for(std::chrono::microseconds(10000));
-
-                if( foundsps && foundpps )
-                    break;
-            }
-
+    
 
         
-            free(in_buffer);
-            av_packet_free(&pkt);
+           
  //           avcodec_close(cdc_ctx);
 //            avcodec_free_context(&cdc_ctx);
-            return foundsps & foundpps;
+            return  true;
 
         }
         
@@ -697,10 +618,12 @@ namespace base {
             int cur_videosize=0;
 
             long framecount =0;
-
-            while (!stopped() && keeprunning) {
+            int gop = 0;
+            while (!stopped() && keeprunning) 
+            {
                  uint64_t currentTime =  CurrentTime_microseconds();
-                if (cur_videosize > 0) {
+                if (cur_videosize > 0) 
+                {
 
                     ret = get_nal_size(cur_videoptr, cur_videosize, &videopkt->data, &videopkt->size);
                     if (ret < 4) {
@@ -726,37 +649,127 @@ namespace base {
                     basicvideoframe.mstimestamp = startTime +  framecount;
                     basicvideoframe.fillPars();
 
-                    if ( basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+       
+
+////////////////////
+
+                    if ( foundsps && foundpps && ( basicvideoframe.h264_pars.frameType == H264SframeType::i &&  basicvideoframe.h264_pars.slice_type == H264SliceType::idr)) //AUD Delimiter
                     {
                         fragmp4_muxer->sendMeta();
-                       // resetParser = false;
+                        
+                       
+                        
+                    #if(_DEBUG)
+                        SInfo << " Key " << basicvideoframe.payload.size();
+                        if (gop)
+                        {
+                            SInfo << "Gop " << gop;
+                        }
+                        gop = 1;
+                    #endif
                     }
-                    
+
                     if (basicvideoframe.h264_pars.slice_type == H264SliceType::sps ||  basicvideoframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
                     {
-                        continue;
+                                       
+                       unsigned num_units_in_tick, time_scale;
+
+
+                        if(  basicvideoframe.h264_pars.slice_type == H264SliceType::sps  )
+                        {    
+                            obj.analyze_seq_parameter_set_data(videopkt->data + 4, videopkt->size - 4, num_units_in_tick, time_scale);
+
+                            if (fps != obj.fps || width != obj.width || height != obj.height)
+                            {
+                                    parseH264Header();
+                                    SInfo << "reset parser, with fps " << obj.fps << " width "  <<   obj.width << " height"  << obj.height;
+                            }
+
+//uint8_t *p = videopkt->data +4;
+
+
+                            if (!foundpps)
+                            {
+                                    fps = obj.fps;
+                                    height = obj.height;
+                                    width = obj.width;
+
+                                    basicvideoframe.fps = obj.fps;
+                                    basicvideoframe.height = obj.height;
+                                    basicvideoframe.width = obj.width;
+
+                                    // SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
+
+                                    //info->run(&basicvideoframe);
+                                    fragmp4_muxer->run(&basicvideoframe); // starts the frame filter chain
+                                    basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+                            }
+                           
+                           foundsps  = true;
+                           
+                        }
+
+                        if( !foundpps &&  basicvideoframe.h264_pars.slice_type == H264SliceType::pps  )
+                        {    
+                          
+                           
+                           // SInfo <<  " Got PPS fps ";
+                            
+                            //info->run(&basicvideoframe);
+                            fragmp4_muxer->run(&basicvideoframe); // starts the frame filter chain
+                            basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+                            
+                             foundpps  = true;
+
+                           
+                        }
+                           
+
                     }
                     else if (!((basicvideoframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicvideoframe.h264_pars.slice_type == H264SliceType::nonidr))) {
-                        continue;
+                    //info->run(&basicvideoframe);
+                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
                     }
-                    
+                    else if (foundsps && foundpps  )
+                    {
+#if(_DEBUG)
+                        if (basicvideoframe.h264_pars.frameType == H264SframeType::p)
+                        {
+                            ++gop;
+                            SInfo << " P frame " << basicvideoframe.payload.size();
+                        }
+                        else if (basicvideoframe.h264_pars.frameType == H264SframeType::b)
+                        {
+                            ++gop;
+                            SInfo << " B frame " << basicvideoframe.payload.size();
+                        }
+                        else if (basicvideoframe.h264_pars.frameType == H264SframeType::i && basicvideoframe.h264_pars.slice_type != H264SliceType::idr)
+                        {
+                            SInfo << " I frame " << basicvideoframe.payload.size() << " gop " << gop;
+                            gop = 1;
+                            
+                        }
+                      
+#endif
 
-                    framecount++;
 
-                   // info->run(&basicvideoframe);
-
-                    fragmp4_muxer->run(&basicvideoframe);
+                              
 
 
-                    basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
+                        //info->run(&basicvideoframe);
+                        fragmp4_muxer->run(&basicvideoframe); // starts the frame filter chain
+                        basicvideoframe.payload.resize(basicvideoframe.payload.capacity());
 
-                    uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
-                    std::this_thread::sleep_for(std::chrono::microseconds(100000 - deltaTimeMillis));
-                    //
+                         framecount++;
 
-                }
+			             uint64_t deltaTimeMillis =CurrentTime_microseconds() - currentTime;
+                         std::this_thread::sleep_for(std::chrono::microseconds(100000 - deltaTimeMillis));
+
+                     }
+		        }
                 else
                 {
+                    reopen();
                      if (fseek(fileVideo, 0, SEEK_SET))
                     return;
 
@@ -767,14 +780,15 @@ namespace base {
                     if (cur_videosize == 0)
                         break;
                     cur_videoptr = in_videobuffer;
-                    }
+
+                    
+                }
             }
 
-            av_packet_free(&videopkt);
-
+	        av_packet_free(&videopkt);	
             free(in_videobuffer);
 
-        }
+       }
         
        void FFParse::parseMuxContent() 
        {
@@ -970,11 +984,11 @@ namespace base {
 
                        basicaudioframe.mstimestamp = startTime + audioframecount;
 
-//                        if( resetParser ) 
-//                        {
+//                     if( resetParser ) 
+//                     {
 //                              fragmp4_muxer->sendMeta();
 //                              resetParser =false;
-//                        }
+//                     }
                        audioframecount = audioframecount + AUDIOSAMPLE;
                        fragmp4_muxer->run(&basicaudioframe);
 
@@ -982,7 +996,7 @@ namespace base {
 
                        av_packet_unref(&audiopkt);
 
-                   //     std::this_thread::sleep_for(std::chrono::microseconds(21000));
+                       //std::this_thread::sleep_for(std::chrono::microseconds(21000));
 
                    }
                }//audio 

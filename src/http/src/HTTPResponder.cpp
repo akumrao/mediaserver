@@ -284,12 +284,15 @@ namespace base {
             closure->path = file_to_open;
             closure->con = connection();
             closure->request.data = closure;
-            int status = uv_queue_work(Application::uvGetLoop(),
-                    &closure->request,
-                    render,
-                    (uv_after_work_cb) after_render);
+            //int status = uv_queue_work(Application::uvGetLoop(),
+            //        &closure->request,
+            //        render,
+            //        (uv_after_work_cb) after_render);
+            //assert(status == 0);
 
-            assert(status == 0);
+            render(&closure->request);  //Removing call to uv_queue_work to avoid thread issues. Our client is already multithreaded
+
+            after_render(&closure->request);
             
             return;
             

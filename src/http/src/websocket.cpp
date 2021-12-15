@@ -70,7 +70,7 @@ namespace base {
             return true;
         }
 
-        void WebSocketConnection::send(const char* data, size_t len, bool binary) {
+        void WebSocketConnection::send(const char* data, size_t len, bool binary , onSendCallback cb) {
            // LTrace("Send: ", len, ": ", std::string(data, len))
             assert(framer.handshakeComplete());
 
@@ -89,7 +89,7 @@ namespace base {
             framer.writeFrame(data, len, flags, writer);
 
             assert(socket);
-            _connection->tcpsend((const char*) writer.begin(), writer.position(), nullptr);
+            _connection->tcpsend((const char*) writer.begin(), writer.position(), cb);
             
             
         }
@@ -121,20 +121,21 @@ namespace base {
             
         }
         
-        void WebSocketConnection::push( const char* data, size_t len, bool binary, bool is_first )
+        void WebSocketConnection::push( const char* data, size_t len, bool binary, int frametype )
         { 
             dummy_mutex.lock();
             
             Store store;
             store.binary = binary;
             store.buff =  std::string(data, len );
-            store.isFirstFrame = is_first;
+            store.frametype = frametype;//  1 ftype, 2 moov , 3 first moof & mdat( idr or I frame),   4 P or B frames cane be dropped
             
-            if (is_first && !first_frame)
-              first_frame = true; 
-
-            if (first_frame)
-            dummy_queue.push(store);
+            if (frametype == first_frame || first_frame >=3 )
+            {
+		if(first_frame  < 6)
+                ++first_frame;
+                dummy_queue.push(store);
+            }
             
             dummy_mutex.unlock();
         }
@@ -153,7 +154,17 @@ namespace base {
             
              //net::HttpConnection* cn = (net::HttpConnection*)connection;
                 
-            int qsize =  ((net::HttpConnection*)_connection)->write_queue_size();
+           // int qsize =  ((net::HttpConnection*)_connection)->write_queue_size();
+
+            auto cb = onSendCallback([this](bool sent)
+            {
+                    if (sent)
+                    {
+                        --this->qsize;
+                    }
+            }
+            );
+
            
             while(dummy_queue.size())
             {  
@@ -163,11 +174,14 @@ namespace base {
                 tmp = dummy_queue.front();
                 dummy_queue.pop();
                 dummy_mutex.unlock();
-                 
-               if( (!dropping && qsize < 27621) ||  (dropping &&  qsize < 27621 && tmp.isFirstFrame ) )
+                //1 ftype, 2 moov, 3 first moof(idr frame),   4 P or B frames cane be dropped
+               if( (!dropping &&  qsize < 45   )  ||  (dropping &&  qsize < 25 && tmp.frametype == 1 )   )     /// 25  1 2 3 4 4 4 4 4 ( recent files)
                {
-                    if(tmp.buff.length())
-                    send(&tmp.buff[0],tmp.buff.length() , tmp.binary);
+                   if (tmp.buff.length())
+                   {  
+                       ++qsize;
+                       send(&tmp.buff[0], tmp.buff.length(), tmp.binary, cb);
+                   }
                     
                     dropping = false;
                }

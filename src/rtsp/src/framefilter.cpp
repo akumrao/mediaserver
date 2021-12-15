@@ -7,7 +7,7 @@
 namespace base {
 namespace fmp4 {
 
-#define DUMPFMP4 1
+//#define DUMPFMP4 1
 
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
@@ -73,7 +73,7 @@ void DummyFrameFilter::go(Frame *frame) {
         #endif
         
         if(conn)
-         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->is_first );
+         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->frametype );
         
         STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
