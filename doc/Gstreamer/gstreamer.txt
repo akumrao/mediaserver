@@ -1,0 +1,971 @@
+pip3 install pycairo==1.11.0
+
+cmake -DCMAKE_BUILD_TYPE=DEBUG
+
+The '*' wildcard is also available. For example GST_DEBUG=2,audio*:6 will use Debug Level 5 for all categories starting with the word audio. GST_DEBUG=*:2 is equivalent to GST_DEBUG=2.
+
+export GST_DEBUG=5,*webrtc*:7,*PAD*:7,*CAPS*:7,*rtp*:7
+
+
+
+https://github.com/bbc/brave/blob/master/docs/install_centos7.md
+
+
+
+a=rtcp-fb:96 goog-remb
+
+a=rtcp-fb:96 transport-cc
+
+https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
+
+sdp simantics unified sdp
+
+
+https://github.com/GStreamer/gst-plugins-good/blob/master/tests/examples/rtp/client-H264-rtx.sh
+https://anongit.freedesktop.org/git/gstreamer/gst-examples.git/
+
+void UGameEngine::OnViewportResized(FViewport* Viewport, uint32 Unused)
+{
+	if (Viewport && Viewport == SceneViewport.Get() && GameViewportWindow.IsValid() && GameViewportWindow.Pin()->GetWindowMode() == EWindowMode::Windowed)
+	{
+		const FIntPoint ViewportSize = Viewport->GetSizeXY();
+		if (ViewportSize.X > 0 && ViewportSize.Y > 0)
+		{
+			GSystemResolution.ResX = ViewportSize.X;
+			GSystemResolution.ResY = ViewportSize.Y;
+			FSystemResolution::RequestResolutionChange(GSystemResolution.ResX, GSystemResolution.ResY, EWindowMode::Windowed);
+
+			UGameUserSettings* Settings = GetGameUserSettings();
+			Settings->SetScreenResolution(ViewportSize);
+			Settings->ConfirmVideoMode();
+			Settings->RequestUIUpdate();
+		}
+	}
+
+https://www.cxymm.net/article/linux_vae/92814626
+
+https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
+https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/merge_requests/377
+https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md
+meson test -C build
+meson test -C builddir --list
+meson test -C builddir --suite gst-plugins-base
+meson test -C builddir --suite gstreamer gst_gstbuffer
+GST_CHECKS=test_subbuffer meson test -C builddir --suite gstreamer gst_gstbuffer
+meson --prefix=/path/to/install/prefix builddir
+ninja -C builddir
+meson install -C builddir
+
+https://github.com/GStreamer/gst-plugins-good/blob/master/tests/examples/rtp/client-H264-rtx.sh
+https://gstreamer.freedesktop.org/documentation/tutorials/basic/hello-world.html?gi-language=c
+
+
+
+This RTP header extension is an extended version of the extension defined in https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
+
+Name: “Transport-wide congenstion control 02”
+
+Formal name: http://www.webrtc.org/experiments/rtp-hdrext/transport-wide-cc-02
+
+Status: This extension is defined here to allow for experimentation. Once experience has shown that it is useful, we intend to make a proposal based on it for standardization in the IETF.
+
+The original extension defines a transport-wide sequence number that is used in feedback packets for congestion control. The original implementation sends these feedback packets at a periodic interval. The extended version presented here has two changes compared to the original version:
+
+Feedback is sent only on request by the sender, therefore, the extension has two optional bytes that signals that a feedback packet is requested.
+The sender determines if timing information should be included or not in the feedback packet. The original version always include timing information.
+Contact kron@google.com or sprang@google.com for more info.
+
+RTP header extension format
+Data layout overview
+Data layout of transport-wide sequence number 1-byte header + 2 bytes of data:
+
+  0                   1                   2
+  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ |  ID   | L=1   |transport-wide sequence number |
+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+Data layout of transport-wide sequence number and optional feedback request 1-byte header + 4 bytes of data:
+
+  0                   1                   2                   3
+  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ |  ID   | L=3   |transport-wide sequence number |T|  seq count  |
+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ |seq count cont.|
+ +-+-+-+-+-+-+-+-+
+Data layout details
+The data is written in the following order,
+
+transport-wide sequence number (16-bit unsigned integer)
+feedback request (optional) (16-bit unsigned integer)
+If the extension contains two extra bytes for feedback request, this means that a feedback packet should be generated and sent immediately. The feedback request consists of a one-bit field giving the flag value T and a 15-bit field giving the sequence count as an unsigned number.
+If the bit T is set the feedback packet must contain timing information.
+seq count specifies how many packets of history that should be included in the feedback packet. If seq count is zero no feedback should be be generated, which is equivalent of sending the two-byte extension above. This is added as an option to allow for a fixed packet header size.
+
+
+dpkg --list | grep  gstreamer
+apt-get purge gstreamer*
+
+
+https://www.collabora.com/news-and-blog/blog/2020/03/19/getting-started-with-gstreamer-gst-build/
+
+https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-meson.html?gi-language=c#layout-of-gstbuild
+
+
+
+
+
+NSI compliance by enabling the --ansi --strict --Wall options in gcc or the equivalent options in your compiler.
+
+https://lucid.app/lucidchart/invitations/accept/inv_f8498f94-471c-4436-ab81-297a8b996bdd
+
+
+
+
+
+*****************************************************************************************
+
+
+https://bitbucket.org/vectonerepo/xgatesignalinggw/            - to access "Signalling GW" project
+https://bitbucket.org/vectonerepo/umn_audiovideo_engine/       - to access Media Project ("MBC SFU")
+https://bitbucket.org/vectonerepo/gst_custom_plugins/          - to access "GStreamer Plugin" project
+https://bitbucket.org/vectonerepo/unifiedringengineplatform/  - to access "UR_Conf" bridge project
+
+1
+which gst-launch-1.0
+If you see similar response
+
+1
+/usr/local/bin/gst-launch-1.0
+You already have Gstreamer installed on your PC. But look at next steps to check that all required packages for development are also installed.
+
+Check Gstreamer Version
+Additional you can check version of installed package typing
+
+1
+gst-inspect-1.0 --version
+You should get similar response in terminal
+
+1
+2
+gst-inspect-1.0 version 1.14.1
+GStreamer 1.14.1 (GIT)
+
+
+
+
+You have to build the other GStreamer modules, especially GStreamer core, from git master if you want to build gst-rtsp-server from git master.
+Take a look at 
+
+
+https://gitlab.freedesktop.org/gstreamer/gst-build for a way to do that relatively easily.
+
+
+
+
+https://www.linuxfromscratch.org/blfs/view/svn/multimedia/gstreamer10.html
+
+
+
+
+
+
+cd ~/ffmpeg_sources
+git clone --branch stable --depth 1 https://code.videolan.org/videolan/x264.git
+cd x264
+PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure --prefix="$HOME/ffmpeg_build" --bindir="$HOME/bin" --enable-static
+make
+make install
+
+root:x264# ./configure --enable-shared
+
+
+Warning: If you get Found no assembler. Minimum version is nasm-2.13 or similar after running ./configure then the outdated nasm package from the repo is installed. Run yum remove nasm && hash -d nasm and x264 will then use your newly compiled nasm instead. Ensure environment is able to resolve path to nasm binary.
+libx265
+
+H.265/HEVC video encoder. See the H.265 Encoding Guide for more information and usage examples.
+
+Requires ffmpeg to be configured with --enable-gpl --enable-libx265.
+
+cd ~/ffmpeg_sources
+git clone --branch stable --depth 2 https://bitbucket.org/multicoreware/x265_git
+cd ~/ffmpeg_sources/x265_git/build/linux
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX="$HOME/ffmpeg_build" -DENABLE_SHARED:bool=off ../../source
+make
+make install
+
+  yum history list  
+gobject-introspection-devel  never install this otherwise your life will be screwed
+
+https://github.com/bbc/brave/blob/master/docs/install_centos7.md
+sudo yum -y install gtk-doc glib2 glib2-devel speex speex-devel wget pygobject3-devel  cairo cairo-devel cairo-gobject cairo-gobject-devel libnotify-devel libnotify libjpeg-turbo-devel nginx pango-devel orc-devel libvorbis-devel libtheora-devel libxml2-devel openssl-devel libsoup-devel mpg123-libs libvpx-devel librsvg2-devel
+
+
+
+apt-get install flex bison
+apt-get install libvpx-dev libsrtp2-dev
+yum install libvpx-devel libsrtp2-devel
+
+edora, CentOS, RHEL, etc.: gobject-introspection-devel
+Debian, Ubuntu, Mint, etc.: libgirepository1.0-dev
+
+udo apt install build-essential python3 git ninja-build python3-pip
+You can now install meson from the pip repository
+
+
+yum remove meson
+yum remove ninja
+pip3 install meson
+pip3 install  meson
+pip3 install ninja // please do not do it it should be from package
+This will install meson into ~/.local/bin which may or may not be included automatically in your PATH by default.
+
+Fetch and Configure
+This step will download the GStreamer repositories including some dependencies such as glib etc. into the subprojects folder. Basically it tries to download as many mesonified third party libraries as possible, and breaking news the cmake ones, as a bridge has been implemented recently if necessary.
+
+
+
+$ git clone https://gitlab.freedesktop.org/gstreamer/gst-build
+
+
+cd
+/usr/local/src/gstreamer/
+https://gitlab.freedesktop.org/gstreamer/gstreamer.git 
+cd
+/usr/local/src/gstreamer/subprojects
+
+git clone https://gitlab.freedesktop.org/gstreamer/gst-examples.git  arvindWebrtc
+
+
+$ cd gst-build
+$ meson build --buildtype=debug -Dcustom_subprojects=arvindWebrtc
+ 
+
+...
+
+Option buildtype is: debug [default: debugoptimized]
+Found ninja-1.8.2 at /usr/bin/ninja
+After this step, a newly created folder named build should be ready to be used by ninja to build the binaries.
+
+As you may notice, --buildtype=debug has been added to the command line to get a fully debugable result without optimization. I invite you to visit this page if you want to fine-tune the build.
+
+Build gst-build
+This step will build all GStreamer libraries in addition to the plugins from base/good/bad/ugly/libav if their dependencies have been met or built by gst-build (ie glib, openh264 etc.).
+
+$ ninja -C build
+Test gst-build
+This command will create an environment where all tools and plugins built previously are available in the environment as a superset of the system environment with the right environment variables set.
+
+$ ninja -C build devenv
+A prefix to your prompt should be shown as
+
+[gst-master] bash-prompt $
+ 
+
+[gst-master] bash-prompt $ env | grep GST_
+From this environment you are now ready to use the power of GStreamer, and even implement new features in it without the fear of using out of date version.
+
+From this shell, you are also able to compile without exiting the environment except when a configure step is necessary. This feature is very convenient to test a branch or fix a bug. Go to the subprojects folder and modify the code directly and then call ninja -C ../../build.
+
+[gst-master] bash-prompt $ gst-inspect-1.0
+Let's add a log line in gst-plugins-base
+In this tutorial, I will explain how to add a log line in videotestsrc element, gst-plugins-base's plugin, rebuild using gst-build and test that the new log is now displayed.
+
+Edit the file
+vim subprojects/gst-plugins-base/gst/videotestsrc/gstvideotestsrc.c
+Go to the method gst_video_test_src_start and add the line:
+
+GST_ERROR_OBJECT (src, ""Starting to debug videotestsrc, is there an error ?");
+This will add a runtime log with the ERROR level. For more information about debugging facilities in GStreamer, visit the following page.
+
+Then close the editor.
+
+
+Test the changes
+In order to enable the logs, you have to export the environment variable GST_DEBUG.
+
+Let's start the playback and display the result in the terminal. The following command will display all the log from videotestsrc with the category ERROR(1).
+
+GST_DEBUG=videotestsrc:1 gst-launch-1.0 videotestsrc num-buffers=1 ! fakevideosink
+
+
+
+
+
+And then you can go in your subproject, edit, change, remove even stare at his beauty.
+
+
+meson build --buildtype=debug -Dcustom_subprojects=arvindWebrtc
+
+$ cd subprojects
+$ git clone my_subproject
+$ cd ../build
+$ rm -rf * && meson .. -Dcustom_subprojects=arvind2
+
+or 
+meson --default-library=static -Dgst-full-libraries=app,video builddir
+
+rm -rf * && meson .. --default-library=static -Dcustom_subprojects=arvind2  -Dgst-full-libraries=app,video -Dintrospection=disabled -Dgst-full-plugins=
+
+ninja -C build
+ninja -C build devenv
+
+meson test -C build
+
+
+
+https://github.com/GStreamer/gst-build
+
+[gst-master] root:build# gst-inspect-1.0 --version
+gst-inspect-1.0 version 1.19.2
+GStreamer 1.19.2
+Unknown package origin
+https://mediasoup.discourse.group/t/using-gstreamer-webrtcbin-as-mediasoup-client/590/3
+
+https://githubmemory.com/repo/hissinger/gstreamer-webrtcbin-demo
+
+
+ enables NACK/RTX(RFC4588)
+enables FEC/RED
+implements CCM FIR
+implements ABS-SEND-TIME RTP extension header
+implements REMB
+implements TWCC
+
+meson test -C build --list  > /tmp/log.txt
+
+meson test -C build
+
+PROP_TWCC_STATS
+
+elements_rtpsession
+
+meson test -C build  --gdb  elements_rtpsession 
+meson test -C build  --suite  elements_rtpsession 
+
+https://webrtc.nirbheek.in/
+
+
+
+meson build-gst-full \
+  -Ddefault_library=static \
+  -Dintrospection=disabled \
+  --buildtype=debug \
+  -Dcustom_subprojects=arvind2
+
+
+'opus' not found
+Required gstreamer plugin 'vpx' not found
+Required gstreamer plugin 'nice' not found
+Required gstreamer plugin 'webrtc' not found
+Required gstreamer plugin 'dtls' not found
+Required gstreamer plugin 'srtp' not found
+Required gstreamer plugin 'rtpmanager' not found
+Required gstreamer plugin 'videotestsrc' not found
+Required gstreamer plugin 'audiotestsrc' not found
+
+GStreamer 1.18 requires applications using gstreamer-full-1.0 to initialize
+static plugins by calling gst_init_static_plugins() after gst_init(). That
+function is defined in gst/gstinitstaticplugins.h header file.
+
+
+meson build-gst-full \
+  -Ddefault_library=static \
+  -Dintrospection=disabled \
+  --buildtype=release \
+  --strip \
+  --wrap-mode=forcefallback
+
+$ ninja -C build-gst-full
+After a successful build, we can reconfigure the last gstreamer-full by providing new options to the meson comamnd line through --reconfigure. In this use-case, we'll enable only 3 elements from the coreelements plugin in GStreamer.
+
+$ meson build-gst-full --reconfigure -Dgst-full-plugins=vpx;nice;webrtc;dtls;rtpmanager;videotestsrc;audiotestsrc;coreelements '-Dgst-full-elements=coreelements:filesrc,fakesink,identity' '-Dgst-full-libraries=[]'
+$ ninja -C build-gst-full
+
+ninja -C build-gst-full devenv
+
+  if (g_getenv ("GST_RTP_ENABLE_EXPERIMENTAL_TWCC_PROPERTY"))
+    enable_experimental_twcc = TRUE;
+gstrtpbasepayload.c
+
+
+gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0`
+
+rtcp-fb-transport-cc=TRUE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SMT_MG_16
+check firewall is running in this machine
+service firewalld status
+stop firewall in machine using below commands
+service firewalld status
+add below configurations in /root/.bashrc file
+export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/lib64/pkgconfig:/usr/lib/pkgconfig
+export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
+export GST_PLUGIN_PATH=/usr/local/lib/gstreamer-1.0
+export http_proxy=http://10.30.2.24:8080/
+export https_proxy=https://10.30.2.24:8080/
+export ACE_ROOT=/usr/local/src/ACE_wrappers
+install latest scl repository package
+yum install -y centos-release-scl
+install latest python script package and other neccessary tools
+yum install -y rh-python36
+scl enable rh-python36 bash
+pip install --upgrade pip
+pip3 install scikit-build
+pip3 install ninja meson
+yum -y groupinstall 'Development Tools'
+yum install -y vim
+yum install -y mlocate
+yum install -y libmount-devel # for glib-2.60
+yum install -y libxslt-1.1.28-5.el7.x86_64 # for glib-2.60
+yum install -y binutils # for glib-2.60
+yum install -y docbook-xsl # for glib-2.60
+yum install -y graphite2-devel # for harfbuzz
+yum install -y gperf # for fontconfig
+yum install -y cairo-devel # For Pango
+yum install -y gobject-introspection-devel  # For Pango
+yum install -y libcurl-devel.x86_64 # For cmake
+yum install -y libarchive-devel.x86_64 # for cmake
+yum install -y expat-devel  # For cmake
+yum install -y libsoup-devel.x86_64 # for good
+install autoconf-2.69 library
+./configure --prefix=/usr/local
+make && make install
+install automake-1.16.1 library
+./configure --prefix=/usr/local
+make && make install
+ACE libray installation
+
+    Install GNU make 3.79.1 or greater on your system
+
+    export ACE_ROOT=/usr/local/src/ACE_wrappers
+
+    Create a configuration file in $ACE_ROOT/ace/config.h, and include below line.
+    #include "ace/config-linux.h"
+
+    Create a build configuration file, $ACE_ROOT/include/makeinclude/platform_macros.GNU, and include below line for linux
+    include $(ACE_ROOT)/include/makeinclude/platform_linux.GNU
+
+    If you wish to install ACE (using "make install"), set the installation prefix in $ACE_ROOT/include/makeinclude/platform_macros.GNU
+    INSTALL_PREFIX = /usr/local
+
+    Note that because ACE builds shared libraries, you'll need to set LD_LIBRARY_PATH to the directory where binary version of the ACE library is built into.
+    export LD_LIBRARY_PATH=$ACE_ROOT/lib:$LD_LIBRARY_PATH
+
+    make
+
+    make install
+    ==================================================================================
+    install glib-2.60.0
+
+    tar -xf glib-2.60.0.tar.xz && cd glib-2.60.0 && mkdir build && cd build
+
+    meson --prefix=/usr/local -Dman=true -Dselinux=disabled
+
+    ninja && ninja install
+    ==================================================================================
+    install gstreamer-1.16.0
+
+    tar -xf gstreamer-1.16.0.tar.xz && cd gstreamer-1.16.0 && mkdir build && cd build
+
+    meson  --prefix=/usr/local -Dbuildtype=release -Dgst_debug=false -Dgtk_doc=disabled -Dpackage-origin=
+
+      -Dpackage-name="GStreamer 1.16.0 BLFS"
+
+    ninja && ninja install
+    ==================================================================================
+    install gobject-introspection-1.60.1
+
+    tar -xf gobject-introspection-1.60.1.tar.xz && cd gobject-introspection-1.60.1 && mkdir build && cd build
+
+    meson  --prefix=/usr/local -Dbuildtype=release
+
+    ninja && ninja install
+    ==================================================================================
+    install openssl-1.1.1d
+
+    tar -xf openssl-1.1.1d.tar.gz && cd openssl-1.1.1d
+
+    ./config --prefix=/usr/local --openssldir=/usr/local/ssl no-idea no-mdc2 no-rc5 shared zlib-dynamic
+
+    make depend && make && make install
+    ==================================================================================
+    install unixODBC-2.3.4
+
+    tar -xf unixODBC-2.3.4.tar.xz && cd unixODBC-2.3.4
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install alsa-lib-1.1.9
+
+    tar alsa-lib-1.1.9.tar.bz2 && cd alsa-lib-1.1.9
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install util-linux-2.32.1
+
+    tar -xf util-linux-2.32.1.tar.xz && cd util-linux-2.32.1
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    insatll ptlib-2.14.3 from source code
+
+    ./configure --prefix=/usr/local --disable-openssl --disable-alsa --disable-oss --disable-v4l2
+
+    make && make install
+    ==================================================================================
+    install opus-1.3.1.tar.gz
+
+    tar -xf opus-1.3.1.tar.gz && cd opus-1.3.1
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install libtool-2.4.6.tar.gz
+
+    tar -xf libtool-2.4.6.tar.gz && cd libtool-2.4.6
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install orc-0.4.29
+
+    tar -xf orc-0.4.29.tar.xz && cd orc-0.4.29
+    build using configuration script
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    build using meson script
+
+    mkdir build && cd build
+
+    meson  --prefix=/usr/local -Dbuildtype=release
+
+    ninja && ninja install
+    ==================================================================================
+    install libogg-1.3.3
+
+    ./configure --prefix=/usr/local --docdir=/usr/share/doc/libogg-1.3.4
+
+    make && make install
+    ==================================================================================
+    install speex-1.2.0
+
+    ./configure --prefix=/usr/local --docdir=/usr/share/doc/speex-1.2.0
+
+    make && make install
+    ==================================================================================
+    install wavpack
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install libpng-1.6.37
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install libsrtp-2.3.0
+
+    ./configure --prefix=/usr/local --enable-openssl
+
+    make && make install
+    ==================================================================================
+    install libnice-0.1.12
+
+    scl enable rh-python36 bash
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install libarchive-3.3.3 is required for cmake
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install libuv-v1.27.0 is required for cmake
+
+    tar -xf libuv-v1.27.0.tar.gz && cd libuv-v1.27.0
+
+    sh autogen.sh
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ==================================================================================
+    install curse library is required for cmake
+
+    yum install ncurses-5.9-14.20130511.el7_4.x86_64
+
+    yum install ncurses-devel-5.9-14.20130511.el7_4.x86_64
+    ==================================================================================
+    install cmake-3.14.3
+
+    sed -i '/"lib64"/s/64//' Modules/GNUInstallDirs.cmake
+
+    ./bootstrap --prefix=/usr/local  
+    --system-libs        
+    --mandir=/share/man  
+    --no-system-jsoncpp  
+    --no-system-librhash 
+    --docdir=/share/doc/cmake-3.14.3
+
+    make && make install
+    ====================================================================================
+    install yasm && nasm required for libjpeg-turbo-2
+
+Error while compiling libjpeg-turbo-2 library
+Error:
+-- The ASM_NASM compiler identification is unknown
+-- Didn't find assembler
+CMake Error at simd/CMakeLists.txt:41 (enable_language):
+No CMAKE_ASM_NASM_COMPILER could be found.
+yum install nasm-2.10.07-7.el7.x86_64
+(or)
+install nasm is required for libx264
+
+    ../configure --prefix=/usr/local --enable-shared --disable-cli
+
+    make && make install
+    ====================================================================================
+    install libjpeg-turbo-2.0.2 is required cmake-3.14.3
+
+mkdir build &&
+cd    build &&
+cmake -DCMAKE_INSTALL_PREFIX=/usr 
+-DCMAKE_BUILD_TYPE=RELEASE  
+-DENABLE_STATIC=FALSE       
+-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 
+-DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  
+.. &&
+make
+rm -f /usr/lib/libjpeg.so*
+make install
+install gst-plugins-base-1.16.0
+
+mkdir build && cd build
+
+meson --prefix=/usr/local -Dbuildtype=release -Dgtk_doc=disabled -Dpackage-origin=
+
+      -Dpackage-name="GStreamer 1.16.0 BLFS"
+
+    ninja && ninja install && cd ..
+
+    find .|grep pc$|grep -v uninstall|xargs -I{} cp {} /usr/lib64/pkgconfig/
+    ===================================================================================
+    install fribidi is required for libass and ffmpeg libraries
+
+    mkdir build && cd build
+
+    meson --prefix=/usr/local
+
+    ninja && ninja install
+    ===================================================================================
+    install libass is required for ffmpeg
+
+./configure --prefix=/usr/local --disable-static
+make;make install
+cp ./libass.pc /usr/lib64/pkgconfig/
+install libfdk_aac is required for ffmpeg
+
+    ./configure --prefix=/usr/local --disable-static
+
+    make && make install
+
+    cp ./fdk-aac.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install LAME is required for ffmpeg
+
+    ./configure --prefix=/usr/local --enable-mp3rtp --disable-static
+
+    make
+
+    make pkghtmldir=/usr/share/doc/lame-3.100 install
+    ===================================================================================
+    install libtheora is required for ffmpeg
+
+    sed -i 's/png_(sizeof)/\1/g' examples/png2theora.c
+
+    ./configure --prefix=/usr/local --disable-static
+
+    make && make install
+
+    cp ./theoradec.pc ./theora.pc ./theoraenc.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install vorbis is required for ffmpeg
+
+    ./configure --prefix=/usr/local --disable-static
+
+    make && make install
+
+    mkdir /usr/share/doc/libvorbis-1.3.6
+
+    install -v -m644 doc/Vorbis* /usr/share/doc/libvorbis-1.3.6
+
+    cp ./vorbisenc.pc ./vorbisfile.pc ./vorbis.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install libvpx is required for ffmpeg
+
+    sed -i 's/cp -p/cp/' build/make/Makefile
+
+    mkdir libvpx-build && cd libvpx-build
+
+    ../configure --prefix=/usr/local --enable-shared --disable-static
+
+    make && make install && cd ..
+
+    cp ./libvpx-build/vpx.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install libx264 is required for ffmpeg
+
+    ./configure --prefix=/usr/local --enable-shared --disable-cli
+
+    make && make install
+
+    cp ./x264.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install libx265 is required for ffmpeg
+
+    mkdir bld && cd bld
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../source
+
+    make && make install
+
+    rm -vf /usr/lib/libx265.a && cd ..
+
+    cp ./bld/x265.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install ffmpeg is required for gst-libav-1.16.0
+
+    sed -i 's/-lflite"/-lflite -lasound"/' configure
+
+    ./configure --prefix=/usr/local --enable-gpl --enable-version3 --enable-nonfree --disable-static --enable-shared --disable-debug --enable-avresample --enable-libass --enable-libfdk-aac --enable-libfreetype --enable-libmp3lame --enable-libopus        --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --docdir=/usr/share/doc/ffmpeg-4.1.3
+
+    make
+
+    gcc tools/qt-faststart.c -o tools/qt-faststart
+
+    make install
+
+    install -v -m755 tools/qt-faststart /usr/bin
+
+    install -v -m755 -d /usr/share/doc/ffmpeg-4.1.3
+
+    install -v -m644 doc/*.txt /usr/share/doc/ffmpeg-4.1.3
+
+    cp ./libpostproc/libpostproc.pc ./libswscale/libswscale.pc ./libavformat/libavformat.pc ./libavcodec/libavcodec.pc ./libavresample/libavresample.pc ./libavdevice/libavdevice.pc ./libavutil/libavutil.pc ./libswresample/libswresample.pc ./libavfilter/libavfilter.pc /usr/lib64/pkgconfig/
+    ===================================================================================
+    install gst-libav-1.16.0
+
+    meson --prefix=/usr/local -Dbuildtype=release -Dpackage-origin=
+
+      -Dpackage-name="GStreamer 1.16.0 BLFS"
+
+    ninja && ninja install
+    ===================================================================================
+    install gst-plugins-good-1.16.0
+
+    meson --prefix=/usr/local -Dbuildtype=release -Dpackage-origin=
+
+      -Dpackage-name="GStreamer 1.16.0 BLFS"
+
+    ninja && ninja install
+    ===================================================================================
+    intall libtiff is required for spandsp library
+
+    yum install libtiff-4.0.3-32.el7.x86_64
+
+    yum install libtiff-devel-4.0.3-32.el7.x86_64
+    ===================================================================================
+    install spandsp-0.0.6pre21 is required for dtmf gst-bad plugin's
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ===================================================================================
+    install gst-plugins-bad-1.16.0
+
+    ./configure --prefix=/usr/local
+
+    make && make install
+    ===================================================================================
+    install g729 library
+
+cd /usr/local/src
+
+tar -xvzf libg729-1.5.0.tar.gz
+cd libg729-1.5.0
+./configure --prefix=/usr/local
+make clean
+make
+make install
+
+Check g729 and stundtls are installed properly or not :
+
+gst-inspect-1.0 g729
+
+Plugin Details:
+Name                     g729
+Description              G729B plugin library
+Filename                 /usr/local/lib/gstreamer-1.0/libgstg729.so
+Version                  1.16.0
+License                  LGPL
+Source module            gst-plugins-bad
+Source release date      2019-04-19
+Binary package           GStreamer Bad Plug-ins source release
+Origin URL               Unknown package origin
+
+g729dec: G729 audio decoder
+g729enc: G729 audio encoder
+
+2 features:
++-- 2 elements
+
+gst-inspect-1.0 stundtls
+
+Plugin Details:
+Name                     stundtls
+Description              STUN DTLS decoder and encoder plugins
+Filename                 /usr/local/lib/gstreamer-1.0/libgststundtls.so
+Version                  1.16.0
+License                  BSD
+Source module            gst-plugins-bad
+Source release date      2019-04-19
+Binary package           GStreamer Bad Plug-ins source release
+Origin URL               Unknown package origin
+
+stundtlsenc: DTLS Encoder
+stundtlsdec: DTLS Decoder
+stunrecv: STUN Receiver
+stunsend: STUN Sender
+stundtlssrtpdec: STUN DTLS-SRTP Decoder
+stundtlssrtpenc: STUN DTLS-SRTP Encoder
+stundtlssrtpdemux: STUN DTLS SRTP Demultiplexer
+
+7 features:
++-- 7 elements
+
+To install g729 and stundtls:
+
+cd gst-plugins-bad-1.16.0
+cd ext
+
+For g729 :
+
+cd g729
+make clean
+make
+make install
+
+For stundtls :
+
+cd stundtls
+make clean
+make
+make install
+
+scl enable rh-python36 bash
+
+
+
+
+
+
+
+
+
+
+
+
+https://github.com/aiortc/pylibsrtp
+
+https://github.com/persmule/libdtlssrtp/blob/master/example.c
+
+
+
+https://github.com/persmule/libdtlssrtp/blob/master/dtls_srtp.c
+
+
+https://developer.cisco.com/codeexchange/github/repo/cisco/libsrtp/
+
+
+ffmpeg -re -i sample.mp4 -an -vcodec copy -f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "NzB4d1BINUAvLEw6UzF3WSJ+PSdFcGdUJShpX1Zj" "srtp://localhost:10000"
+
+
+
+ffmpeg -re -i sample.mp4 -an -vcodec copy -f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "NzB4d1BINUAvLEw6UzF3WSJ+PSdFcGdUJShpX1Zj" "srtp://localhost:10000"
+
+
+
+
+
+
+
+https://ffmpeg.org/doxygen/3.2/tests_2srtp_8c_source.html
+
+
+
+https://gitlab.freedesktop.org/ystreet/gstreamer/-/commits/webrtc-simulcast/
+
+
