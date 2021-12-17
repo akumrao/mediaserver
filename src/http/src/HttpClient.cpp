@@ -131,7 +131,7 @@ namespace base {
             
             if(wsAdapter)
             {
-                wsAdapter->send(data,len, binary );
+                wsAdapter->send(data,len, binary, nullptr );
                 return;
             }
 

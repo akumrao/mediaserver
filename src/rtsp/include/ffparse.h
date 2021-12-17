@@ -21,7 +21,7 @@
 #include "framefilter.h"
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
-
+#include "H264Framer.h"
 
 
 extern "C" {
@@ -153,7 +153,7 @@ class ReadMp4;
     int height{0};
     
   
-    //H264Framer obj;
+    H264Framer obj;
     
  #if 0   
     /* Add an output stream. */

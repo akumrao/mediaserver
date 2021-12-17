@@ -273,7 +273,7 @@ public:
 public:
     std::vector<uint8_t> meta_blob; ///< Byte blob that is casted to correct metadata struct
     MuxMetaType          meta_type; ///< Mux type that mandates how meta_blob is casted
-    bool is_first;
+    int frametype;   // 1 ftype, 2 moov , 3 first moof( idr frame), 4 P or B frames cane be dropped 
 };
 
 
