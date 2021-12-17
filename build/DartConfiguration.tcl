@@ -5,7 +5,7 @@
 
 # Configuration directories and files
 SourceDirectory: C:/FFMpeg
-BuildDirectory: C:/FFMpeg/build2
+BuildDirectory: ./build
 
 # Where to place the cost data store
 CostDataFile: 

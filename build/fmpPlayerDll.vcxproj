@@ -135,9 +135,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <ProgramDataBaseFile>C:/FFMpeg/build2/Debug/ffmpegPlayer.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>./build/Debug/ffmpegPlayer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
-      <ImportLibrary>C:/FFMpeg/build2/Debug/ffmpegPlayer.lib</ImportLibrary>
+      <ImportLibrary>./build/Debug/ffmpegPlayer.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -181,8 +181,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg/build2/Release/ffmpegPlayer.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg/build2/Release/ffmpegPlayer.pdb</ProgramDataBaseFile>
+      <ImportLibrary>./build/Release/ffmpegPlayer.lib</ImportLibrary>
+      <ProgramDataBaseFile>./build/Release/ffmpegPlayer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -227,8 +227,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg/build2/MinSizeRel/ffmpegPlayer.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg/build2/MinSizeRel/ffmpegPlayer.pdb</ProgramDataBaseFile>
+      <ImportLibrary>./build/MinSizeRel/ffmpegPlayer.lib</ImportLibrary>
+      <ProgramDataBaseFile>./build/MinSizeRel/ffmpegPlayer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -269,8 +269,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/FFMpeg/build2/RelWithDebInfo/ffmpegPlayer.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/FFMpeg/build2/RelWithDebInfo/ffmpegPlayer.pdb</ProgramDataBaseFile>
+      <ImportLibrary>./build/RelWithDebInfo/ffmpegPlayer.lib</ImportLibrary>
+      <ProgramDataBaseFile>./build/RelWithDebInfo/ffmpegPlayer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
