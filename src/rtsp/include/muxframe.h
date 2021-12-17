@@ -21,6 +21,7 @@
 
 #include "constant.h"
 
+#define u_int8_t uint8_t
 /** Enumeration of Frame classes 
  * 
  * @ingroup frames_tag

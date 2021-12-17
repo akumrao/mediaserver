@@ -274,12 +274,6 @@
     <ClCompile Include="..\src\rtsp\ffmpeg\libfdk-aacenc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\rtsp\ffmpeg\live.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\rtsp\ffmpeg\livethread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\rtsp\ffmpeg\log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

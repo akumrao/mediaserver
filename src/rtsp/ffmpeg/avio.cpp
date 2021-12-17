@@ -30,7 +30,7 @@
 #include "network.h"
 #endif
 #include "url.h"
-#include "mytime.h"
+#include "include/mytime.h"
 
 /** @name Logging context. */
 /*@{*/

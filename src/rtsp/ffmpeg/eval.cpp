@@ -39,7 +39,7 @@
 #include "avstring.h"
 //#include "timer.h"
 #include "reverse.h"
-#include "mytime.h"
+#include "include/mytime.h"
 
 typedef struct Parser {
     const AVClass *class_av;
