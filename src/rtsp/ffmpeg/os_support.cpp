@@ -32,7 +32,11 @@
 #include <fcntl.h>
 #if !HAVE_POLL_H
 #if HAVE_SYS_TIME_H
+#if defined(WIN32)
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 #endif /* HAVE_SYS_TIME_H */
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>

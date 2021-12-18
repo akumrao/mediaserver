@@ -418,6 +418,7 @@
     <ClCompile Include="..\src\rtsp\ffmpeg\vpcc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\rtsp\ffmpeg\frame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

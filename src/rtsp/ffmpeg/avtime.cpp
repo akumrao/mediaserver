@@ -24,7 +24,11 @@
 #include <stdint.h>
 #include <time.h>
 #if HAVE_GETTIMEOFDAY
+#if defined(WIN32)
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>

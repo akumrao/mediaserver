@@ -19,7 +19,7 @@
  */
 #include "config.h"
 
-#ifdef HAVE_PTHREADS
+#if HAVE_PTHREADS
 #include <pthread.h>
 #else
 #include "compat/w32pthreads.h"

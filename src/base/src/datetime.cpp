@@ -22,7 +22,9 @@
 #if defined(_WIN32_WCE)
 #include "wce_time.h"
 #endif
-#if !defined(WIN32)
+#if defined(WIN32)
+#include <time.h>
+#else
 #include <sys/time.h>
 #endif
 

@@ -145,7 +145,7 @@ int ff_poll(struct pollfd *fds, nfds_t numfds, int timeout);
 #elif defined(_WIN32)
 #include <stdio.h>
 #include <windows.h>
-#include "ffmpeg/wchar_filename.h"
+#include "libavutil/wchar_filename.h"
 
 #ifdef WINAPI_FAMILY
 #include <winapifamily.h>

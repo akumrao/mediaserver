@@ -83,7 +83,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\base\include;..\src\http_parser;..\src\json\include;..\src\net\include;..\src\http\include;..\src\libuv\include;..\src\libuv\src;..\src\signal\include;..\src\rtsp\ffmpeg;..\src\rtsp;..\src\zlib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -305,8 +305,6 @@
     <ClCompile Include="..\src\rtsp\ffmpeg\isom.cpp" />
     <ClCompile Include="..\src\rtsp\ffmpeg\libfdk-aacdec.cpp" />
     <ClCompile Include="..\src\rtsp\ffmpeg\libfdk-aacenc.cpp" />
-    <ClCompile Include="..\src\rtsp\ffmpeg\live.cpp" />
-    <ClCompile Include="..\src\rtsp\ffmpeg\livethread.cpp" />
     <ClCompile Include="..\src\rtsp\ffmpeg\log.cpp" />
     <ClCompile Include="..\src\rtsp\ffmpeg\mathematics.cpp" />
     <ClCompile Include="..\src\rtsp\ffmpeg\mem.cpp" />

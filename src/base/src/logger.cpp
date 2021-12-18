@@ -17,8 +17,11 @@
 #include "base/time.h"
 #include "base/util.h"
 
+#if defined(WIN32)
 #include <time.h>
-//#include <sys/time.h>
+#else
+#include <sys/time.h>
+#endif
 
 #include <assert.h>
 #include <iterator>

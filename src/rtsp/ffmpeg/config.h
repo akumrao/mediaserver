@@ -342,7 +342,11 @@
 #define HAVE_GLOB 1
 #define HAVE_GLXGETPROCADDRESS 0
 #define HAVE_GMTIME_R 1
+#ifdef _WIN32
+#define HAVE_INET_ATON 0
+#else
 #define HAVE_INET_ATON 1
+#endif
 #define HAVE_ISATTY 1
 #define HAVE_JACK_PORT_GET_LATENCY_RANGE 0
 #define HAVE_KBHIT 0

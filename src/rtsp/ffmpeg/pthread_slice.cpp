@@ -21,9 +21,12 @@
  * Slice multithreading support functions
  * @see doc/multithreading.txt
  */
-
-#include <pthread.h>
 #include "config.h"
+#if HAVE_PTHREADS
+#include <pthread.h>
+#else
+#include "compat/w32pthreads.h"
+#endif
 
 #include "avcodec.h"
 #include "internal_codec.h"
