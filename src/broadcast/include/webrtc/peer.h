@@ -30,7 +30,7 @@ public:
     };
 
     Peer(PeerManager* manager,
-         PeerFactoryContext* context, std::string &cam, 
+         PeerFactoryContext* context, std::string &cam, std::string &room,
          const std::string& peerid,
          const std::string& token,
          Mode mode);
@@ -72,6 +72,8 @@ public:
     void mute( const json& message);
     
     std::string& getCam( ){return cam;}
+    
+    std::string& getRoom( ){return room;}
      
     //webrtc::FakeConstraints& constraints();
     webrtc::PeerConnectionFactoryInterface* factory() const;
@@ -101,8 +103,10 @@ protected:
     virtual rtc::RefCountReleaseStatus Release() const override { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
 
 protected:
-     std::string  cam;
-    PeerManager* _manager;
+    std::string  cam;
+     
+    std::string  room;
+  
     PeerFactoryContext* _context;
     std::string _peerid;
     std::string _token;
@@ -120,6 +124,8 @@ protected:
    // webrtc::FakeConstraints _constraints;
 public:
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
+    
+    PeerManager* _manager;
    
     void pushFrame(base::fmp4::BasicFrame *p);
     
@@ -129,7 +135,7 @@ public:
     //rtc::scoped_refptr<webrtc::MediaStreamInterface> _stream;
     //std::unique_ptr<cricket::BasicPortAllocator> _portAllocator;
     
-   
+    std::string  status;
 };
 
 

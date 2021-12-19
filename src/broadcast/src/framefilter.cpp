@@ -3,7 +3,8 @@
 #include "tools.h"
 #include "base/logger.h"
 #include "fmp4.h"
-
+#include "webrtc/peer.h"
+#include "webrtc/peermanager.h"
 namespace base {
 namespace fmp4 {
 
@@ -26,7 +27,7 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name,  base::wrtc::Peer *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
 {
     #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
@@ -72,8 +73,8 @@ void DummyFrameFilter::go(Frame *frame) {
         tolalMp4Size +=ret;
         #endif
         
-        if(conn)
-         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->is_first );
+       // if(conn)
+       //  conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->is_first );
         
         STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
@@ -85,7 +86,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *name,  ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *name,  base::wrtc::Peer *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
 {
 }
 
@@ -97,10 +98,12 @@ TextFrameFilter::~TextFrameFilter()
 void TextFrameFilter::go(Frame *frame) {
         
       TextFrame *txt    =  (TextFrame*) frame;
-       SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
-        
+      SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
+      
+      conn->status = txt->txt;
+              
       if(conn)
-         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false, false );
+         conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
    
 }
 

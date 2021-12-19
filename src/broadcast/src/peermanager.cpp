@@ -24,6 +24,11 @@ namespace base {
         void PeerManager::sendSDP(Peer* conn, const std::string& type, const std::string& sdp) {
             assert(0 && "virtual");
         }
+        
+        void PeerManager::postAppMessage(std::string message , std::string from , std::string &room)
+        {
+             assert(0 && "virtual"); 
+        }
 
         void PeerManager::sendCandidate(Peer* conn, const std::string& mid, int mlineindex, const std::string& sdp) {
             assert(0 && "virtual");

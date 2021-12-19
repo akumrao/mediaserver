@@ -126,7 +126,7 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
 
         info = new fmp4::InfoFrameFilter("info", nullptr);
 
-        txt = new fmp4::TextFrameFilter("txt", nullptr);
+        txt = new fmp4::TextFrameFilter("txt", peer);
 
 
         ffparser = new fmp4::LiveThread("live");
@@ -136,13 +136,26 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
        // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
 
         std::string  cam = peer->getCam();
-        std::string add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
+        
+        std::string add;
+        
+        
+        if( Settings::getNodeState(cam, "rtsp" , add ))
+        {
+       // std::string &add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
 
-        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
-        ffparser->registerStreamCall(*ctx);
-        ffparser->playStreamCall(*ctx);
-    
-        Settings::configuration.rtsp[cam]["state"]="streaming";
+            ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
+            ffparser->registerStreamCall(*ctx);
+            ffparser->playStreamCall(*ctx);
+
+         //   Settings::configuration.rtsp[cam]["state"]="streaming";
+            Settings::setNodeState(cam , "starting" );
+        }
+        else
+        {
+            
+            SError << "Could not find camera at Json Repository "  << cam; 
+        }
       
 }
 
@@ -187,8 +200,14 @@ void VideoPacketSource::stopParser()
         if(ffparser)
         {
             
+            SInfo << "Stopping cam "  << ctx->cam; 
             
-            Settings::configuration.rtsp[ctx->cam]["state"]="stopped";
+            if( !Settings::setNodeState(ctx->cam , "stopped" ) )
+            {
+                 SError << "Could not find camera at Json Repository "  << ctx->cam; 
+            }
+            
+          //  Settings::configuration.rtsp[ctx->cam]["state"]= "stopped";
               
             ffparser->stopStreamCall(*ctx);
 
@@ -298,7 +317,6 @@ void VideoPacketSource::run(fmp4::Frame *frame)
 
 	//rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
 	//	webrtc::I420Buffer::Create(720,576);
-    
         
              int ret = 0;
              int got_picture = 0;
@@ -306,10 +324,9 @@ void VideoPacketSource::run(fmp4::Frame *frame)
             // basic_frame->fillAVPacket(videopkt);
              
              if ((ret = av_parser_parse2(parser, cdc_ctx, &videopkt->data, &videopkt->size,
-                            basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+                  basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
                         SError << "av_parser_parse2 failed" ;;
                         //goto ret8;
-       
                }
              
 //                printf("[Packet]Size:%6d\t", videopkt->size);

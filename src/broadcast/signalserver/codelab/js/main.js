@@ -98,7 +98,7 @@ function sendMessage(message) {
 // This client receives a message
 socket.on('message', function(message) {
   console.log('Client received message:', message);
-  log('Client received message:', message);
+ // log('Client received message:', message);
 
 
   if (message === 'got user media') {
@@ -124,6 +124,13 @@ socket.on('message', function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   }
+  else if(message.type === 'error') {
+   
+    console.log('Camera state', message.desc);
+    log('Camera state:', message.desc);
+
+  }
+
 });
 
 ////////////////////////////////////////////////////

@@ -61,6 +61,10 @@ public:
     static std::string  getNode();
    
     static bool putNode(json &node, std::vector<std::string> & vec  ) ;
+    
+    static bool setNodeState(std::string  & id , std::string  status);
+    
+    static bool getNodeState(std::string id , std::string  key , std::string  &value) ;
 };
 
 #endif

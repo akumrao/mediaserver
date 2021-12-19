@@ -37,6 +37,8 @@ namespace base {
             virtual void onStable(Peer* conn);
             virtual void onClosed(Peer* conn);
             virtual void onFailure(Peer* conn, const std::string& error);
+            
+            virtual void postAppMessage(std::string message , std::string from , std::string &room);
         };
 
 

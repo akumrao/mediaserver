@@ -242,7 +242,10 @@ async function runSocketServer() {
 
 
 	});
+/*
 
+ .in(room).emit() to broadcast to everyone in a particular room, including the sender.
+ socket.to will exclude the sender. I'll mark your answer as correct, thank you for the explanation
 
 	socket.on('postAppMessage', function(message) {
 

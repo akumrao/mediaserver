@@ -54,11 +54,12 @@ bool AddCandidateToFirstTransport(cricket::Candidate* candidate,
 
 Peer::Peer(PeerManager* manager,
            PeerFactoryContext* context,
-           std::string &cam, 
+           std::string &cam,
+           std::string &room,
            const std::string& peerid,
            const std::string& token,
            Mode mode)
-    : cam(cam),_manager(manager)
+    : cam(cam), room(room), _manager(manager)
     , _context(context)
     , _peerid(peerid)
     , _token(token)

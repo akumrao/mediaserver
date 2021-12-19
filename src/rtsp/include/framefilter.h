@@ -157,10 +157,10 @@ protected:
 class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn,  FrameFilter *next = NULL ); 
+    TextFrameFilter(const char *name, base::wrtc::Peer *conn,  FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
-     base::fmp4::ReadMp4 *conn; 
+     base::wrtc::Peer *conn; 
      
   
 public:

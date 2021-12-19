@@ -281,7 +281,6 @@ bool Settings::deleteNode(json &node , std::vector<std::string> & vec  )
 
 std::string Settings::getNode() 
 {
-    
     std::string ret;
     mutexNode.lock();
     ret =  Settings::configuration.rtsp.dump(4) ;
@@ -289,5 +288,49 @@ std::string Settings::getNode()
     return ret;  
 }
 
+bool Settings::setNodeState(std::string &id , std::string  status) 
+{
+    bool ret = false;
+    
+    mutexNode.lock();
+       
+    json &rtsp =  Settings::configuration.rtsp;
+    if (rtsp.find(id) != rtsp.end()) 
+    {
+        rtsp[id]["state"]= status;   
+        ret = true;
+    }
+    
+    mutexNode.unlock();   
+    
+
+    return ret;  
+}
+
+bool Settings::getNodeState(std::string id ,  std::string  key ,   std::string  &value) 
+{
+    
+    bool ret = false;
+    
+    mutexNode.lock();
+       
+    json &rtsp =  Settings::configuration.rtsp;
+    if (rtsp.find(id) != rtsp.end()) 
+    {
+       value =  rtsp[id][key];   
+       ret = true;
+    }
+    
+    mutexNode.unlock();   
+    
+
+    return ret;  
+}
+
+    
+    
+    
+
+ 
 
 #undef LOGGING_LOG_TO_FILE
