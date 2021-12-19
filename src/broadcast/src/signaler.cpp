@@ -80,7 +80,7 @@ namespace base {
             postMessage(m);
         }
 
-        void Signaler::onPeerConnected(std::string& peerID ,  std::string &cam) {
+        void Signaler::onPeerConnected(std::string& peerID ,  std::string &cam , std::string &room ) {
 
             LDebug("Peer connected: ", peerID)
 
@@ -90,7 +90,7 @@ namespace base {
             }
 
             // Create the Peer Peer
-            auto conn = new wrtc::Peer(this, &_context, cam, peerID, "", wrtc::Peer::Offer);
+            auto conn = new wrtc::Peer(this, &_context, cam, room, peerID, "", wrtc::Peer::Offer);
            // conn->constraints().SetMandatoryReceiveAudio(false);
            // conn->constraints().SetMandatoryReceiveVideo(false);
            // conn->constraints().SetAllowDtlsSctpDataChannels();
@@ -158,21 +158,27 @@ namespace base {
 //                SWarn << " On Peer message is missing user name ";
 //            }
             
-            if (m.find("cam") != m.end()) {
+            if (m.find("cam") != m.end())
+            {
                camT = m["cam"].get<std::string>();
                // cam = std::stoi(camT);
                 if( Settings::configuration.rtsp.find(camT) == Settings::configuration.rtsp.end()  )
                 {
+                    if(camT == "0"  )                    
                     camT = Settings::configuration.rtsp.begin().key();
+                    else
+                    {
+                        postAppMessage("Camera not available, check with Json API Cam: " + camT, from , room  );
+                        return;
+                    }
                 }
-                
             }
 
             LInfo("Peer message: ", from, " ", type )
 
             if (std::string("offer") == type) {
 
-                onPeerConnected(from, camT);
+                onPeerConnected(from, camT, room);
                 
             } else if (std::string("answer") == type) {
                 recvSDP(from, m["desc"]);
@@ -200,7 +206,7 @@ namespace base {
 
             auto conn = wrtc::PeerManager::remove(peerID);
             if (conn) {
-                LDebug("Deleting peer connection: ", peerID)
+                LInfo("Deleting peer connection: ", peerID)
                         // async delete not essential, but to be safe
                         delete conn;
                 //deleteLater<wrtc::Peer>(conn);
@@ -216,12 +222,12 @@ namespace base {
         }
 
         void Signaler::onStable(wrtc::Peer* conn) {
-            LInfo("Start FFMPEG Capture")
+             SInfo << "Start Capture cam "  <<  conn->getCam();
             _capturer.start( conn->getCam());
         }
 
         void Signaler::onClosed(wrtc::Peer* conn) {
-            LInfo("stop FFMPEG Capture")
+              SInfo << "Stop Capture cam "  <<  conn->getCam();
             _capturer.stop(conn->getCam());
             wrtc::PeerManager::onClosed(conn);
         }
@@ -232,13 +238,31 @@ namespace base {
             wrtc::PeerManager::onFailure(conn, error);
         }
 
-        void Signaler::postMessage(const json& m) {
+        void Signaler::postMessage(const json& m)
+        {
 
-            LInfo("postMessage", cnfg::stringify(m));
+            SDebug << "postMessage " <<  cnfg::stringify(m);
+            
             socket->emit("message", m);
         }
 
-        void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm) {
+       void Signaler::postAppMessage(std::string message , std::string from , std::string &room) 
+       {
+
+           // LTrace("postAppMessage", cnfg::stringify(m));
+           
+            json m;
+            m["type"] = "error";
+            m["desc"] = message ;
+            m["to"] =from;
+            m["room"] = room;
+            
+            socket->emit("postAppMessage", m);
+       }
+
+
+       void Signaler::connect(const std::string& host, const uint16_t port, const std::string rm)
+       {
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 

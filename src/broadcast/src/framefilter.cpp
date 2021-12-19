@@ -5,6 +5,9 @@
 #include "fmp4.h"
 #include "webrtc/peer.h"
 #include "webrtc/peermanager.h"
+
+#include "Settings.h"
+
 namespace base {
 namespace fmp4 {
 
@@ -103,7 +106,12 @@ void TextFrameFilter::go(Frame *frame) {
       conn->status = txt->txt;
               
       if(conn)
-         conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
+      {
+
+          Settings::setNodeState(conn->getCam() , txt->txt );
+          conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
+      
+      }
    
 }
 

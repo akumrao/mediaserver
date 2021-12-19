@@ -49,7 +49,7 @@ socket.on('join', function (room, id, numClients){
 });
 socket.on('joined', function(room, id, numClients) {
  console.log('joined: ' + room + ' with peerID: ' + id);
- log('joined: ' + room + ' with peerID: ' + id);
+ //log('joined: ' + room + ' with peerID: ' + id);
   isChannelReady = true;
   peerID = id;
 
@@ -90,7 +90,7 @@ function getUrlVars() {
 
 function sendMessage(message) {
   console.log('Client sending message: ', message);
-  log('Client sending message: ', message);
+  //log('Client sending message: ', message);
   //socket.emit('message', message);
   socket.emit('sfu-message', message);
 }
@@ -273,7 +273,7 @@ function setLocalAndSendMessage(sessionDescription) {
 }
 
 function onCreateSessionDescriptionError(error) {
-  log('Failed to create session description: ' + error.toString());
+  //log('Failed to create session description: ' + error.toString());
   console.log('Failed to create session description: ' + error.toString());
   
 }
