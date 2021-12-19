@@ -229,30 +229,25 @@ void MultiplexMediaCapturer::addMediaTracks(
 //      assert(_videoCapture->video());
  //     auto oparams = _videoCapture->video()->oparams;
       //auto source = new VideoPacketSource();
-      
+      mutexCap.lock(); 
       std::string &cam = peer->getCam();
       if( VideoCapturer.find(cam) == VideoCapturer.end())
       {
          VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , peer);
-          
+         video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
       }
+      mutexCap.unlock();   
+      
+     
+      
+        video_track[cam]->set_enabled(true);
+        conn->AddTrack(video_track[cam], {streamId});
+         
+        VideoCapturer[cam]->myAddRef();
+         
        
-      
-    //  ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
-
-    //  _videoCapture->cbProcessVideo.push_back(var);
-      
-
-        if( video_track.find(cam) == video_track.end())
-        {
-            video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
-        }
-
          
-         video_track[cam]->set_enabled(true);
-         conn->AddTrack(video_track[cam], {streamId});
-         
-         VideoCapturer[cam]->myAddRef();
+        
       
     }        
           
@@ -293,36 +288,43 @@ void MultiplexMediaCapturer::stop(std::string & cam )
      SInfo << "MultiplexMediaCapturer::stop() cam "  << cam;
      
 
-       
-     std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
-     it=video_track.find(cam);
-     if( it != video_track.end())
-     {
-          SInfo << "MultiplexMediaCapturer::stop()1 cam "  << cam;
-         video_track[cam]->Release();
-         video_track[cam].release();
-         video_track[cam] = nullptr;
-         
-         video_track.erase(it);
-         if(rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease())
-         {
-             std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
-             vsItr=VideoCapturer.find(cam);
-             if( vsItr != VideoCapturer.end())
-             {
-                  SInfo << "MultiplexMediaCapturer::stop()2 cam "  << cam;
-                  
-                  VideoCapturer[cam]->myRelease();
-                  VideoCapturer[cam]->Release();
-                  VideoCapturer[cam].release();
-                  VideoCapturer[cam] = nullptr;
-                  VideoCapturer.erase(vsItr);
-             }
-              
-         }
-      }
+       mutexCap.lock();
     
- 
+     
+      
+         
+     {
+        std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
+        vsItr=VideoCapturer.find(cam);
+        if( vsItr != VideoCapturer.end() && ( rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease()) )
+        {
+             SInfo << "VideoCapturer::stop() cam "  << cam;
+
+            
+             VideoCapturer[cam]->Release();
+             VideoCapturer[cam].release();
+             VideoCapturer[cam] = nullptr;
+             VideoCapturer.erase(vsItr);
+             
+             
+            std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
+           it=video_track.find(cam);
+           if( it != video_track.end())
+           {
+                SInfo << "MultiplexMediaCapturer::stop()1 cam "  << cam;
+               video_track[cam]->Release();
+               video_track[cam].release();
+               video_track[cam] = nullptr;
+               video_track.erase(it);
+           }
+             
+        }
+
+     }
+     
+    
+     
+     mutexCap.unlock();
 //    
 //   
 //    VideoCapturer.release();

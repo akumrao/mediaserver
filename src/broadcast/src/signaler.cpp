@@ -195,7 +195,7 @@ namespace base {
                 
 
             } else if (std::string("bye") == type) {
-                onPeerDiconnected(from);
+               // onPeerDiconnected(from);
             }
             
 
@@ -317,8 +317,10 @@ namespace base {
 
                 // Leaving rooms and disconnecting from peers.
                 socket->on("disconnectClient", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
-                     LTrace(cnfg::stringify(data));
-                    
+                    std::string from = data.get<std::string>();
+                    SInfo << "disconnectClient " <<  from;
+                    //LInfo(cnfg::stringify(data));
+                    onPeerDiconnected(from);
                 }));
 
 

@@ -97,7 +97,9 @@ public:
  private:
      
        
-     std::string fileName;
+    std::string fileName;
+     
+    std::mutex mutexCap;
 };
 
 
