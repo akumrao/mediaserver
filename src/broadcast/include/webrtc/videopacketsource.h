@@ -34,7 +34,7 @@ class VideoPacketSource : public rtc::AdaptedVideoTrackSource, fmp4::FrameFilter
 { 
 
 public:                                                                
-      VideoPacketSource(const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next = NULL);
+      VideoPacketSource(const char *name,  std::string cam, fmp4::FrameFilter *next = NULL);
 
 protected:
     void go(fmp4::Frame *frame)
@@ -46,7 +46,7 @@ public:
     void run(fmp4::Frame  *frame);
    
 public:
-    wrtc::Peer *peer;
+      std::string  cam;
    
    // VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
@@ -62,16 +62,24 @@ public:
 
     /// cricket::VideoCapturer implementation.
 
-    void myAddRef();
-    rtc::RefCountReleaseStatus myRelease();
+    void myAddRef(std::string peerid);
+    rtc::RefCountReleaseStatus myRelease( std::string peerid);
     SourceState state() const override;
     bool remote() const override;
     bool is_screencast() const override;
     absl::optional<bool> needs_denoising() const override;
     
+    
+    void reset(  std::set< std::string> & peerids ); 
+    
 private:
-    mutable volatile int ref_count_;
-    std::string playerId;
+    
+    std::set< std::string> setPeerid;
+    
+    std::mutex mutexVideoSoure;
+    
+   // mutable volatile int ref_count_;
+   // std::string playerId;
 
 protected:
     cricket::VideoFormat _captureFormat;

@@ -23,10 +23,10 @@
 namespace base {
  
 
-namespace wrtc {
-
-class Peer;
-}
+//namespace wrtc {
+//
+//class Peer;
+//}
     
 namespace fmp4 {
 
@@ -145,10 +145,10 @@ public: // API
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name, base::wrtc::Peer *conn , bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name, std::string &cam , bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
 
-     base::wrtc::Peer *conn;  
+     std::string cam;  
 protected:
     bool verbose;
    
@@ -164,10 +164,10 @@ protected:
 class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name,  base::wrtc::Peer *conn,  FrameFilter *next = NULL ); 
+    TextFrameFilter(const char *name, std::string &cam,  FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
-     base::wrtc::Peer *conn; 
+    std::string cam;
      
   
 public:

@@ -21,7 +21,8 @@ namespace base {
 
             void startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping);
             void connect(const std::string& host, const uint16_t port, const std::string room);
-
+            void closeCamera(std::string &cam);
+            
         protected:
 
             /// PeerManager interface
@@ -40,8 +41,6 @@ namespace base {
             void onPeerMessage(std::string &name , json const& m);
             void onPeerDiconnected(std::string& peerID);
             void postAppMessage(std::string message , std::string from , std::string &room);
-
-
 
 
 

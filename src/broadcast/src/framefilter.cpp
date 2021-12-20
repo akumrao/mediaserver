@@ -3,8 +3,8 @@
 #include "tools.h"
 #include "base/logger.h"
 #include "fmp4.h"
-#include "webrtc/peer.h"
-#include "webrtc/peermanager.h"
+//#include "webrtc/peer.h"
+//#include "webrtc/peermanager.h"
 
 #include "Settings.h"
 
@@ -30,7 +30,7 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name,  base::wrtc::Peer *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name,  std::string &cam , bool verbose, FrameFilter *next) : cam(cam), FrameFilter(name, next), verbose(verbose)
 {
     #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
@@ -89,7 +89,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *name,  base::wrtc::Peer *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *name,  std::string &cam , FrameFilter *next) : FrameFilter(name, next),cam(cam) 
 {
 }
 
@@ -103,15 +103,11 @@ void TextFrameFilter::go(Frame *frame) {
       TextFrame *txt    =  (TextFrame*) frame;
       SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
       
-      conn->status = txt->txt;
-              
-      if(conn)
-      {
 
-          Settings::setNodeState(conn->getCam() , txt->txt );
-          conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
+      Settings::setNodeState(cam , txt->txt );
+         /// conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
       
-      }
+
    
 }
 

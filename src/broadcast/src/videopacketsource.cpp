@@ -40,7 +40,7 @@ namespace wrtc {
     
 #define tcprequest true
 
-VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4::FrameFilter *next):peer(peer),fmp4::FrameFilter(name, next)
+VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::FrameFilter *next):cam(cam),fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
     , _nextTimestamp(0)
@@ -121,12 +121,12 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
         
         
      
-        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", nullptr);
+        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam);
         fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
         info = new fmp4::InfoFrameFilter("info", nullptr);
 
-        txt = new fmp4::TextFrameFilter("txt", peer);
+        txt = new fmp4::TextFrameFilter("txt", cam);
 
 
         ffparser = new fmp4::LiveThread("live");
@@ -135,7 +135,7 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
 
        // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
 
-        std::string  cam = peer->getCam();
+       // std::string  cam = peer->getCam();
         
         std::string add;
         
@@ -149,7 +149,9 @@ VideoPacketSource::VideoPacketSource( const char *name,  wrtc::Peer *peer, fmp4:
             ffparser->playStreamCall(*ctx);
 
          //   Settings::configuration.rtsp[cam]["state"]="streaming";
-            Settings::setNodeState(cam , "starting" );
+            Settings::setNodeState(cam , "streaming" );
+            
+            SInfo  <<   cam  << " " <<    "streaming";
         }
         else
         {
@@ -488,23 +490,62 @@ bool VideoPacketSource::IsScreencast() const
 */
 
 
-void VideoPacketSource::myAddRef()  {
+void VideoPacketSource::myAddRef(  std::string peerid)  {
    
-  const int count =   rtc::AtomicOps::Increment(&ref_count_);  //arvind
-  SInfo << "VideoPacketSource::AddRef()" << count;
+    mutexVideoSoure.lock();
+    
+    setPeerid.insert(peerid);
+    
+    mutexVideoSoure.unlock();
+ // const int count =   rtc::AtomicOps::Increment(&ref_count_);  //arvind
+ // SInfo << "VideoPacketSource::AddRef()" << count;
   
 }
 
-rtc::RefCountReleaseStatus VideoPacketSource::myRelease()  {
-   const int count = rtc::AtomicOps::Decrement(&ref_count_);  //arvind 
-   SInfo << "VideoPacketSource::Release()" << count;
+rtc::RefCountReleaseStatus VideoPacketSource::myRelease(  std::string peerid )  {
+    
+    std::set< std::string> ::iterator itr;
+    int count =1;
+    
+    mutexVideoSoure.lock();
+    itr = setPeerid.find(peerid);
+    
+    if( itr != setPeerid.end())
+    {
+        setPeerid.erase(itr);
+    }
+    
+    count = setPeerid.size();
+    mutexVideoSoure.unlock();
+    
+    
   
+  
+    SInfo << "VideoPacketSource::Release()" << count;
+    
    if (count == 0) {
-      stopParser(); 
+     
      return rtc::RefCountReleaseStatus::kDroppedLastRef;
    }
   return rtc::RefCountReleaseStatus::kOtherRefsRemained;
 }
+
+
+
+
+ void VideoPacketSource::reset(  std::set< std::string> & peeerids )  {
+    
+    std::set< std::string> tmp;
+    mutexVideoSoure.lock();
+   
+    peeerids =    setPeerid;
+    
+    setPeerid.clear();
+    
+    mutexVideoSoure.unlock();
+    
+}
+
 
 webrtc::MediaSourceInterface::SourceState VideoPacketSource::state() const {
   return kLive;

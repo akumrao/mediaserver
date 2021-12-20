@@ -35,6 +35,8 @@
 #define AUDIOFILE1  "/var/tmp/songs/quintin.pcm"               
 #define VIDEOFILE1  "/var/tmp/videos/test1.264"  
 
+#include "webrtc/signaler.h"
+
 //#define FILEPARSER 1
 
 namespace base {
@@ -151,8 +153,8 @@ class HttDeleteResponder : public net::ServerResponder
 {
 public:
 
-    HttDeleteResponder(net::HttpBase* conn) :
-    net::ServerResponder(conn) {
+    HttDeleteResponder(net::HttpBase* conn, base::wrtc::Signaler  &sig) :
+    net::ServerResponder(conn), sig(sig)  {
         STrace << "BasicResponder" << std::endl;
     }
 
@@ -169,12 +171,20 @@ public:
     
     std::vector<std::string>  vec;
     bool ret{false};
+    
+    base::wrtc::Signaler  &sig;
+    
              
 };
 
 
  class StreamingResponderFactory1 : public net::ServerConnectionFactory {
         public:
+            
+            StreamingResponderFactory1( base::wrtc::Signaler  &sig):sig(sig)
+            {
+                
+            }
 
             net::ServerResponder* createResponder(net::HttpBase* conn) {
 
@@ -196,7 +206,7 @@ public:
                     return new HttpGetResponder(conn);
                 }
                 else if (request.getMethod() == "DELETE") {
-                    return new HttDeleteResponder(conn);
+                    return new HttDeleteResponder(conn, sig);
                 }  
                 else {
                     return new BasicResponder(conn);
@@ -204,6 +214,9 @@ public:
 
 
             }
+            
+ public:        
+    base::wrtc::Signaler  &sig;
 
  };
 
@@ -228,7 +241,7 @@ public:
    // virtual void stop() override;
    
      void run() override;
-     
+     /*
      std::vector<uint8_t> outputData;
      bool looping{true};
      
@@ -237,9 +250,9 @@ public:
       #else
         LiveThread  *ffparser;
       #endif
-     
+     */
  private:
-     
+     /*
      DummyFrameFilter *fragmp4_filter{nullptr};
      FrameFilter *fragmp4_muxer{nullptr};;
      FrameFilter *info{nullptr};;
@@ -249,6 +262,7 @@ public:
      std::string fileName;
      
      std::atomic<int> critical_sec{0};
+     */
  public:
      
      void broadcast(const char * data, int size, bool binary,  bool is_first  );

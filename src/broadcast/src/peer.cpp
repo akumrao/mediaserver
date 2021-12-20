@@ -67,7 +67,10 @@ Peer::Peer(PeerManager* manager,
     //, _context->factory(manager->factory())
     , _peerConnection(nullptr)
 {
-      webrtc::PeerConnectionInterface::IceServer stun;
+    
+    LInfo(_peerid, ": Creating " , this )
+            
+     webrtc::PeerConnectionInterface::IceServer stun;
      // stun.uri = kGoogleStunServerUri;
      //_config.servers.push_back(stun);
 
@@ -99,7 +102,7 @@ Peer::Peer(PeerManager* manager,
 
 Peer::~Peer()
 {
-    LInfo(_peerid, ": Destroying")
+    LInfo(_peerid, ": Destroying " , this )
     // closeConnection();
 
     if (_peerConnection) {
@@ -185,7 +188,7 @@ void Peer::createOffer()
 
 void Peer::recvSDP(const std::string& type, const std::string& sdp)
 {
-    LInfo(_peerid, ": Received answer ", type, ": ", sdp)
+    LDebug(_peerid, ": Received answer ", type, ": ", sdp)
 
     webrtc::SdpParseError error;
     webrtc::SessionDescriptionInterface* desc(
@@ -246,13 +249,13 @@ void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state)
 {
-    LInfo(_peerid, ": On ICE connection change: ", new_state)
+    LDebug(_peerid, ": On ICE connection change: ", new_state)
 }
 
 
 void Peer::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state)
 {
-    LInfo(_peerid, ": On ICE gathering change: ", new_state)
+    LDebug(_peerid, ": On ICE gathering change: ", new_state)
     
     // if( new_state == webrtc::PeerConnectionInterface::kIceGatheringComplete)
     // {
@@ -277,7 +280,7 @@ void Peer::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 
  void Peer::OnTrack( rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
 
-     LInfo(_peerid, ": OnTrack")
+     LDebug(_peerid, ": OnTrack")
     //_manager->onAddRemoteTrack(this, transceiver.get());
      
 //    const char * pMid  = transceiver->mid()->c_str();
@@ -367,7 +370,7 @@ void Peer::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
         return;
     }
       
-    LInfo(_peerid, sdp);
+    LDebug(_peerid, sdp);
     _manager->sendCandidate(this, candidate->sdp_mid(),
                            candidate->sdp_mline_index(), sdp);
 
@@ -400,7 +403,7 @@ fmp4::BasicFrame* Peer::popFrame( )
  
 void Peer::OnSuccess(webrtc::SessionDescriptionInterface* desc)
 {
-    LInfo(_peerid, ": Set local description")
+    LDebug(_peerid, ": Set local description")
             
     cricket::SessionDescription* desc1 = desc->description();
     

@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     
     base::cnfg::Configuration config;
 
-    config.load("/workspace/mediaserver/src/broadcast/main/config.js");
+    config.load("./config.js");
   
     json cnfg;
    
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
     
     
     
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 8080, new fmp4::StreamingResponderFactory1()  );
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 1111, new fmp4::StreamingResponderFactory1( sig)  );
      
     
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
    // Ignore some signals.
     IgnoreSignals();
         
-    app.waitForShutdown([&](void*)
+   app.waitForShutdown([&](void*)
    {
 
     LTrace("app.run() is over")

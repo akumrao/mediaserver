@@ -118,10 +118,7 @@ namespace base {
        void HttpGetResponder::onPayload(const std::string&  body )
        {
             SInfo << "get Camera settings " << body << std::endl;
-           
-
-              
-        }
+       }
 
         void HttpGetResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
@@ -145,6 +142,11 @@ namespace base {
                 settingCam = json::parse(body.c_str());
                 
                 ret = Settings::deleteNode( settingCam, vec);
+                
+                for( std::string  el : vec)
+                {
+                    sig.closeCamera(el);
+                }
                 
                 SInfo << "reconfigure Camera settings " << body << std::endl;
              }
@@ -212,7 +214,7 @@ namespace base {
         ReadMp4::~ReadMp4() {
             SInfo << "~ReadMp4( )";
              
-      
+      /*
             
             ffparser->stopStreamCall(*ctx);
 
@@ -228,6 +230,7 @@ namespace base {
             delete fragmp4_muxer;
             delete info;
             delete txt;
+       */ 
         }
 
 
@@ -342,15 +345,11 @@ namespace base {
             for (auto* connection :  this->GetConnections())
             {
                 net::HttpConnection* cn = (net::HttpConnection*)connection;
-                
-
-                
-                 net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
-                 if(con)
+               
+                net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
+                if(con)
                  con->push(data ,size, binary, is_first );
             }
-
-        
 
         }
         

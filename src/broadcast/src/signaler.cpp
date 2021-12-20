@@ -222,19 +222,33 @@ namespace base {
         }
 
         void Signaler::onStable(wrtc::Peer* conn) {
-             SInfo << "Start Capture cam "  <<  conn->getCam();
-            _capturer.start( conn->getCam());
+            // SInfo << "Start Capture cam "  <<  conn->getCam();
+            //_capturer.start( conn->getCam());
         }
 
         void Signaler::onClosed(wrtc::Peer* conn) {
               SInfo << "Stop Capture cam "  <<  conn->getCam();
-            _capturer.stop(conn->getCam());
+            _capturer.remove(conn);
             wrtc::PeerManager::onClosed(conn);
         }
+        
+       void Signaler::closeCamera(std::string &cam)
+       {
+            SInfo << "Remove cam "  << cam;
+            std::set< std::string>  peeerids;
+            
+            _capturer.stop(cam , peeerids);
+            
+            for( std::string from : peeerids   )
+            {
+                onPeerDiconnected( from);
+            }
+            
+       }
 
         void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
             LInfo("onFailure stop FFMPEG Capture")
-            _capturer.stop(conn->getCam());
+            _capturer.remove(conn);
             wrtc::PeerManager::onFailure(conn, error);
         }
 

@@ -233,7 +233,7 @@ void MultiplexMediaCapturer::addMediaTracks(
       std::string &cam = peer->getCam();
       if( VideoCapturer.find(cam) == VideoCapturer.end())
       {
-         VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , peer);
+         VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , cam);
          video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
       }
       mutexCap.unlock();   
@@ -243,7 +243,7 @@ void MultiplexMediaCapturer::addMediaTracks(
         video_track[cam]->set_enabled(true);
         conn->AddTrack(video_track[cam], {streamId});
          
-        VideoCapturer[cam]->myAddRef();
+        VideoCapturer[cam]->myAddRef(peer->peerid());
          
        
          
@@ -266,70 +266,67 @@ void MultiplexMediaCapturer::addMediaTracks(
 }
 
 
-void MultiplexMediaCapturer::start( std::string & cam )
-{
-    #if MP4File
-    //_stream.start
-    _videoCapture->start();
-    #endif
-    
-    SInfo << "MultiplexMediaCapturer::start()" ;
-    
-    
-   
-            
-}
-
-void MultiplexMediaCapturer::stop(std::string & cam )
-{
-                 
-  // _stream.stop();
-    //_videoCapture->stop();
-     SInfo << "MultiplexMediaCapturer::stop() cam "  << cam;
-     
-
-       mutexCap.lock();
-    
-     
-      
-         
-     {
-        std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
-        vsItr=VideoCapturer.find(cam);
-        if( vsItr != VideoCapturer.end() && ( rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease()) )
-        {
-             SInfo << "VideoCapturer::stop() cam "  << cam;
-
-            
-             VideoCapturer[cam]->Release();
-             VideoCapturer[cam].release();
-             VideoCapturer[cam] = nullptr;
-             VideoCapturer.erase(vsItr);
-             
-             
-            std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
-           it=video_track.find(cam);
-           if( it != video_track.end())
-           {
-                SInfo << "MultiplexMediaCapturer::stop()1 cam "  << cam;
-               video_track[cam]->Release();
-               video_track[cam].release();
-               video_track[cam] = nullptr;
-               video_track.erase(it);
-           }
-             
-        }
-
-     }
-     
-    
-     
-     mutexCap.unlock();
+//void MultiplexMediaCapturer::start( std::string & cam )
+//{
+//    #if MP4File
+//    //_stream.start
+//    _videoCapture->start();
+//    #endif
+//    
+//    SInfo << "MultiplexMediaCapturer::start()" ;
+//    
 //    
 //   
-//    VideoCapturer.release();
-//    VideoCapturer = nullptr;
+//            
+//}
+
+void MultiplexMediaCapturer::remove(wrtc::Peer* conn )
+{
     
+    std::string cam = conn->getCam();
+    
+    std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
+    vsItr=VideoCapturer.find(cam);
+    if( vsItr != VideoCapturer.end() && ( rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease( conn->peerid())) )
+    {
+         SInfo << "VideoCapturer::stop() cam "  << cam;
+
+         mutexCap.lock();
+         VideoCapturer[cam]->Release();
+         VideoCapturer[cam].release();
+         VideoCapturer[cam] = nullptr;
+         VideoCapturer.erase(vsItr);
+         mutexCap.unlock();
+
+
+       std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
+       it=video_track.find(cam);
+       if( it != video_track.end())
+       {
+            SInfo << "MultiplexMediaCapturer::stop()1 cam "  << cam;
+           video_track[cam]->Release();
+           video_track[cam].release();
+           video_track[cam] = nullptr;
+           video_track.erase(it);
+       }
+
+    }
+ 
+     
+    
+}
+void MultiplexMediaCapturer::stop(std::string & cam , std::set< std::string> & sPeerIds )
+{
+                 
+   std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
+   vsItr=VideoCapturer.find(cam);
+    
+   if( vsItr != VideoCapturer.end()  )
+   {
+       VideoCapturer[cam]->reset( sPeerIds);
+   }
+
+  
 }
 
 
