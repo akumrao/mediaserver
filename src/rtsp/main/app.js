@@ -362,18 +362,17 @@ var hiddenInput = undefined;
                             if (verbose) { console.log("queue pop:", queue.length); }
                     
                             if (verbose)
-			    {
-				    var memview = new Uint8Array(inp);
-				     res = getBox(memview, 0);
-                                     console.log(res[1]);
-				    //console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]);
-			     }
-                        
+                            {
+                                var memview = new Uint8Array(inp);
+                                 res = getBox(memview, 0);
+                                  console.log(res[1]); //console.log(" ==> writing buffer with", memview[0], memview[1], memview[2], memview[3]);
+                            }                       
                             source_buffer.appendBuffer(inp);
                             queue.shift();
                          } catch (e) 
                          {
                             console.log("sourceBuffer.appendBuffer = " + e.toString())
+                            reSet();
                          }
 
                         cc = cc + 1;
