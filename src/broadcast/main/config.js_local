@@ -7,12 +7,9 @@
     "potentialID" : "729795",
     "stream_type" : "webrtc",
     "rtsp": {
-    "629976VGSTESTHDStressBox3CAM35081": {"rtsp":"rtsp://localhost:9554/testStream"},
-    "529976VGSTESTHDStressBox3CAM35081": {"rtsp":"rtsp://localhost:8554/testStream"},
-    "729976VGSTESTHDStressBox3CAM35081": {"rtsp":"rtsp://root:60056005@10.76.0.16:555/axis-media/media.amp?videocodec=h264&resolution=1280x720&fps=5"},
-    "729976VGSTESTHDStressBox3CAM96865": {"rtsp":"rtsp://root:60056005@10.76.0.16:557/axis-media/media.amp?videocodec=h264&resolution=1280x720&fps=5"},
-    "729976VGSTESTHDStressBox3CAM86942": {"rtsp":"rtsp://root:60056005@10.76.0.16:556/axis-media/media.amp?videocodec=h264&resolution=1280x720&fps=5"}
-    },
+    "1": {"rtsp":"rtsp://localhost:9554/testStream"},
+    "2": {"rtsp":"rtsp://localhost:8554/testStream"}
+      },
     "logLevel": "info",
     "logTags": [
       "info"
