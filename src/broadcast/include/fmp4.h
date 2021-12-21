@@ -227,7 +227,7 @@ public:
      
      
  public:
-     ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory );
+     ReadMp4( std::string ip, int port,   base::wrtc::Signaler &sig,  net::ServerConnectionFactory *factory );
      
      ~ReadMp4( );
      
@@ -252,6 +252,8 @@ public:
       #endif
      */
  private:
+     
+     base::wrtc::Signaler &sig;
      /*
      DummyFrameFilter *fragmp4_filter{nullptr};
      FrameFilter *fragmp4_muxer{nullptr};;
@@ -265,7 +267,7 @@ public:
      */
  public:
      
-     void broadcast(const char * data, int size, bool binary,  bool is_first  );
+     void broadcast(std::string &cam, std::string &reason );
      void on_read(net::Listener* connection, const char* msg, size_t len) ;
      
 //    virtual void onConnect(    int socketID                        );

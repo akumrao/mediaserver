@@ -21,7 +21,7 @@ namespace base {
 
             void startStreaming(const std::string& dir, const std::string& file,  const std::string& type ,  bool looping);
             void connect(const std::string& host, const uint16_t port, const std::string room);
-            void closeCamera(std::string &cam);
+            void closeCamera(std::string &cam ,  std::string  reason );
             
         protected:
 

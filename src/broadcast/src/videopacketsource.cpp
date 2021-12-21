@@ -36,9 +36,13 @@ using std::endl;
 #define BYPASSGAME 1
 
 namespace base {
+    
+ extern fmp4::ReadMp4 *self;
+    
 namespace wrtc {
     
 #define tcprequest true
+    
 
 VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::FrameFilter *next):cam(cam),fmp4::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
@@ -121,12 +125,12 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
         
         
      
-        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam);
+        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam, nullptr);
         fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
         info = new fmp4::InfoFrameFilter("info", nullptr);
 
-        txt = new fmp4::TextFrameFilter("txt", cam);
+        txt = new fmp4::TextFrameFilter("txt", cam, self);
 
 
         ffparser = new fmp4::LiveThread("live");

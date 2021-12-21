@@ -8,7 +8,6 @@
 #include <deque>
 #include <atomic>
 #include <condition_variable>
-
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
 
@@ -21,15 +20,9 @@
 
                                                 
 namespace base {
- 
-
-//namespace wrtc {
-//
-//class Peer;
-//}
-    
 namespace fmp4 {
 
+class ReadMp4;    
     
 struct FrameFifoContext {                                                                                                                                       // <pyapi>
                                                                                                                    // <pyapi>
@@ -145,10 +138,11 @@ public: // API
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name, std::string &cam , bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name, std::string &cam ,base::fmp4::ReadMp4 *conn, bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
 
-     std::string cam;  
+     std::string cam;
+     base::fmp4::ReadMp4 *conn; 
 protected:
     bool verbose;
    
@@ -164,11 +158,11 @@ protected:
 class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name, std::string &cam,  FrameFilter *next = NULL ); 
+    TextFrameFilter(const char *name, std::string &cam, base::fmp4::ReadMp4 *conn, FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
     std::string cam;
-     
+    base::fmp4::ReadMp4 *conn; 
   
 public:
     

@@ -3,10 +3,6 @@
 #include "tools.h"
 #include "base/logger.h"
 #include "fmp4.h"
-//#include "webrtc/peer.h"
-//#include "webrtc/peermanager.h"
-
-#include "Settings.h"
 
 namespace base {
 namespace fmp4 {
@@ -30,7 +26,7 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name,  std::string &cam , bool verbose, FrameFilter *next) : cam(cam), FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name, std::string &cam , ReadMp4 *conn, bool verbose, FrameFilter *next) : cam(cam), FrameFilter(name, next), verbose(verbose)
 {
     #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
@@ -89,7 +85,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *name,  std::string &cam , FrameFilter *next) : FrameFilter(name, next),cam(cam) 
+TextFrameFilter::TextFrameFilter(const char *name,  std::string &cam, ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next), cam(cam), conn(conn)  
 {
 }
 
@@ -104,8 +100,9 @@ void TextFrameFilter::go(Frame *frame) {
       SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
       
 
-      Settings::setNodeState(cam , txt->txt );
-         /// conn->_manager->postAppMessage(txt->txt,  conn->peerid() , conn->getRoom() );
+     
+       if(conn)
+         conn->broadcast(cam, txt->txt);
       
 
    

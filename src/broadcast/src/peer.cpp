@@ -107,6 +107,9 @@ Peer::~Peer()
 
     if (_peerConnection) {
         _peerConnection->Close();
+        
+        _peerConnection.release();
+        _peerConnection = nullptr;
     }
 }
 

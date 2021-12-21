@@ -33,7 +33,7 @@ extern "C"
 
 namespace base {
     
-    //fmp4::ReadMp4 *self;
+   fmp4::ReadMp4 *self;
 
     namespace fmp4 {
 
@@ -145,7 +145,7 @@ namespace base {
                 
                 for( std::string  el : vec)
                 {
-                    sig.closeCamera(el);
+                    sig.closeCamera(el, "Deleted camera with Rest API");
                 }
                 
                 SInfo << "reconfigure Camera settings " << body << std::endl;
@@ -174,9 +174,9 @@ namespace base {
         }
         
 
-        ReadMp4::ReadMp4( std::string ip, int port, net::ServerConnectionFactory *factory ): net::HttpServer(  ip, port,  factory, true) {
+        ReadMp4::ReadMp4( std::string ip, int port,   base::wrtc::Signaler &sig, net::ServerConnectionFactory *factory ): sig(sig), net::HttpServer(  ip, port,  factory, true) {
 
-           // self = this;
+            self = this;
 
 //	    fragmp4_filter = new DummyFrameFilter("fragmp4", this);
 //            fragmp4_muxer = new FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
@@ -330,27 +330,14 @@ namespace base {
 
         }
     
-        void ReadMp4::broadcast(const char * data, int size, bool binary, bool is_first  )
+        void ReadMp4::broadcast(std::string &cam, std::string &reason )
         {
-           // conn->send( data, size, binary    );
-            static int noCon =0;
             
-            if(noCon !=this->GetNumConnections())
-                
-            {
-                noCon = this->GetNumConnections();
-                SInfo << "No of Connectons " << noCon;
-            }
-
-            for (auto* connection :  this->GetConnections())
-            {
-                net::HttpConnection* cn = (net::HttpConnection*)connection;
-               
-                net::WebSocketConnection *con = ((net::HttpConnection*)connection)->getWebSocketCon();
-                if(con)
-                 con->push(data ,size, binary, is_first );
-            }
-
+             Settings::setNodeState(cam , reason );
+             
+             sig.closeCamera( cam, reason   );
+             
+          
         }
         
         void ReadMp4::run() {

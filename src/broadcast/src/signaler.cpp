@@ -232,15 +232,17 @@ namespace base {
             wrtc::PeerManager::onClosed(conn);
         }
         
-       void Signaler::closeCamera(std::string &cam)
+       void Signaler::closeCamera(std::string &cam ,  std::string  reason )
        {
             SInfo << "Remove cam "  << cam;
             std::set< std::string>  peeerids;
             
             _capturer.stop(cam , peeerids);
             
+            std::string room("foo"); // Arvind: hard coded room, soon we will remove it
             for( std::string from : peeerids   )
             {
+                postAppMessage(reason, from, room );
                 onPeerDiconnected( from);
             }
             
@@ -266,10 +268,12 @@ namespace base {
            // LTrace("postAppMessage", cnfg::stringify(m));
            
             json m;
-            m["type"] = "error";
+            m["type"] = "bye";
             m["desc"] = message ;
             m["to"] =from;
             m["room"] = room;
+            
+            SInfo << "postMessage " <<  cnfg::stringify(m);
             
             socket->emit("postAppMessage", m);
        }
