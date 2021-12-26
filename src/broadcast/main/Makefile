@@ -1,6 +1,8 @@
 ################################################################################
 ### CUSTOMIZE BELOW HERE #######################################################
 
+WEBRTC_PATH = /workspace/webrtc_android/src/
+
 CC	= gcc
 CXX     = g++
 TARGET=runStreamer # define the name of the executable
@@ -14,7 +16,7 @@ LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 #/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
 LDLIBS    := -lpthread -lm -ldl -lavformat -lavfilter -lavcodec -lavutil -lswscale -lavdevice -lswresample
 
-SLIBS     := /workspace/webrtc_android/src/out/m84/obj/libwebrtc.a
+SLIBS     := ${WEBRTC_PATH}/out/m75/obj/libwebrtc.a 
 
 
 ################################################################################

@@ -50,7 +50,7 @@ void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string&
     if(!dir.empty())         
         _videoCapture->openDir(dir,type);
     else if( !file.empty() )
-       _videoCapture->openFile(dir + "/"+ file , type);
+       _videoCapture->openFile(file , type);
 
 
 
