@@ -58,10 +58,13 @@ int main(int argc, char** argv) {
 
     //sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
     
-   // sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
+    //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
-    sig.startStreaming("", "/var/tmp/test.mp4", "mp4",  true); // single file play in loop, this feauture migt be broken.
+    sig.startStreaming("/var/tmp/videos", "", "264",  false);
     
+    //sig.startStreaming("", "/var/tmp/test.mp4", "mp4",  true); // single file play in loop, this feauture migt be broken.  // obsolete apis do not do this
+    
+   // sig.startStreaming("", "/var/tmp/test.264", "264",  false); // single file play in loop, this feauture migt be broken. // obsolete apis do not do this
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
 

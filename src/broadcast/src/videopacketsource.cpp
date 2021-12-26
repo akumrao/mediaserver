@@ -15,7 +15,7 @@
 
 using std::endl;
 
-#define WebRTC_USE_DECODER_PTS 1
+//#define WebRTC_USE_DECODER_PTS 1
 
 
 namespace base {
@@ -144,10 +144,14 @@ int VideoPacketSource::onVideoCaptured(IPacket& pac)
     // WebRTC sets the initial packet time to 1000 so we will do the same.
     timestamp += 1000;
 #else
-     _nextTimestamp += _captureFormat.interval;
-     timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
+  //   _nextTimestamp += _captureFormat.interval;
+  //   timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
+    
+    timestamp = rtc::TimeMicros();
 #endif
 
+     
+     
      if (!AdaptFrame(packet.width, packet.height,
          timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
          &adapted_width, &adapted_height,
