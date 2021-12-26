@@ -28,7 +28,7 @@ apt-get install -y libx264-dev
 apt-get install -y  nasm
 git clone    https://github.com/cisco/openh264 
 
-git checkout v1.5.0
+git checkout openh264v1.5
 make -j8
 
 ****************************************************************** to compile ffmpeg in static mode**************************************

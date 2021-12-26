@@ -7,17 +7,17 @@
 #define SEND_PARAMETER_SETS // keep this always defined
  static const unsigned LIVE_GET_PARAMETER_PING = 50;
  
- enum PayloadSizes {
-  DEFAULT_PAYLOAD_SIZE            = 1024,    ///< Default buffer size in Live555 for h264 // debug // not used anymore
-  
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*100, ///< Default buffer size in Live555 for h264
-  DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264 
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*10,  ///< Default buffer size in Live555 for h264 // debug
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024, // use this small value for debugging (( debug
-  
-  DEFAULT_PAYLOAD_SIZE_PCMU       = 1024,    ///< Default buffer size in Live555 for pcmu
-};
+// enum PayloadSizes {
+//  DEFAULT_PAYLOAD_SIZE            = 1024,    ///< Default buffer size in Live555 for h264 // debug // not used anymore
+//  
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*100, ///< Default buffer size in Live555 for h264
+//  DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264 
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*10,  ///< Default buffer size in Live555 for h264 // debug
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024, // use this small value for debugging (( debug
+//  
+//  DEFAULT_PAYLOAD_SIZE_PCMU       = 1024,    ///< Default buffer size in Live555 for pcmu
+//};
 
  
 namespace base {
@@ -241,6 +241,15 @@ void MSRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, ch
     // after we've sent a RTSP "PLAY" command.)
 
     // scs.subsession->sink = FrameSink::createNew(env, *scs.subsession, framefilter, scs.subsession_index, rtspClient->url());
+   
+#if DIRECTFILE
+     char outFileName[] = "/tmp/test11.264";  
+     scs.subsession->sink = H264VideoFileSink::createNew(env, outFileName,
+						   scs.subsession->fmtp_spropparametersets(),
+						  600000, 0);
+#endif    
+     
+     
     scs.subsession->sink = FrameSink::createNew(env, scs, fragmp4_muxer, info, txt, rtspClient->url());
       // perhaps use your own custom "MediaSink" subclass instead
     if (scs.subsession->sink == NULL) {
@@ -474,7 +483,7 @@ StreamClientState::~StreamClientState() {
 
 // Even though we're not going to be doing anything with the incoming data, we still need to receive it.
 // Define the size of the buffer that we'll use:
-#define DUMMY_SINK_RECEIVE_BUFFER_SIZE 500000
+#define DUMMY_SINK_RECEIVE_BUFFER_SIZE 600000
 
 /*
 FrameSink* FrameSink::createNew(UsageEnvironment& env, MediaSubsession& subsession, FrameFilter& framefilter, int subsession_index, char const* streamId) {
@@ -603,11 +612,13 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 #endif
   
    basicframe.copyBuf(fReceiveBuffer, frameSize );
+   fragmp4_muxer->run(&basicframe);
+   basicframe.payload.resize(basicframe.payload.capacity()); 
    
  // unsigned target_size=frameSize+numTruncatedBytes;
   // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-  basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+ /* basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
   basicframe.fillPars();
   
   //SInfo << "afterGettingFrame: " << fragmp4_muxer->resetParser ;
@@ -650,7 +661,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 //   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" ;
 //    setReceiveBuffer(target_size);
 //  }
-  
+  */
    // recovers maximum size .. must set maximum size before letting live555 to write into the memory area
   
   // Then continue, to request the next frame of data:

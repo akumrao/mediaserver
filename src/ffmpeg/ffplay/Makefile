@@ -1,8 +1,7 @@
 #
 # http://www.gnu.org/software/make/manual/make.html
 #
-FFMPEG_ROOT = /export/views/video/ffmpeg
-
+FFMPEG_ROOT = /workspace/ffmpeg
 CC:=gcc
 INCLUDES:=$(shell pkg-config --cflags sdl)
 # CFLAGS:=-Wall -ggdb

@@ -7,7 +7,7 @@
 namespace base {
 namespace fmp4 {
 
-//#define DUMPFMP4 1
+#define DUMP264 1
 
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
@@ -28,9 +28,9 @@ void FrameFilter::run(Frame *frame)
 // subclass like this:
 DummyFrameFilter::DummyFrameFilter(const char *name, std::string &cam , ReadMp4 *conn, bool verbose, FrameFilter *next) : cam(cam), FrameFilter(name, next), verbose(verbose)
 {
-    #if DUMPFMP4 
+    #if DUMP264 
     // std::cout << ">>>>>>" << verbose << std::endl;
-    const char *input_file = "/tmp/test.mp4"; 
+    const char *input_file = "/tmp/test.264"; 
     if ((fp_out = fopen(input_file, "wb")) == NULL) {
         fprintf(stderr, "fopen %s failed.\n", input_file);
         // goto ret7;
@@ -40,7 +40,7 @@ DummyFrameFilter::DummyFrameFilter(const char *name, std::string &cam , ReadMp4 
 }
 DummyFrameFilter::~DummyFrameFilter()
 {
-    #if DUMPFMP4 
+    #if DUMP264 
     fclose(fp_out);
     #endif
 }
@@ -52,30 +52,28 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-        if (frame->type() != "MuxFrame") {
-            std::cout << "FragMP4ShmemFrameFilter: go: ERROR: MuxFrame required" << std::endl;
+        if (frame->type() != "BasicFrame") {
+            std::cout << "DummyFrameFilter: go: ERROR: BasicFrame required" << std::endl;
             return;
+            
+            
         }
-        MuxFrame *muxframe = static_cast<MuxFrame*> (frame);
-        if (muxframe->meta_type != MuxMetaType::fragmp4) {
-            std::cout << "FragMP4ShmemFrameFilter::go: needs MuxMetaType::fragmp4"
-                    << std::endl;
-            return;
-        }
+        BasicFrame *muxframe = static_cast<BasicFrame*> (frame);
+       
 
     
-        FragMP4Meta* meta = (FragMP4Meta*) (muxframe->meta_blob.data());
+        //FragMP4Meta* meta = (FragMP4Meta*) (muxframe->meta_blob.data());
        // *meta = *meta_;
        
-        #if DUMPFMP4 
-        int ret = fwrite(muxframe->payload.data(), meta->size, 1, fp_out);
+        #if DUMP264 
+        int ret = fwrite(muxframe->payload.data(), muxframe->payload.size(), 1, fp_out);
         tolalMp4Size +=ret;
         #endif
         
        // if(conn)
        //  conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->is_first );
         
-        STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
+       // STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
  
 }
