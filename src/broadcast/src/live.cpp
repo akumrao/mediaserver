@@ -611,45 +611,49 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
   
-   basicframe.copyBuf(fReceiveBuffer, frameSize );
+  if(setupframe.stream_index  == 0)  // for video
+  { 
+      basicframe.copyBuf(fReceiveBuffer, frameSize );
      
  // unsigned target_size=frameSize+numTruncatedBytes;
   // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
-  basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
-  basicframe.fillPars();
-  
-  //SInfo << "afterGettingFrame: " << fragmp4_muxer->resetParser ;
-  
- // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
-  
-   scs.setFrame();
-//   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
-//   {
-//       // info->run(&basicframe);
-//       // fragmp4_muxer->sendMeta();
-//        //fragmp4_muxer->resetParser = false;
-//   }
+    basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+    basicframe.fillPars();
 
-   if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
-   {
-       //info->run(&basicframe);
-      // fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-      // basicframe.payload.resize(basicframe.payload.capacity());
-   }
-   else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
-        //info->run(&basicframe);
-         fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-        basicframe.payload.resize(basicframe.payload.capacity());
-   }
-   else
-   {
-        //info->run(&basicframe);
-        fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-        basicframe.payload.resize(basicframe.payload.capacity());
-        
-   }
-                    
+    //SInfo << "afterGettingFrame: " << fragmp4_muxer->resetParser ;
+
+   // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
+
+     scs.setFrame();
+  //   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+  //   {
+  //       // info->run(&basicframe);
+  //       // fragmp4_muxer->sendMeta();
+  //        //fragmp4_muxer->resetParser = false;
+  //   }
+
+     if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
+     {
+         //info->run(&basicframe);
+        // fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+        // basicframe.payload.resize(basicframe.payload.capacity());
+     }
+     else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
+          //info->run(&basicframe);
+           fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+          basicframe.payload.resize(basicframe.payload.capacity());
+     }
+     else
+     {
+          //info->run(&basicframe);
+          fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+          basicframe.payload.resize(basicframe.payload.capacity());
+
+     }
+     
+  }
+
   // flag that indicates that we got a frame
   
   // std::cerr << "BufferSource: IN0: " << basicframe ;
