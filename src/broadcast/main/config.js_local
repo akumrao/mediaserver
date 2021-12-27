@@ -7,8 +7,10 @@
     "potentialID" : "729795",
     "stream_type" : "webrtc",
     "rtsp": {
-    "1": {"rtsp":"rtsp://localhost:9554/testStream"},
-    "2": {"rtsp":"rtsp://localhost:8554/testStream"}
+    "1": {"rtsp":"rtsp://localhost/test.264"},
+    "2": {"rtsp":"rtsp://localhost/test2.264"},
+    "3": {"rtsp":"rtsp://localhost/test3.264"},
+    "4": {"rtsp":"rtsp://localhost/test6.264"}
       },
     "logLevel": "info",
     "logTags": [

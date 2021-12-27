@@ -75,7 +75,7 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
         V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
         V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
     */            
-        codec = avcodec_find_decoder_by_name("h264_cuvid");
+     //   codec = avcodec_find_decoder_by_name("h264_cuvid");
 
         if(!codec)
            codec = avcodec_find_decoder_by_name("libopenh264");
@@ -85,10 +85,8 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
 
         if(!codec)
         codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-
-  
      
-     	if ((codec = avcodec_find_decoder(AV_CODEC_ID_H264)) == NULL)
+     	if (codec == NULL)
     	{
     		SError<<  "avcodec_find_decoder failed";
     		
@@ -100,9 +98,9 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
     	
     	}
         
-        if(codec->capabilities & CODEC_CAP_TRUNCATED) {
-            cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
-        }
+//        if(codec->capabilities & CODEC_CAP_TRUNCATED) {
+//            cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
+//        }
         
         int ret ;
     	if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
@@ -126,7 +124,7 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
         
      
         fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam, nullptr);
-        fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+       // fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
 
         info = new fmp4::InfoFrameFilter("info", nullptr);
 
@@ -232,9 +230,9 @@ void VideoPacketSource::stopParser()
              delete fragmp4_filter;
             fragmp4_filter = nullptr;
             
-            if(fragmp4_muxer)
-            delete fragmp4_muxer;
-            fragmp4_muxer = nullptr;
+            //if(fragmp4_muxer)
+            //delete fragmp4_muxer;
+            //fragmp4_muxer = nullptr;
             
             if(info)
             delete info;
@@ -316,7 +314,23 @@ void VideoPacketSource::run(fmp4::Frame *frame)
     static uint frameNo = 0;
     
     int64_t TimestampUs = rtc::TimeMicros();
-     fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
+       
+    fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
+     
+    fragmp4_filter->run(basic_frame);
+    
+    
+    
+
+
+    int adapted_width;
+    int adapted_height;
+    int crop_width;
+    int crop_height;
+    int crop_x;
+    int crop_y;
+ 
+ 
     
     #if BYPASSGAME
 
@@ -328,11 +342,11 @@ void VideoPacketSource::run(fmp4::Frame *frame)
              
             // basic_frame->fillAVPacket(videopkt);
              
-             if ((ret = av_parser_parse2(parser, cdc_ctx, &videopkt->data, &videopkt->size,
-                  basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
-                        SError << "av_parser_parse2 failed" ;;
-                        //goto ret8;
-               }
+//             if ((ret = av_parser_parse2(parser, cdc_ctx, &videopkt->data, &videopkt->size,
+//                  basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
+//                        SError << "av_parser_parse2 failed" ;;
+//                        //goto ret8;
+//               }
              
 //                printf("[Packet]Size:%6d\t", videopkt->size);
 //                    switch (parser->pict_type) {
@@ -348,48 +362,66 @@ void VideoPacketSource::run(fmp4::Frame *frame)
 //                    printf("Number:%4d\n", parser->output_picture_number);
 //                    
 //		
-			
+             basic_frame->fillAVPacket(videopkt);
 
-             if (videopkt->size > 0)
-             ret = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, videopkt);
-             if (ret < 0) {
-                
-               // fmp4::InfoFrameFilter tmp("VideoPacketSource", nullptr);
-               // tmp.run( basic_frame);
-                SError << "Decode Error" ;
-                
-                return ;
-            }
-            if (got_picture) {
-                
-                
-                //const char *pixelFmt = av_get_pix_fmt_name(cdc_ctx->pix_fmt);
-                
-                //const char *pixelFm2t = av_get_pix_fmt_name((AVPixelFormat)avframe->format);
-                
+             while (videopkt->size > 0)
+             {
+                    ret = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, videopkt);
+                    if (ret < 0) {
+                      // basic_frame->fillPars();
+                       fmp4::InfoFrameFilter tmp("VideoPacketSource", nullptr);
+                       tmp.run( basic_frame);
+                       SError << "Decode Error" ;
 
-              //  SInfo << "Found Frame" ;
-                
-                rtc::scoped_refptr<webrtc::I420Buffer> Buffer = webrtc::I420Buffer::Copy(
-                avframe->width, avframe->height,
-                avframe->data[0],avframe->linesize[0],
-                avframe->data[1], avframe->linesize[1],
-                avframe->data[2], avframe->linesize[2]);
-    
-    
-                webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-		set_video_frame_buffer(Buffer).
-		set_rotation(webrtc::kVideoRotation_0).
-		set_timestamp_us(TimestampUs).
-		build(); 
+                       return ;
+                   }
+                   if (got_picture) 
+                   {
 
-               // SDebug << "ideoPacketSource::OnFrame";
 
-                OnFrame(Frame);  //arvind
-    
-                return;
-                
-            }
+                       //const char *pixelFmt = av_get_pix_fmt_name(cdc_ctx->pix_fmt);
+
+                       //const char *pixelFm2t = av_get_pix_fmt_name((AVPixelFormat)avframe->format);
+
+
+                     //  SInfo << "Found Frame" ;
+
+                      if (!AdaptFrame(avframe->width, avframe->height,
+                           TimestampUs, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+                           &adapted_width, &adapted_height,
+                           &crop_width, &crop_height,
+                           &crop_x, &crop_y)) {
+                           //LWarn("Adapt frame failed", packet.time)
+                           return;
+                       }
+
+
+
+                       rtc::scoped_refptr<webrtc::I420Buffer> Buffer = webrtc::I420Buffer::Copy(
+                       avframe->width, avframe->height,
+                       avframe->data[0],avframe->linesize[0],
+                       avframe->data[1], avframe->linesize[1],
+                       avframe->data[2], avframe->linesize[2]);
+
+
+                       webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+                       set_video_frame_buffer(Buffer).
+                       set_rotation(webrtc::kVideoRotation_0).
+                       set_timestamp_us(TimestampUs).
+                       build(); 
+
+                      // SDebug << "ideoPacketSource::OnFrame";
+
+                       OnFrame(Frame);  //arvind
+
+
+                   } // if found
+                    
+                    
+                videopkt->size -= ret;
+                videopkt->data += ret;
+             
+           }//while
                     
  
      #else
@@ -439,15 +471,6 @@ void VideoPacketSource::run(fmp4::Frame *frame)
                 
      
         
-//     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-//		set_video_frame_buffer(Buffer).
-//		set_rotation(webrtc::kVideoRotation_0).
-//		set_timestamp_us(TimestampUs).
-//		build(); 
-//
-//     SDebug << "ideoPacketSource::OnFrame";
-//       
-//     OnFrame(Frame);  //arvind
     
     return ;
 }

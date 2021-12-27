@@ -612,13 +612,11 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 #endif
   
    basicframe.copyBuf(fReceiveBuffer, frameSize );
-   fragmp4_muxer->run(&basicframe);
-   basicframe.payload.resize(basicframe.payload.capacity()); 
-   
+     
  // unsigned target_size=frameSize+numTruncatedBytes;
   // mstimestamp=presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
   // std::cout << "afterGettingFrame: mstimestamp=" << mstimestamp <<std::endl;
- /* basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
+  basicframe.mstimestamp=(presentationTime.tv_sec*1000+presentationTime.tv_usec/1000);
   basicframe.fillPars();
   
   //SInfo << "afterGettingFrame: " << fragmp4_muxer->resetParser ;
@@ -626,18 +624,18 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
  // basicframe.payload.resize(checkBufferSize(frameSize)); // set correct frame size .. now information about the packet length goes into the filter chain
   
    scs.setFrame();
-   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
-   {
-       // info->run(&basicframe);
-       // fragmp4_muxer->sendMeta();
-        //fragmp4_muxer->resetParser = false;
-   }
+//   if ( basicframe.h264_pars.frameType == H264SframeType::i && basicframe.h264_pars.slice_type == H264SliceType::idr) //AUD Delimiter
+//   {
+//       // info->run(&basicframe);
+//       // fragmp4_muxer->sendMeta();
+//        //fragmp4_muxer->resetParser = false;
+//   }
 
    if (basicframe.h264_pars.slice_type == H264SliceType::sps ||  basicframe.h264_pars.slice_type == H264SliceType::pps) //AUD Delimiter
    {
        //info->run(&basicframe);
-       fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-       basicframe.payload.resize(basicframe.payload.capacity());
+      // fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+      // basicframe.payload.resize(basicframe.payload.capacity());
    }
    else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
         //info->run(&basicframe);
@@ -661,7 +659,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 //   SDebug << "FrameSink : growing reserved size to "<< target_size << " bytes" ;
 //    setReceiveBuffer(target_size);
 //  }
-  */
+  
    // recovers maximum size .. must set maximum size before letting live555 to write into the memory area
   
   // Then continue, to request the next frame of data:

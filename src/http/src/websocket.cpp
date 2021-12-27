@@ -175,7 +175,7 @@ namespace base {
                 dummy_queue.pop();
                 dummy_mutex.unlock();
                 //1 ftype, 2 moov, 3 first moof(idr frame),   4 P or B frames cane be dropped
-               if( (!dropping &&  qsize < 45   )  ||  (dropping &&  qsize < 25 && tmp.frametype == 1 )   )     /// 25  1 2 3 4 4 4 4 4 ( recent files)
+               if(  true  ||  (!dropping &&  qsize < 45   )  ||  (dropping &&  qsize < 25 && tmp.frametype == 1 )   )     /// 25  1 2 3 4 4 4 4 4 ( recent files)
                {
                    if (tmp.buff.length())
                    {  
