@@ -317,11 +317,8 @@ void VideoPacketSource::run(fmp4::Frame *frame)
        
     fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
      
-    fragmp4_filter->run(basic_frame);
-    
-    
-    
-
+   // fragmp4_filter->run(basic_frame);   // arvind create /tmp/test.h264 files 
+   
 
     int adapted_width;
     int adapted_height;
