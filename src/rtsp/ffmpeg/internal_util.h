@@ -157,7 +157,7 @@
 
 #define FF_ALLOCZ_ARRAY_OR_GOTO(ctx, p, nelem, elsize, label)\
 {\
-    p = av_mallocz_array(nelem, elsize);\
+    p = (uint8_t *)av_mallocz_array(nelem, elsize);\
     if (!p) {\
         av_log(ctx, AV_LOG_ERROR, "Cannot allocate memory.\n");\
         goto label;\

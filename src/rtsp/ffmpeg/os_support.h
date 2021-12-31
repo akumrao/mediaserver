@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#include <wchar.h>
 #if HAVE_DIRECT_H
 #include <direct.h>
 #endif
@@ -144,7 +145,7 @@ int ff_poll(struct pollfd *fds, nfds_t numfds, int timeout);
 #elif defined(_WIN32)
 #include <stdio.h>
 #include <windows.h>
-#include "libavutil/wchar_filename.h"
+#include "wchar_filename.h"
 
 #ifdef WINAPI_FAMILY
 #include <winapifamily.h>

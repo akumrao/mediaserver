@@ -22,7 +22,7 @@
 #include <stdatomic.h>
 #include <stdint.h>
 
-#include "buffer.h"
+#include "avbuffer.h"
 #include "avthread.h"
 
 /**

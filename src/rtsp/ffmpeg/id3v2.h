@@ -161,22 +161,23 @@ int ff_id3v2_parse_apic(AVFormatContext *s, ID3v2ExtraMeta **extra_meta);
 extern const AVMetadataConv ff_id3v2_34_metadata_conv[];
 extern const AVMetadataConv ff_id3v2_4_metadata_conv[];
 
+// Sanjay  removed it 
 /**
  * A list of text information frames allowed in both ID3 v2.3 and v2.4
  * http://www.id3.org/id3v2.4.0-frames
  * http://www.id3.org/id3v2.4.0-changes
  */
-extern const char ff_id3v2_tags[][4];
+//extern const char ff_id3v2_tags[][4];
 
 /**
  * ID3v2.4-only text information frames.
  */
-extern const char ff_id3v2_4_tags[][4];
+//extern const char ff_id3v2_4_tags[][4];
 
 /**
  * ID3v2.3-only text information frames.
  */
-extern const char ff_id3v2_3_tags[][4];
+//extern const char ff_id3v2_3_tags[][4];
 
 //extern const CodecMime ff_id3v2_mime_tags[];
 

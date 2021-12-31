@@ -48,7 +48,7 @@
 #include "pixblockdsp.h"
 #include "put_bits.h"
 #include "ratecontrol.h"
-#include "parser.h"
+#include "avparser.h"
 #include "mpegutils.h"
 #include "mpeg12data.h"
 #include "qpeldsp.h"
@@ -76,7 +76,7 @@
  * MpegEncContext.
  */
 typedef struct MpegEncContext {
-    AVClass *class;
+    AVClass *class_av;
 
     int y_dc_scale, c_dc_scale;
     int ac_pred;

@@ -24,18 +24,12 @@
 #include "H264Framer.h"
 
 
-extern "C" {
- 
-// #include <libavutil/avassert.h>    
- #include <avcodec.h>
-// #include <libavutil/opt.h>
-// #include <libswscale/swscale.h>
-// #ifdef HAVE_FFMPEG_SWRESAMPLE
-// #include <libswresample/swresample.h>
-// #else
-// #include <libavresample/avresample.h>
-// #endif
-}
+#include "avcodec.h"
+#include "avformat.h"
+#include "channel_layout.h"
+#include "mathematics.h"
+
+//}
 
  
 
@@ -95,7 +89,7 @@ class ReadMp4;
      
     
      /// Video Begin 
-    bool parseH264Header();
+    bool parseH264Header(int stream_index);
     
     void parseH264Content();
     FILE *fileVideo;
@@ -105,16 +99,19 @@ class ReadMp4;
     /// Audio Begin 
     
     FILE *fileAudio;
-    bool parseAACHeader();
+    bool parseAACHeader(int stream_index);
     void parseAACContent();
-     AVCodecContext *audioContext= NULL;
     
+   bool initAAC();
+    
+    AVCodecContext *audioContext= NULL;
+     const AVCodec *audiocodec = NULL;
     void reset();
     void restart(bool mute);
 
     void resHD(bool hd);
     void reopen();
-
+   
       
     long get_nal_size(uint8_t *buf, long size,  uint8_t **poutbuf, int *poutbuf_size);
       
@@ -125,15 +122,15 @@ class ReadMp4;
    /// Audio End 
     
     long int startTime{0};
-    int stream_index{0};
+   // int stream_index{0};
     void parseMuxContent();
     
       
  private:
      
     //std::atomic< bool > resetParser { false };
-    std::atomic< bool > mute { false };
-    std::atomic< bool > hd { false };
+    std::atomic< bool > mute { true };
+    int hd{0} ;
     std::atomic< bool > keeprunning { true };
 
    // DummyFrameFilter *fragmp4_filter;

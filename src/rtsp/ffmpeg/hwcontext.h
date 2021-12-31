@@ -19,8 +19,9 @@
 #ifndef AVUTIL_HWCONTEXT_H
 #define AVUTIL_HWCONTEXT_H
 
-#include "buffer.h"
-#include "frame.h"
+#include "config.h"
+#include "avbuffer.h"
+#include "avframe.h"
 #include "log.h"
 #include "pixfmt.h"
 

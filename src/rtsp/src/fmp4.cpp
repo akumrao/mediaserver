@@ -18,11 +18,12 @@
 #include "livethread.h"
  #include "Settings.h"
 
-extern "C"
-{
+//extern "C"
+//{
 //#include <libavutil/timestamp.h>
-#include <avformat.h>
-}
+#include "avformat.h"
+//#include <libavcodec/avcodec.h>
+//}
 
 #define tcprequest true
 
@@ -74,10 +75,7 @@ namespace base {
 
            #endif
 
-
-            
-
-            
+         
 
         }
 
@@ -88,6 +86,24 @@ namespace base {
             ffparser->join();
             delete ffparser;
         }
+        
+        
+         void ReadMp4::on_close(net::Listener* connection)
+         {
+             
+            /* net::HttpsConnection* cn = (net::HttpsConnection*)connection;
+                if(cn)
+                {
+                    net::WebSocketConnection *con = ((net::HttpsConnection*)cn)->getWebSocketCon();
+                    if(con)
+                    {
+                      SInfo << "on_close " ;
+                    }
+                }
+             
+             */
+             
+         }
 
 
         void  ReadMp4::on_read(net::Listener* connection, const char* msg, size_t len) {

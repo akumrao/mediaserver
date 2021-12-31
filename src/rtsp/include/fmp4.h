@@ -96,6 +96,9 @@ class FFParse;
      void broadcast(const char * data, int size, bool binary,  int frametype   );
      void on_read(net::Listener* connection, const char* msg, size_t len) ;
      
+     void on_close(net::Listener* connection);
+     
+     
 //    virtual void onConnect(    int socketID                        );
 //    virtual void onMessage(    int socketID, const string& data    );
 //    virtual void onDisconnect( int socketID                        );

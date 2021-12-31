@@ -5,15 +5,19 @@
 
 //#include "mem.h"
 
-extern "C"
-{
 //#include <libavutil/timestamp.h>
  
- #include "avformat.h"
- #include "avcodec.h"
+// #include "avformat.h"
+// #include "avcodec.h"
  #include "channel_layout.h"
   
-}
+//extern "C"
+//{
+//#include <libavutil/timestamp.h>
+#include "avformat.h"
+#include "avcodec.h"
+//}
+
  /*
 
   H.264 comes in a variety of stream formats. One variation is called "Annex B".
@@ -913,7 +917,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
                 }
 
                if(metap->is_first)
-               SInfo << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
+               STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
                 // #endif
             }if (strncmp(boxname, "mdat", 4) == 0) {
 
@@ -947,6 +951,7 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;
                 // std::cout << "FragMP4MuxFrameFilter: metadata cached" << std::endl;
             }
+
 
 #ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: sending frame downstream " << std::endl;

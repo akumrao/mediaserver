@@ -22,10 +22,13 @@
 #ifndef AVUTIL_PIXDESC_H
 #define AVUTIL_PIXDESC_H
 
+#include "config.h"
 #include <inttypes.h>
 
 #include "attributes.h"
 #include "pixfmt.h"
+#include "math.h"
+#include "internal_util.h"
 //#include "version.h"
 
 typedef struct AVComponentDescriptor {

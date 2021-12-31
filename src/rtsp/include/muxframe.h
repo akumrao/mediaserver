@@ -5,17 +5,9 @@
 #include <iostream>
 #include  <vector>
 
-//#include <algorithm>
-//#include <iterator>
-//#include  <vector>
 
-// #include "ff/ff.h"
- //#include "ff/mediacapture.h"
-extern "C"
-{
-//#include <libavutil/timestamp.h>
 #include "avformat.h"
-}
+#include "avcodec.h"
 
 //#include "micro.h"
 #include "codec.h"
@@ -24,15 +16,6 @@ extern "C"
 
 namespace base {
 namespace fmp4 {
-    
-//#include <algorithm>
-//#include <iterator>
-//#include  <vector>
-
-// #include "ff/ff.h"
- //#include "ff/mediacapture.h"
-
-//#include <libavutil/timestamp.h>
 
 
 /** Enumeration of Frame classes 
@@ -383,9 +366,8 @@ public:                // managed objects
  * Copiable/Queable : no
  * 
  * @ingroup frames_tag
-;
-
-/** Decoded YUV frame in a non-planar format (thus "NP")
+ 
+ * Decoded YUV frame in a non-planar format (thus "NP")
  * 
  * For example, the YUYV422 format (AV_PIX_FMT_YUYV422), where the data layout looks like this:
  * YUYV YUYV YUYV YUYV YUYV YUYV

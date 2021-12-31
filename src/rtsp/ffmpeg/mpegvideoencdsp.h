@@ -44,8 +44,9 @@ typedef struct MpegvideoEncDSPContext {
                        int w, int h, int sides);
 } MpegvideoEncDSPContext;
 
-void ff_mpegvideoencdsp_init(MpegvideoEncDSPContext *c,
-                             AVCodecContext *avctx);
+// Sanjay  removed it 
+//void ff_mpegvideoencdsp_init(MpegvideoEncDSPContext *c,
+//                             AVCodecContext *avctx);
 void ff_mpegvideoencdsp_init_arm(MpegvideoEncDSPContext *c,
                                  AVCodecContext *avctx);
 void ff_mpegvideoencdsp_init_ppc(MpegvideoEncDSPContext *c,

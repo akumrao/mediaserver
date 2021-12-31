@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 
-#include "frame.h"
+#include "avframe.h"
 
 #include "avcodec.h"
 //#include "version.h"

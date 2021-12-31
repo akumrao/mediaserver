@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "avcodec.h"
-#include "parser.h"
+#include "avparser.h"
 
 typedef enum {
     AAC_AC3_PARSE_ERROR_SYNC        = -0x1030c0a,

@@ -56,9 +56,9 @@ typedef unsigned short uint16_t;
 #include <stdint.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 /**
  * \addtogroup ENCODER_STRUCTURE NvEncodeAPI Data structures
@@ -3092,7 +3092,7 @@ NVENCSTATUS NVENCAPI NvEncRunMotionEstimationOnly               (void* encoder, 
  * ::NV_ENC_ERR_INVALID_PTR \n
  */
 NVENCSTATUS NVENCAPI NvEncodeAPIGetMaxSupportedVersion          (uint32_t* version);
-
+typedef NVENCSTATUS NVENCAPI tNvEncodeAPIGetMaxSupportedVersion (uint32_t* version);
 
 /// \cond API PFN
 /*
@@ -3209,10 +3209,11 @@ typedef struct _NV_ENCODE_API_FUNCTION_LIST
  * ::NV_ENC_ERR_INVALID_PTR
  */
 NVENCSTATUS NVENCAPI NvEncodeAPICreateInstance(NV_ENCODE_API_FUNCTION_LIST *functionList);
+typedef NVENCSTATUS NVENCAPI tNvEncodeAPICreateInstance(NV_ENCODE_API_FUNCTION_LIST *functionList);
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 
 #endif

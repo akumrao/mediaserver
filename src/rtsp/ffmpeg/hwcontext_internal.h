@@ -19,11 +19,12 @@
 #ifndef AVUTIL_HWCONTEXT_INTERNAL_H
 #define AVUTIL_HWCONTEXT_INTERNAL_H
 
+#include "config.h"
 #include <stddef.h>
 
-#include "buffer.h"
+#include "avbuffer.h"
 #include "hwcontext.h"
-#include "frame.h"
+#include "avframe.h"
 #include "pixfmt.h"
 
 typedef struct HWContextType {

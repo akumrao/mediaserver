@@ -27,7 +27,8 @@
 #ifndef AVCODEC_THREAD_H
 #define AVCODEC_THREAD_H
 
-#include "buffer.h"
+#include "config.h"
+#include "avbuffer.h"
 
 #include "config.h"
 #include "avcodec.h"
