@@ -7,7 +7,7 @@
 namespace base {
 namespace fmp4 {
 
-#define DUMP264 1
+//#define DUMP264 1
 
 // #define TIMESTAMPFILTER_DEBUG // keep this commented
 
