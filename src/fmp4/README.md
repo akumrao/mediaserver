@@ -316,6 +316,16 @@ Show 7 more comments
 
 
 
+ffplay test.264 25 fps, 25 tbr, 1200k tbn, 50 tbc
+tbn = the time base in AVStream that has come from the container
+tbc = the time base in AVCodecContext for the codec used for a particular stream
+tbr = tbr is guessed from the video stream and is the value users want to see when they look for the video frame rate
+
+http://dranger.com/ffmpeg/tutorial05.html
+
+
+
+
 http://underpop.online.fr/f/ffmpeg/help/mov_002c-mp4_002c-ismv.htm.gz
 Writing a fragmented file has the advantage that the file is decodable even if the writing is interrupted (while a normal MOV/MP4 is undecodable if it is not properly finished), and it requires less memory when writing very long files (since writing normal MOV/MP4 files stores info about every single packet in memory until the file is closed). The downside is that it is less compatible with other applications.
 
