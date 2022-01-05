@@ -21,7 +21,7 @@
 #include<cstdio>
 #include<stdio.h>
 
-#include "BitVector.hh"
+#include "BitVector.h"
 
 
 ///////////////////////////////////////////
@@ -54,18 +54,18 @@ public:
      virtual ~H264Framer();
      
      void profile_tier_level(BitVector& bv, unsigned max_sub_layers_minus1);
-     unsigned removeH264or5EmulationBytes(u_int8_t* to, unsigned toMaxSize,
-                                     u_int8_t const* from, unsigned fromSize);
+     unsigned removeH264or5EmulationBytes(uint8_t* to, unsigned toMaxSize,
+                                     uint8_t const* from, unsigned fromSize);
      
-     void removeEmulationBytes( u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit,    u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize);
+     void removeEmulationBytes( uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit,    uint8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize);
      
-     void analyze_video_parameter_set_data(u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale);
+     void analyze_video_parameter_set_data(uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale);
      void analyze_hrd_parameters(BitVector& bv);
      
      void analyze_vui_parameters(BitVector& bv,
 			 unsigned& num_units_in_tick, unsigned& time_scale);
      
-     void analyze_seq_parameter_set_data(u_int8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) ;
+     void analyze_seq_parameter_set_data(uint8_t const* nalUnitOrig, unsigned const numBytesInNALunit, unsigned& num_units_in_tick, unsigned& time_scale) ;
      
 private:
     
