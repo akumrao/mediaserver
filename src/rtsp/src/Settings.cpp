@@ -65,10 +65,10 @@ void Settings::SetConfiguration(json &cnfg)
             base::Level ld = base::getLevelFromString(loglevel.c_str());
             
 #if	LOGGING_LOG_TO_FILE
-            base::Logger::instance().add(new base::FileChannel("webrtcserver","/var/log/webrtcserver", ld));
+            base::Logger::instance().add(new base::FileChannel("mpegdash","/var/log/mpegdash", ld));
             base::Logger::instance().setWriter(new base::AsyncLogWriter);
 #else
-            base::Logger::instance().add(new base::ConsoleChannel("webrtcserver", ld));
+            base::Logger::instance().add(new base::ConsoleChannel("mpegdash", ld));
 #endif
             
         }
