@@ -365,10 +365,12 @@ void VideoPacketSource::run(fmp4::Frame *frame)
              {
                     ret = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, videopkt);
                     if (ret < 0) {
+	               /*
                        basic_frame->fillPars();
                        fmp4::InfoFrameFilter tmp("VideoPacketSource", nullptr);
                        tmp.run( basic_frame);
                        SError << "Decode Error" ;
+		       */
 
                        return ;
                    }
