@@ -138,9 +138,10 @@ public: // API
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn , bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name, std::string &cam ,base::fmp4::ReadMp4 *conn, bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
 
+     std::string cam;
      base::fmp4::ReadMp4 *conn; 
 protected:
     bool verbose;
@@ -157,11 +158,11 @@ protected:
 class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name,  base::fmp4::ReadMp4 *conn,  FrameFilter *next = NULL ); 
+    TextFrameFilter(const char *name, std::string &cam, base::fmp4::ReadMp4 *conn, FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
-     base::fmp4::ReadMp4 *conn;
-     
+    std::string cam;
+    base::fmp4::ReadMp4 *conn; 
   
 public:
     

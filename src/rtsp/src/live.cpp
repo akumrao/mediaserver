@@ -7,17 +7,17 @@
 #define SEND_PARAMETER_SETS // keep this always defined
  static const unsigned LIVE_GET_PARAMETER_PING = 50;
  
- enum PayloadSizes {
-  DEFAULT_PAYLOAD_SIZE            = 1024,    ///< Default buffer size in Live555 for h264 // debug // not used anymore
-  
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*100, ///< Default buffer size in Live555 for h264
-  DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264 
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*10,  ///< Default buffer size in Live555 for h264 // debug
-  // DEFAULT_PAYLOAD_SIZE_H264       = 1024, // use this small value for debugging (( debug
-  
-  DEFAULT_PAYLOAD_SIZE_PCMU       = 1024,    ///< Default buffer size in Live555 for pcmu
-};
+// enum PayloadSizes {
+//  DEFAULT_PAYLOAD_SIZE            = 1024,    ///< Default buffer size in Live555 for h264 // debug // not used anymore
+//  
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*100, ///< Default buffer size in Live555 for h264
+//  DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264 
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*500, ///< Default buffer size in Live555 for h264
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024*10,  ///< Default buffer size in Live555 for h264 // debug
+//  // DEFAULT_PAYLOAD_SIZE_H264       = 1024, // use this small value for debugging (( debug
+//  
+//  DEFAULT_PAYLOAD_SIZE_PCMU       = 1024,    ///< Default buffer size in Live555 for pcmu
+//};
 
  
 namespace base {
@@ -241,6 +241,15 @@ void MSRTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, ch
     // after we've sent a RTSP "PLAY" command.)
 
     // scs.subsession->sink = FrameSink::createNew(env, *scs.subsession, framefilter, scs.subsession_index, rtspClient->url());
+   
+#if DIRECTFILE
+     char outFileName[] = "/tmp/test11.264";  
+     scs.subsession->sink = H264VideoFileSink::createNew(env, outFileName,
+						   scs.subsession->fmtp_spropparametersets(),
+						  600000, 0);
+#endif    
+     
+     
     scs.subsession->sink = FrameSink::createNew(env, scs, fragmp4_muxer, info, txt, rtspClient->url());
       // perhaps use your own custom "MediaSink" subclass instead
     if (scs.subsession->sink == NULL) {
@@ -306,7 +315,7 @@ void MSRTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, cha
   else {
     *livestatus=LiveStatus::alive;
     // start periodic GET_PARAMETER pinging of the camera.  Required for buggy 3-tier cameras, like AXIS
-     SError << "MSRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" ;
+     SInfo << "MSRTSPClient: Buggy AXIS firmware does not comply with the RTCP protocol => starting regular GET_PARAMETER pings to the camera" ;
     // ..Sampsa, I commented that stupid pun since it only creates confusion (Petri)
     scs.pingGetParameterTask = env.taskScheduler().scheduleDelayedTask(1000000*LIVE_GET_PARAMETER_PING, (TaskFunc*)pingGetParameter, rtspClient);  // arvind ping imp
   }
@@ -626,6 +635,9 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
   
+
+  if(basicframe.stream_index  == 0)  // for video
+  {
    basicframe.copyBuf(fReceiveBuffer, frameSize );
    
  // unsigned target_size=frameSize+numTruncatedBytes;
@@ -716,6 +728,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
         // framecount++;
 
     }
+}
 
                 
   

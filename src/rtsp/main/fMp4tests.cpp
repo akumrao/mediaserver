@@ -16,15 +16,9 @@
 #include "json/configuration.h"
 
 #include "fmp4.h"
-//#include "ff/ff.h"
-//#include "ff/mediacapture.h"
 
-//#include <libavutil/timestamp.h>
-extern "C"
-{
-//#include <libavutil/timestamp.h>
-#include <avformat.h>
-}
+#include  "avformat.h"
+
 
 using namespace base;
 
@@ -103,7 +97,7 @@ int main(int argc, char** argv) {
     avcodec_register_all();
 
       
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 80, new net::StreamingResponderFactory()  );
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 80, new base::fmp4::StreamingResponderFactory1()  );
     
     //readmp4.websocketConnect();
 

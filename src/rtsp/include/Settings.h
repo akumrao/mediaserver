@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 #include <json/json.hpp>
+#include <mutex>          // std::mutex
+
+
+
 using json = nlohmann::json;
 
 class Settings
@@ -27,8 +31,7 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
-                std::string rtsp1;
-                std::string rtsp2;
+                json rtsp;
                 json listenIps;
                 
 	};
@@ -47,6 +50,21 @@ public:
 
 private:
 	
+public:
+    
+    static void postNode(json &node ) ;
+    
+    static bool deleteNode(json &node, std::vector<std::string> & vec ) ;
+    
+    static std::mutex  mutexNode;
+    
+    static std::string  getNode();
+   
+    static bool putNode(json &node, std::vector<std::string> & vec  ) ;
+    
+    static bool setNodeState(std::string  & id , std::string  status);
+    
+    static bool getNodeState(std::string id , std::string  key , std::string  &value) ;
 };
 
 #endif

@@ -291,6 +291,9 @@ namespace base {
             bool dropping{false};
             int first_frame{1};
             int qsize{ 0 };
+            
+        public:
+            std::string key;
         };
 
 

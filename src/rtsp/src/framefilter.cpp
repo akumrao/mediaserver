@@ -26,11 +26,11 @@ void FrameFilter::run(Frame *frame)
 }
 
 // subclass like this:
-DummyFrameFilter::DummyFrameFilter(const char *name,  ReadMp4 *conn, bool verbose, FrameFilter *next) : conn(conn), FrameFilter(name, next), verbose(verbose)
+DummyFrameFilter::DummyFrameFilter(const char *name, std::string &cam , ReadMp4 *conn, bool verbose, FrameFilter *next) : cam(cam), conn(conn), FrameFilter(name, next), verbose(verbose)
 {
     #if DUMPFMP4 
     // std::cout << ">>>>>>" << verbose << std::endl;
-    const char *input_file = "/tmp/test.mp4"; 
+    const char *input_file = "/tmp/test.264"; 
     if ((fp_out = fopen(input_file, "wb")) == NULL) {
         fprintf(stderr, "fopen %s failed.\n", input_file);
         // goto ret7;
@@ -73,9 +73,9 @@ void DummyFrameFilter::go(Frame *frame) {
         #endif
         
         if(conn)
-         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->frametype );
+         conn->broadcast((const char*)muxframe->payload.data(), meta->size, true , muxframe->frametype, cam);
         
-        STrace << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
+       // SInfo << " Mp4 Wrote: "<<   meta->size << " Toltal Mp4 Size: " << tolalMp4Size ;
 
  
 }
@@ -85,7 +85,7 @@ void DummyFrameFilter::go(Frame *frame) {
 
 
 
-TextFrameFilter::TextFrameFilter(const char *name,  ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next),conn(conn) 
+TextFrameFilter::TextFrameFilter(const char *name,  std::string &cam, ReadMp4 *conn, FrameFilter *next) : FrameFilter(name, next), cam(cam), conn(conn)  
 {
 }
 
@@ -100,7 +100,7 @@ void TextFrameFilter::go(Frame *frame) {
        SDebug << "Send Text Message : " << this->name << " : got frame : " << txt->txt ;
         
       if(conn)
-         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false, false );
+         conn->broadcast((const char*)txt->txt.c_str(), txt->txt.size(), false, 0, cam );
    
 }
 

@@ -378,9 +378,8 @@ public:                // managed objects
  * Copiable/Queable : no
  * 
  * @ingroup frames_tag
-;
-
-/** Decoded YUV frame in a non-planar format (thus "NP")
+ 
+ * Decoded YUV frame in a non-planar format (thus "NP")
  * 
  * For example, the YUYV422 format (AV_PIX_FMT_YUYV422), where the data layout looks like this:
  * YUYV YUYV YUYV YUYV YUYV YUYV

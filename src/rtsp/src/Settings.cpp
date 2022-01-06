@@ -1,3 +1,8 @@
+/*  For testing reset api use Postman
+ * https://web.postman.co/workspace/My-Workspace~292b44c7-cae4-44d6-8253-174622f0233e/request/create?requestId=e6995876-3b8c-4b7e-b170-83a733a631db
+ */
+
+
 #include "Settings.h"
 #include "base/error.h"
 #include "base/logger.h"
@@ -8,11 +13,12 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
+#define LOGGING_LOG_TO_FILE 1
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
 
-
+std::mutex Settings::mutexNode;
 
 /* Class methods. */
 
@@ -44,13 +50,11 @@ void Settings::SetConfiguration(json &cnfg)
             Settings::configuration.rtcMaxPort = cnfg["rtcMaxPort"].get<uint16_t>();
         }
         
-        if (cnfg.find("rtsp1") != cnfg.end()) {
-            Settings::configuration.rtsp1 = cnfg["rtsp1"].get<std::string>();
+        if (cnfg.find("rtsp") != cnfg.end()) {
+            Settings::configuration.rtsp = cnfg["rtsp"];
         }
         
-        if (cnfg.find("rtsp2") != cnfg.end()) {
-            Settings::configuration.rtsp2 = cnfg["rtsp2"].get<std::string>();
-        }
+      
             
         if (cnfg.find("logLevel") != cnfg.end()) {   // trace, debug, info, warn
             //TBD // Move logger setting from main to here
@@ -60,9 +64,12 @@ void Settings::SetConfiguration(json &cnfg)
             
             base::Level ld = base::getLevelFromString(loglevel.c_str());
             
-            //base::Logger::instance().add(new base::ConsoleChannel("mediaserver", ld));
-            base::Logger::instance().add(new base::FileChannel("mediaserver","/var/log/mediaserver", ld));
+#if	LOGGING_LOG_TO_FILE
+            base::Logger::instance().add(new base::FileChannel("webrtcserver","/var/log/webrtcserver", ld));
             base::Logger::instance().setWriter(new base::AsyncLogWriter);
+#else
+            base::Logger::instance().add(new base::ConsoleChannel("webrtcserver", ld));
+#endif
             
         }
         
@@ -211,3 +218,119 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
 	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
+
+
+void Settings::postNode(json &node ) // complete json
+{
+    mutexNode.lock();
+          
+    Settings::configuration.rtsp = node ;
+    
+    mutexNode.unlock();
+     
+}
+
+bool Settings::putNode(json &node , std::vector<std::string> & vec )  // only one node
+{
+    bool ret = false;
+          
+    json &rtsp =  Settings::configuration.rtsp ;
+    
+    for (auto& [key, value] : node.items())
+    {
+       
+       if (rtsp.find(key) == rtsp.end()) 
+       {
+           
+            mutexNode.lock();
+            rtsp[key] = value;
+            mutexNode.unlock();
+            vec.push_back(key);
+            ret = true;
+       }
+    }
+    
+    return ret;
+     
+}
+
+
+bool Settings::deleteNode(json &node , std::vector<std::string> & vec  ) 
+{
+    bool ret = false;
+          
+    json &rtsp =  Settings::configuration.rtsp;
+    
+    for (auto& [key, value] : node.items())
+    {
+      
+       if (rtsp.find(key) != rtsp.end()) 
+       {
+            mutexNode.lock();
+            rtsp.erase(key);
+            mutexNode.unlock();
+            vec.push_back(key);
+            ret = true;
+       }
+       
+    }
+    
+    return ret;
+     
+}
+
+std::string Settings::getNode() 
+{
+    std::string ret;
+    mutexNode.lock();
+    ret =  Settings::configuration.rtsp.dump(4) ;
+    mutexNode.unlock();
+    return ret;  
+}
+
+bool Settings::setNodeState(std::string &id , std::string  status) 
+{
+    bool ret = false;
+    
+    mutexNode.lock();
+       
+    json &rtsp =  Settings::configuration.rtsp;
+    if (rtsp.find(id) != rtsp.end()) 
+    {
+        rtsp[id]["state"]= status;   
+        ret = true;
+    }
+    
+    mutexNode.unlock();   
+    
+
+    return ret;  
+}
+
+bool Settings::getNodeState(std::string id ,  std::string  key ,   std::string  &value) 
+{
+    
+    bool ret = false;
+    
+    mutexNode.lock();
+       
+    json &rtsp =  Settings::configuration.rtsp;
+    if (rtsp.find(id) != rtsp.end()) 
+    {
+       value =  rtsp[id][key];   
+       ret = true;
+    }
+    
+    mutexNode.unlock();   
+    
+
+    return ret;  
+}
+
+    
+    
+    
+
+ 
+
+#undef LOGGING_LOG_TO_FILE
