@@ -476,7 +476,13 @@ https://github.com/lieff/minimp4
 
 
 
+fps change  from 25 to 5
 
+ffmpeg -i cat.mp4  -r 5 -y cat2.mp4
+
+extract h264
+
+ffmpeg -i cat2.mp4  -c:v libx264 test.h264
 
 
 
