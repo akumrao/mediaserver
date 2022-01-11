@@ -47,7 +47,9 @@ namespace base {
                                           "-----END CERTIFICATE-----";
 
 
-        static SSL_CTX *ctx = nullptr;
+        static SSL_CTX *ctxClient = nullptr;
+        
+        static SSL_CTX *ctxServer = nullptr;
 
         SSL_CTX* InitCTX(bool server) {
             const SSL_METHOD *method;
@@ -238,12 +240,12 @@ namespace base {
                     assert(!_socket->context()->isForServerUse());
                      */
 
-            if (!ctx) {
-                ctx = InitCTX(false); /* initialize SSL */
+            if (!ctxClient) {
+                ctxClient = InitCTX(false); /* initialize SSL */
             }
 
 
-            _ssl = SSL_new(ctx);
+            _ssl = SSL_new(ctxClient);
 
             // TODO: Improve automatic SSL session handling.
             // Maybe add a stored session to the network manager.
@@ -265,13 +267,13 @@ namespace base {
                         _socket->useContext(SSLManager::instance().defaultServerContext());
                     assert(_socket->context()->isForServerUse());*/
 
-            if (!ctx) {
-                ctx = InitCTX(true); /* initialize SSL */
+            if (!ctxServer) {
+                ctxServer = InitCTX(true); /* initialize SSL */
 
             }
 
 
-            _ssl = SSL_new(ctx);
+            _ssl = SSL_new(ctxServer);
             _readBIO = BIO_new(BIO_s_mem());
             _writeBIO = BIO_new(BIO_s_mem());
             SSL_set_bio(_ssl, _readBIO, _writeBIO);
