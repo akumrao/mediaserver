@@ -897,12 +897,16 @@ static void video_image_display(VideoState *is)
     Frame *vp;
     Frame *sp = NULL;
     SDL_Rect rect;
+    
+    
+  
 
     vp = frame_queue_peek_last(&is->pictq);
     if (is->subtitle_st) {
         if (frame_queue_nb_remaining(&is->subpq) > 0) {
             sp = frame_queue_peek(&is->subpq);
 
+              
             if (vp->pts >= sp->pts + ((float) sp->sub.start_display_time / 1000)) {
                 if (!sp->uploaded) {
                     uint8_t* pixels[4];
@@ -944,6 +948,13 @@ static void video_image_display(VideoState *is)
         }
     }
 
+    time_t start = time(NULL);
+    static uint count =0;
+    int64_t cur_time  = av_gettime_relative();
+
+    printf("stream count %d , clock time %lld  CLOCKS_PER_SEC %lld  \n",  count, cur_time, CLOCKS_PER_SEC  );
+    printf("stream count %d , time %lld \n",  count++, start  );
+             
     calculate_display_rect(&rect, is->xleft, is->ytop, is->width, is->height, vp->width, vp->height, vp->sar);
 
     if (!vp->uploaded) {
