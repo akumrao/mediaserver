@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     avcodec_register_all();
 
       
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 80, new base::fmp4::StreamingResponderFactory1()  );
+    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 9090, new base::fmp4::StreamingResponderFactory1()  );
     
     //readmp4.websocketConnect();
 

@@ -18,6 +18,8 @@
 #include "livethread.h"
 #include "Settings.h"
 #include "http/HTTPResponder.h"
+#include "http/HttpServer.h"
+
 
 //extern "C"
 //{
@@ -229,7 +231,7 @@ namespace base {
         }
 
 
-        ReadMp4::ReadMp4( std::string ip, int port, StreamingResponderFactory1 *factory ): net::HttpServer(  ip, port,  factory, true) {
+        ReadMp4::ReadMp4( std::string ip, int port, StreamingResponderFactory1 *factory ): net::HttpsServer(  ip, port,  factory, true) {
 
             self = this;
 
@@ -577,10 +579,10 @@ namespace base {
 
             for (auto* connection :  this->GetConnections())
             {
-                net::HttpConnection* cn = (net::HttpConnection*)connection;
+                net::HttpsConnection* cn = (net::HttpsConnection*)connection;
                 if(cn)
                 {
-                    net::WebSocketConnection *con = ((net::HttpConnection*)cn)->getWebSocketCon();
+                    net::WebSocketConnection *con = ((net::HttpsConnection*)cn)->getWebSocketCon();
                     if(con && con->key == cam )
                      con->push(data ,size, binary, fametype);
                 }
