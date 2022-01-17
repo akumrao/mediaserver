@@ -6,8 +6,9 @@
 #include <string>
 #include <vector>
 #include <json/json.hpp>
-#include <mutex>          // std::mutex
+//#include <mutex>          // std::mutex
 
+#include <uv.h>
 
 
 using json = nlohmann::json;
@@ -15,6 +16,10 @@ using json = nlohmann::json;
 class Settings
 {
 public:
+    
+    static void init();
+    static void exit();
+    
 	struct LogTags
 	{
 		bool info{ false };
@@ -31,7 +36,9 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
-                json rtsp;
+                //json rtsp;
+                
+                json root;
                 json listenIps;
                 
 	};
@@ -49,14 +56,14 @@ public:
 	static struct Configuration configuration;
 
 private:
-	
+	static void  saveFile(const std::string& path, const std::string& dump);
 public:
     
     static void postNode(json &node ) ;
     
     static bool deleteNode(json &node, std::vector<std::string> & vec ) ;
     
-    static std::mutex  mutexNode;
+    static uv_rwlock_t  rwlock_t;
     
     static std::string  getNode();
    

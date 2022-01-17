@@ -106,18 +106,20 @@ int main(int argc, char** argv) {
 
     config.load("./config.js");
   
-    json cnfg;
+   // json cnfg;
    
-    if( !config.getRaw("webrtc", cnfg))
-    {
-        std::cout << "Could not parse config file";
-    }
+//    if( !config.getRaw("webrtc", cnfg))
+//    {
+//        std::cout << "Could not parse config file";
+//    }
             
-
+    Settings::init();
+    
     try {
-        Settings::SetConfiguration(cnfg);
+        Settings::SetConfiguration(config.root);
     } catch (const std::exception& error) {
 
+       Settings::exit();
         std::_Exit(-1);
     } 
 
@@ -170,6 +172,7 @@ int main(int argc, char** argv) {
    {
 
     LTrace("app.run() is over")
+    Settings::exit();         
     rtc::CleanupSSL();
     Logger::destroy();
     
