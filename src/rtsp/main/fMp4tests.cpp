@@ -74,18 +74,20 @@ int main(int argc, char** argv) {
 
     config.load("./config.js");
   
-    json cnfg;
+   // json cnfg;
    
-    if( !config.getRaw("webrtc", cnfg))
-    {
-        std::cout << "Could not parse config file";
-    }
+//    if( !config.getRaw("webrtc", cnfg))
+//    {
+//        std::cout << "Could not parse config file";
+//    }
             
-
+    Settings::init();
+    
     try {
-        Settings::SetConfiguration(cnfg);
+        Settings::SetConfiguration(config.root);
     } catch (const std::exception& error) {
 
+       Settings::exit();
         std::_Exit(-1);
     } 
     
@@ -105,6 +107,8 @@ int main(int argc, char** argv) {
     IgnoreSignals();
         
     app.waitForShutdown([&](void*) {
+        
+    Settings::exit();
 
     SInfo << "Main shutdwon";
     

@@ -54,7 +54,12 @@ void Configuration::loadIt(bool create)
         
         std::cout << "Parser failse " <<  _path  << error.what();
     }
+    
+    
+    //std::cout << root.dump(4) << std::flush;
+    
 
+    
     _loaded = true;
 }
 

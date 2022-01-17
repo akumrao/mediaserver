@@ -441,12 +441,10 @@ namespace base {
             }
             
              
-            
-            if( Settings::configuration.rtsp.find(camT) == Settings::configuration.rtsp.end()  )
+            std::string add;
+
+            if( !Settings::getNodeState(camT, "rtsp" , add ))
             {
-                    if(camT == "0"  )                    
-                    camT = Settings::configuration.rtsp.begin().key();
-                    else
                     {
                        // postAppMessage("Camera not available, check with Json API Cam: " + camT, from , room  );\
                      

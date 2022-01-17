@@ -18,17 +18,32 @@
 
 struct Settings::Configuration Settings::configuration;
 
-std::mutex Settings::mutexNode;
 
+uv_rwlock_t Settings:: rwlock_t;
 /* Class methods. */
+
+void Settings::init()
+{
+    uv_rwlock_init(&rwlock_t);
+
+}
+
+ void Settings::exit()
+{
+   uv_rwlock_destroy(&rwlock_t);
+ 
+}
+
 
 void Settings::SetConfiguration(json &cnfg)
 {
-
+       
+        Settings::configuration.root = cnfg;
+            
 	std::string stringValue;
 	std::vector<std::string> logTags;
         
-        //std::cout << cnfg.dump(4) << std::flush;
+       //  std::cout << cnfg.dump(4) << std::flush;
 
         if (cnfg.find("logTags") != cnfg.end()) {
           // there is an entry with key "foo"
@@ -50,9 +65,9 @@ void Settings::SetConfiguration(json &cnfg)
             Settings::configuration.rtcMaxPort = cnfg["rtcMaxPort"].get<uint16_t>();
         }
         
-        if (cnfg.find("rtsp") != cnfg.end()) {
-            Settings::configuration.rtsp = cnfg["rtsp"];
-        }
+       // if (cnfg.find("rtsp") != cnfg.end()) {
+       //     Settings::configuration.rtsp = cnfg["rtsp"];
+       // }
         
       
             
@@ -220,35 +235,58 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 }
 
 
+ void  Settings::saveFile(const std::string& path, const std::string& dump)
+{
+    std::ofstream ofs(path, std::ios::binary | std::ios::out);
+    if (!ofs.is_open())
+        throw std::runtime_error("Cannot open output file: " + path);
+
+
+    ofs << dump;
+    
+    ofs.close();
+}
+
+
 void Settings::postNode(json &node ) // complete json
 {
-    mutexNode.lock();
+ 
+    std::string dump;
+    uv_rwlock_wrlock(&rwlock_t);
           
-    Settings::configuration.rtsp = node ;
+    Settings::configuration.root["rtsp"] = node ;
     
-    mutexNode.unlock();
+    dump =  Settings::configuration.root.dump(4) ;
+          
+    uv_rwlock_wrunlock(&rwlock_t);
+    
+    saveFile( "./config.js", dump   );
+
      
 }
 
 bool Settings::putNode(json &node , std::vector<std::string> & vec )  // only one node
 {
     bool ret = false;
-          
-    json &rtsp =  Settings::configuration.rtsp ;
+    std::string dump;
+    uv_rwlock_wrlock(&rwlock_t);
+      
+    json &rtsp =   Settings::configuration.root["rtsp"] ;
     
     for (auto& [key, value] : node.items())
     {
        
        if (rtsp.find(key) == rtsp.end()) 
        {
-           
-            mutexNode.lock();
             rtsp[key] = value;
-            mutexNode.unlock();
             vec.push_back(key);
             ret = true;
        }
     }
+    dump =  Settings::configuration.root.dump(4) ;
+    uv_rwlock_wrunlock(&rwlock_t);
+    
+    saveFile( "./config.js", dump   );
     
     return ret;
      
@@ -258,23 +296,39 @@ bool Settings::putNode(json &node , std::vector<std::string> & vec )  // only on
 bool Settings::deleteNode(json &node , std::vector<std::string> & vec  ) 
 {
     bool ret = false;
-          
-    json &rtsp =  Settings::configuration.rtsp;
+    std::string dump;
     
-    for (auto& [key, value] : node.items())
+    
+   // if(node.is_object()
+    
+    uv_rwlock_wrlock(&rwlock_t);      
+    json &rtsp =  Settings::configuration.root["rtsp"];
+    
+     for (json::iterator it = node.begin(); it != node.end(); ++it) 
+    //for (auto& [key, value] : node.items())
     {
-      
+       std::string key;
+       
+       if(node.is_object())
+          key = it.key();
+       else
+          key = *it;
+       
        if (rtsp.find(key) != rtsp.end()) 
        {
-            mutexNode.lock();
             rtsp.erase(key);
-            mutexNode.unlock();
             vec.push_back(key);
             ret = true;
        }
        
     }
     
+    dump =  Settings::configuration.root.dump(4) ;
+     
+    uv_rwlock_wrunlock(&rwlock_t);
+    
+    saveFile( "./config.js", dump   );
+     
     return ret;
      
 }
@@ -282,9 +336,11 @@ bool Settings::deleteNode(json &node , std::vector<std::string> & vec  )
 std::string Settings::getNode() 
 {
     std::string ret;
-    mutexNode.lock();
-    ret =  Settings::configuration.rtsp.dump(4) ;
-    mutexNode.unlock();
+    uv_rwlock_rdlock(&rwlock_t);
+    
+    json &rtsp =  Settings::configuration.root["rtsp"];
+    ret = rtsp.dump(4) ;
+    uv_rwlock_rdunlock(&rwlock_t);
     return ret;  
 }
 
@@ -292,16 +348,15 @@ bool Settings::setNodeState(std::string &id , std::string  status)
 {
     bool ret = false;
     
-    mutexNode.lock();
-       
-    json &rtsp =  Settings::configuration.rtsp;
+    uv_rwlock_wrlock(&rwlock_t);     
+    json &rtsp =   Settings::configuration.root["rtsp"];
     if (rtsp.find(id) != rtsp.end()) 
     {
         rtsp[id]["state"]= status;   
         ret = true;
     }
+    uv_rwlock_wrunlock(&rwlock_t);
     
-    mutexNode.unlock();   
     
 
     return ret;  
@@ -312,16 +367,16 @@ bool Settings::getNodeState(std::string id ,  std::string  key ,   std::string  
     
     bool ret = false;
     
-    mutexNode.lock();
+     uv_rwlock_rdlock(&rwlock_t);
        
-    json &rtsp =  Settings::configuration.rtsp;
+    json &rtsp =   Settings::configuration.root["rtsp"];
     if (rtsp.find(id) != rtsp.end()) 
     {
        value =  rtsp[id][key];   
        ret = true;
     }
     
-    mutexNode.unlock();   
+  uv_rwlock_rdunlock(&rwlock_t);
     
 
     return ret;  
