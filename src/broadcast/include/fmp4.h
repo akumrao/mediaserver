@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-
+#include "http/HTTPResponder.h"
 #include "net/netInterface.h"
 #include "http/HttpClient.h"
 #include "http/HttpServer.h" 
@@ -50,36 +50,14 @@ class TextFrameFilter;
 class ReadMp4;  
 class LiveConnectionContext;
 class FFParse;
-
-
-
- class BasicResponder : public net::ServerResponder
-        /// Basic server responder (make echo?)
-{
-public:
-
-    BasicResponder(net::HttpBase* conn) :
-    net::ServerResponder(conn) {
-        STrace << "BasicResponder" << std::endl;
-    }
-
-    virtual void onClose() {
-        LDebug("On close")
-
-    }
-
-    void onRequest(net::Request& request, net::Response& response) ;
-    
-
-};
-
-class HttpPostResponder : public net::ServerResponder
-/// Basic server responder (make echo?)
+ 
+class HttpPostResponder : public net::BasicResponder
 {
 public:
 
     HttpPostResponder(net::HttpBase* conn) :
-    net::ServerResponder(conn) {
+
+    net::BasicResponder(conn) {
         STrace << "BasicResponder" << std::endl;
     }
 
@@ -97,13 +75,13 @@ public:
 };
 
 
-class HttpPutResponder : public net::ServerResponder
+class HttpPutResponder : public net::BasicResponder
 /// Basic server responder (make echo?)
 {
 public:
 
     HttpPutResponder(net::HttpBase* conn) :
-    net::ServerResponder(conn) {
+    net::BasicResponder(conn) {
         STrace << "BasicResponder" << std::endl;
     }
 
@@ -125,13 +103,13 @@ public:
 
 
 
-class HttpGetResponder : public net::ServerResponder
+class HttpGetResponder : public net::BasicResponder
 /// Basic server responder (make echo?)
 {
 public:
 
     HttpGetResponder(net::HttpBase* conn) :
-    net::ServerResponder(conn) {
+    net::BasicResponder(conn) {
         STrace << "BasicResponder" << std::endl;
     }
 
@@ -148,13 +126,13 @@ public:
              
 };
         
-class HttDeleteResponder : public net::ServerResponder
+class HttDeleteResponder : public net::BasicResponder
 /// Basic server responder (make echo?)
 {
 public:
 
     HttDeleteResponder(net::HttpBase* conn, base::wrtc::Signaler  &sig) :
-    net::ServerResponder(conn), sig(sig)  {
+    net::BasicResponder(conn), sig(sig)  {
         STrace << "BasicResponder" << std::endl;
     }
 
@@ -209,7 +187,7 @@ public:
                     return new HttDeleteResponder(conn, sig);
                 }  
                 else {
-                    return new BasicResponder(conn);
+                    return new net::BasicResponder(conn);
                 }
 
 

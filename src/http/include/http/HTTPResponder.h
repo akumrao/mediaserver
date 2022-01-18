@@ -36,6 +36,9 @@ namespace base {
                 LDebug("On close")
 
             }
+            
+            void sendResponse(std::string &result, bool success);
+            
 
             void onRequest(net::Request& request, net::Response& response) ;
         };

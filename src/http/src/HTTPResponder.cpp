@@ -204,16 +204,52 @@ namespace base {
         
         
         
+        void BasicResponder::sendResponse(std::string &result, bool success)
+        {
+            std::string response_code("200 OK");
+            std::string content_type("text/plain");
+            
+            if(!success)
+              response_code =  "404 Not Found";
+                      
+             std::ostringstream rep;
+                rep << "HTTP/1.1 " << response_code << "\r\n"
+                        << "Content-Type: " << content_type << "\r\n"
+                        //<< "Connection: keep-alive\r\n"
+                        << "Connection: close\r\n"
+                        << "Content-Length: " << result.size() << "\r\n"
+                        << "Access-Control-Allow-Origin: *" << "\r\n"
+                        << "\r\n";
+                rep << result;
+                std::string res = rep.str();
+            
+            HttpBase *con = connection();     
+                
+            auto cb =  onSendCallback([&con ](bool sent)
+            {
+                if (sent)
+                {
+                    con->Close();
 
+                }
+            }
+
+            );
+
+            connection()->tcpsend( res.c_str(), res.size(), cb );
+        }
 
 
         void BasicResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
 
-            response.setContentLength(14); // headers will be auto flushed
+            //response.setContentLength(14); // headers will be auto flushed
 
-            connection()->send((const char *) "hello universe", 14);
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+           // connection()->send((const char *) "hello universe", 14);
+           // connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+            std::string reponse= "hello universe";
+            sendResponse(reponse, true);
+            
         }
         
         

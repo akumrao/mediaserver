@@ -17,7 +17,6 @@
 #include "ffparse.h"
 #include "livethread.h"
 #include "Settings.h"
-#include "http/HTTPResponder.h"
 #include "http/HttpServer.h"
 
 
@@ -39,16 +38,6 @@ namespace base {
     namespace fmp4 {
 
 
-         void BasicResponder::onRequest(net::Request& request, net::Response& response) {
-            STrace << "On complete" << std::endl;
-
-            const char *msg = "Post with Json is allowed";
-            response.setContentLength( strlen(msg)); // headers will be auto flushed
-            connection()->send((const char *)msg , strlen(msg));
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
-        }
-        
-        
          void HttpPostResponder::onPayload(const std::string&  body )
          {
              
@@ -72,13 +61,17 @@ namespace base {
             
             std::string msg;
             if( settingCam != nullptr)
+            {
                 msg = "Success";
+                sendResponse(msg, true);
+            }
             else
+            {
                 msg = "failure";
+                sendResponse(msg, false);
+            }
                 
-            response.setContentLength( msg.length()); // headers will be auto flushed
-            connection()->send((const char *)msg.c_str() , msg.length());
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+        
         }
         
         
@@ -106,13 +99,15 @@ namespace base {
             
             std::string msg;
             if( settingCam != nullptr && ret)
-                msg = "Success";
+            {   msg = "Success";
+                sendResponse(msg, true);
+            }
             else
+            {
                 msg = "failure";
-                
-            response.setContentLength( msg.length()); // headers will be auto flushed
-            connection()->send((const char *)msg.c_str() , msg.length());
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+                sendResponse(msg, false);
+            }
+
         }
         
         
@@ -123,14 +118,10 @@ namespace base {
 
         void HttpGetResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
-            
             std::string msg;
-
             msg =  Settings::getNode();
-                    
-            response.setContentLength( msg.length()); // headers will be auto flushed
-            connection()->send((const char *)msg.c_str() , msg.length());
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+            sendResponse(msg, true);
+     
         }
         
  
@@ -168,13 +159,13 @@ namespace base {
             if( settingCam != nullptr && ret)
             {
                 msg = "Success";
+                sendResponse(msg, true);
             }
             else
+            {
                 msg = "failure";
-                
-            response.setContentLength( msg.length()); // headers will be auto flushed
-            connection()->send((const char *)msg.c_str() , msg.length());
-            connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
+                sendResponse(msg, false);
+            }
         }
         
         
@@ -222,7 +213,7 @@ namespace base {
                     return new HttDeleteResponder(conn);
                 }  
                 else {
-                    return new BasicResponder(conn);
+                    return new net::BasicResponder(conn);
                 }
                 
                 

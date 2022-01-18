@@ -580,7 +580,7 @@ int main(){
     r = uv_tcp_keepalive(&servertcp, 1, 60);
     CHECK(r, "tcp_keepalive");
     struct sockaddr_in address;
-    r = uv_ip4_addr("0.0.0.0", 8080, &address);
+    r = uv_ip4_addr("0.0.0.0", 3000, &address);
     CHECK(r, "ip4_addr");
     r = uv_tcp_bind(&servertcp, (const struct sockaddr*) &address, 0);
     CHECK(r, "tcp_bind");
@@ -612,7 +612,7 @@ int main(){
 #endif
 
    CHECK(r, "uv_listen");
-    LOG("listening on port 8080");
+    LOG("listening on port 3000");
    
 
     
