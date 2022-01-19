@@ -133,6 +133,8 @@ namespace base {
             {
                 settingCam = json::parse(body.c_str());
                 
+                std::vector<std::string>  vec;
+                    
                 ret = Settings::deleteNode( settingCam, vec);
                 
                 for( std::string  el : vec)

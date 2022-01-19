@@ -146,8 +146,7 @@ public:
     void onPayload(const std::string& /* body */); 
     
     json settingCam{ nullptr};
-    
-    std::vector<std::string>  vec;
+
     bool ret{false};
     
     base::wrtc::Signaler  &sig;
