@@ -241,13 +241,13 @@ namespace base {
             std::string room("foo"); // Arvind: hard coded room, soon we will remove it
             for( std::string from : peeerids   )
             {
-                postAppMessage(reason, from, room );
+               // postAppMessage(reason, from, room );
                 onPeerDiconnected( from);
             }
             
        }
 
-        void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
+       void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
             LInfo("onFailure stop FFMPEG Capture")
             _capturer.remove(conn);
             wrtc::PeerManager::onFailure(conn, error);

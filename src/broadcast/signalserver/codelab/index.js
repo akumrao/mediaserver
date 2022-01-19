@@ -268,9 +268,9 @@ async function runSocketServer() {
 		}
 		else
 		{
-			if ('room' in message) {
-				socket.to(message.room).emit('message', message);
-			}
+			//if ('room' in message) {
+				socket.to(message.to).emit('message', message);
+			//}
 
 		}
 
