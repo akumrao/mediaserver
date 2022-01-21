@@ -124,7 +124,7 @@ socket.on('message', function(message) {
   } else if (message.type === 'bye' && isStarted) {
     handleRemoteHangup();
   }
-  else if(message.type === 'bye') {
+  else if(message.type === 'error') {
    
     console.log('Camera state', message.desc);
     log('Camera state:', message.desc);

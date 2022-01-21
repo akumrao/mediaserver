@@ -167,7 +167,7 @@ namespace base {
                if( !Settings::getNodeState(camT, "rtsp" , add ))
                {
                     {
-                        postAppMessage("Camera not available, check with Json API Cam: " + camT, from , room  );
+                        postAppMessage("Camera not available.", from , room  );
                         return;
                     }
                 }
@@ -241,7 +241,7 @@ namespace base {
             std::string room("foo"); // Arvind: hard coded room, soon we will remove it
             for( std::string from : peeerids   )
             {
-               // postAppMessage(reason, from, room );
+                postAppMessage(reason, from, room );
                 onPeerDiconnected( from);
             }
             
@@ -267,7 +267,7 @@ namespace base {
            // LTrace("postAppMessage", cnfg::stringify(m));
            
             json m;
-            m["type"] = "bye";
+            m["type"] = "error";
             m["desc"] = message ;
             m["to"] =from;
             m["room"] = room;
