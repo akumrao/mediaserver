@@ -4,11 +4,11 @@
   
  */
 
-#include "GenToken.hxx"
-#include "SecurityToken.hxx"
+#include "GenToken.h"
+#include "SecurityToken.h"
 
+#include "base/uuid.h"
 
-#include <uuid/uuid.h>  //apt-get install uuid uuid-dev
 #include "base/logger.h"
 
 using namespace std;
@@ -21,23 +21,23 @@ int main(int arc, char** argv) {
     Logger::instance().add(new ConsoleChannel("debug", Level::Info));
 
 
-     string permissions("VT");
-     string deviceUid("ID");
-     string appkey = "appkey";
+    string permissions("VT");
+    string deviceUid("ID");
+    string appkey = "admin@provigil.com#232dfdf";
      
-     unsigned long expireSec = 5;
+    unsigned long expireSec = 5;
 
-     uuid_t uuid;
-      char coreID[64];
+    //    uuid_t uuid;
+    //char coreID[64];
 
-      uuid_generate(uuid);
-      uuid_unparse_lower(uuid, coreID);
-      //char coreID[100];
-      uuid_unparse(uuid, coreID);
-      deviceUid.assign(coreID);
+    // uuid_generate(uuid);
+    // uuid_unparse_lower(uuid, coreID);
+
+    // uuid_unparse(uuid, coreID);
+    deviceUid.assign(uuid4::uuid());
 
       
-      SInfo << "perm: "  << permissions  << " key: "  <<   appkey   << " dev: " <<  deviceUid << " tocken expire in secs " << expireSec;
+    SInfo << "perm: "  << permissions  << " key: "  <<   appkey   << " dev: " <<  deviceUid << " tocken expire in secs " << expireSec;
 
    // // gut_log(STR_ERROR, " perm %s, dev %s appkey %s", permissions.c_str(), deviceUid.c_str(), appkey.c_str());
 
@@ -45,7 +45,7 @@ int main(int arc, char** argv) {
    //  timeval now;
    //  gettimeofday(&now, NULL);
 
-       string token = SecToken::createSecurityToken(deviceUid, permissions, appkey, 5);
+    string token = SecToken::createSecurityToken(deviceUid, permissions, appkey, 5);
 
        SInfo << "token "  << token;
    //  gut_log(STR_ERROR, "token %s", token.c_str());
