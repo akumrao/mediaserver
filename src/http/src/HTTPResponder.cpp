@@ -268,7 +268,7 @@ namespace base {
                      else
                      return false;
                 }
-                else if(request.has("exp") && request.has("perm") )
+                else if( !tokenOnly && request.has("exp") && request.has("perm") )
                 {
                     std::string cam;
                     if(request.has("cam"))
