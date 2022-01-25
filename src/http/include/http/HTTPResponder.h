@@ -41,6 +41,9 @@ namespace base {
             
 
             void onRequest(net::Request& request, net::Response& response) ;
+            
+            bool authcheck(net::Request& request, std::string &ret, bool tokenOnly =true);
+            
         };
 
         class render_baton;
