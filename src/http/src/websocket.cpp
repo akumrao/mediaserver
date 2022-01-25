@@ -174,8 +174,9 @@ namespace base {
                 tmp = dummy_queue.front();
                 dummy_queue.pop();
                 dummy_mutex.unlock();
+                
                 //1 ftype, 2 moov, 3 first moof(idr frame),   4 P or B frames cane be dropped
-               if(  true  ||  (!dropping &&  qsize < 45   )  ||  (dropping &&  qsize < 25 && tmp.frametype == 1 )   )     /// 25  1 2 3 4 4 4 4 4 ( recent files)
+              // if(  true  ||  (!dropping &&  qsize < 45   )  ||  (dropping &&  qsize < 25 && tmp.frametype == 1 )   )     /// 25  1 2 3 4 4 4 4 4 ( recent files)
                {
                    if (tmp.buff.length())
                    {  
@@ -183,14 +184,16 @@ namespace base {
                        send(&tmp.buff[0], tmp.buff.length(), tmp.binary, cb);
                    }
                     
-                    dropping = false;
+                    //dropping = false;
                }
-               else
-               {
-                   dropping = true;
-                   SInfo << "dropping frame, storage queueze " <<  dummy_queue.size() << " pending Queue Size "  <<   qsize;
-                   
-               }
+                
+                
+//               else
+//               {
+//                   dropping = true;
+//                   SInfo << "dropping frame, storage queueze " <<  dummy_queue.size() << " pending Queue Size "  <<   qsize;
+//                   
+//               }
             }
             
             

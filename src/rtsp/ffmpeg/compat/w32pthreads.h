@@ -44,10 +44,10 @@
  #define MemoryBarrier __sync_synchronize
  #endif
  
- #include "ffmpeg/attributes.h"
- #include "ffmpeg/common.h"
- #include "ffmpeg/internal_util.h"
- #include "ffmpeg/mem.h"
+ #include "attributes.h"
+ #include "common.h"
+ #include "internal_util.h"
+ #include "mem.h"
  
  typedef struct pthread_t {
      void *handle;

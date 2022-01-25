@@ -19,6 +19,11 @@
 #include "Settings.h"
 #include "http/HttpServer.h"
 
+#include "GenToken.h"
+#include "SecurityToken.h"
+#include "base/uuid.h"
+
+
 
 //extern "C"
 //{
@@ -169,6 +174,81 @@ namespace base {
         }
         
         
+   
+
+        void HttOptionsResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            
+            std::string msg; 
+           if(request.has("key"))
+           {
+                std::string key =  request.get("key");
+               
+                
+                if(request.has("token"))
+                {
+                    
+                    std::string token =  request.get("token");
+                    
+                    std::string perm;
+                    std::string msg;
+                    uint32_t statusCode;
+
+
+                     MS_SecurityToken obj(token);
+                     obj.validate(key, msg, perm, statusCode, false);
+                     
+                     if(statusCode == 200)
+                     sendResponse(msg, true);      
+                     else
+                     sendResponse(msg, false);
+                }
+                    
+                else if(request.has("exp") && request.has("perm") )
+                {
+                    std::string cam;
+                    if(request.has("cam"))
+                    {
+                       cam =  request.get("cam");
+                    }
+                    else
+                    {
+                        cam = uuid4::uuid();
+                    }
+                    
+                    std::string exp =  request.get("exp");
+                    
+                    int iexp = std::stoi(exp);
+                    
+                    std::string perm =  request.get("perm");
+                    
+                    
+                    std::string token = SecToken::createSecurityToken(cam, perm, key, iexp);
+                    
+                    sendResponse(token, true);
+                    
+                }
+                else
+                {
+                  
+                   msg = "token or (expiring & permission missing)";
+                   sendResponse(msg, false);
+                    
+                }
+                
+                
+               
+           }
+           else
+           {
+                msg = "key missing";
+                sendResponse(msg, false);
+           }
+          
+        }
+
+        
         
 
          net::ServerResponder* StreamingResponderFactory1::createResponder(net::HttpBase* conn)
@@ -211,7 +291,11 @@ namespace base {
                 }
                 else if (request.getMethod() == "DELETE") {
                     return new HttDeleteResponder(conn);
-                }  
+                }
+                
+                else if (request.getMethod() == "OPTIONS") {
+                    return new HttOptionsResponder(conn);
+                }
                 else {
                     return new net::BasicResponder(conn);
                 }

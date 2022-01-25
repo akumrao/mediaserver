@@ -60,12 +60,12 @@ namespace base {
                 filepath += closure->path;
                 
                 
-                std::string index_path = (filepath + "index.html");
+               // std::string index_path = (filepath + "index.html");
 
-                std::cout << "file Path: " << filepath << "index Path " << index_path << std::endl;
+                std::cout << "file Path: " << filepath << std::endl;
 
-                bool has_index = base::fs::exists(index_path);               /// (access(index_path.c_str(), R_OK) != -1);
-                if (/*!has_index &&*/ filepath[filepath.size() - 1] == '/')
+                /*bool has_index = base::fs::exists(index_path);               /// (access(index_path.c_str(), R_OK) != -1);
+                if (!has_index && filepath[filepath.size() - 1] == '/')
                 {
                     uv_fs_t scandir_req;
                     uv_fs_scandir(req->loop, &scandir_req, filepath.c_str(), 0, NULL);
@@ -89,21 +89,22 @@ namespace base {
                     closure->result += "</ul></body></html>";
                     uv_fs_req_cleanup(&scandir_req);
                 } else
+                */
                 {
-                    std::string file_to_open = filepath;
-                    if (has_index)
+                    //std::string file_to_open = filepath;
+                   /* if (has_index)
                     {
                         file_to_open = index_path;
-                    }
-                    std::cout << "file Path: " << file_to_open << std::endl;
-                    bool exists =  base::fs::exists(file_to_open); //(access(file_to_open.c_str(), R_OK) != -1);
+                    }*/
+                    //std::cout << "file Path: " << file_to_open << std::endl;
+                    bool exists =  base::fs::exists(filepath); //(access(file_to_open.c_str(), R_OK) != -1);
                     if (!exists)
                     {
                         closure->result = "no access";
                         closure->response_code = "404 Not Found";
                         return;
                     }
-                    FILE * f = fopen(file_to_open.c_str(), "rb");
+                    FILE * f = fopen(filepath.c_str(), "rb");
                     if (f)
                     {
                         std::fseek(f, 0, SEEK_END);
@@ -115,31 +116,31 @@ namespace base {
                         //std::cout << &closure->result[0] << std::endl;
 
                         fclose(f);
-                        if (endswith(file_to_open, "html"))
+                        if (endswith(filepath, "html"))
                         {
                             closure->content_type = "text/html";
-                        } else if (endswith(file_to_open, "css"))
+                        } else if (endswith(filepath, "css"))
                         {
                             closure->content_type = "text/css";
-                        } else if (endswith(file_to_open, "js"))
+                        } else if (endswith(filepath, "js"))
                         {
                             closure->content_type = "application/javascript";
                         }
-                        else if (endswith(file_to_open, "ico"))
+                        else if (endswith(filepath, "ico"))
                         {
                               closure->content_type = "image/x-icon";  
-                        } else if (endswith(file_to_open, "gif")) 
+                        } else if (endswith(filepath, "gif"))
                         {
                              closure->content_type = "image/gif"; 
                              
-                        } else if (endswith(file_to_open, "jpeg"))
+                        } else if (endswith(filepath, "jpeg"))
                         {
                              closure->content_type = "image/jpeg"; 
-                        } else if (endswith(file_to_open, "png")) 
+                        } else if (endswith(filepath, "png"))
                         {
                              closure->content_type = "image/png"; 
                         } else {
-                            SError << "file format not supported " << file_to_open;
+                            SError << "file format not supported " << filepath;
                         }
                     
                         
@@ -312,9 +313,7 @@ namespace base {
 
             SInfo << "Response file Path: " << file_to_open << std::endl;
 
-            
-            
-            SInfo << "open render_baton " << closure ;
+             SInfo << "open render_baton " << closure ;
             
             
             closure->path = file_to_open;

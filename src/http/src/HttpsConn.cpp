@@ -53,9 +53,9 @@ namespace base {
 
         void HttpsConnection::on_read(const char* data, size_t len) {
 
-            LTrace("on_read()" )
+          // LTrace("on_read()" )
                     
-             LTrace( data )
+          //  LTrace( data )
                     
             if(wsAdapter)
             {
