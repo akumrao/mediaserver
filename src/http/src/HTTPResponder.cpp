@@ -297,7 +297,7 @@ namespace base {
                    if( tokenOnly)
                     ret = "token missing";
                    else
-                   ret = "token or (expiring & permission missing)";
+                   ret = "(expiring(secs) or permission missing. Please set exp as 360 and perm as w ";
                    return false;
                     
                 }
@@ -305,7 +305,7 @@ namespace base {
            }
            else
            {
-                ret = "key missing";
+                ret = "key missing. Please set key as admin@passsword";
                 return false;
            }
           

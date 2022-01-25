@@ -118,9 +118,20 @@ namespace base {
 
         void HttpGetResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
+            
+            
             std::string msg;
-            msg =  Settings::getNode();
-            sendResponse(msg, true);
+            
+            if(authcheck( request, msg, true ))
+            {
+                msg =  Settings::getNode();
+                sendResponse(msg, true);     
+            }
+            else
+            {
+               sendResponse(msg, false);
+            }
+          
      
         }
         
@@ -167,6 +178,26 @@ namespace base {
             }
         }
         
+        
+   
+
+        void HttOptionsResponder::onRequest(net::Request& request, net::Response& response) {
+            STrace << "On complete" << std::endl;
+            
+            std::string msg;
+            if(authcheck( request, msg, false ))
+            {
+               sendResponse(msg, true);      
+            }
+            else
+            {
+               sendResponse(msg, false);
+            }
+                
+                    
+                
+        }
+
         
         
 

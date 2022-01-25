@@ -127,7 +127,6 @@ public:
 };
         
 class HttDeleteResponder : public net::BasicResponder
-/// Basic server responder (make echo?)
 {
 public:
 
@@ -153,6 +152,33 @@ public:
     
              
 };
+
+class HttOptionsResponder : public net::BasicResponder
+{
+public:
+
+    HttOptionsResponder(net::HttpBase* conn) :
+    net::BasicResponder(conn)  {
+        STrace << "BasicResponder" << std::endl;
+    }
+
+    virtual void onClose() {
+         LDebug("On close")
+
+    }
+
+    void onRequest(net::Request& request, net::Response& response);
+    
+      
+    json settingCam{ nullptr};
+    
+    std::vector<std::string>  vec;
+    bool ret{false};
+    
+             
+};
+
+
 
 
  class StreamingResponderFactory1 : public net::ServerConnectionFactory {
@@ -184,7 +210,10 @@ public:
                 }
                 else if (request.getMethod() == "DELETE") {
                     return new HttDeleteResponder(conn, sig);
-                }  
+                }
+                else if (request.getMethod() == "OPTIONS") {
+                    return new HttOptionsResponder(conn);
+                }
                 else {
                     return new net::BasicResponder(conn);
                 }
