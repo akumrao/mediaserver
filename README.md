@@ -53,7 +53,7 @@ ln -s gcc-7 gcc
 
 ln -s g++-7  g++
 
-ln -s clang-1o  clang
+ln -s clang-10  clang
 
 ln -s clang++-10   clang++
 
