@@ -1,10 +1,18 @@
-ffmpeg complile 
+ffmpeg complile
+
 apt-get install libssl-dev -y
 
 
 apt install libsdl2-dev libsdl2-2.0-0 -y
+
 apt install libfdk-aac-dev -y
-git clone git@github.com:FFmpeg/FFmpeg.git  ffmpeg
+
+cd /workspace
+
+git clone git@github.com:FFmpeg/FFmpeg.git ffmpeg
+
+cd ffmpeg
+
 git checkout release/3.3
 
 ./configure --disable-yasm --enable-shared  --enable-ffplay--enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
@@ -13,11 +21,11 @@ do it
  ./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
 
 
-for h264 to enable for decoding
+for h264 to enable for decoding - See  openh264 installing section next
 
 ./configure --disable-yasm --enable-shared   --enable-debug=2 --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac    --enable-nonfree --enable-libx264 --enable-libopenh264
 
-
+ffmpeg webrtc - for google chrome based compilation 
 gn gen out/m84 --args='is_debug=true symbol_level=2 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true proprietary_codecs=true ffmpeg_branding="Chrome"'
 
 
@@ -26,28 +34,47 @@ apt-get install -y libx264-dev
 
 
 apt-get install -y  nasm
-git clone    https://github.com/cisco/openh264 
 
-git checkout openh264v1.5
-make -j8
+For compiling and using openh264  
+   git clone    https://github.com/cisco/openh264 
+
+   git checkout openh264v1.5
+   
+   cd openh264/
+   
+   make -j8
+   
+   make install
 
 ****************************************************************** to compile ffmpeg in static mode**************************************
 // do not give prefix path
+
 apt-get install -y  nasm
+
 apt-get remove  libx264-dev
+
+cd /workspace 
+
 git clone    https://github.com/mirror/x264.git 
 
+cd x264
+
 ./configure   --disable-opencl --enable-static
+
 make -j8
+
 make install
 
 
 cd /export/views/video/ffmpeg
-./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-libopenh264 --enable-filters --enable-runtime-cpudetect --disable-lzma
+
+    ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-libopenh264 --enable-filters --enable-runtime-cpudetect --disable-lzma
 
 debug
-cd /export/views/video/ffmpeg
-./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-debug=2 --disable-optimizations --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma
+
+  cd /export/views/video/ffmpeg
+
+  ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-debug=2 --disable-optimizations --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma
 
 ***********************************************************************************************************************
 
