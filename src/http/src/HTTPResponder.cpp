@@ -251,7 +251,7 @@ namespace base {
             {
                 std::string key =  request.get("key");
                
-                if(request.has("token") && tokenOnly)
+                if(request.has("token"))
                 {
                     
                     std::string token =  request.get("token");

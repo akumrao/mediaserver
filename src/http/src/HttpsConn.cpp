@@ -200,7 +200,7 @@ namespace base {
         void HttpsConnection::on_payload(const char* data, size_t len){
             
             if (_responder)
-                _responder->onPayload( std::string( data,len ));
+                _responder->onPayload( std::string( data,len ), _request);
 
         }
 

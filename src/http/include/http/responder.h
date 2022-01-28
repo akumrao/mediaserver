@@ -30,7 +30,7 @@ namespace base {
             virtual void onHeaders(Request& /* request */) {
             }
 
-            virtual void onPayload(const std::string& /* body */) {
+            virtual void onPayload(const std::string& /* body */, Request& ) {
             }
 
             virtual void onRequest(Request& /* request */, Response& /* response */) {

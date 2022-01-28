@@ -68,9 +68,11 @@ public:
 
     void onRequest(net::Request& request, net::Response& response);
     
-    void onPayload(const std::string& /* body */); 
+    void onPayload(const std::string& /* body */, net::Request& request); 
     
-     json settingCam{ nullptr};
+    json settingCam{ nullptr};
+    
+    std::string msg;
              
 };
 
@@ -92,12 +94,14 @@ public:
 
     void onRequest(net::Request& request, net::Response& response);
     
-    void onPayload(const std::string& /* body */); 
+    void onPayload(const std::string& /* body */, net::Request& request); 
     
     json settingCam{ nullptr};
     
     std::vector<std::string>  vec;
     bool ret{false};
+    
+    std::string msg;
              
 };
 
@@ -120,7 +124,7 @@ public:
 
     void onRequest(net::Request& request, net::Response& response);
     
-    void onPayload(const std::string& /* body */); 
+    void onPayload(const std::string& /* body */, net::Request& request);  
     
      json settingCam{ nullptr};
              
@@ -142,7 +146,7 @@ public:
 
     void onRequest(net::Request& request, net::Response& response);
     
-    void onPayload(const std::string& /* body */); 
+    void onPayload(const std::string& /* body */,net::Request& request); 
     
     json settingCam{ nullptr};
 

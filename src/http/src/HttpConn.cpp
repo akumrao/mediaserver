@@ -209,7 +209,7 @@ namespace base {
            this->listener->on_read(this, data,len );
            
             if (_responder)
-                _responder->onPayload( std::string( data,len ));
+                _responder->onPayload( std::string( data,len ), _request);
         }
 
         void HttpConnection::onComplete() {

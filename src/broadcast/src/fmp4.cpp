@@ -38,28 +38,43 @@ namespace base {
     namespace fmp4 {
 
 
-         void HttpPostResponder::onPayload(const std::string&  body )
-         {
-             
-             try
-             {
-                settingCam = json::parse(body.c_str());
-                
-                Settings::postNode( settingCam);
+        void HttpPostResponder::onPayload(const std::string&  body , net::Request& request)
+        {
+            
+            
+            
+            if(authcheck( request, msg, true ))
+            {
                
-                SInfo << "reconfigure Camera settings " << body << std::endl;
-             }
-             catch(...)
-             {
-                 settingCam = nullptr;
-             }
-              
-         }
+                
+                try
+                {
+                   settingCam = json::parse(body.c_str());
 
-        void HttpPostResponder::onRequest(net::Request& request, net::Response& response) {
+                   Settings::postNode( settingCam);
+
+                   SInfo << "reconfigure Camera settings " << body << std::endl;
+                }
+                catch(...)
+                {
+                    settingCam = nullptr;
+                }
+                
+            }
+            else
+            {
+                 settingCam = nullptr;
+            }
+           
+            
+              
+        }
+
+        void HttpPostResponder::onRequest(net::Request& request, net::Response& response) 
+        {
             STrace << "On complete" << std::endl;
             
-            std::string msg;
+
             if( settingCam != nullptr)
             {
                 msg = "Success";
@@ -67,7 +82,9 @@ namespace base {
             }
             else
             {
+                if(!msg.size())
                 msg = "failure";
+                
                 sendResponse(msg, false);
             }
                 
@@ -76,34 +93,45 @@ namespace base {
         
         
         
-        void HttpPutResponder::onPayload(const std::string&  body )
+        void HttpPutResponder::onPayload(const std::string&  body , net::Request& request)
         {
-
-            try
+            
+            if(authcheck( request, msg, true ))
             {
-                settingCam = json::parse(body.c_str());
-                
-                ret = Settings::putNode( settingCam, vec);
-                
-                SInfo << "Add single Camera " << body << std::endl;
-             }
-             catch(...)
-             {
+            
+                try
+                {
+                    settingCam = json::parse(body.c_str());
+
+                    ret = Settings::putNode( settingCam, vec);
+
+                    SInfo << "Add single Camera " << body << std::endl;
+                }
+                catch(...)
+                {
+                     settingCam = nullptr;
+                } 
+            
+            }
+            else
+            {
                  settingCam = nullptr;
-             }
+            }
+
+           
               
          }
 
         void HttpPutResponder::onRequest(net::Request& request, net::Response& response) {
             STrace << "On complete" << std::endl;
             
-            std::string msg;
             if( settingCam != nullptr && ret)
             {   msg = "Success";
                 sendResponse(msg, true);
             }
             else
             {
+                if(!msg.size())
                 msg = "failure";
                 sendResponse(msg, false);
             }
@@ -111,9 +139,9 @@ namespace base {
         }
         
         
-       void HttpGetResponder::onPayload(const std::string&  body )
+       void HttpGetResponder::onPayload(const std::string&  body ,net::Request& request)
        {
-            SInfo << "get Camera settings " << body << std::endl;
+          //  SInfo << "get Camera settings " << body << std::endl;
        }
 
         void HttpGetResponder::onRequest(net::Request& request, net::Response& response) {
@@ -137,7 +165,7 @@ namespace base {
         
  
         
-       void HttDeleteResponder::onPayload(const std::string&  body )
+       void HttDeleteResponder::onPayload(const std::string&  body, net::Request& request)
        {
            
             try
