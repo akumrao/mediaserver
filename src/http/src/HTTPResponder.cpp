@@ -321,8 +321,8 @@ namespace base {
 
            // connection()->send((const char *) "hello universe", 14);
            // connection()->Close();  // wrong we should close close after write is successful. Check the callback onSendCallback function
-            std::string reponse= "hello universe";
-            sendResponse(reponse, true);
+            std::string reponse= "wrong request";
+            sendResponse(reponse, false);
             
         }
         

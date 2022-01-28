@@ -12,6 +12,9 @@ WorkingDirectory=/workspace/mediaserver/src/rtsp/main
 #ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
+LimitNOFILE=20000
+LimitCORE=infinity
+
 
 [Install]
 WantedBy=multi-user.target

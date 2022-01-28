@@ -12,6 +12,9 @@ ExecStart=/workspace/mediaserver/src/broadcast/main/runWebrtc
 #ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
+LimitNOFILE=20000
+LimitCORE=infinity
+
 
 [Install]
 WantedBy=multi-user.target
