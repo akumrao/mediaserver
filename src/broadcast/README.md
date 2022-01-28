@@ -68,7 +68,7 @@ make install
 
 cd /export/views/video/ffmpeg
 
-    ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-libopenh264 --enable-filters --enable-runtime-cpudetect --disable-lzma
+    ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma
 
 debug
 
@@ -306,3 +306,22 @@ ffmpeg -i test.264  -i test.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+sep
 
 
 ffmpeg -i kunal720.264  -i kunal720_track2.aac -f mp4 -movflags empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof /tmp/output1.mp4
+
+
+
+for coredump  disable appport for file  otherwise do the following
+
+
+
+ I looked at /var/log/apport.log:
+
+cat /var/log/apport.log 
+and I saw the file name:
+
+ERROR: apport (pid 3426) Mon Nov  8 14:34:07 2021: writing core dump to core._home_guest_a_out.1000.4 ... 
+and then I search throughout all the system
+
+sudo find . -name "core._home_guest_a_out.1000.4..."
+I found the core dump in /var/lib/apport/coredump/
+
+
