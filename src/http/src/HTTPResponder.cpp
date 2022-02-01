@@ -246,6 +246,7 @@ namespace base {
         
         bool BasicResponder::authcheck(net::Request& request, std::string &ret, bool tokenOnly) 
         {
+           // return true;
             
             if(request.has("key"))
             {
@@ -282,7 +283,7 @@ namespace base {
                     
                     std::string exp =  request.get("exp");
                     
-                    int iexp = std::stoi(exp);
+                    unsigned long iexp = std::stol(exp);
                     
                     std::string perm =  request.get("perm");
                     
