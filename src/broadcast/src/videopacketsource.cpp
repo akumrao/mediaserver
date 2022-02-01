@@ -550,6 +550,7 @@ rtc::RefCountReleaseStatus VideoPacketSource::myRelease(  std::string peerid )  
     
    if (count == 0) {
      
+      stopParser();
      return rtc::RefCountReleaseStatus::kDroppedLastRef;
    }
   return rtc::RefCountReleaseStatus::kOtherRefsRemained;
