@@ -390,7 +390,7 @@ namespace base {
             
              Settings::setNodeState(cam , reason );
              
-             sig.closeCamera( cam, reason   );
+             sig.postcloseCamera( cam, reason   );
              
           
         }

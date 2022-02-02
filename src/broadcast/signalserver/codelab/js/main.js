@@ -122,13 +122,17 @@ socket.on('message', function(message) {
     });
     pc.addIceCandidate(candidate);
   } else if (message.type === 'bye' && isStarted) {
+
+    console.log('Camera state', message.desc);
+    log('Camera state:', message.desc);
+
     handleRemoteHangup();
   }
   else if(message.type === 'error') {
    
     console.log('Camera state', message.desc);
     log('Camera state:', message.desc);
-
+    hangup();
   }
 
 });

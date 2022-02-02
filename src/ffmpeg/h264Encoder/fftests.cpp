@@ -63,8 +63,8 @@ int main(int argc, char **argv)
     /* put sample parameters */
     c->bit_rate = 400000;
     /* resolution must be a multiple of two */
-    c->width = 352;
-    c->height = 288;
+    c->width = 720;
+    c->height = 576;
     /* frames per second */
     c->time_base = (AVRational){1, 25};
     c->framerate = (AVRational){25, 1};
@@ -75,12 +75,26 @@ int main(int argc, char **argv)
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    c->gop_size = 10;
-    c->max_b_frames = 1;
+    c->gop_size = 25;
+  //  c->max_b_frames = 1;
+    c->max_b_frames = 0;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
-
+   
+    c->color_range = AVCOL_RANGE_JPEG;
+    
+    
+  //  c->bit_rate = config.target_bps * 0.7;
+ //   c->rc_max_rate = config.target_bps * 0.85;
+  //  c->rc_min_rate = config.target_bps * 0.1;
+  //  c->rc_buffer_size = config.target_bps * 2;
+    
+     
     if (codec->id == AV_CODEC_ID_H264)
-        av_opt_set(c->priv_data, "preset", "slow", 0);
+    {
+       //av_opt_set(c->priv_data, "preset", "slow", 0);
+       av_opt_set(c->priv_data, "preset", "ultrafast", 0);
+       av_opt_set(c->priv_data, "tune", "zerolatency", 0); 
+    }
 
     /* open it */
     if (avcodec_open2(c, codec, NULL) < 0) {
@@ -110,7 +124,7 @@ int main(int argc, char **argv)
     }
 
     /* encode 1 second of video */
-    for (i = 0; i < 25; i++) {
+    for (i = 0; i < 225; i++) {
         av_init_packet(&pkt);
         pkt.data = NULL;    // packet data will be allocated by the encoder
         pkt.size = 0;

@@ -194,14 +194,14 @@ namespace base {
                 
 
             } else if (std::string("bye") == type) {
-               // onPeerDiconnected(from);
+                onPeerDiconnected(from);
             }
             
 
         }
 
         void Signaler::onPeerDiconnected(std::string& peerID) {
-            LDebug("Peer disconnected")
+            SInfo << "onPeerDiconnected " << peerID;
 
             auto conn = wrtc::PeerManager::remove(peerID);
             if (conn) {
@@ -230,6 +230,24 @@ namespace base {
             _capturer.remove(conn);
             wrtc::PeerManager::onClosed(conn);
         }
+        
+       
+        
+       void Signaler::postcloseCamera(std::string &cam ,  std::string  reason )
+       {
+            SInfo << "Remove cam "  << cam;
+            std::set< std::string>  peeerids;
+            
+            _capturer.stop(cam , peeerids);
+            std::string room("foo"); // Arvind: hard coded room, soon we will remove it
+            for( std::string from : peeerids   )
+            {
+                postAppMessage(reason, from, room );
+                
+            }
+            
+       }
+
         
        void Signaler::closeCamera(std::string &cam ,  std::string  reason )
        {
@@ -335,7 +353,7 @@ namespace base {
                 // Leaving rooms and disconnecting from peers.
                 socket->on("disconnectClient", sockio::Socket::event_listener_aux([&](string const& name, json const& data, bool isAck, json & ack_resp) {
                     std::string from = data.get<std::string>();
-                    SInfo << "disconnectClient " <<  from;
+                   // SInfo << "disconnectClient " <<  from;
                     //LInfo(cnfg::stringify(data));
                     onPeerDiconnected(from);
                 }));

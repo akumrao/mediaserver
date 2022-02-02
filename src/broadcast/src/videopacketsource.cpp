@@ -253,7 +253,7 @@ void VideoPacketSource::stopParser()
     
     }
 
-    
+    SInfo << "stoppedParser";
 }
 
 //void VideoPacketSource::setPacketSource(PacketSignal* source)

@@ -969,6 +969,7 @@ void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
 
 void LiveThread::stop(bool flag)
 {
+    exit_requested=true;
     eventLoopWatchVariable = 1;
 
     Thread::stop(flag);
