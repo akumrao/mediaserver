@@ -385,7 +385,7 @@ protected: // redefinitions
 protected:
   TaskScheduler*    scheduler;               ///< Live555 event loop TaskScheduler
   UsageEnvironment* env;                     ///< Live555 UsageEnvironment identifying the event loop
-  char              eventLoopWatchVariable;  ///< Modifying this, kills the Live555 event loop
+  volatile char              eventLoopWatchVariable;  ///< Modifying this, kills the Live555 event loop
   std::vector<Connection*>   slots_;         ///< A constant sized vector.  Book-keeping of the connections (RTSP or SDP) currently active in the live555 thread.  Organized in "slots".
   std::vector<Outbound*>     out_slots_;     ///< Book-keeping for the outbound connections
   std::list<Connection*>     pending;        ///< Incoming connections pending for closing

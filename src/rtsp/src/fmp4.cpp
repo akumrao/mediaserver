@@ -376,11 +376,42 @@ namespace base {
 
         }
         
+         
         ReadMp4::stParser::~stParser()
         {
-           ffparser->stop();
+            
+            ffparser->stopStreamCall(*ctx);
+
+            ffparser->deregisterStreamCall(*ctx);
+            ffparser->stop();
             ffparser->join();
+
+
             delete ffparser;
+            ffparser =nullptr;
+            
+            if(ctx)
+            delete ctx;
+            ctx = nullptr;
+            
+            if(fragmp4_filter)        
+             delete fragmp4_filter;
+            fragmp4_filter = nullptr;
+            
+            //if(fragmp4_muxer)
+            //delete fragmp4_muxer;
+            //fragmp4_muxer = nullptr;
+            
+            if(info)
+            delete info;
+            info = nullptr;
+            
+            if(txt)
+            delete txt;
+            txt = nullptr;
+            
+            
+            
         }
         
         
@@ -626,8 +657,6 @@ namespace base {
 //                SInfo << "No of Connectons " << noCon;
 //            }
             
-            if(!binary)
-            Settings::setNodeState(cam , std::string(data, size) );
 
             for (auto* connection :  this->GetConnections())
             {
@@ -638,6 +667,14 @@ namespace base {
                     if(con && con->key == cam )
                      con->push(data ,size, binary, fametype);
                 }
+            }
+            
+            
+            if(!binary)
+            {
+            
+                Settings::setNodeState(cam , std::string(data, size) );
+                //delCamera( cam); // nerver do that otherwise live555 will crash
             }
 
         }

@@ -529,6 +529,8 @@
                         // text frame
                         console.log(event.data);
                         log('Client sending message: ', event.data);
+                        ws.close();
+                        
                         // if(event.data == "reset" )
                         // {
                         //     document.getElementById("parStats").innerHTML = "";
