@@ -35,7 +35,7 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 443
+#define SERVER_PORT 9093
 #define JOIN_ROOM  "foo"        
 
 

@@ -3,7 +3,7 @@
 var os = require('os');
 const fs = require('fs');
 var nodeStatic = require('node-static');
-var https = require('https');
+var http = require('http');
 var socketIO = require('socket.io');
 //const ortc = require('./ortc.js');
 const config = require('./config');
@@ -31,7 +31,7 @@ let io;
 
 
 
-console.log("https://localhost/");
+console.log("http://localhost/");
 
 let serverSocketid =null;
 
@@ -73,7 +73,7 @@ async function runWebServer() {
     cert: fs.readFileSync(sslCrt),
     key: fs.readFileSync(sslKey),
   };
-  webServer = https.createServer(tls, expressApp);
+  webServer = http.createServer(expressApp);
   webServer.on('error', (err) => {
     console.error('starting web server failed:', err.message);
   });
@@ -83,7 +83,7 @@ async function runWebServer() {
     const { listenIp, listenPort } = config;
     webServer.listen(listenPort, listenIp, () => {
       console.log('server is running');
-      console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
+      console.log(`open http://127.0.0.1:${listenPort} in your web browser`);
 
     //  listenIps = config.webRtcTransport.listenIps;
       //const ip = listenIps.announcedIp || listenIps.ip;

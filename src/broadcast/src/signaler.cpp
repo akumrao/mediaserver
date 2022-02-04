@@ -301,7 +301,7 @@ namespace base {
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-            client = new sockio::SocketioClient(host, port, true);
+            client = new sockio::SocketioClient(host, port, false);
             client->connect();
 
             socket = client->io();
