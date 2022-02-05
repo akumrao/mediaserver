@@ -7,11 +7,11 @@ FFMPEG_ROOT = /workspace/ffmpeg
 
 
 TARGET=runH264Encoder # define the name of the executable
-SOURCES=$(wildcard *.cpp )
+SOURCES=$(wildcard *.cpp  ../h24Decoder/H*.cpp  )
 
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
 
-CPPFLAGS   := -I../../json/include/ -I../../ffmpeg/include -I../../signal/include -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ 
+CPPFLAGS   := -I../h24Decoder/ -I../../json/include/ -I../../ffmpeg/include -I../../signal/include -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ 
               
 LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
