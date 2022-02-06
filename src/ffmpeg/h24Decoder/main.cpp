@@ -131,6 +131,40 @@ int main() {
 }
  
 
+void frame_callback(AVFrame* frame, AVPacket* pkt, void* user) {
+
+  if(!playback_initialized) {
+    initialize_playback(frame, pkt);
+    playback_initialized = true;
+  }
+
+  if(player_ptr) {
+    player_ptr->setYPixels(frame->data[0], frame->linesize[0]);
+    player_ptr->setUPixels(frame->data[1], frame->linesize[1]);
+    player_ptr->setVPixels(frame->data[2], frame->linesize[2]);
+  }
+}
+
+void initialize_playback(AVFrame* frame, AVPacket* pkt) {
+
+  if(frame->format != AV_PIX_FMT_YUV420P) {
+    printf("This code only support YUV420P data.\n");
+    ::exit(EXIT_FAILURE);
+  }
+
+  if(!player_ptr) {
+    printf("player_ptr not found.\n");
+    ::exit(EXIT_FAILURE);
+  }
+
+  if(!player_ptr->setup(frame->width, frame->height)) {
+    printf("Cannot setup the yuv420 player.\n");
+    ::exit(EXIT_FAILURE);
+  }
+}
+
+
+
  #if 0
 
 void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods) {

@@ -283,7 +283,17 @@ namespace base {
                     
                     std::string exp =  request.get("exp");
                     
-                    unsigned long iexp = std::stol(exp);
+                    
+                    unsigned long iexp = 450;
+                    
+                    try
+                    {
+                        iexp = std::stol(exp);
+                    }
+                    catch(...)
+                    {
+                        
+                    }
                     
                     std::string perm =  request.get("perm");
                     
