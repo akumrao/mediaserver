@@ -173,6 +173,20 @@ int H264_Decoder::readBuffer() {
   if(bytes_read) {
     std::copy(inbuf, inbuf + bytes_read, std::back_inserter(buffer));
   }
+  else
+  {
+      
+ 
+        if(feof(fp))
+        {
+
+             if (fseek(fp, 0, SEEK_SET))
+            return 0;
+            return readBuffer() ;
+
+        }
+      
+  }
 
   return bytes_read;
 }

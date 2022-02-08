@@ -2,7 +2,7 @@
 LIVE555_ROOT = /workspace/live
 CXX     = g++
 TARGET=test # define the name of the executable
-SOURCES    = $(wildcard *.cpp ../src/H264*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp ../../json/src/*.cpp ../../crypto/src/*.cpp ../../net/src/*.cpp ../../http/src/*.cpp  ../../http_parser/*.cpp )
+SOURCES    = $(wildcard *.cpp ../src/H264*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp ../../base/src/*.cpp )
 
 CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized -Wno-attributes -Wno-fpermissive -Wno-deprecated-declarations
  

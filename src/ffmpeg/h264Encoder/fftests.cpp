@@ -1,5 +1,3 @@
-#include "ff/ff.h"
-#include "ff/mediacapture.h"
 #include "base/define.h"
 #include "base/test.h"
 #include "base/filesystem.h"
@@ -9,189 +7,104 @@
 #include "base/packetqueue.h"
 #include "base/platform.h"
 
+#include "H264_Encoder.h"
+
+
 using namespace std;
 using namespace base;
-using namespace base::ff;
-using namespace base::test;
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
 
-#include <libavutil/opt.h>
-#include <libavutil/imgutils.h>
+bool playback_initialized = false;
 
-};
+
+#include "H264_Decoder.h"
+
+void frame_callback(AVFrame* frame, AVPacket* pkt, void* user);
+void initialize_playback(AVFrame* frame, AVPacket* pkt);
+
+
+  H264_Encoder encoder(NULL, NULL);
+  
 
 int main(int argc, char **argv)
 {
-    const char *filename, *codec_name;
-    const AVCodec *codec;
-    AVCodecContext *c= NULL;
-    int i, ret, x, y, got_output;
-    FILE *f;
-    AVFrame *frame;
-    AVPacket pkt;
-   // uint8_t endcode[] = { 0, 0, 1, 0xb7 };
-
-    if (argc <= 1) {
-        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
-        exit(0);
-    }
-    filename = argv[1];
-    //codec_name = argv[2];
-
-    avcodec_register_all();
-
-    /* find the mpeg1video encoder */
    
-     codec = avcodec_find_encoder_by_name("libx264");
-    if (!codec) {
-        fprintf(stderr, "Codec not found\n");
-        exit(1);
+
+    H264_Decoder decoder(frame_callback, NULL);
+
+   // YUV420P_Player player;
+
+    //player_ptr = &player;
+//        decoder_ptr = &decoder;
+
+//    if(!decoder.load( "/var/tmp/test1.264", 30.0f)) {
+//      ::exit(EXIT_FAILURE);
+//    }
+
+    
+     if(!decoder.load( "/workspace/live/mediaServer/test4.264", 30.0f)) {
+      ::exit(EXIT_FAILURE);
     }
 
-    c = avcodec_alloc_context3(codec);
-    if (!c) {
-        fprintf(stderr, "Could not allocate video codec context\n");
-        exit(1);
-    }
+    
+    
 
-    /* put sample parameters */
-    c->bit_rate = 400000;
-    /* resolution must be a multiple of two */
-    c->width = 720;
-    c->height = 576;
-    /* frames per second */
-    c->time_base = (AVRational){1, 25};
-    c->framerate = (AVRational){25, 1};
 
-    /* emit one intra frame every ten frames
-     * check frame pict_type before passing frame
-     * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
-     * then gop_size is ignored and the output of encoder
-     * will always be I frame irrespective to gop_size
-     */
-    c->gop_size = 25;
-  //  c->max_b_frames = 1;
-    c->max_b_frames = 0;
-    c->pix_fmt = AV_PIX_FMT_YUV420P;
-   
-    c->color_range = AVCOL_RANGE_JPEG;
-    
-    
-  //  c->bit_rate = config.target_bps * 0.7;
- //   c->rc_max_rate = config.target_bps * 0.85;
-  //  c->rc_min_rate = config.target_bps * 0.1;
-  //  c->rc_buffer_size = config.target_bps * 2;
-    
-     
-    if (codec->id == AV_CODEC_ID_H264)
+    while(1)
     {
-       //av_opt_set(c->priv_data, "preset", "slow", 0);
-       av_opt_set(c->priv_data, "preset", "ultrafast", 0);
-       av_opt_set(c->priv_data, "tune", "zerolatency", 0); 
+      decoder.readFrame();
     }
+   
+    
+//    
+//     encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
+//     
+//     for(int x=0; x < 100 ;++x )
+//     encoder.encodeFrame();
+     
+}
+    
 
-    /* open it */
-    if (avcodec_open2(c, codec, NULL) < 0) {
-        fprintf(stderr, "Could not open codec\n");
-        exit(1);
-    }
+void frame_callback(AVFrame* frame, AVPacket* pkt, void* user) {
 
-    f = fopen(filename, "wb");
-    if (!f) {
-        fprintf(stderr, "Could not open %s\n", filename);
-        exit(1);
-    }
+  if(!playback_initialized) {
+    initialize_playback(frame, pkt);
+    playback_initialized = true;
+  }
 
-    frame = av_frame_alloc();
-    if (!frame) {
-        fprintf(stderr, "Could not allocate video frame\n");
-        exit(1);
-    }
-    frame->format = c->pix_fmt;
-    frame->width  = c->width;
-    frame->height = c->height;
-
-    ret = av_frame_get_buffer(frame, 32);
-    if (ret < 0) {
-        fprintf(stderr, "Could not allocate the video frame data\n");
-        exit(1);
-    }
-
-    /* encode 1 second of video */
-    for (i = 0; i < 225; i++) {
-        av_init_packet(&pkt);
-        pkt.data = NULL;    // packet data will be allocated by the encoder
-        pkt.size = 0;
-
-        fflush(stdout);
-
-        /* make sure the frame data is writable */
-        ret = av_frame_make_writable(frame);
-        if (ret < 0)
-            exit(1);
-
-        /* prepare a dummy image */
-        /* Y */
-        for (y = 0; y < c->height; y++) {
-            for (x = 0; x < c->width; x++) {
-                frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
-            }
-        }
-
-        /* Cb and Cr */
-        for (y = 0; y < c->height/2; y++) {
-            for (x = 0; x < c->width/2; x++) {
-                frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
-                frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
-            }
-        }
-
-        frame->pts = i;
-
-        /* encode the image */
-        ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
-        if (ret < 0) {
-            fprintf(stderr, "Error encoding frame\n");
-            exit(1);
-        }
-
-        if (got_output) {
-            printf("Write frame %3d (size=%5d)\n", i, pkt.size);
-            fwrite(pkt.data, 1, pkt.size, f);
-            av_packet_unref(&pkt);
-        }
-    }
-
-    /* get the delayed frames */
-    for (got_output = 1; got_output; i++) {
-        fflush(stdout);
-
-        ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
-        if (ret < 0) {
-            fprintf(stderr, "Error encoding frame\n");
-            exit(1);
-        }
-
-        if (got_output) {
-            printf("Write frame %3d (size=%5d)\n", i, pkt.size);
-            fwrite(pkt.data, 1, pkt.size, f);
-            av_packet_unref(&pkt);
-        }
-    }
-
-    /* add sequence end code to have a real MPEG file */
-   // fwrite(endcode, 1, sizeof(endcode), f);
-    fclose(f);
-
-    avcodec_free_context(&c);
-    av_frame_free(&frame);
-
-    return 0;
+  
+    encoder.encodeFrame(frame->data[0], frame->linesize[0] , frame->data[1], frame->linesize[1], frame->data[2], frame->linesize[2] );
+    
+//  if(player_ptr) {
+//    player_ptr->setYPixels(frame->data[0], frame->linesize[0]);
+//    player_ptr->setUPixels(frame->data[1], frame->linesize[1]);
+//    player_ptr->setVPixels(frame->data[2], frame->linesize[2]);
+//  }
 }
 
+void initialize_playback(AVFrame* frame, AVPacket* pkt) {
+
+  if(frame->format != AV_PIX_FMT_YUV420P) {
+    printf("This code only support YUV420P data.\n");
+    ::exit(EXIT_FAILURE);
+  }
+
+   encoder.load( std::string("/tmp/test.264") , 25,  frame->width, frame->height);
+//  if(!player_ptr) {
+//    printf("player_ptr not found.\n");
+//    ::exit(EXIT_FAILURE);
+//  }
+//
+//  if(!player_ptr->setup(frame->width, frame->height)) {
+//    printf("Cannot setup the yuv420 player.\n");
+//    ::exit(EXIT_FAILURE);
+//  }
+  
+  
+  
+}
