@@ -14,14 +14,6 @@ var  peerID;
 //var  remotePeerName;
 var  peerName;
 
-var spinner = new jQuerySpinner({
-  parentId: 'videoLoader'
-});
-// //showLoadSpinner();
-// function showLoadSpinner() {
-  //spinner.show();
-  //spinner.hide();
-//}
 
 var pcConfig = {
   'iceServers': [{
@@ -108,12 +100,6 @@ socket.on('message', function(message) {
   console.log('Client received message:', message);
   log('Client received message:', message);
 
-  if (typeof message.type !== 'undefined' && message.type == 'error') {
-    document.getElementById("hlsStreamSection").innerHTML = '<div class="liveview_col text-center">We are having trouble connecting to this camera. Please try again. If issue persists, please report to <a target="_blank" href="mailto: customer.support@pro-vigil.com">customer.support@pro-vigil.com</a></div>';
-    spinner.hide();
-    var removeControls = document.getElementById("controls");
-    removeControls.remove();
-  }
 
   if (message === 'got user media') {
     maybeStart();
@@ -136,6 +122,10 @@ socket.on('message', function(message) {
     });
     pc.addIceCandidate(candidate);
   } else if (message.type === 'bye' && isStarted) {
+
+    console.log('Camera state', message.desc);
+    log('Camera state:', message.desc);
+
     handleRemoteHangup();
   }
   else if(message.type === 'error') {
@@ -143,7 +133,6 @@ socket.on('message', function(message) {
     console.log('Camera state', message.desc);
     log('Camera state:', message.desc);
     hangup();
-
   }
 
 });
@@ -186,7 +175,6 @@ if (isInitiator) {
 // }
 
 function maybeStart() {
-  spinner.show();
   console.log('>>>>>>> maybeStart() ', isStarted, isChannelReady);
   if (!isStarted  && isChannelReady) {
     console.log('>>>>>> creating peer connection');
@@ -396,7 +384,6 @@ pc.ontrack = ({transceiver, streams: [stream]}) => {
 
  pc.addEventListener('iceconnectionstatechange', () =>
   {
-    
       switch (pc.iceConnectionState)
       {
           case 'checking':
@@ -407,7 +394,7 @@ pc.ontrack = ({transceiver, streams: [stream]}) => {
 
 
               console.log( 'subscribed...');
-              spinner.hide();
+
               break;
           case 'failed':
              // pc2.close();
@@ -447,120 +434,5 @@ function onMuteClick() {
     });
 
 }
-
-
-actionButtons();
-function actionButtons() {
-	/* predefine zoom and rotate */
-	var zoom = 1,
-		rotate = 0;
-	/* Grab the necessary DOM elements */
-	var hlsStreamSection = document.getElementById('hlsStreamSection'),
-		v = document.getElementsByTagName('video')[0],
-		controls = document.getElementById('controls');
-	/* Array of possible browser specific settings for transformation */
-	var properties = ['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform'],
-		prop = properties[0];
-	/* Iterators and stuff */
-	var i, j, t;
-	/* Find out which CSS transform the browser supports */
-	/*   for(i=0,j=properties.length;i<j;i++){
-	    if (properties[i] in v.style) {
-	      prop = properties[i];
-	      break;
-	    }
-	  } */
-	/* Position video */
-	v.style.left = 0;
-	v.style.top = 0;
-	/* If there is a controls element, add the player buttons */
-	if(controls) {
-		controls.innerHTML = '<div id="change">' + '<button title="Reset" class="reset"><svg class="reset" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  width="45" height="45" viewBox="0 0 512 512" xml:space="preserve"><g class="reset" transform="matrix(1.48 0 0 1.48 256 256)"><path class="reset" style="stroke: rgb(0,0,0); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(77,77,79); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-256, -244.27)" d="M 256 121.07 L 122.88 234.35 L 170.70999999999998 234.35 L 170.70999999999998 347.81 C 170.7980015432894 358.71166102152233 179.6780348828916 367.4933749180086 190.57999999999998 367.46 L 230.27999999999997 367.46 L 230.27999999999997 298.08 L 283.18999999999994 298.08 L 283.18999999999994 367.46 L 321.42999999999995 367.46 C 332.3297231322432 367.4878975083077 341.2065463470775 358.7093581941913 341.29999999999995 347.81 L 341.29999999999995 234.35 L 389.12999999999994 234.35 Z" stroke-linecap="round" /></g></svg></button>'+'<button title="Zoom In" class="zoomin"><svg class="zoomin" viewBox="0 0 512 512"><path class="zoomin" d="M505.75,475.58,378.42,348.25a212.3,212.3,0,0,0,48.25-134.92C426.67,95.7,331,0,213.33,0S0,95.7,0,213.33,95.7,426.67,213.33,426.67a212.3,212.3,0,0,0,134.92-48.25L475.58,505.75a21.33,21.33,0,1,0,30.17-30.17ZM277.33,234.67H234.67v42.67a21.33,21.33,0,1,1-42.67,0V234.67H149.33a21.33,21.33,0,0,1,0-42.67H192V149.33a21.33,21.33,0,0,1,42.67,0V192h42.67a21.33,21.33,0,1,1,0,42.67Z" fill="#5b5b5f"/></svg></button>' + '<button title="Zoom Out" class="zoomout"><svg class="zoomout" viewBox="0 0 512 512"><path class="zoomout" d="M505.75,475.58,378.42,348.25a212.3,212.3,0,0,0,48.25-134.92C426.67,95.7,331,0,213.33,0S0,95.7,0,213.33,95.7,426.67,213.33,426.67a212.3,212.3,0,0,0,134.92-48.25L475.58,505.75a21.33,21.33,0,1,0,30.17-30.17ZM277.33,234.67h-128a21.33,21.33,0,0,1,0-42.67h128a21.33,21.33,0,1,1,0,42.67Z" fill="#5b5b5f"/></svg></button>' + '<button title="Move Left" class="right"><svg class="right" viewBox="0 0 512 512"><polygon class="right" points="91.13 256 255.42 382.35 255.42 302.45 405.63 302.45 405.63 209.56 255.44 209.56 255.44 129.65 91.13 256" fill="#5b5b5f"/></svg></button>' + '<button title="Move Right" class="left"><svg class="left" viewBox="0 0 512 512"><polygon class="left" points="420.88 256 256.57 129.66 256.57 209.57 106.37 209.57 106.37 302.45 256.57 302.45 256.57 382.35 420.88 256" fill="#5b5b5f"/></svg></button>' + '<button title="Move Down" class="up"><svg class="up" viewBox="0 0 512 512"><polygon class="up" points="256 420.89 382.35 256.58 302.44 256.58 302.44 106.38 209.55 106.38 209.55 256.57 129.65 256.57 256 420.89" fill="#5b5b5f"/></svg></button>' + '<button title="Move Up" class="down"><svg class="down" viewBox="0 0 512 512"><polygon class="down" points="256.02 91.13 129.66 255.43 209.57 255.43 209.57 405.62 302.45 405.62 302.45 255.43 382.36 255.43 256.02 91.13" fill="#5b5b5f"/></svg></button>' + '</div>';
-	}
-	/* If a button was clicked (uses event delegation)...*/
-	controls.addEventListener('click', function(e) {
-		t = e.target;
-		if(t.nodeName.toLowerCase() === 'button' || t.nodeName.toLowerCase() == 'svg' || t.nodeName.toLowerCase() == 'polygon' || t.nodeName.toLowerCase() == 'path') {
-			
-			var classValue = typeof t.className.baseVal === "undefined" ? t.className : t.className.baseVal;
-			/* Check the class name of the button and act accordingly */
-			switch (classValue) {
-				/* Increase zoom and set the transformation */
-				case 'zoomin':
-					if(zoom < 6) {
-						zoom = zoom + 0.5;
-						v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-					}
-					break;
-					/* Decrease zoom and set the transformation */
-				case 'zoomout':
-					if(zoom > 1) {
-						zoom = zoom - 0.5;
-						v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-					}
-					break;
-				case 'left':
-					if(zoom > 1) {
-						v.style.left = (parseInt(v.style.left, 10) - 25) + 'px';
-					}
-					break;
-				case 'right':
-					if(zoom > 1) {
-						v.style.left = (parseInt(v.style.left, 10) + 25) + 'px';
-					}
-					break;
-				case 'up':
-					if(zoom > 1) {
-						v.style.top = (parseInt(v.style.top, 10) - 25) + 'px';
-					}
-					break;
-				case 'down':
-					if(zoom > 1) {
-						v.style.top = (parseInt(v.style.top, 10) + 25) + 'px';
-					}
-					break;
-					/* Reset all to default */
-				case 'reset':
-					zoom = 1;
-					rotate = 0;
-					v.style.top = 0 + 'px';
-					v.style.left = 0 + 'px';
-					v.style.transform = 'rotate(' + rotate + 'deg) scale(' + zoom + ')';
-					break;
-			}
-			e.preventDefault();
-		}
-	}, false);
-	document.addEventListener("keydown", function(event) {
-		if ((event.keyCode == 187 || event.keyCode == 61) && zoom < 6) {
-			zoom = zoom + 0.5;
-			v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-		}
-		if ((event.keyCode == 189 || event.keyCode == 173) && zoom > 1) {
-			zoom = zoom - 0.5;
-			v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-		}
-		if (event.keyCode == 39 && zoom > 1) {
-			v.style.left = (parseInt(v.style.left, 10) - 25) + 'px';
-		}
-		if (event.keyCode == 37 && zoom > 1) {
-			v.style.left = (parseInt(v.style.left, 10) + 25) + 'px';
-		}
-		if (event.keyCode == 40 && zoom > 1) {
-			v.style.top = (parseInt(v.style.top, 10) - 25) + 'px';
-		}
-		if (event.keyCode == 38 && zoom > 1) {
-			v.style.top = (parseInt(v.style.top, 10) + 25) + 'px';
-		}
-		if (event.keyCode == 27) {
-			zoom = 1;
-			rotate = 0;
-			v.style.top = 0 + 'px';
-			v.style.left = 0 + 'px';
-			v.style.transform = 'rotate(' + rotate + 'deg) scale(' + zoom + ')';
-		}
-	});
-};
-
 
  

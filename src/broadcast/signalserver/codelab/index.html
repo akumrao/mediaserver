@@ -1,139 +1,42 @@
-
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="mobile-web-app-capable" content="yes">
-
-
-
-  <title>Camera video feed for webrtcstreamer</title>
-</head>
-
-    <style>
-    body {
-      font: .9rem arial, serif;
-    }
-    table {
-/*      max-width: 1024px;*/
-    }
-    table td {
-  /*    width: 33.33%;*/
-      vertical-align: top;
-    }
-    fieldset {
-  /*    min-height: 100%;*/
-      border: 1px solid silver;
-      padding: 2px;
-    }
-    button {
-      padding: 1px;
-      margin: 1px;
-    }
-    video {
-/*      max-width: 1024px;*/
-      width: 100%;
-    }
-    span {
-      font-family: monospace;
-    }
-
-  
-
-  div.scroll {
-          margin: 4px, 4px;
-          padding: 4px;
-          max-width: 1024px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          white-space: nowrap;
-      }
-
-  hr.new4 {
-    border: 1px solid red;
-    width: 1px;
-  }
-      
-   
-  .centerTable { 
-
-    margin: 0px auto; 
-    border: 0;
-    cellpadding: 0;
-/*    max-width: 1024px;*/
-  }
-
-
-  </style>
-  <body>
-
-
-  <table class="centerTable">
-  <tbody>
-  <tr style="background-color: #1ffff0;">
-  <th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;Camera video feed for webrtcstreamer</th>
-  </tr>
-  <tr style="background-color: #f9ecf2;">
-  <td colspan="3">
+<html>
+  <head>
+    <title>Live Camera</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel='shortcut icon' type='image/png' href='/favicon.ico' />
+    <link href="/css/videostyle.css" rel="stylesheet" type="text/css" />
+    <link href="/css/jquery-spinner.min.css" rel="stylesheet" type="text/css" />
     
-    <div class="block">
-       <video id="remoteVideo" autoplay playsinline muted></video>
-    </div>
-  </td>
-  </tr>
-  <tr style="background-color: #00ff00;">
-  <td>
-   <span onClick="show()">Show Log</span>
-  </td>
-  <td colspan="2">
-  <span onClick="hide()">Hide Log</span>
-  </td>
-  </tr>
-  <tr id="used">
-  <td style="background-color: #b3d1ff;" colspan="3">
+  </head>
+  <body>
+      <script>
+          log = function () {
+            var args = Array.prototype.slice.call(arguments);
+            $('#webrtc-logs').append(JSON.stringify(args)).append('\n');
+            console.log.apply(console, arguments);
+          }
+      </script>
 
-   <div  class="scroll">
-           <label>log</label>
-           <pre id="webrtc-logs"></pre>
-   </div>
-
-  </td>
-
-  </tr>
-
-
-  </tbody>
-  </table>
-
-<script>
-
-function show() { 
-
-   document.getElementById("used").style.display = '';
-}
-
-function hide() { 
-
-   document.getElementById("used").style.display = 'none';
-}
-
-
-  // Intercept Symple log messages
-  log = function () {
-      var args = Array.prototype.slice.call(arguments);
-      //$('#webrtc-logs').append(JSON.stringify(args)).append('\n');
-      console.log.apply(console, arguments);
-       var logger = document.getElementById('webrtc-logs');
-       logger.innerHTML += JSON.stringify(args) + '<br />';
-
-  }
-</script>
-
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-<script src="/js/main.js"></script>
-     
-</body>
+      <div id="videoLoader" class="videoLoader">
+      </div>
+      <div id="boundary">
+        <div id="hlsStreamSection">
+          <video id="remoteVideo" autoplay playsinline muted></video>
+        </div>
+        <div id="controls"></div>
+      </div>
+      
+      <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+      <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>  
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+      <script src="js/jquery-spinner.min.js"></script>
+      <script src="js/main.js"></script>
+      
+  </body>
 </html>
