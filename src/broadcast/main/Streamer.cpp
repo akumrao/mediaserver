@@ -185,5 +185,36 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+/*
+  ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --enable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma
+ 
+ 
+ gn gen out/m75 --args='is_debug=true symbol_level=2 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=false use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=false  use_glib=false rtc_use_pipewire=false rtc_use_gtk=false rtc_include_pulse_audio=false rtc_include_tests=false  treat_warnings_as_errors=false rtc_include_ilbc=false rtc_build_examples=false rtc_build_tools=false enable_iterator_debugging=false rtc_use_x11=false use_gio=false '
+ninja -C out/m75 webrtc
+ 
+  
+pmap -x `pidof runWebrtc`
+
+valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes  ./runWebrtc  >& /var/tmp/leak.txt
 
 
+
+ *  
+ 
+valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes  ./runWebrtc  >& /var/tmp/leak.txt
+
+==16187== LEAK SUMMARY:
+==16187==    definitely lost: 0 bytes in 0 blocks
+==16187==    indirectly lost: 0 bytes in 0 blocks
+==16187==      possibly lost: 29,517,882 bytes in 1,441 blocks
+==16187==    still reachable: 3,692,609 bytes in 5,000 blocks
+==16187==                       of which reachable via heuristic:
+==16187==                         length64           : 22,043 bytes in 250 blocks
+==16187==                         multipleinheritance: 392 bytes in 1 blocks
+==16187==         suppressed: 0 bytes in 0 blocks
+==16187== 
+==16187== For counts of detected and suppressed errors, rerun with: -v
+==16187== ERROR SUMMARY: 7444071 errors from 278 contexts (suppressed: 0 from 0)
+
+ */ 
+ 

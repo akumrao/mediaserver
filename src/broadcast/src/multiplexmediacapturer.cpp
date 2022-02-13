@@ -139,33 +139,8 @@ void MultiplexMediaCapturer::addMediaTracks(
 
     SInfo  << "MultiplexMediaCapturer::addMediaTracks" ; 
     
-    // This capturer is multicast, meaning it can be used as the source
-    // for multiple Peer objects.
-    //
-    // KLUDGE: Pixel format conversion should happen on the
-    // VideoPacketSource rather than on the decoder becasue different
-    // peers may request different optimal output video sizes.
 
-    // Create and add the audio stream
-    // if (_videoCapture->audio()) { //arvind
-    //     stream->AddTrack(factory->CreateAudioTrack(
-    //         kAudioLabel, factory->CreateAudioSource(nullptr)));
-    // }
-
-    // Create and add the video stream
-    // if (_videoCapture->video()) {  //arvind
-    //     stream->AddTrack(factory->CreateVideoTrack(
-    //         kVideoLabel, factory->CreateVideoSource(createVideoSource(), nullptr)));
-    // }
-
-    // Default WebRTC video stream for testing
-    // stream->AddTrack(factory->CreateVideoTrack(
-    //     kVideoLabel, factory->CreateVideoSource(openVideoDefaultWebRtcCaptureDevice(), nullptr)));
-    
-    // stream->AddTrack(factory->CreateVideoTrack(
-    //     kVideoLabel, factory->CreateVideoSource(openVideoDefaultWebRtcCaptureDevice(), nullptr)));
-    
-   std::string rnd=   random_string();
+ //  std::string rnd=   random_string();
 
 //  std::string audioLable = kAudioLabel + rnd;
 //  std::string videoLable = kVideoLabel + rnd;
@@ -175,51 +150,7 @@ void MultiplexMediaCapturer::addMediaTracks(
   std::string videoLable = kVideoLabel;
   std::string streamId =  kStreamId;
   
-#if MP4File
-  if (_videoCapture->audio())
-  {
 
-    
-      cricket::AudioOptions AudioSourceOptions;
-      AudioSourceOptions.echo_cancellation = false;
-      AudioSourceOptions.auto_gain_control = false;
-      AudioSourceOptions.noise_suppression = false;
-     // AudioSourceOptions.audio_jitter_buffer_enable_rtx_handling = true;
-     // AudioSourceOptions.audio_jitter_buffer_max_packets =true;
-      //AudioSourceOptions.audio_network_adaptor =true;
-      
-      if(!audio_track)
-      audio_track =   factory->CreateAudioTrack(    audioLable, factory->CreateAudioSource( AudioSourceOptions));
-   
-    //stream->AddTrack(audio_track);
-    // peer_connection_->AddTransceiver(audio_track);
-      conn->AddTrack(audio_track, {streamId});
-      
-  } 
-
-
-  if (_videoCapture->video())
-  {
-      using std::placeholders::_1;
-      assert(_videoCapture->video());
-      auto oparams = _videoCapture->video()->oparams;
-      //auto source = new VideoPacketSource();
-       VideoCapturer = new rtc::RefCountedObject<VideoPacketSource>(rnd);
-       
-      ff::MediaCapture::function_type var = std::bind(&VideoPacketSource::onVideoCaptured ,VideoCapturer , _1);
-
-      _videoCapture->cbProcessVideo.push_back(var);
-      
-
-      
-      if(!video_track)
-        video_track =     factory->CreateVideoTrack(videoLable, VideoCapturer);
-        
-         video_track->set_enabled(true);
-         conn->AddTrack(video_track, {streamId});
-    }
-#endif
-  
   
   
   
@@ -235,6 +166,8 @@ void MultiplexMediaCapturer::addMediaTracks(
       {
          VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , cam);
          video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
+         
+        // VideoCapturer[cam]->start();
       }
       mutexCap.unlock();   
       
@@ -252,63 +185,54 @@ void MultiplexMediaCapturer::addMediaTracks(
     }        
           
           
-      //stream->AddTrack(video_track);
 
-//      video_track->set_enabled(true);
-//      
-//
-//      if (local_video_observer_) {
-//            video_track->AddOrUpdateSink(local_video_observer_.get(),
-//                                                   rtc::VideoSinkWants());
-//      }
-//    }
-    
 }
 
 
-//void MultiplexMediaCapturer::start( std::string & cam )
-//{
-//    #if MP4File
-//    //_stream.start
-//    _videoCapture->start();
-//    #endif
-//    
-//    SInfo << "MultiplexMediaCapturer::start()" ;
-//    
-//    
-//   
-//            
-//}
 
 void MultiplexMediaCapturer::remove(wrtc::Peer* conn )
 {
     
     std::string cam = conn->getCam();
     
-    std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
-    vsItr=VideoCapturer.find(cam);
-    if( vsItr != VideoCapturer.end() && ( rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease( conn->peerid())) )
-    {
-         SInfo << "VideoCapturer::stop() cam "  << cam;
-
-         mutexCap.lock();
-         VideoCapturer[cam]->Release();
-         VideoCapturer[cam].release();
-         VideoCapturer[cam] = nullptr;
-         VideoCapturer.erase(vsItr);
-         mutexCap.unlock();
+    
+    
+    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =     conn->_peerConnection->GetSenders();
 
 
-       std::map< std::string,  rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
-       it=video_track.find(cam);
-       if( it != video_track.end())
-       {
-            SInfo << "MultiplexMediaCapturer::stop()1 cam "  << cam;
-           video_track[cam]->Release();
-           video_track[cam].release();
-           video_track[cam] = nullptr;
-           video_track.erase(it);
-       }
+    for (const auto& sender : senders) {
+        
+        conn->_peerConnection->RemoveTrack(sender);
+     
+    }
+  
+     
+
+    std::map< std::string, rtc::scoped_refptr<VideoPacketSource> > ::iterator vsItr;
+    vsItr = VideoCapturer.find(cam);
+    if (vsItr != VideoCapturer.end() && (rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease(conn->peerid()))) {
+
+
+        //VideoCapturer[cam]->stop();
+        //VideoCapturer[cam]->join();
+        
+        mutexCap.lock();
+//        std::map< std::string, rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;
+//        it = video_track.find(cam);
+//        if (it != video_track.end()) {
+//            SInfo << "MultiplexMediaCapturer::stop()1 cam " << cam;
+//         //   video_track[cam]->Release();
+//            video_track.erase(it);
+//        }
+        
+        
+        SInfo << "VideoCapturer::stop() cam " << cam;
+        video_track.erase(cam);
+        //video_track[cam]->Release();
+       // VideoCapturer[cam]->Release();
+       VideoCapturer.erase(vsItr);
+        mutexCap.unlock();
+
 
     }
  

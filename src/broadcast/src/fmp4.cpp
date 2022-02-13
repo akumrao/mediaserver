@@ -178,7 +178,7 @@ namespace base {
                 
                 for( std::string  el : vec)
                 {
-                    sig.closeCamera(el, "Deleted camera with Rest API");
+                    sig.postcloseCamera(el, "Deleted camera with Rest API");
                 }
                 
                 SInfo << "reconfigure Camera settings " << body << std::endl;

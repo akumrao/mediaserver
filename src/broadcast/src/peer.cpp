@@ -68,7 +68,7 @@ Peer::Peer(PeerManager* manager,
     , _peerConnection(nullptr)
 {
     
-    LInfo(_peerid, ": Creating " , this )
+    SInfo << _peerid <<  ": Creating "    ;
             
      webrtc::PeerConnectionInterface::IceServer stun;
      // stun.uri = kGoogleStunServerUri;
@@ -102,15 +102,11 @@ Peer::Peer(PeerManager* manager,
 
 Peer::~Peer()
 {
-    LInfo(_peerid, ": Destroying " , this )
-    // closeConnection();
+   // LInfo(_peerid, ": Destroying " , this )
+    SInfo << "Destroying " <<  _peerid  << " obj " << this;
+    // closeConnection();  // Do not uncomment it it will cause memory leaks
 
-    if (_peerConnection) {
-        _peerConnection->Close();
-        
-        _peerConnection.release();
-        _peerConnection = nullptr;
-    }
+
 }
 
 
@@ -204,7 +200,7 @@ void Peer::recvSDP(const std::string& type, const std::string& sdp)
 
 
     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-    options.offer_to_receive_audio = true;
+    options.offer_to_receive_audio = false;
     options.offer_to_receive_video = true;
  
     if (type == "offer") {
@@ -239,7 +235,7 @@ void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new
             _manager->onStable(this);
             break;
         case webrtc::PeerConnectionInterface::kClosed:
-            _manager->onClosed(this);
+           // _manager->onClosed(this);  // Do not uncomment it, it will cause memory leaks
             break;
         case webrtc::PeerConnectionInterface::kHaveLocalOffer:
         case webrtc::PeerConnectionInterface::kHaveRemoteOffer:

@@ -19,6 +19,7 @@
 #include "rtc_base/timestamp_aligner.h"
 #include "framefilter.h"
 
+//#include "base/thread.h"
 #include "livethread.h"
 
 namespace base {
@@ -30,7 +31,7 @@ namespace wrtc {
 /// It's used as the remote video source's `VideoCapturer` so that the remote
 /// video can be used as a `cricket::VideoCapturer` and in that way a remote
 /// video stream can implement the `MediaStreamSourceInterface`.
-class VideoPacketSource : public rtc::AdaptedVideoTrackSource, fmp4::FrameFilter
+class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public fmp4::FrameFilter//, public base::Thread
 { 
 
 public:                                                                
@@ -43,6 +44,9 @@ protected:
     }
 
 public:
+    
+   // void run();
+    
     void run(fmp4::Frame  *frame);
    
 public:
@@ -78,6 +82,12 @@ private:
     
     std::mutex mutexVideoSoure;
     
+    std::vector<uint8_t> buffer;
+    
+    void StartParser();
+    
+    void decodeFrame(uint8_t* data, int size);
+    
    // mutable volatile int ref_count_;
    // std::string playerId;
 
@@ -91,7 +101,7 @@ protected:
     
     AVCodec *codec{nullptr};
     AVCodecContext *cdc_ctx;
-    AVPacket *videopkt{nullptr};   
+   // AVPacket *videopkt{nullptr};   
     AVFrame *avframe;
     AVCodecParserContext *parser;
     

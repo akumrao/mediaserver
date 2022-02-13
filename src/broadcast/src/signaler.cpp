@@ -205,11 +205,18 @@ namespace base {
 
             auto conn = wrtc::PeerManager::remove(peerID);
             if (conn) {
+                
+               
+               // wrtc::PeerManager::onClosed(conn);
+            
+                 _capturer.remove(conn);
                 LInfo("Deleting peer connection: ", peerID)
-                        // async delete not essential, but to be safe
-                        delete conn;
-                //deleteLater<wrtc::Peer>(conn);
-            }
+                        
+              //  conn->Release();
+              // async delete not essential, but to be safe
+                 delete conn;
+
+             }
         }
 
         void Signaler::onAddRemoteStream(wrtc::Peer* conn, webrtc::MediaStreamInterface* stream) {
@@ -249,21 +256,21 @@ namespace base {
        }
 
         
-       void Signaler::closeCamera(std::string &cam ,  std::string  reason )
-       {
-            SInfo << "Remove cam "  << cam;
-            std::set< std::string>  peeerids;
-            
-            _capturer.stop(cam , peeerids);
-            
-            std::string room("foo"); // Arvind: hard coded room, soon we will remove it
-            for( std::string from : peeerids   )
-            {
-                postAppMessage(reason, from, room );
-                onPeerDiconnected( from);
-            }
-            
-       }
+//       void Signaler::closeCamera(std::string &cam ,  std::string  reason )
+//       {
+//            SInfo << "Remove cam "  << cam;
+//            std::set< std::string>  peeerids;
+//            
+//            _capturer.stop(cam , peeerids);
+//            
+//            std::string room("foo"); // Arvind: hard coded room, soon we will remove it
+//            for( std::string from : peeerids   )
+//            {
+//                postAppMessage(reason, from, room );
+//                onPeerDiconnected( from);
+//            }
+//            
+//       }
 
        void Signaler::onFailure(wrtc::Peer* conn, const std::string& error) {
             LInfo("onFailure stop FFMPEG Capture")

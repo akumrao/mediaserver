@@ -31,10 +31,10 @@ PeerFactoryContext::PeerFactoryContext(
     LInfo("PeerFactoryContext")
             
     // Setup threads
-    networkThread = rtc::Thread::CreateWithSocketServer();
-    workerThread = rtc::Thread::Create();
-    if (!networkThread->Start() || !workerThread->Start())
-        throw std::runtime_error("Failed to start WebRTC threads");
+   // networkThread = rtc::Thread::CreateWithSocketServer();
+    //workerThread = rtc::Thread::Create();
+  //  if (!networkThread->Start() || !workerThread->Start())
+  //      throw std::runtime_error("Failed to start WebRTC threads");
 
 
       g_signaling_thread = rtc::Thread::Create();
@@ -65,12 +65,14 @@ PeerFactoryContext::PeerFactoryContext(
     //         default_adm, video_encoder_factory, video_decoder_factory);
     // }
 
-
-      VideoEncoderFactoryStrong = std::make_unique<FVideoEncoderFactory>();
+      #if !BYPASSGAME
+      
+     VideoEncoderFactoryStrong = std::make_unique<FVideoEncoderFactory>();
+    #endif  
 
     factory = webrtc::CreatePeerConnectionFactory(
-              networkThread.get(), workerThread.get(), g_signaling_thread.get(),
-              default_adm, 
+              nullptr,nullptr, g_signaling_thread.get(),
+              nullptr, 
 
               webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
               webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),

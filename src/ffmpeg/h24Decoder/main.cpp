@@ -87,9 +87,9 @@ int main() {
   // ----------------------------------------------------------------
   // THIS IS WHERE YOU START CALLING OPENGL FUNCTIONS, NOT EARLIER!!
   // ----------------------------------------------------------------
-  //H264_Decoder decoder(frame_callback, NULL);
+  H264_Decoder decoder(frame_callback, NULL);
 
-  H264_Decoder decoder(NULL, NULL);
+  //H264_Decoder decoder(NULL, NULL);
 
  // YUV420P_Player player;
 
@@ -138,11 +138,12 @@ void frame_callback(AVFrame* frame, AVPacket* pkt, void* user) {
     playback_initialized = true;
   }
 
-  if(player_ptr) {
-    player_ptr->setYPixels(frame->data[0], frame->linesize[0]);
-    player_ptr->setUPixels(frame->data[1], frame->linesize[1]);
-    player_ptr->setVPixels(frame->data[2], frame->linesize[2]);
-  }
+  printf(" size %d \n" , pkt->size);
+  // if(player_ptr) {
+  //   player_ptr->setYPixels(frame->data[0], frame->linesize[0]);
+  //   player_ptr->setUPixels(frame->data[1], frame->linesize[1]);
+  //   player_ptr->setVPixels(frame->data[2], frame->linesize[2]);
+  // }
 }
 
 void initialize_playback(AVFrame* frame, AVPacket* pkt) {
@@ -152,15 +153,15 @@ void initialize_playback(AVFrame* frame, AVPacket* pkt) {
     ::exit(EXIT_FAILURE);
   }
 
-  if(!player_ptr) {
-    printf("player_ptr not found.\n");
-    ::exit(EXIT_FAILURE);
-  }
+  // if(!player_ptr) {
+  //   printf("player_ptr not found.\n");
+  //   ::exit(EXIT_FAILURE);
+  // }
 
-  if(!player_ptr->setup(frame->width, frame->height)) {
-    printf("Cannot setup the yuv420 player.\n");
-    ::exit(EXIT_FAILURE);
-  }
+  // if(!player_ptr->setup(frame->width, frame->height)) {
+  //   printf("Cannot setup the yuv420 player.\n");
+  //   ::exit(EXIT_FAILURE);
+  // }
 }
 
 
