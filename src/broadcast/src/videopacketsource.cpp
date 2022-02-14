@@ -32,7 +32,7 @@ extern "C"
 
 using std::endl;
 
-#define BYPASSGAME 1
+
 
 namespace base {
     
@@ -56,146 +56,17 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
     
     SInfo << " VideoPacketSource " << this;
     
+    #if BYPASSGAME
     StartParser();
+    #else
+     StartParser(); 
+     StartLive(); 
+    #endif
  
 }
 
-
-void VideoPacketSource::StartParser()
+void VideoPacketSource::StopLive()
 {
- 
-     
-             
-    //ffmpeg -decoders
-    
-    /*
-        VFS..D h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
-        V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
-        V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
-    */            
-     //   codec = avcodec_find_decoder_by_name("h264_cuvid");
-
-       // if(!codec)
-      //     codec = avcodec_find_decoder_by_name("libopenh264");
-
-        if(!codec)
-          codec = avcodec_find_decoder_by_name("h264");
-
-        if(!codec)
-        codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-     
-     	if (codec == NULL)
-    	{
-    		SError<<  "avcodec_find_decoder failed";
-    		
-    	}
-            
-    	if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL)
-    	{
-                SError<<  "avcodec_alloc_context3 failed";
-    	
-    	}
-        
-//        if(codec->capabilities & CODEC_CAP_TRUNCATED) {
-//            cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
-//        }
-        
-        int ret ;
-    	if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
-    	{
-    		SError<<  "avcodec_open2 failed";
-      
-    	}
-            
-        if ((avframe = av_frame_alloc()) == NULL)
-    	{
-                SError<<  "av_frame_alloc failed";
-    	}
-            
-            
-        if ((parser = av_parser_init(codec->id)) == NULL)
-	{
-		
-	    SError<<  "av_parser_init failed";
-	}
-        
-        
-     
-        fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam, nullptr);
-       // fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
-
-        info = new fmp4::InfoFrameFilter("info", nullptr);
-
-        txt = new fmp4::TextFrameFilter("txt", cam, self);
-
-
-        ffparser = new fmp4::LiveThread("live");
-
-        ffparser->start();
-
-       // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
-
-       // std::string  cam = peer->getCam();
-        
-        std::string add;
-        
-        
-        if( Settings::getNodeState(cam, "rtsp" , add ))
-        {
-       // std::string &add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
-
-            ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
-            ffparser->registerStreamCall(*ctx);
-            ffparser->playStreamCall(*ctx);
-
-         //   Settings::configuration.rtsp[cam]["state"]="streaming";
-            Settings::setNodeState(cam , "streaming" );
-            
-            SInfo  <<   cam  << " " <<    "streaming";
-        }
-        else
-        {
-            SError << "Could not find camera at Json Repository "  << cam; 
-        }
-    
-}
-
-
-//VideoPacketSource::VideoPacketSource(const cricket::VideoFormat& captureFormat)
-//    : _captureFormat(captureFormat)
-//    , _rotation(webrtc::kVideoRotation_0)
-//    , _timestampOffset(0)
-//    , _nextTimestamp(0)
-////    , _source(nullptr)
-//{
-//    // Default supported formats. Use SetSupportedFormats to over write.
-//    std::vector<cricket::VideoFormat> formats;
-//    formats.push_back(_captureFormat);
-//    //SetSupportedFormats(formats);
-//
-//    // formats.push_back(cricket::VideoFormat(1280, 720, _fpsInterval, _codec));
-//    // formats.push_back(cricket::VideoFormat(640, 480, _fpsInterval, _codec));
-//    // formats.push_back(cricket::VideoFormat(320, 240, _fpsInterval, _codec));
-//    // formats.push_back(cricket::VideoFormat(160, 120, _fpsInterval, _codec));
-//}
-
-
-VideoPacketSource::~VideoPacketSource()
-{
-    SInfo << "~VideoPacketSource " << this;
-    
-    	//avformat_close_input(&fmt_ctx);
-
-	//avformat_free_context(fmt_ctx);
-
-    stopParser();
-
-
-}
-
-void VideoPacketSource::stopParser()
-{
-    SInfo << "stopParser";
     if(ffparser)
     {
         if(ffparser)
@@ -240,94 +111,177 @@ void VideoPacketSource::stopParser()
             delete txt;
             txt = nullptr;
         }
-
-
-
-        
-        
-        
-        
-        if(parser) {
-            av_parser_close(parser);
-            parser = NULL;
-        }
-
-        if(cdc_ctx) {
-          avcodec_close(cdc_ctx);
-          av_free(cdc_ctx);
-          cdc_ctx = NULL;
-        }
-
-        if(avframe) {
-          av_free(avframe);
-          avframe = NULL;
-        }
-        
-        
-        
-        
-    
     }
+    
+}
+
+void VideoPacketSource::StartParser()
+{
+ 
+     
+             
+    //ffmpeg -decoders
+    
+    /*
+        VFS..D h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
+        V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
+        V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
+    */            
+     //   codec = avcodec_find_decoder_by_name("h264_cuvid");
+
+       // if(!codec)
+      //     codec = avcodec_find_decoder_by_name("libopenh264");
+
+    if(!codec)
+      codec = avcodec_find_decoder_by_name("h264");
+
+    if(!codec)
+    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+
+    if (codec == NULL)
+    {
+            SError<<  "avcodec_find_decoder failed";
+
+    }
+
+    if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL)
+    {
+            SError<<  "avcodec_alloc_context3 failed";
+
+    }
+
+    if(codec->capabilities & CODEC_CAP_TRUNCATED) {
+        cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
+    }
+
+    int ret ;
+    if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
+    {
+            SError<<  "avcodec_open2 failed";
+
+    }
+
+    if ((avframe = av_frame_alloc()) == NULL)
+    {
+            SError<<  "av_frame_alloc failed";
+    }
+
+
+    if ((parser = av_parser_init(codec->id)) == NULL)
+    {
+
+        SError<<  "av_parser_init failed";
+    }
+
+  
+}
+
+
+void VideoPacketSource::StartLive()
+{
+     fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam, nullptr);
+       // fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+
+    info = new fmp4::InfoFrameFilter("info", nullptr);
+
+    txt = new fmp4::TextFrameFilter("txt", cam, self);
+
+
+    ffparser = new fmp4::LiveThread("live");
+
+    ffparser->start();
+
+   // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
+
+   // std::string  cam = peer->getCam();
+
+    std::string add;
+
+
+    if( Settings::getNodeState(cam, "rtsp" , add ))
+    {
+   // std::string &add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
+
+        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
+        ffparser->registerStreamCall(*ctx);
+        ffparser->playStreamCall(*ctx);
+
+     //   Settings::configuration.rtsp[cam]["state"]="streaming";
+        Settings::setNodeState(cam , "streaming" );
+
+        SInfo  <<   cam  << " " <<    "streaming";
+    }
+    else
+    {
+        SError << "Could not find camera at Json Repository "  << cam; 
+    }   
+    
+}
+
+
+VideoPacketSource::~VideoPacketSource()
+{
+    SInfo << "~VideoPacketSource " << this;
+    
+
+    #if BYPASSGAME
+    StopParser();
+    #else
+    StopLive();
+    StopParser();
+    #endif
+
+}
+
+void VideoPacketSource::StopParser()
+{
+    SInfo << "stopParser";
+ 
+        
+    if(parser) {
+        av_parser_close(parser);
+        parser = NULL;
+    }
+
+    if(cdc_ctx) {
+      avcodec_close(cdc_ctx);
+       avcodec_free_context(&cdc_ctx);
+      av_free(cdc_ctx);
+      cdc_ctx = NULL;
+    }
+
+    if(avframe) {
+      av_frame_free(&avframe);
+      av_free(avframe);
+      avframe = NULL;
+    }
+
+    #if BYPASSGAME
+      if(fp) {
+        fclose(fp);
+        fp = NULL;
+      }
+    #endif
+    
+    
 
     SInfo << "stoppedParser";
 }
 
-//void VideoPacketSource::setPacketSource(PacketSignal* source)
-//{
-//    assert(!_source);
-    // if (_source)
-    //     _source->detach(packetSlot(this, &VideoPacketSource::onVideoCaptured));
-    //_source = source;
-//}
 
 
-/*cricket::CaptureState VideoPacketSource::Start(const cricket::VideoFormat& format)
-{
-    LDebug("VideoPacketSource::Start")
 
-    // NOTE: The requested format must match the input format until
-    // we implememnt pixel format conversion and resizing inside
-    // this class.
-    RTC_CHECK(_captureFormat == format);
-    if (capture_state() == cricket::CS_RUNNING) {
-        LWarn("Start called when it's already started.")
-        return capture_state();
-    }
-
-//    if (_source)
-    //    _source->attach(packetSlot(this, &VideoPacketSource::onVideoCaptured));
-    
-    
-    // using std::placeholders::_1;
-//    _source= std::bind( &VideoPacketSource::onVideoCaptured, this, _1 );
-    
-    SetCaptureFormat(&format);
-    return cricket::CS_RUNNING;
-}
-
-
-void VideoPacketSource::Stop()
-{
-    LDebug("Stop")
-    if (capture_state() == cricket::CS_STOPPED) {
-        LWarn("Stop called when it's already stopped.")
-        return;
-    }
-
-//    if (_source)
-  //      _source->detach(packetSlot(this, &VideoPacketSource::onVideoCaptured));
-
-    SetCaptureFormat(nullptr);
-    SetCaptureState(cricket::CS_STOPPED);
-}
-*/
-
-/*
+#if BYPASSGAME
 void VideoPacketSource::run()
 {
+    
+    load( "/var/tmp/test.264", 30.0f);
+        
+   
     while(!this->stopped())
         
     {
+#if(0)
       int64_t TimestampUs = rtc::TimeMicros();
       
       rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
@@ -343,11 +297,129 @@ void VideoPacketSource::run()
 
                        OnFrame(Frame);  //arvind
       base::sleep(40); 
+#else
+      readFrame();
+       base::sleep(40); 
+#endif
     }
     
       SInfo << "run end";
 }
-*/
+
+bool VideoPacketSource::load(std::string filepath, float fps) {
+    
+        
+  
+
+  fp = fopen(filepath.c_str(), "rb");
+
+  if(!fp) {
+    printf("Error: cannot open: %s\n", filepath.c_str());
+    return false;
+  }
+
+
+  if(fps > 0.0001f) {
+    frame_delay = (1.0f/fps) * 1000ull * 1000ull * 1000ull;
+    //frame_timeout = rx_hrtime() + frame_delay;
+  }
+
+  // kickoff reading...
+  readBuffer();
+
+  return true;
+}
+
+bool VideoPacketSource::readFrame() {
+
+  // uint64_t now = rx_hrtime();
+  // if(now < frame_timeout) {
+  //   return false;
+  // }
+
+  bool needs_more = false;
+
+  while(!update(needs_more)) { 
+    if(needs_more) {
+      readBuffer();
+    }
+  }
+
+  // it may take some 'reads' before we can set the fps
+  if(frame_timeout == 0 && frame_delay == 0) {
+    double fps = av_q2d(cdc_ctx->time_base);
+    if(fps > 0.0) {
+      frame_delay = fps * 1000ull * 1000ull * 1000ull;
+    }
+  }
+
+  // if(frame_delay > 0) {
+  //   frame_timeout = rx_hrtime() + frame_delay;
+  // }
+
+  return true;
+}
+
+int VideoPacketSource::readBuffer() {
+
+  int bytes_read = (int)fread(inbuf, 1, H264_INBUF_SIZE, fp);
+
+  if(bytes_read) {
+    std::copy(inbuf, inbuf + bytes_read, std::back_inserter(buffer));
+  }
+  else
+  {
+      
+ 
+        if(feof(fp))
+        {
+
+             if (fseek(fp, 0, SEEK_SET))
+            return 0;
+            return readBuffer() ;
+
+        }
+      
+  }
+
+  return bytes_read;
+}
+
+
+bool VideoPacketSource::update(bool& needsMoreBytes) {
+
+  needsMoreBytes = false;
+
+  if(!fp) {
+    printf("Cannot update .. file not opened...\n");
+    return false;
+  }
+
+  if(buffer.size() == 0) {
+    needsMoreBytes = true;
+    return false;
+  }
+
+  uint8_t* data = NULL;
+  int size = 0;
+  int len = av_parser_parse2(parser, cdc_ctx, &data, &size, 
+                             &buffer[0], buffer.size(), 0, 0, AV_NOPTS_VALUE);
+
+  if(size == 0 && len >= 0) {
+    needsMoreBytes = true;
+    return false;
+  }
+
+  if(len) {
+    decodeFrame(&buffer[0], size);
+    buffer.erase(buffer.begin(), buffer.begin() + len);
+    return true;
+  }
+
+  return false;
+}
+
+#endif
 
 
 
@@ -373,7 +445,7 @@ void VideoPacketSource::decodeFrame(uint8_t* data, int size) {
 
         len = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, &pkt);
         if (len < 0) {
-            printf("Error while decoding a frame.\n");
+            SWarn <<" Error while decoding a frame for cam " <<  cam;
         }
 
         if (got_picture == 0) {
@@ -412,7 +484,7 @@ void VideoPacketSource::decodeFrame(uint8_t* data, int size) {
 
         // SDebug << "ideoPacketSource::OnFrame";
 
-        OnFrame(Frame); //arvind
+        OnFrame(Frame); 
 
 
             //  ++frame;
@@ -491,54 +563,11 @@ void VideoPacketSource::run(fmp4::Frame *frame)
             return ;
         }
             
-            
-    
-                
-     
-        
+       
     
     return ;
 }
 
-/*
-bool VideoPacketSource::IsRunning()
-{
-    return capture_state() == cricket::CS_RUNNING;
-}
-
-
-bool VideoPacketSource::GetPreferredFourccs(std::vector<uint32_t>* fourccs)
-{
-    if (!fourccs)
-        return false;
-
-    // This class does not yet support multiple pixel formats.
-    fourccs->push_back(_captureFormat.fourcc);
-    return true;
-}
-
-
-bool VideoPacketSource::GetBestCaptureFormat(const cricket::VideoFormat& desired, cricket::VideoFormat* best_format)
-{
-    if (!best_format)
-        return false;
-
-    // Use the supported format as the best format.
-    // best_format->width = desired.width;
-    // best_format->height = desired.height;
-    // best_format->fourcc = _codec;
-    // best_format->interval = desired.interval;
-
-    *best_format = _captureFormat;
-    return true;
-}
-
-
-bool VideoPacketSource::IsScreencast() const
-{
-    return false;
-}
-*/
 
 
 void VideoPacketSource::myAddRef(  std::string peerid)  {

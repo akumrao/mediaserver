@@ -166,8 +166,10 @@ void MultiplexMediaCapturer::addMediaTracks(
       {
          VideoCapturer[cam] = new rtc::RefCountedObject<VideoPacketSource>("VideoCapturer" , cam);
          video_track[cam] =     factory->CreateVideoTrack(videoLable, VideoCapturer[cam]);
-         
-        // VideoCapturer[cam]->start();
+       
+        #if BYPASSGAME
+        VideoCapturer[cam]->start();
+        #endif
       }
       mutexCap.unlock();   
       
@@ -212,9 +214,10 @@ void MultiplexMediaCapturer::remove(wrtc::Peer* conn )
     vsItr = VideoCapturer.find(cam);
     if (vsItr != VideoCapturer.end() && (rtc::RefCountReleaseStatus::kDroppedLastRef == VideoCapturer[cam]->myRelease(conn->peerid()))) {
 
-
-        //VideoCapturer[cam]->stop();
-        //VideoCapturer[cam]->join();
+        #if BYPASSGAME
+        VideoCapturer[cam]->stop();
+        VideoCapturer[cam]->join();
+        #endif
         
         mutexCap.lock();
 //        std::map< std::string, rtc::scoped_refptr<webrtc::VideoTrackInterface> >::iterator it;

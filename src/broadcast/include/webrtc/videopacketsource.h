@@ -19,8 +19,15 @@
 #include "rtc_base/timestamp_aligner.h"
 #include "framefilter.h"
 
-//#include "base/thread.h"
+//#define BYPASSGAME 1
+
+#if BYPASSGAME
+#include "base/thread.h"
+#endif
 #include "livethread.h"
+
+
+
 
 namespace base {
 namespace wrtc {
@@ -31,7 +38,11 @@ namespace wrtc {
 /// It's used as the remote video source's `VideoCapturer` so that the remote
 /// video can be used as a `cricket::VideoCapturer` and in that way a remote
 /// video stream can implement the `MediaStreamSourceInterface`.
-class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public fmp4::FrameFilter//, public base::Thread
+class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public fmp4::FrameFilter
+#if BYPASSGAME
+, public base::Thread
+#endif
+
 { 
 
 public:                                                                
@@ -44,9 +55,26 @@ protected:
     }
 
 public:
+#if BYPASSGAME  
     
-   // void run();
+    #define H264_INBUF_SIZE 16384  
+
+    void run();
     
+    bool load(std::string filepath, float fps);
+    bool readFrame();
+    int readBuffer();
+    bool update(bool& needsMoreBytes);
+    uint8_t inbuf[H264_INBUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE]; 
+    FILE* fp;                                                                              /* file pointer to the file from which we read the h264 data */
+   // int frame;                                                                             /* the number of decoded frames */
+  //  h264_decoder_callback cb_frame;                                                        /* the callback function which will receive the frame/packet data */
+  //  void* cb_user;                                                                         /* the void* with user data that is passed into the set callback */
+    uint64_t frame_timeout;                                                                /* timeout when we need to parse a new frame */
+    uint64_t frame_delay;  
+    
+    
+ #endif   
     void run(fmp4::Frame  *frame);
    
 public:
@@ -85,6 +113,9 @@ private:
     std::vector<uint8_t> buffer;
     
     void StartParser();
+    void StopParser();
+    void StartLive();
+    void StopLive();
     
     void decodeFrame(uint8_t* data, int size);
     
@@ -105,7 +136,7 @@ protected:
     AVFrame *avframe;
     AVCodecParserContext *parser;
     
-    void stopParser();
+  
          
      fmp4::LiveThread  *ffparser{nullptr};
     

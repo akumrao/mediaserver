@@ -23,11 +23,14 @@ H264_Decoder::~H264_Decoder() {
 
   if(codec_context) {
     avcodec_close(codec_context);
+     avcodec_free_context(&codec_context);
     av_free(codec_context);
     codec_context = NULL;
   }
 
+
   if(picture) {
+    av_frame_free(&picture);
     av_free(picture);
     picture = NULL;
   }

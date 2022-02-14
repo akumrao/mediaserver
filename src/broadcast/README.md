@@ -18,7 +18,7 @@ git checkout release/3.3
 ./configure --disable-yasm --enable-shared  --enable-ffplay--enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping
 
 do it 
- ./configure --disable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
+ ./configure --enable-yasm --enable-shared  --enable-ffplay --enable-debug=3  --disable-optimizations --disable-mmx --disable-stripping --enable-gpl --enable-nonfree --enable-libfdk-aac
 
 
 for h264 to enable for decoding - See  openh264 installing section next
@@ -325,3 +325,7 @@ sudo find . -name "core._home_guest_a_out.1000.4..."
 I found the core dump in /var/lib/apport/coredump/
 
 
+chrome log
+
+export CHROME_LOG_FILE=/tmp/chrome_debug.log
+--enable-logging --v=1
