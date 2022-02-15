@@ -641,8 +641,8 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
      }
      else if (!((basicframe.h264_pars.slice_type == H264SliceType::idr) ||   (basicframe.h264_pars.slice_type == H264SliceType::nonidr))) {
           //info->run(&basicframe);
-           fragmp4_muxer->run(&basicframe); // starts the frame filter chain
-          basicframe.payload.resize(basicframe.payload.capacity());
+           //fragmp4_muxer->run(&basicframe); // starts the frame filter chain
+          //basicframe.payload.resize(basicframe.payload.capacity());
      }
      else
      {

@@ -75,7 +75,8 @@ namespace base {
             // LTrace("Parse: ", len)
 
             if (_complete) {
-                throw std::runtime_error("HTTP parser already complete");
+               //  throw std::runtime_error("HTTP parser already complete");
+                SError <<  "Exception: HTTP parser already complete, Check incoming data " <<  std::string( data, len);
             }
 
             size_t nparsed = ::http_parser_execute(&_parser, &_settings, data, len);

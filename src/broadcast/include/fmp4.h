@@ -197,10 +197,18 @@ public:
 
                 auto& request = conn->_request;
 
-                // Log incoming requests
-              //  STrace << "Incoming connection from " << ": Request:\n" << request << std::endl;
+                STrace << "Incoming connection from " << ": Request:\n" << request << std::endl;
+
+                if( !request.has("Host"))
+                {
+
+                    SError << "Incoming connection does not have host "  << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+
+                    return new net::BasicResponder(conn);
+                }
 
                 SDebug << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+
 
                 // Handle websocket connections
                 if (request.getMethod() == "POST") {

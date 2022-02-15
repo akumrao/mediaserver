@@ -213,10 +213,20 @@ public:
 
     ServerResponder* createResponder(net::HttpBase* conn) {
         
-          auto& request = conn->_request;
+        auto& request = conn->_request;
 
-            // Log incoming requests
-          STrace << "Incoming connection from " << ": URI:\n" << request.getURI() << ": Request:\n" << request << std::endl;
+        STrace << "Incoming connection from " << ": Request:\n" << request << std::endl;
+
+        if( !request.has("Host"))
+        {
+
+            SError << "Incoming connection does not have host "  << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+
+            return new BasicResponder(conn);
+         }
+
+        SDebug << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
+
 
         if( request.getURI() == "multipart")
             return new MultiPartResponder(conn);
