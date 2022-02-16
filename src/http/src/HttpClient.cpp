@@ -292,11 +292,13 @@ namespace base {
 
             // Release any file handles
             if (_readStream) {
-                std::ofstream* fstream = (std::ofstream*) (_readStream.get());
-                if (fstream) {
+             //   std::ofstream* fstream = (std::ofstream*) (_readStream.get());
+             //   if (fstream) {
                     // LTrace("Closing file stream")
-                    fstream->close();
-                }
+               //     fstream->close();
+                //}
+                _readStream.release();
+
             }
             _complete = true; // in case close() is called inside callback
 

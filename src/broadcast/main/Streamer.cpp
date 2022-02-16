@@ -201,6 +201,8 @@ ninja -C out/m75/ webrtc
   
 pmap -x `pidof runWebrtc`
 
+lsof -p `pidof runWebrtc`   // number of file descriptor 
+
 valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes  ./runWebrtc  >& /var/tmp/leak.txt
 
 

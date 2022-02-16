@@ -34,7 +34,8 @@ MultiplexMediaCapturer::MultiplexMediaCapturer():
 #if MP4File
 _videoCapture(std::make_shared<ff::MediaCapture>()),
 #endif
-  _audioModule(AudioPacketModule::Create()), PlayerID(0)
+//  _audioModule(AudioPacketModule::Create()), 
+PlayerID(0)
 {
      using std::placeholders::_1;
    // _stream.attachSource(_videoCapture, true);
@@ -126,10 +127,10 @@ std::string MultiplexMediaCapturer::random_string()
    
 }
 
-rtc::scoped_refptr<AudioPacketModule> MultiplexMediaCapturer::getAudioModule()
-{
-   return _audioModule;
-}
+//rtc::scoped_refptr<AudioPacketModule> MultiplexMediaCapturer::getAudioModule()
+//{
+//   return _audioModule;
+//}
 
 
 void MultiplexMediaCapturer::addMediaTracks(

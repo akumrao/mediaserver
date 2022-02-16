@@ -78,7 +78,7 @@ protected:
     
     
     
-    rtc::scoped_refptr<AudioPacketModule> _audioModule;
+    //rtc::scoped_refptr<AudioPacketModule> _audioModule;
 public:    
     
      std::map< std::string ,  rtc::scoped_refptr<VideoPacketSource> > VideoCapturer;

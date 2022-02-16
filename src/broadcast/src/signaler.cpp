@@ -14,9 +14,10 @@ using std::endl;
 namespace base {
     namespace wrtc {
 
-        Signaler::Signaler() :
-        _capturer()
-        , _context(_capturer.getAudioModule()) {
+        Signaler::Signaler() 
+        : _capturer()
+        //, _context(_capturer.getAudioModule())
+        {
 
         }
 

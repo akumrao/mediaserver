@@ -34,6 +34,9 @@ namespace base
                 virtual const std::string& GetLocalIp() const{ return ip_port;}
                 virtual const std::string& GetPeerIp() const{return ip_port;}
                 
+                virtual uint16_t GetLocalPort() const { return 0;}
+                virtual uint16_t GetPeerPort() const {return 0;}
+                
                       /////////////////////////////////////////
                 virtual void on_header(Listener* conn) { }
         

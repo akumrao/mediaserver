@@ -118,7 +118,7 @@ namespace base {
 	     //override this function
 
             TcpConnectionBase *con = (TcpConnectionBase*)connection;
-            STrace << "HttpServer::on_close, LocalIP" << con->GetLocalIp() << " PeerIP" << con->GetPeerIp() << std::endl << std::flush;
+            SInfo << "HttpServer::on_close, LocalIP" << con->GetLocalIp() <<":" << con->GetLocalPort()  << " PeerIP" << con->GetPeerIp() << ":" << con->GetPeerPort();
           
         }
 
@@ -221,9 +221,9 @@ namespace base {
            // tcpHTTPServer = nullptr;
         }
 
-        void HttpsServer::on_close(Listener* connection) {
+        void HttpsServer::on_close(Listener* con) {
 
-            STrace << "HttpsServer::on_close, LocalIP" << connection->GetLocalIp() << " PeerIP" << connection->GetPeerIp() << std::endl << std::flush;
+            SInfo << "HttpsServer::on_close, LocalIP" << con->GetLocalIp() <<":" << con->GetLocalPort()  << " PeerIP" << con->GetPeerIp() << ":" << con->GetPeerPort();
 
         }
 
