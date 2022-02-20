@@ -604,7 +604,7 @@ bool FrameSink::parseH264Header()
     setupframe.mstimestamp      = CurrentTime_milliseconds();
     // send setup frame
 
-    info->run(&setupframe);
+    //info->run(&setupframe);
     fragmp4_muxer->run(&setupframe);
 
     //cur_size = fread(in_buffer, 1, in_buffer_size, fileVideo);
@@ -689,7 +689,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 
                 // SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
 
-                info->run(&basicframe);
+                //info->run(&basicframe);
                 fragmp4_muxer->run(&basicframe); // starts the frame filter chain
                 basicframe.payload.resize(basicframe.payload.capacity());
             }
@@ -704,7 +704,7 @@ void FrameSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 
            // SInfo <<  " Got PPS fps ";
 
-            info->run(&basicframe);
+            //info->run(&basicframe);
             fragmp4_muxer->run(&basicframe); // starts the frame filter chain
             basicframe.payload.resize(basicframe.payload.capacity());
 
@@ -808,7 +808,7 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
            
            SInfo <<  " Got SPS fps "  << fps << " width "  << width  <<  " height " << height ;
                    
-           info->run(&basicframe);
+           //info->run(&basicframe);
            fragmp4_muxer->run(&basicframe); // starts the frame filter chain
            basicframe.payload.resize(basicframe.payload.capacity());
            
@@ -822,7 +822,7 @@ void FrameSink::afterGettingHeader(unsigned frameSize, unsigned numTruncatedByte
            
             SInfo <<  " Got PPS fps ";
             
-            info->run(&basicframe);
+            //info->run(&basicframe);
             fragmp4_muxer->run(&basicframe); // starts the frame filter chain
             basicframe.payload.resize(basicframe.payload.capacity());
             

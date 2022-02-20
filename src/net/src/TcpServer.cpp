@@ -39,6 +39,7 @@ namespace base
                
                 free(req);
          #else
+          uv_close((uv_handle_t*) req->data, nullptr);
           free(req->data);
           free(req); 
          #endif

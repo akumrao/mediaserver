@@ -97,7 +97,7 @@ void alloc_buffer_worker(uv_handle_t *handle, size_t suggested_size, uv_buf_t *b
 
 void on_close(uv_handle_t* handle){
     client_t* client = (client_t*) handle->data;
-    LOGF("[ %5d ] connection closed\n\n", client->request_num);
+    LOGF("[ %5d ] connection closed client %x, handle %x \n\n", client->request_num, client , handle);
     delete client;
 }
 
@@ -107,7 +107,7 @@ void alloc_cb(uv_handle_t * /*handle*/, size_t suggested_size, uv_buf_t* buf){
 
 void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t * buf){
     ssize_t parsed;
-    LOGF("on read: %ld\n", nread);
+    LOGF("on read: %ld handle %x \n", nread , tcp );
     client_t* client = (client_t*) tcp->data;
     if (nread >= 0)
     {
@@ -128,6 +128,7 @@ void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t * buf){
         {
             UVERR(nread, "read");
         }
+        LOGF("on close:handle %x \n",  tcp );
         uv_close((uv_handle_t*) & client->handle, on_close);
     }
     free(buf->base);
@@ -157,6 +158,7 @@ void after_write(uv_write_t* req, int status){
     CHECK(status, "write");
     if (!uv_is_closing((uv_handle_t*) req->handle))
     {
+        LOGF("after_write close handle %x\n",  req->handle);
         render_baton *closure = static_cast<render_baton *> (req->data);
         delete closure;
         uv_close((uv_handle_t*) req->handle, on_close);
@@ -176,7 +178,7 @@ bool endswith(std::string const& value, std::string const& search){
 void render(uv_work_t* req){
     render_baton *closure = static_cast<render_baton *> (req->data);
     client_t* client = (client_t*) closure->client;
-    LOGF("[ %5d ] render\n", client->request_num);
+    LOGF("[ %5d ] render client %x\n", client->request_num , client);
 
     //closure->result = "hello universe";
     closure->response_code = "200 OK";
@@ -184,9 +186,10 @@ void render(uv_work_t* req){
     //#if 0
     std::string filepath(".");
     filepath += client->path;
-    std::string index_path = (filepath + "index.html");
-
-    std::cout << "file Path: " << filepath << "index Path " << index_path << std::endl;
+//    std::string index_path = (filepath + "index.html");
+     std::string index_path = filepath;
+             
+    std::cout << "file Path: " << filepath <<  std::endl << std::flush ;
 
     bool has_index = (access(index_path.c_str(), R_OK) != -1);
     if (/*!has_index &&*/ filepath[filepath.size() - 1] == '/')
@@ -219,7 +222,7 @@ void render(uv_work_t* req){
         {
             file_to_open = index_path;
         }
-        std::cout << "file Path: " << file_to_open << std::endl;
+       // std::cout << "file Path: " << file_to_open << std::endl;
         bool exists = (access(file_to_open.c_str(), R_OK) != -1);
         if (!exists)
         {
@@ -262,7 +265,7 @@ void after_render(uv_work_t* req){
     render_baton *closure = static_cast<render_baton *> (req->data);
     client_t* client = (client_t*) closure->client;
 
-    LOGF("[ %5d ] after render\n", client->request_num);
+    LOGF("[ %5d ] after render , cline %x \n", client->request_num, client);
 
     std::ostringstream rep;
     rep << "HTTP/1.1 " << closure->response_code << "\r\n"
@@ -392,8 +395,7 @@ void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf
     client_t* client = new client_t();
     client->request_num = request_num;
     request_num++;
-
-    LOGF("[ %5d ] new connection\n", request_num);
+   
 
     client->myloop = tmp->loppworker;
     
@@ -403,6 +405,8 @@ void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf
     client->parser.data = client;
     client->handle.data = client;
     
+    
+    LOGF("[ %5d ] new connection, client %x, handle %x \n", request_num, client,  &client->handle);
 
     int r = uv_accept(q, (uv_stream_t*) & client->handle);
     CHECK(r, "accept");
@@ -485,6 +489,27 @@ static void workermain(void* _worker) {
             }
 }
 
+  
+static void after_pipe_write(uv_write_t* req, int status) {
+ #ifdef _WIN32 
+      //  free(req->data);
+       // free_write_req(req);
+      //  uv_close((uv_handle_t*) req->handle, nullptr);
+
+        free(req);
+ #else
+
+   std::cout << " after_pipe_write "  <<  req  << " req->handle"  << req->data  << std::endl << std::flush;
+  
+  uv_close((uv_handle_t*) req->data, nullptr);
+  free(req->data);
+  free(req); 
+
+#endif
+        return;
+}
+        
+  
 uv_buf_t dummy_buf;
 void on_new_connection(uv_stream_t *server, int status) {
 
@@ -495,12 +520,20 @@ void on_new_connection(uv_stream_t *server, int status) {
     }
 
     uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+    
+    std::cout << " on_new_connection handle"  <<  client << std::endl << std::flush;
+    
     uv_tcp_init(uv_loop, client);
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
         uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
         dummy_buf = uv_buf_init("a", 1);
         struct child_worker *worker = &workers[round_robin_counter];
-        int e =  uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
+        
+         write_req->data = client;
+        
+         std::cout << " write_req "  <<  write_req << std::endl << std::flush;
+            
+        int e =  uv_write2(write_req, (uv_stream_t*) & worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, after_pipe_write);
         round_robin_counter = (round_robin_counter + 1) % child_worker_count;
     } else {
         uv_close((uv_handle_t*) client, NULL);
@@ -517,7 +550,7 @@ void on_connect(uv_stream_t* server_handle, int status){
     client->request_num = request_num;
     request_num++;
 
-    LOGF("[ %5d ] new connection\n", request_num);
+    
 
     client->myloop = server_handle->loop;
     
@@ -527,8 +560,14 @@ void on_connect(uv_stream_t* server_handle, int status){
     client->parser.data = client;
     client->handle.data = client;
     
+    LOGF("[ %5d ] on_connect  %x, handle %x \n", request_num , client, &client->handle );
+    
+    
+    
+    std::cout << " client  " << client <<  " handle " <<   &client->handle  << std::endl << std::flush;
+        
 
-    int r = uv_accept(server_handle, (uv_stream_t*) & client->handle);
+    int r = uv_accept(server_handle, (uv_stream_t*)&client->handle);
     CHECK(r, "accept");
 
     uv_read_start((uv_stream_t*) & client->handle, alloc_cb, on_read);
