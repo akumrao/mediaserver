@@ -405,9 +405,9 @@ namespace base {
              delete fragmp4_filter;
             fragmp4_filter = nullptr;
             
-            //if(fragmp4_muxer)
-            //delete fragmp4_muxer;
-            //fragmp4_muxer = nullptr;
+            if(fragmp4_muxer)
+             delete fragmp4_muxer;
+             fragmp4_muxer = nullptr;
             
             if(info)
             delete info;

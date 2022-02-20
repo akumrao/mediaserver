@@ -218,7 +218,7 @@ namespace base
 
             // launch same number of workers as number of CPUs
             uv_cpu_info_t *info;
-            int cpu_count = 3;
+            int cpu_count = 20;
             //uv_cpu_info(&info, &cpu_count);
             //uv_free_cpu_info(info, cpu_count);
 
