@@ -30,20 +30,23 @@ namespace base
 {
     namespace net
     {
+        
+        
+       inline static void onClose(uv_handle_t* handle) {
+            SDebug << " TcpServerBase::onClose"  ;
+            delete handle;
+        }
 
         static void after_pipe_write(uv_write_t* req, int status) {
 	 #ifdef _WIN32 
-              //  free(req->data);
-               // free_write_req(req);
-              //  uv_close((uv_handle_t*) req->handle, nullptr);
-               
-                free(req);
+             
+             uv_close((uv_handle_t*) req->data, onClose);  
+             delete req; 
          #else
-          uv_close((uv_handle_t*) req->data, nullptr);
-          free(req->data);
-          free(req); 
+          uv_close((uv_handle_t*) req->data, onClose);
+          delete req; 
          #endif
-                return;
+         return;
         }
         
 
@@ -58,10 +61,7 @@ namespace base
             server->OnUvConnection(handle , status);
         }
 
-        inline static void onClose(uv_handle_t* handle) {
-            SDebug << " TcpServerBase::onClose"  ;
-            delete handle;
-        }
+
         
    
         void on_new_worker_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
@@ -417,10 +417,10 @@ namespace base
 
                 SDebug << "OnUvConnection " << round_robin_counter;
                 
-                uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof (uv_tcp_t));
+                uv_tcp_t *client = (uv_tcp_t*) new uv_tcp_t();
                 uv_tcp_init(Application::uvGetLoop(), client);
                 if (uv_accept(reinterpret_cast<uv_stream_t*> (this->uvHandle), (uv_stream_t*) client) == 0) {
-                    uv_write_t *write_req = (uv_write_t*) malloc(sizeof (uv_write_t));
+                    uv_write_t *write_req = (uv_write_t*) new uv_write_t();
                     dummy_buf = uv_buf_init("a", 1);
                     struct child_worker *worker = &workers[round_robin_counter];
                     

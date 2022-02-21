@@ -198,6 +198,10 @@ ninja -C out/m75 webrtc
  gn gen out/m75 --args='is_debug=false symbol_level=0 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=false rtc_enable_protobuf=false use_rtti=false use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=false  use_glib=false rtc_use_pipewire=false rtc_use_gtk=false rtc_include_pulse_audio=false rtc_include_tests=false  treat_warnings_as_errors=false rtc_include_ilbc=false rtc_build_examples=false rtc_build_tools=false enable_iterator_debugging=false rtc_use_x11=false use_gio=false '
 ninja -C out/m75/ webrtc
  
+
+core dump location
+
+/var/lib/apport/coredump/
   
 pmap -x `pidof runWebrtc`
 

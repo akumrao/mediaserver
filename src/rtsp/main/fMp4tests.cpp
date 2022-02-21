@@ -139,6 +139,15 @@ int main(int argc, char** argv) {
 
  valgrind --leak-check=full   --show-leak-kinds=all  --track-origins=yes  ./mediaserver
  
- 
+  LEAK SUMMARY:
+==27168==    definitely lost: 128 bytes in 1 blocks
+==27168==    indirectly lost: 0 bytes in 0 blocks
+==27168==      possibly lost: 576 bytes in 2 blocks
+==27168==    still reachable: 30,773 bytes in 268 blocks
+==27168==         suppressed: 0 bytes in 0 blocks
+==27168== 
+==27168== For counts of detected and suppressed errors, rerun with: -v
+==27168== ERROR SUMMARY: 34 errors from 4 contexts (suppressed: 0 from 0)
+
  
  */
