@@ -115,6 +115,8 @@ namespace base {
         }
 
         void  AudioPacketModule::onAudioCaptured(IPacket& pack) {
+            
+            #if MP4File
             ff::AudioPacket& packet = (ff::AudioPacket&)pack;
 
             LTrace("Audio frame captured")
@@ -148,7 +150,8 @@ namespace base {
                 webrtc::SleepMs(5);
                 
             }
-
+            
+           #endif
            return ;
 
         }

@@ -8,8 +8,9 @@
 
 #ifdef HAVE_FFMPEG
 
+#if MP4File
 #include "ff/packet.h"
-
+#endif
 //#include "media/base/videocapturer.h"
 #include "media/base/adapted_video_track_source.h"
 #include "rtc_base/timestamp_aligner.h"
@@ -38,7 +39,7 @@ public:
 
     /// Callback that fired when an `av::PlanarVideoPacket`
     /// is ready for processing.
-    int onVideoCaptured(IPacket& pac);
+    //int onVideoCaptured(IPacket& pac);
 
     /// cricket::VideoCapturer implementation.
 

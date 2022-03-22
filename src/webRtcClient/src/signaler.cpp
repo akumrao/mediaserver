@@ -247,7 +247,7 @@ namespace base {
 
             LTrace("Tests signalling Begin. Please run signalling server at webrtc folder")
 
-            client = new SocketioClient(host, port, true);
+            client = new SocketioClient(host, port, false);
             client->connect();
 
             socket = client->io();
@@ -301,6 +301,7 @@ namespace base {
                     m["desc"] = "sessionDescription";
                     m["from"] =from;
                     m["room"]= room;
+                    m["cam"] ="0";
             // smpl::Message m({ type, {
             //     { wrtc::kSessionDescriptionTypeName, type },
             //     { wrtc::kSessionDescriptionSdpName, sdp} }

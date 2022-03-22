@@ -6,14 +6,20 @@
 
 #include "base/base.h"
 
-#ifdef HAVE_FFMPEG
+//#ifdef HAVE_FFMPEG
 
+
+#if MP4File
 #include "ff/ff.h"
 #include "ff/mediacapture.h"
+#endif
+
+
 #include "webrtc/audiopacketmodule.h"
 #include "webrtc/videopacketsource.h"
 
 #include "api/peer_connection_interface.h"
+
 
 
 
@@ -42,7 +48,13 @@ public:
 
 protected:
 //    PacketStream _stream;
+    #if MP4File
     ff::MediaCapture::Ptr _videoCapture;
+    #endif
+
+    
+    
+    
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
@@ -59,6 +71,6 @@ protected:
 } } // namespace wrtc
 
 
-#endif // HAVE_FFMPEG
+//#endif // HAVE_FFMPEG
 #endif
 

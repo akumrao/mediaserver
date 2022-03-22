@@ -3,12 +3,12 @@
 #include "webrtc/videopacketsource.h"
 
 #ifdef HAVE_FFMPEG
-
+#if MP4File
 #include "ff/ffmpeg.h"
 #include "ff/videocontext.h"
 #include "ff/videodecoder.h"
 #include "ff/fpscounter.h"
-
+ #endif
 #include "api/video/i420_buffer.h"
 #include "rtc_base/atomic_ops.h"
 #include <chrono>
@@ -56,7 +56,7 @@ VideoPacketSource::VideoPacketSource(const cricket::VideoFormat& captureFormat)
 
 VideoPacketSource::~VideoPacketSource()
 {
-    LDebug(": Destroying")
+    //LDebug(": Destroying")
 }
 
 
@@ -110,93 +110,93 @@ void VideoPacketSource::Stop()
 }
 */
 
-int VideoPacketSource::onVideoCaptured(IPacket& pac)
-{
-    //if(!IsRunning())
-  //  return;
+// int VideoPacketSource::onVideoCaptured(IPacket& pac)
+// {
+//     //if(!IsRunning())
+//   //  return;
     
-    ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
+//     ff::PlanarVideoPacket& packet = (ff::PlanarVideoPacket&)pac;
     
    
 
-    assert(packet.width > 0);
-    assert(packet.height > 0);
+//     assert(packet.width > 0);
+//     assert(packet.height > 0);
 
-    int adapted_width;
-    int adapted_height;
-    int crop_width;
-    int crop_height;
-    int crop_x;
-    int crop_y;
-    int64_t timestamp;
-   // int64_t translated_camera_time_us;
+//     int adapted_width;
+//     int adapted_height;
+//     int crop_width;
+//     int crop_height;
+//     int crop_x;
+//     int crop_y;
+//     int64_t timestamp;
+//    // int64_t translated_camera_time_us;
 
-#if WebRTC_USE_DECODER_PTS
-    // Set the packet timestamp.
-    // Since the stream may not be playing from the beginning we
-    // store the first packet timestamp and subtract it from
-    // subsequent packets.
-    if (!_timestampOffset)
-        _timestampOffset = -packet.time;
-    timestamp = packet.time + _timestampOffset;
+// #if WebRTC_USE_DECODER_PTS
+//     // Set the packet timestamp.
+//     // Since the stream may not be playing from the beginning we
+//     // store the first packet timestamp and subtract it from
+//     // subsequent packets.
+//     if (!_timestampOffset)
+//         _timestampOffset = -packet.time;
+//     timestamp = packet.time + _timestampOffset;
 
-    // NOTE: Initial packet time cannot be 0 for some reason.
-    // WebRTC sets the initial packet time to 1000 so we will do the same.
-    timestamp += 1000;
-#else
-     _nextTimestamp += _captureFormat.interval;
-     timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
-#endif
+//     // NOTE: Initial packet time cannot be 0 for some reason.
+//     // WebRTC sets the initial packet time to 1000 so we will do the same.
+//     timestamp += 1000;
+// #else
+//      _nextTimestamp += _captureFormat.interval;
+//      timestamp = _nextTimestamp / rtc::kNumNanosecsPerMicrosec;
+// #endif
 
-     if (!AdaptFrame(packet.width, packet.height,
-         timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
-         &adapted_width, &adapted_height,
-         &crop_width, &crop_height,
-         &crop_x, &crop_y)) {
-         //LWarn("Adapt frame failed", packet.time)
-         return 0;
-     }
+//      if (!AdaptFrame(packet.width, packet.height,
+//          timestamp, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+//          &adapted_width, &adapted_height,
+//          &crop_width, &crop_height,
+//          &crop_x, &crop_y)) {
+//          //LWarn("Adapt frame failed", packet.time)
+//          return 0;
+//      }
 
-   // int64_t TimestampUs = rtc::TimeMicros();
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Copy(
-            packet.width, packet.height,
-            packet.buffer[0], packet.linesize[0],
-            packet.buffer[1], packet.linesize[1],
-            packet.buffer[2], packet.linesize[2]);
+//    // int64_t TimestampUs = rtc::TimeMicros();
+//     rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Copy(
+//             packet.width, packet.height,
+//             packet.buffer[0], packet.linesize[0],
+//             packet.buffer[1], packet.linesize[1],
+//             packet.buffer[2], packet.linesize[2]);
     
     
-    webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-		set_video_frame_buffer(buffer).
-		set_rotation(webrtc::kVideoRotation_0).
-		set_timestamp_us(timestamp).
-		build();
+//     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+// 		set_video_frame_buffer(buffer).
+// 		set_rotation(webrtc::kVideoRotation_0).
+// 		set_timestamp_us(timestamp).
+// 		build();
 
-	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
-     //SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
-     OnFrame(Frame);  //arvind
+// 	//UE_LOG(PixelStreamer, VeryVerbose, TEXT("(%d) captured video %lld"), RtcTimeMs(), TimestampUs);
+//      //SInfo << "On video frame for Player : " << playerId << " " <<  packet.width, 'x', packet.height;
+//      OnFrame(Frame);  //arvind
         
 
-    // OnFrame(webrtc::VideoFrame(
-    //     buffer, _rotation,
-    //     translated_camera_time_us), // timestamp
-    //     packet.width, packet.height);
+//     // OnFrame(webrtc::VideoFrame(
+//     //     buffer, _rotation,
+//     //     translated_camera_time_us), // timestamp
+//     //     packet.width, packet.height);
 
-#if 0 // Old code pre f5297a0
-    cricket::CapturedFrame frame;
-    frame.width = packet.width;
-    frame.height = packet.height;
-    frame.pixel_width = 1;
-    frame.pixel_height = 1;
-    frame.fourcc = cricket::FOURCC_NV12;
-    frame.data = packet.data();
-    frame.data_size = packet.size();
-    // frame.time_stamp = packet.time; // time in microseconds is ignored
+// #if 0 // Old code pre f5297a0
+//     cricket::CapturedFrame frame;
+//     frame.width = packet.width;
+//     frame.height = packet.height;
+//     frame.pixel_width = 1;
+//     frame.pixel_height = 1;
+//     frame.fourcc = cricket::FOURCC_NV12;
+//     frame.data = packet.data();
+//     frame.data_size = packet.size();
+//     // frame.time_stamp = packet.time; // time in microseconds is ignored
 
-    SignalFrameCaptured(this, &frame);
-#endif
+//     SignalFrameCaptured(this, &frame);
+// #endif
     
-    return 1;
-}
+//     return 1;
+// }
 
 /*
 bool VideoPacketSource::IsRunning()

@@ -22,6 +22,7 @@
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
+#include "VideoDecoder.h"
 
 namespace base {
 namespace wrtc {
@@ -47,6 +48,8 @@ private:
     //std::unique_ptr<rtc::PacketSocketFactory> socketFactory;
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
     // rtc::scoped_refptr<webrtc::AudioDeviceModule> audioDeviceManager;
+    
+    std::unique_ptr<FVideoDecoderFactory> VideoDecoderFactoryStrong;
 };
 
 

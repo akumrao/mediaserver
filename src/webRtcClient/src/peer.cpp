@@ -15,6 +15,7 @@ namespace base {
 namespace wrtc {
 
 
+    
 void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
 
  
@@ -27,7 +28,7 @@ void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
 
   } else {
     // The buffer has alpha channel.
-    webrtc::I420ABufferInterface* i420a_buffer = buffer->GetI420A();
+    webrtc::I420ABufferInterface* i420a_buffer = (webrtc::I420ABufferInterface*) buffer->GetI420A();
 
     
   }
@@ -256,7 +257,7 @@ void Peer::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new
             _manager->onStable(this);
             break;
         case webrtc::PeerConnectionInterface::kClosed:
-            _manager->onClosed(this);
+           // _manager->onClosed(this);  // Do not uncomment it, it will cause memory leaks
             break;
         case webrtc::PeerConnectionInterface::kHaveLocalOffer:
         case webrtc::PeerConnectionInterface::kHaveRemoteOffer:

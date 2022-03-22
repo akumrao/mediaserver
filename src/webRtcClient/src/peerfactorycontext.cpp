@@ -16,6 +16,7 @@
 #include "api/audio_codecs/audio_encoder_factory_template.h"
 #include "api/audio_codecs/opus/audio_decoder_opus.h"
 #include "api/audio_codecs/opus/audio_encoder_opus.h"
+#include "webrtc/VideoDecoder.h"
 
 
 using std::endl;
@@ -65,6 +66,8 @@ PeerFactoryContext::PeerFactoryContext(
     //         default_adm, video_encoder_factory, video_decoder_factory);
     // }
 
+      
+     VideoDecoderFactoryStrong = std::make_unique<FVideoDecoderFactory>();
 
 
     factory = webrtc::CreatePeerConnectionFactory(
@@ -74,9 +77,10 @@ PeerFactoryContext::PeerFactoryContext(
               webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
               webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
 
-              webrtc::CreateBuiltinVideoEncoderFactory(),
+              std::make_unique<webrtc::InternalEncoderFactory>(),
 
-              webrtc::CreateBuiltinVideoDecoderFactory(),
+              //std::make_unique<webrtc::InternalDecoderFactory>(),
+              std::move(VideoDecoderFactoryStrong),
 
               nullptr, nullptr);
 

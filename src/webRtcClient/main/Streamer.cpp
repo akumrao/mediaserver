@@ -9,6 +9,7 @@
 
 #include "webrtc/signaler.h"
 
+
 using namespace std;
 using namespace base;
 
@@ -22,10 +23,11 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 8080 //443
+#define SERVER_PORT 9093
 #define JOIN_ROOM  "foo"        
 
-#include "webrtc/signaler.h"
+
+
 
 //std::string sampleDataDir(const std::string& file) {
 //    std::string dir;
@@ -43,7 +45,7 @@ int main(int argc, char** argv) {
 
 
     // Setup WebRTC environment
-    rtc::LogMessage::LogToDebug(rtc::LS_INFO); // LS_VERBOSE, LS_INFO, LS_ERROR
+    rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // LS_VERBOSE, LS_INFO, LS_ERROR
     // rtc::LogMessage::LogTimestamps();
     // rtc::LogMessage::LogThreads();
 
@@ -87,4 +89,8 @@ int main(int argc, char** argv) {
 }
 
 
-
+/*
+ 
+ * gn gen out/m85 --args='is_debug=true symbol_level=2 is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true proprietary_codecs=true ffmpeg_branding="Chrome"'
+ 
+ */
