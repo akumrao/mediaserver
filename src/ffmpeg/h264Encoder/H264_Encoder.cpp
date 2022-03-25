@@ -37,13 +37,23 @@ H264_Encoder::~H264_Encoder() {
 
 }
 
+
 bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     
+
+    codec = avcodec_find_encoder_by_name("h264_nvenc");
        
-    codec = avcodec_find_encoder_by_name("libx264");
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
         exit(1);
+   
+
+        codec = avcodec_find_encoder_by_name("libx264");
+        if (!codec) {
+            fprintf(stderr, "Codec not found\n");
+            exit(1);
+        }
+   
     }
 
     c = avcodec_alloc_context3(codec);

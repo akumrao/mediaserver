@@ -1,17 +1,17 @@
-#include "base/define.h"
-#include "base/test.h"
-#include "base/filesystem.h"
-#include "base/application.h"
-#include "base/packetstream.h"
-#include "base/packet.h"
-#include "base/packetqueue.h"
-#include "base/platform.h"
+//#include "base/define.h"
+//#include "base/test.h"
+//#include "base/filesystem.h"
+//#include "base/application.h"
+//#include "base/packetstream.h"
+//#include "base/packet.h"
+//#include "base/packetqueue.h"
+//#include "base/platform.h"
 
 #include "H264_Encoder.h"
 
 
 using namespace std;
-using namespace base;
+//using namespace base;
 
 
 #include <stdio.h>
@@ -22,7 +22,7 @@ using namespace base;
 bool playback_initialized = false;
 
 
-#include "H264_Decoder.h"
+//#include "H264_Decoder.h"
 
 void frame_callback(AVFrame* frame, AVPacket* pkt, void* user);
 void initialize_playback(AVFrame* frame, AVPacket* pkt);
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 {
    
 
-    H264_Decoder decoder(frame_callback, NULL);
+    //H264_Decoder decoder(frame_callback, NULL);
 
    // YUV420P_Player player;
 
@@ -47,25 +47,25 @@ int main(int argc, char **argv)
 //    }
 
     
-     if(!decoder.load( "/workspace/live/mediaServer/test4.264", 30.0f)) {
-      ::exit(EXIT_FAILURE);
-    }
-
-    
-    
-
-
-    while(1)
-    {
-      decoder.readFrame();
-    }
-   
-    
+//     if(!decoder.load( "/workspace/live/mediaServer/test4.264", 30.0f)) {
+//      ::exit(EXIT_FAILURE);
+//    }
+//
 //    
-//     encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
-//     
-//     for(int x=0; x < 100 ;++x )
-//     encoder.encodeFrame();
+//    
+//
+//
+//    while(1)
+//    {
+//      decoder.readFrame();
+//    }
+//   
+    
+    
+     encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
+     
+     for(int x=0; x < 100 ;++x )
+     encoder.encodeFrame();
      
 }
     
