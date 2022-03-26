@@ -177,6 +177,21 @@ $ make -C build/
 For windows
 1. Install git:
 
+
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+Cloning into 'depot_tools'...
+remote: Total 49152 (delta 33104), reused 49152 (delta 33104)
+Receiving objects: 100% (49152/49152), 42.84 MiB | 5.25 MiB/s, done.
+Resolving deltas: 100% (33104/33104), done.
+
+$ cd depot_tools
+
+akumr@DESKTOP-CLA1K6E MINGW64 /e/depot_tools (main)
+$ git checkout 01a4536ff80f24ef7cfc5b7f9f67938b1e8fc2bd
+Note: switching to '01a4536ff80f24ef7cfc5b7f9f67938b1e8fc2bd'.
+
+
+
 if you haven’t installed a copy of git, open https://git-for-windows.github.io/, download and install, suggest to select “Use Git from Windows Command Prompt” during installation.
 
 2. Fetch depot_tools:
