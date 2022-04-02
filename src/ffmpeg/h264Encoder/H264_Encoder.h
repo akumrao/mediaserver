@@ -88,9 +88,19 @@ class H264_Encoder {
     int frameCount{0};
     int  ret, x, y, got_output;
     //FILE *f;
-    AVFrame *frame;
+    
+    AVFrame *sw_frame{ NULL};
     AVPacket* pkt{NULL};
   /* buffer we use to keep track of read/unused bitstream data */
+    
+    
+    AVFrame *hw_frame{ NULL};
+    //hardware 
+    AVBufferRef *avcodec_hw_device_ctx{NULL};
+
+    AVHWDeviceType avcodec_hw_type{AV_HWDEVICE_TYPE_NONE};
+
+
 };
 
 #endif
