@@ -15,17 +15,24 @@ H264_Encoder::H264_Encoder(h264_encoder_callback frameCallback, void* user)
 H264_Encoder::~H264_Encoder() {
 
 
+  if (pkt) {
+    av_packet_free(&pkt);
+
+    pkt = NULL;
+  }
 
   if(c) {
-    avcodec_close(c);
-    av_free(c);
+   // avcodec_close(c);
+    //av_free(c);
+    avcodec_free_context(&c);
     c = NULL;
   }
 
   if(frame) {
-    av_free(frame);
+    av_frame_free(&frame);
     frame = NULL;
   }
+
 
   if(fp) {
     fclose(fp);
@@ -44,10 +51,9 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     codec = avcodec_find_encoder_by_name("h264_nvenc");
        
     if (!codec) {
-        fprintf(stderr, "Codec not found\n");
-        exit(1);
+       // fprintf(stderr, "Codec not found\n");
+      //  exit(1);
    
-
         codec = avcodec_find_encoder_by_name("libx264");
         if (!codec) {
             fprintf(stderr, "Codec not found\n");
@@ -68,8 +74,17 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     c->width = width;
     c->height = height;
     /* frames per second */
-    c->time_base = (AVRational){1, fps};
-    c->framerate = (AVRational){fps, 1};
+
+    AVRational tb;
+    tb.num = 1;
+    tb.den = fps;
+    c->time_base = tb;  //arvind
+   
+    AVRational tfp;
+    tfp.num = fps;
+    tfp.den = 1;
+
+    c->framerate = tfp;
 
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
@@ -110,6 +125,15 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
         exit(1);
     }
 
+
+    pkt = av_packet_alloc();
+    if (!pkt) {
+      fprintf(stderr, "could not allocate the packet\n");
+      exit(1);
+    }
+
+
+
     frame = av_frame_alloc();
     if (!frame) {
         fprintf(stderr, "Could not allocate video frame\n");
@@ -134,9 +158,9 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
 
 void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int usize, uint8_t* vdata, int vsize) {
 
-  av_init_packet(&pkt);
-    pkt.data = NULL;    // packet data will be allocated by the encoder
-    pkt.size = 0;
+  av_init_packet(pkt);
+    pkt->data = NULL;    // packet data will be allocated by the encoder
+    pkt->size = 0;
 
     fflush(stdout);
 
@@ -164,16 +188,16 @@ void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int us
     frame->pts = ++frameCount;
 
     /* encode the image */
-    ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
+    ret = avcodec_encode_video2(c, pkt, frame, &got_output);
     if (ret < 0) {
         fprintf(stderr, "Error encoding frame\n");
         exit(1);
     }
 
     if (got_output) {
-        printf("Write frame %3d (size=%5d)\n", frameCount, pkt.size);
-        fwrite(pkt.data, 1, pkt.size, fp);
-        av_packet_unref(&pkt);
+        printf("Write frame %3d (size=%5d)\n", frameCount, pkt->size);
+        fwrite(pkt->data, 1, pkt->size, fp);
+        av_packet_unref(pkt);
     }
     
 
@@ -188,9 +212,9 @@ void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int us
 
 void H264_Encoder::encodeFrame() {
 
-  av_init_packet(&pkt);
-    pkt.data = NULL;    // packet data will be allocated by the encoder
-    pkt.size = 0;
+  av_init_packet(pkt);
+    pkt->data = NULL;    // packet data will be allocated by the encoder
+    pkt->size = 0;
 
     fflush(stdout);
 
@@ -221,7 +245,7 @@ void H264_Encoder::encodeFrame() {
     
 
     /* encode the image */
-    ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
+        /* ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
     if (ret < 0) {
         fprintf(stderr, "Error encoding frame\n");
         exit(1);
@@ -231,7 +255,29 @@ void H264_Encoder::encodeFrame() {
         printf("Write frame %3d (size=%5d)\n", frameCount, pkt.size);
         fwrite(pkt.data, 1, pkt.size, fp);
         av_packet_unref(&pkt);
-    }
+    }*/
+
+
+        
+       ret = avcodec_send_frame(c, frame);
+        if (ret < 0) {
+          fprintf(stderr, "Error sending a frame for encoding\n");
+          exit(1);
+        }
+
+        while (ret >= 0) {
+          ret = avcodec_receive_packet(c, pkt);
+          if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            return;
+          else if (ret < 0) {
+            fprintf(stderr, "Error during encoding\n");
+            exit(1);
+          }
+
+          printf("Write frame %3d (size=%5d)\n", frameCount, pkt->size);
+          fwrite(pkt->data, 1, pkt->size, fp);
+          av_packet_unref(pkt);
+        }
     
 
     /* get the delayed frames */

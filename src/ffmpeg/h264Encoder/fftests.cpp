@@ -27,9 +27,7 @@ bool playback_initialized = false;
 void frame_callback(AVFrame* frame, AVPacket* pkt, void* user);
 void initialize_playback(AVFrame* frame, AVPacket* pkt);
 
-
-  H264_Encoder encoder(NULL, NULL);
-  
+H264_Encoder encoder(NULL, NULL);
 
 int main(int argc, char **argv)
 {
@@ -61,8 +59,13 @@ int main(int argc, char **argv)
 //    }
 //   
     
-    
+#ifdef __linux__ 
+    encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
+#elif _WIN32
+   encoder.load( std::string("e:/test2.264") , 25,  800, 600);
+#else
      encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
+#endif
      
      for(int x=0; x < 100 ;++x )
      encoder.encodeFrame();

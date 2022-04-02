@@ -39,6 +39,10 @@ extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 
+#include <libavutil/channel_layout.h>
+#include <libavutil/common.h>
+#include <libavutil/frame.h>
+
 }
 
 typedef void(*h264_encoder_callback)(AVFrame* frame, AVPacket* pkt, void* user);         /* the decoder callback, which will be called when we have decoded a frame */
@@ -85,7 +89,7 @@ class H264_Encoder {
     int  ret, x, y, got_output;
     //FILE *f;
     AVFrame *frame;
-    AVPacket pkt;
+    AVPacket* pkt{NULL};
   /* buffer we use to keep track of read/unused bitstream data */
 };
 
