@@ -41,7 +41,7 @@ And there is no h264_videotoolbox decoder, only encoder. To list decoders/encode
 ffmpeg -encoders
 ffmpeg -decoders
 
-FFMPEG MINIMAL Steps from Sanjay
+*FFMPEG MINIMAL Steps from Sanjay*
 
 
 
