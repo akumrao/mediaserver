@@ -21,8 +21,8 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "libavutil/common.h"
-#include "internal.h"
+#include "common.h"
+#include "internal_audio.h"
 
 #if defined(CONFIG_RESAMPLE_DBL)
 #define SET_TYPE(func)  func ## _dbl

@@ -21,9 +21,9 @@
 #ifndef AVRESAMPLE_AUDIO_CONVERT_H
 #define AVRESAMPLE_AUDIO_CONVERT_H
 
-#include "libavutil/samplefmt.h"
+#include "samplefmt.h"
 #include "avresample.h"
-#include "internal.h"
+#include "internal_audio.h"
 #include "audio_data.h"
 
 /**

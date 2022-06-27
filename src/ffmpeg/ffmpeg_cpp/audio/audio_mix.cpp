@@ -27,6 +27,8 @@
 #include "internal_audio.h"
 #include "audio_data.h"
 #include "audio_mix.h"
+#include "macros.h"
+
 
 static const char * const coeff_type_names[] = { "q8", "q15", "flt" };
 

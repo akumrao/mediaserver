@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #include "avformat.h"
-#include "libavutil/intreadwrite.h"
+#include "intreadwrite.h"
 #include "qtpalette.h"
 
 int ff_get_qtpalette(int codec_id, AVIOContext *pb, uint32_t *palette)

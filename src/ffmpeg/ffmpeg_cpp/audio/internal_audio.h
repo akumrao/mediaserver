@@ -21,10 +21,10 @@
 #ifndef AVRESAMPLE_INTERNAL_H
 #define AVRESAMPLE_INTERNAL_H
 
-#include "libavutil/audio_fifo.h"
-#include "libavutil/log.h"
-#include "libavutil/opt.h"
-#include "libavutil/samplefmt.h"
+#include "audio_fifo.h"
+#include "log.h"
+#include "opt.h"
+#include "samplefmt.h"
 #include "avresample.h"
 
 typedef struct AudioData AudioData;

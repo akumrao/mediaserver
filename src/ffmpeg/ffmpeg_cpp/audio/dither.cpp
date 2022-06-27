@@ -39,7 +39,7 @@
 #include "audio_convert.h"
 #include "dither.h"
 #include "internal_audio.h"
-
+#include "macros.h"
 typedef struct DitherState {
     int mute;
     unsigned int seed;

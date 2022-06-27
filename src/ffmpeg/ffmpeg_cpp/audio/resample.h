@@ -22,7 +22,7 @@
 #define AVRESAMPLE_RESAMPLE_H
 
 #include "avresample.h"
-#include "internal.h"
+#include "internal_audio.h"
 #include "audio_data.h"
 
 struct ResampleContext {

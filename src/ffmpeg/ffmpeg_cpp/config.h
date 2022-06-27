@@ -223,10 +223,12 @@
 #define HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H 0
 #ifdef _WIN32
 #define HAVE_DIRECT_H 1
+#define HAVE_DIRENT_H 0
 #else
 #define HAVE_DIRECT_H 0
-#endif
 #define HAVE_DIRENT_H 1
+#endif
+
 #define HAVE_DLFCN_H 1
 #define HAVE_D3D11_H 0
 #define HAVE_DXVA_H 0
@@ -358,14 +360,16 @@
 
 #ifdef _WIN32
 #define HAVE_INET_ATON 0
+#define HAVE_LSTAT 0
 #else
 #define HAVE_INET_ATON 1
+#define HAVE_LSTAT 1
 #endif
 #define HAVE_ISATTY 1
 #define HAVE_JACK_PORT_GET_LATENCY_RANGE 0
 #define HAVE_KBHIT 0
 #define HAVE_LOADLIBRARY 0
-#define HAVE_LSTAT 1
+
 #define HAVE_LZO1X_999_COMPRESS 0
 #define HAVE_MACH_ABSOLUTE_TIME 0
 #define HAVE_MAPVIEWOFFILE 0

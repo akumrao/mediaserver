@@ -22,7 +22,7 @@
 #include "common.h"
 #include "libm.h"
 #include "log.h"
-#include "internal.h"
+#include "internal_audio.h"
 #include "resample.h"
 #include "audio_data.h"
 

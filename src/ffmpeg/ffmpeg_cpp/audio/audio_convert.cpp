@@ -30,6 +30,7 @@
 #include "audio_convert.h"
 #include "audio_data.h"
 #include "dither.h"
+#include "macros.h"
 
 enum ConvFuncType {
     CONV_FUNC_TYPE_FLAT,
