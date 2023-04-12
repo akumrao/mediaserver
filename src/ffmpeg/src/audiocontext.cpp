@@ -166,7 +166,7 @@ void initAudioCodecFromContext(const AVCodecContext* ctx, AudioCodec& params)
     
     params.sampleFmt = av_get_sample_fmt_name(ctx->sample_fmt);
     params.channels = ctx->channels;
-    params.sampleRate = ctx->sample_rate;
+    params.sampleRate = 8000;//ctx->sample_rate;
     params.bitRate = ctx->bit_rate;
 }
 

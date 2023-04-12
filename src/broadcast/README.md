@@ -1,3 +1,11 @@
+
+//ffmpeg -i audio_debug.output.1.wav -ar 8k -ac 1 -f mulaw  out.ul
+
+//root:songs# ffplay -i /var/tmp/audio/output.g711u  -ar 8k -ac 1 -f mulaw
+//ffplay -i out.ul  -ar 8k -ac 1 -f mulaw
+
+
+
 ffmpeg complile 
 apt-get install libssl-dev -y
 

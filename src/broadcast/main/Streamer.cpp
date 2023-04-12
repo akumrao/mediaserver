@@ -27,6 +27,12 @@ CMemLeakDetect memLeakDetect;
 
 #include "webrtc/signaler.h"
 
+//ffmpeg -i audio_debug.output.1.wav -ar 8k -ac 1 -f mulaw  out.ul
+
+//root:songs# ffplay -i /var/tmp/audio/output.g711u  -ar 8k -ac 1 -f mulaw
+//ffplay -i out.ul  -ar 8k -ac 1 -f mulaw
+
+
 //std::string sampleDataDir(const std::string& file) {
 //    std::string dir;
 //   // fs::addnode(dir, base_SOURCE_DIR);
@@ -43,7 +49,7 @@ int main(int argc, char** argv) {
 
 
     // Setup WebRTC environment
-    rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // LS_VERBOSE, LS_INFO, LS_ERROR
+    rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // , LS_INFO, LS_ERROR
     // rtc::LogMessage::LogTimestamps();
     // rtc::LogMessage::LogThreads();
 
@@ -56,11 +62,11 @@ int main(int argc, char** argv) {
 
     base::wrtc::Signaler sig;
 
-    //sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+    sig.startStreaming("/var/tmp/songs", "", "ul",  false);
     
     //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
-    sig.startStreaming("/var/tmp/videos", "", "264",  false);
+ //   sig.startStreaming("/var/tmp/videos", "", "264",  false);
     
     //sig.startStreaming("", "/var/tmp/test.mp4", "mp4",  true); // single file play in loop, this feauture migt be broken.  // obsolete apis do not do this
     

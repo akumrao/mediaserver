@@ -17,11 +17,76 @@
 
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "pc/local_audio_source.h"
+
+
+
+
+class MyLocalAudioSource : public webrtc::LocalAudioSource
+{
+public:
+  
+
+    static rtc::scoped_refptr<MyLocalAudioSource> Create(const std::string& sTrackName, const cricket::AudioOptions& audio_options)
+    {
+        rtc::scoped_refptr<MyLocalAudioSource> source(
+            new rtc::RefCountedObject<MyLocalAudioSource>(sTrackName, audio_options));
+        return source;
+    }
+
+    const cricket::AudioOptions options() const override { return m_Options; }
+
+    void AddSink(webrtc::AudioTrackSinkInterface* sink) override 
+    {
+        m_pAudioTrackSinkInterface = sink;
+    }
+    void RemoveSink(webrtc::AudioTrackSinkInterface* sink) override
+    {
+        m_pAudioTrackSinkInterface = 0;
+    }
+
+    void OnData(const void* pAudioData, int nBitPerSample, int nSampleRate, size_t nNumChannels, size_t nNumFrames)
+    {
+        if (m_pAudioTrackSinkInterface)
+        {
+            m_pAudioTrackSinkInterface->OnData(pAudioData, nBitPerSample, nSampleRate, nNumChannels, nNumFrames);
+        }
+    }
+protected:
+
+    MyLocalAudioSource(const std::string& sTrackName, const cricket::AudioOptions& audio_options) : m_sTrackName(sTrackName), m_Options(audio_options), m_pAudioTrackSinkInterface(0)
+    {
+    }
+    ~MyLocalAudioSource() override {}
+
+private:
+    std::string m_sTrackName;
+    cricket::AudioOptions m_Options;
+    webrtc::AudioTrackSinkInterface* m_pAudioTrackSinkInterface;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+#include "base/thread.h"
+
+
+
+
 namespace base {
 namespace wrtc {
 
 
-class MultiplexMediaCapturer
+
+class MultiplexMediaCapturer:public base::Thread
 {
 public:
     MultiplexMediaCapturer();
@@ -39,6 +104,8 @@ public:
 
     rtc::scoped_refptr<AudioPacketModule> getAudioModule();
     //VideoPacketSource* createVideoSource();
+    
+    void run();
 
 protected:
 //    PacketStream _stream;
@@ -46,6 +113,9 @@ protected:
     rtc::scoped_refptr<AudioPacketModule> _audioModule;
     
     rtc::scoped_refptr<VideoPacketSource> VideoCapturer;
+    
+    
+    rtc::scoped_refptr<MyLocalAudioSource> ausrc;
     
     
       rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;

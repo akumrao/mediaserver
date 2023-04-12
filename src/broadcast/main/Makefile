@@ -14,9 +14,9 @@ CPPFLAGS   := -I../../json/include/ -I../include -I../../signal/include -I../../
                -I/workspace/webrtc_android/src/ -I/workspace/webrtc_android/src/third_party/abseil-cpp -I/export/views/video/ffmpeg
 LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 #/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
-LDLIBS    := -lpthread -lm -ldl -lavformat -lavfilter -lavcodec -lavutil -lswscale -lavdevice -lswresample
+LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto -lavformat -lavfilter -lavcodec -lavutil -lswscale -lavdevice -lswresample
 
-SLIBS     := ${WEBRTC_PATH}/out/m75/obj/libwebrtc.a 
+SLIBS     := ${WEBRTC_PATH}/out/m84_release/obj/libwebrtc.a 
 
 
 ################################################################################

@@ -14,6 +14,9 @@
 #include <random>
 
 
+#include <chrono>
+#include <thread>
+
 
 const char kStreamId[] = "stream_id";
 
@@ -57,8 +60,8 @@ void MultiplexMediaCapturer::openFile(const std::string& dir, const std::string&
     // Set the output settings
     if (_videoCapture->audio()) {
         _videoCapture->audio()->oparams.sampleFmt = "s16";
-        _videoCapture->audio()->oparams.sampleRate = 48000;
-        _videoCapture->audio()->oparams.channels = 2;
+        _videoCapture->audio()->oparams.sampleRate = 8000;
+        _videoCapture->audio()->oparams.channels = 1;
         _videoCapture->audio()->recreateResampler();
         // _videoCapture->audio()->resampler->maxNumSamples = 480;
         // _videoCapture->audio()->resampler->variableOutput = false;
@@ -165,11 +168,20 @@ void MultiplexMediaCapturer::addMediaTracks(
       //AudioSourceOptions.audio_network_adaptor =true;
       
       if(!audio_track)
-      audio_track =   factory->CreateAudioTrack(    audioLable, factory->CreateAudioSource( AudioSourceOptions));
+      {
+       
+        ausrc =  MyLocalAudioSource::Create("arvind", AudioSourceOptions);
+          
+          
+        audio_track =   factory->CreateAudioTrack(audioLable, ausrc );
+               
+      }
    
     //stream->AddTrack(audio_track);
     // peer_connection_->AddTransceiver(audio_track);
       conn->AddTrack(audio_track, {streamId});
+      
+      base::Thread::start();
   } 
   
 
@@ -206,6 +218,65 @@ void MultiplexMediaCapturer::addMediaTracks(
 //    }
     
 }
+
+
+void MultiplexMediaCapturer::run()
+{
+       
+    static const uint8_t kNumberOfChannels = 1;
+    static const int kSamplesPerSecond = 8000;
+    static const size_t kNumberSamples = 80;
+    static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
+    static const size_t kBufferBytes = kNumberSamples * kBytesPerSample;
+
+
+ //   uint8_t test[kBufferBytes];
+
+  
+
+    FILE* in_file = fopen("/var/tmp/audio/out.ul", "rb");
+    
+    uint8_t encoded[kBufferBytes];
+    
+    
+    memset( encoded, 'a',  kBufferBytes);
+    
+    encoded[0]  = '6';
+    encoded[81]  = '7';
+    encoded[82]  = '8';
+    encoded[159] = '9';
+    
+   
+    int sz= 0;
+     
+    while(!stopped())
+    {
+        if (( sz = fread(encoded, 1, kBufferBytes, in_file)) <= 0)
+        {
+             printf("Failed to read raw data! \n");
+
+    //            audio = frame_buf;
+
+         }else if(feof(in_file))
+         {
+             fseek(in_file, 0, SEEK_SET);
+              std::cout << " end end" << std::endl << std::flush;
+         }
+
+    
+        if(sz != kBufferBytes)
+        {
+             std::cout << " second bad end " << std::endl << std::flush;
+        }
+    
+        
+        ausrc->OnData(encoded, 16, kSamplesPerSecond,1, 80);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        
+    }
+
+}
+
 
 
 void MultiplexMediaCapturer::start()

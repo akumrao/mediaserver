@@ -18,6 +18,9 @@
 #include "api/audio_codecs/opus/audio_encoder_opus.h"
 
 
+#include <webrtc/G711.h>
+
+
 using std::endl;
 
 
@@ -71,7 +74,7 @@ PeerFactoryContext::PeerFactoryContext(
               networkThread.get(), workerThread.get(), g_signaling_thread.get(),
               default_adm, 
 
-              webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
+              webrtc::CreateAudioEncoderFactory<AudioEncoderG711_Cam>(),
               webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
 
               webrtc::CreateBuiltinVideoEncoderFactory(),

@@ -13,7 +13,6 @@ ffmpeg -i /var/tmp/test.mp3 -ar 48000 -ac 2 -f s16le out.pcm
 
 
 
-
 -acodec pcm_s16be: Output pcm format, signed 16 encoding, endian is big end (small end is le);
 -ar 16000: The sampling rate is 16000
 -ac 1: the number of channels is 1
@@ -58,6 +57,7 @@ using std::endl;
 namespace base {
     namespace wrtc {
 
+#if 0
         #define MAX_AUDIO_BUFFER 50*1920*2
         static const uint8_t kNumberOfChannels = 2;
         static const int kSamplesPerSecond = 48000;
@@ -69,6 +69,9 @@ namespace base {
         AudioPacketModule::AudioPacketModule()  {
             
             /// PLAYOUT
+            
+            
+            in_file = fopen("/var/tmp/audio/output.g711u", "rb");
 
 #if DIAGNOSTICK
             std::string _outputFilename = "/var/tmp/out.pcm";
@@ -137,7 +140,29 @@ namespace base {
                     _outputFile.Write(&data[0], ns*4);
                  }
     #endif
-                  RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
+
+
+               int sz;
+                
+                char encoded[160]="arvind";
+                
+//                if (( sz = fread(encoded, 1, 160, in_file)) <= 0)
+//                {
+//                     printf("Failed to read raw data! \n");
+//
+//         //            audio = frame_buf;
+//
+//                 }else if(feof(in_file))
+//                 {
+//                     fseek(in_file, 0, SEEK_SET);
+//                 }
+                
+
+
+      //          memset( &data[0], 'a',  ns*4);
+
+
+                RecordingBuffer.insert(RecordingBuffer.end(), &data[0], &data[ns*4]);
             }
             
             int x = RecordingBuffer.size();
@@ -539,18 +564,19 @@ namespace base {
         
         
         
-#if 0
+#else
         // Constants correspond to 10ms of sterio audio at 44kHz.
-        static const uint8_t kNumberOfChannels = 2;
-        static const int kSamplesPerSecond = 44000;
-        static const size_t kNumberSamples = 440;
+        static const uint8_t kNumberOfChannels = 1;
+        static const int kSamplesPerSecond = 8000;
+        static const size_t kNumberSamples = 80;
         static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
         static const size_t kBufferBytes = kNumberSamples * kBytesPerSample;
 
+        
         static const int kTimePerFrameMs = 10;
         static const int kTotalDelayMs = 0;
         static const int kClockDriftMs = 0;
-        static const uint32_t kMaxVolume = 14392;
+        static const uint32_t kMaxVolume = 0;
 
         // Same value as src/modules/audio_device/main/source/audio_device_config.h in
         // https://code.google.com/p/webrtc/
@@ -572,6 +598,9 @@ namespace base {
         , _started(false)
         , _nextFrameTime(0)
         , _sendSamples(kBufferBytes) {
+            
+           in_file = fopen("/var/tmp/audio/out.ul", "rb");
+             
         }
 
         AudioPacketModule::~AudioPacketModule() {
@@ -637,10 +666,10 @@ namespace base {
         void AudioPacketModule::updateProcessing(bool start) {
             if (start) {
                 if (!_processThread) {
-                    _processThread = rtc::Thread::Create();
-                    _processThread->Start();
+                    //_processThread = rtc::Thread::Create();
+                    //_processThread->Start();
                 }
-                _processThread->Post(RTC_FROM_HERE, this, MSG_START_PROCESS);
+                //_processThread->Post(RTC_FROM_HERE, this, MSG_START_PROCESS);
             } else {
                 if (_processThread) {
                     _processThread->Stop();
@@ -680,7 +709,13 @@ namespace base {
             _nextFrameTime += kTimePerFrameMs;
             const int64_t current_time = rtc::TimeMillis();
             const int64_t wait_time = (_nextFrameTime > current_time) ? _nextFrameTime - current_time : 0;
-            _processThread->PostDelayed(RTC_FROM_HERE, wait_time, this, MSG_RUN_PROCESS);
+            
+            if( last_time)
+            std::cout << " wait time " << current_time - last_time <<  std::endl << std::flush;
+            
+            last_time = current_time;
+                    
+            _processThread->PostDelayed(RTC_FROM_HERE, wait_time + kTimePerFrameMs, this, MSG_RUN_PROCESS);
         }
 
         void AudioPacketModule::sendFrameP() {
@@ -691,19 +726,56 @@ namespace base {
                 return;
             }
 
-            auto samples = &_sendSamples[0];
-            if (!_sendFifo.read((void**) &samples, kNumberSamples)) {
-                LDebug("No audio frames in send buffer")
-                return;
-            }
+//            auto samples = &_sendSamples[0];
+//            if (!_sendFifo.read((void**) &samples, kNumberSamples)) {
+//                LDebug("No audio frames in send buffer")
+//                return;
+//            }
 
             bool key_pressed = false;
             uint32_t current_mic_level = 0;
             MicrophoneVolume(&current_mic_level);
+            
+            ///memset( samples, 'a',  kNumberSamples*2);
+            
+            
+            uint8_t test[kBufferBytes];
+            int sz;
+            
+            if (( sz = fread(test, 1, kBufferBytes, in_file)) <= 0)
+            {
+                     printf("Failed to read raw data! \n");
 
+                   exit(0);
+
+            }else if(feof(in_file))
+            {
+                fseek(in_file, 0, SEEK_SET);
+                std::cout << " first end " << std::endl << std::flush;
+                sz = fread(test, 1, kBufferBytes, in_file);
+                
+            }
+
+            
+            if(sz != kBufferBytes)
+            {
+                 std::cout << " first bad end " << std::endl << std::flush;
+            }
+
+            
+            
+//           memset( test, 'a',  160);    
+//           
+//           test[0] = nCount;
+//           test[159] = nCount;
+//           
+//          //  std::cout <<  nCount << " first " << (int) test[0]  <<  " "  <<  (int)test[159]<< std::endl << std::flush;
+            
+//           ++nCount;
+                    
             LTrace("Send audio")
             if (_audioCallback->RecordedDataIsAvailable(
-                    samples, kNumberSamples, kBytesPerSample, kNumberOfChannels,
+                    test, kNumberSamples, kBytesPerSample, kNumberOfChannels,
                     kSamplesPerSecond, kTotalDelayMs, kClockDriftMs, current_mic_level,
                     key_pressed, current_mic_level) != 0) {
                 assert(false);

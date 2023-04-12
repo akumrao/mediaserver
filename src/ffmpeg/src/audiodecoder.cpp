@@ -37,6 +37,15 @@ namespace base {
             if (!frame)
                 throw std::runtime_error("Cannot allocate input frame.");
 
+            
+            
+            if (ctx->codec_id == AV_CODEC_ID_PCM_MULAW || ctx->codec_id == AV_CODEC_ID_PCM_ALAW)
+            {
+                    ctx->sample_rate = 8000;
+                    ctx->channels = 1;
+            }
+
+            
             int ret = avcodec_open2(ctx, codec, nullptr);
             if (ret < 0)
                 throw std::runtime_error("Cannot open the audio codec: " + averror(ret));

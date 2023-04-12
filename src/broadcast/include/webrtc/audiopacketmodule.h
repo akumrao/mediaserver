@@ -30,9 +30,12 @@
 
 namespace base {
     namespace wrtc {
-
-        class AudioPacketModule : public webrtc::AudioDeviceModule
+#if 0
+ class AudioPacketModule : public webrtc::AudioDeviceModule
  {
+            
+
+
         public:
             //typedef uint16_t Sample;
             //std::vector<Sample> _sendSamples;
@@ -262,7 +265,7 @@ namespace base {
 
             size_t _recordingBufferSizeIn10MS;
             size_t _recordingFramesIn10MS;
-            int8_t* _recordingBuffer; // In bytes.
+            int8_t* _recordingBuffer{nullptr}; // In bytes.
 
   #if DIAGNOSTICK
             webrtc::FileWrapper _inputFile;
@@ -276,11 +279,14 @@ namespace base {
             bool RecThreadProcess();
             int64_t _lastCallRecordMillis{0};
             
+            
+            FILE* in_file;
+            
 
 
         };
 
-#if 0
+#else
         /// This class implements an `AudioDeviceModule` that can be used to process
         /// arbitrary audio packets. This class is send only, recording is not implemented
         ///
@@ -515,6 +521,8 @@ namespace base {
             /// `_started` ensures that _nextFrameTime can be initialized properly on first call.
             bool _started;
             int64_t _nextFrameTime;
+            
+            int64_t last_time{0}; 
 
             std::unique_ptr<rtc::Thread> _processThread;
 
@@ -531,6 +539,11 @@ namespace base {
             /// Protects |_audioCallback| that is accessed from `_processThread` and
             /// the main thread.
             rtc::CriticalSection _critCallback;
+            
+            
+            FILE* in_file;
+            
+            int nCount{0};
         };
 
 
