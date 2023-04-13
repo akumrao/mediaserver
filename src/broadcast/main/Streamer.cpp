@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
 
     base::wrtc::Signaler sig;
 
-    sig.startStreaming("/var/tmp/songs", "", "ul",  false);
+//    sig.startStreaming("/var/tmp/songs", "", "ul",  false);
     
-    //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
+    sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
  //   sig.startStreaming("/var/tmp/videos", "", "264",  false);
     

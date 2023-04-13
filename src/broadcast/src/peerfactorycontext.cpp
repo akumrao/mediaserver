@@ -16,7 +16,7 @@
 #include "api/audio_codecs/audio_encoder_factory_template.h"
 #include "api/audio_codecs/opus/audio_decoder_opus.h"
 #include "api/audio_codecs/opus/audio_encoder_opus.h"
-
+#include "api/audio_codecs/g711/audio_decoder_g711.h"
 
 #include <webrtc/G711.h>
 

@@ -181,7 +181,7 @@ void MultiplexMediaCapturer::addMediaTracks(
     // peer_connection_->AddTransceiver(audio_track);
       conn->AddTrack(audio_track, {streamId});
       
-      base::Thread::start();
+     ausrc->start();
   } 
   
 
@@ -220,14 +220,29 @@ void MultiplexMediaCapturer::addMediaTracks(
 }
 
 
-void MultiplexMediaCapturer::run()
+
+void MultiplexMediaCapturer::start()
+{
+    //_stream.start
+    _videoCapture->start();
+}
+
+void MultiplexMediaCapturer::stop()
+{
+  // _stream.stop();
+    //_videoCapture->stop();
+}
+
+} } // namespace wrtc
+
+void MyLocalAudioSource::run()
 {
        
     static const uint8_t kNumberOfChannels = 1;
     static const int kSamplesPerSecond = 8000;
     static const size_t kNumberSamples = 80;
-    static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
-    static const size_t kBufferBytes = kNumberSamples * kBytesPerSample;
+   // static const size_t kBytesPerSample = sizeof (AudioPacketModule::Sample) * kNumberOfChannels;
+    static const size_t kBufferBytes = 160;
 
 
  //   uint8_t test[kBufferBytes];
@@ -270,7 +285,7 @@ void MultiplexMediaCapturer::run()
         }
     
         
-        ausrc->OnData(encoded, 16, kSamplesPerSecond,1, 80);
+        this->OnData(encoded, 16, kSamplesPerSecond,1, 80);
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
         
     }
@@ -279,20 +294,21 @@ void MultiplexMediaCapturer::run()
 
 
 
-void MultiplexMediaCapturer::start()
+void MyLocalAudioSource::start()
 {
     //_stream.start
-    _videoCapture->start();
+    base::Thread::start();
+
+    
 }
 
-void MultiplexMediaCapturer::stop()
+void MyLocalAudioSource::stop()
 {
-  // _stream.stop();
-    //_videoCapture->stop();
+
+    base::Thread::stop();
+        
+    base::Thread::join();
+    
+    
 }
-
-
-} } // namespace wrtc
-
-
 #endif // HAVE_FFMPEG

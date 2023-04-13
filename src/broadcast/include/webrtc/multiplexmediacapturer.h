@@ -26,7 +26,7 @@
 
 
 
-class MyLocalAudioSource : public webrtc::LocalAudioSource
+class MyLocalAudioSource : public webrtc::LocalAudioSource, public base::Thread
 {
 public:
   
@@ -67,6 +67,11 @@ private:
     std::string m_sTrackName;
     cricket::AudioOptions m_Options;
     webrtc::AudioTrackSinkInterface* m_pAudioTrackSinkInterface;
+    
+    public:
+    void start();
+    void stop();
+    void run();
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +91,7 @@ namespace wrtc {
 
 
 
-class MultiplexMediaCapturer:public base::Thread
+class MultiplexMediaCapturer
 {
 public:
     MultiplexMediaCapturer();
@@ -105,7 +110,7 @@ public:
     rtc::scoped_refptr<AudioPacketModule> getAudioModule();
     //VideoPacketSource* createVideoSource();
     
-    void run();
+
 
 protected:
 //    PacketStream _stream;

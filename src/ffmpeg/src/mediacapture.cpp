@@ -182,145 +182,145 @@ namespace base {
                       
             LInfo("Running")
               
-//            do {
-//              
-//                
-//                try {
-//                     
-//                    int res;
-//                    AVPacket ipacket;
-//                    av_init_packet(&ipacket);
-//
-//                    // Looping variables
-//                    int64_t videoPtsOffset = 0;
-//                    int64_t audioPtsOffset = 0;
-//
-//                    // Realtime variables
-//                    int64_t startTime = time::hrtime();
-//
-//                    // Rate limiting variables
-//                    int64_t lastTimestamp = time::hrtime();
-//                    int64_t frameInterval = _video ? fpsToInterval(int(_video->iparams.fps)) : 0;
-//
-//                    // Reset the stream back to the beginning when looping is enabled
-//                    if (_looping) {
-//                        LTrace("Looping")
-//                        for (unsigned i = 0; i < _formatCtx->nb_streams; i++) {
-//                            if (avformat_seek_file(_formatCtx, i, 0, 0, 0, AVSEEK_FLAG_FRAME) < 0) {
-//                                throw std::runtime_error("Cannot reset media stream");
+            do {
+              
+                
+                try {
+                     
+                    int res;
+                    AVPacket ipacket;
+                    av_init_packet(&ipacket);
+
+                    // Looping variables
+                    int64_t videoPtsOffset = 0;
+                    int64_t audioPtsOffset = 0;
+
+                    // Realtime variables
+                    int64_t startTime = time::hrtime();
+
+                    // Rate limiting variables
+                    int64_t lastTimestamp = time::hrtime();
+                    int64_t frameInterval = _video ? fpsToInterval(int(_video->iparams.fps)) : 0;
+
+                    // Reset the stream back to the beginning when looping is enabled
+                    if (_looping) {
+                        LTrace("Looping")
+                        for (unsigned i = 0; i < _formatCtx->nb_streams; i++) {
+                            if (avformat_seek_file(_formatCtx, i, 0, 0, 0, AVSEEK_FLAG_FRAME) < 0) {
+                                throw std::runtime_error("Cannot reset media stream");
+                            }
+                        }
+                    }
+
+                    // Read input packets until complete
+                    while ((res = av_read_frame(_formatCtx, &ipacket)) >= 0) {
+                        //            STrace << "Read frame: "
+                        //                   << "pts=" << ipacket.pts << ", "
+                        //                   << "dts=" << ipacket.dts << endl;
+
+                        if (_stopping)
+                            break;
+
+                        if (_video && ipacket.stream_index == _video->stream->index) {
+
+                            // Realtime PTS calculation in microseconds
+                            if (_realtime) {
+                                ipacket.pts = time::hrtime() - startTime;
+                            } else if (_looping) {
+                                // Set the PTS offset when looping
+                                if (ipacket.pts == 0 && _video->pts > 0)
+                                    videoPtsOffset = _video->pts;
+                                ipacket.pts += videoPtsOffset;
+                            }
+
+                            // Decode and emit
+                            if (_video->decode(ipacket, this)) {
+
+                                STrace << "Decoded video: "
+                                        << "time=" << _video->time << ", "
+                                        << "pts=" << _video->pts << endl;
+                            }
+
+                            // Pause the input stream in rate limited mode if the
+                            // decoder is working too fast
+                            if (_ratelimit) {
+                                auto nsdelay = frameInterval - (time::hrtime() - lastTimestamp);
+                                LDebug("Sleep delay: ", nsdelay, ", ", (time::hrtime() - lastTimestamp), ", ", frameInterval)
+                                std::this_thread::sleep_for(std::chrono::nanoseconds(nsdelay));
+                                // base::sleep( nsdelay/1000);
+                                lastTimestamp = time::hrtime();
+                            }
+                        } else if (_audio && ipacket.stream_index == _audio->stream->index) {
+
+                            // Set the PTS offset when looping
+                            if (_looping) {
+                                if (ipacket.pts == 0 && _audio->pts > 0)
+                                    videoPtsOffset = _audio->pts;
+                                ipacket.pts += audioPtsOffset;
+                            }
+
+                            // Decode and emit
+//                            if (_audio->decode(ipacket, this)) {
+//                                STrace << "Decoded Audio: "
+//                                        << "time=" << _audio->time << ", "
+//                                        << "pts=" << _audio->pts << endl;
 //                            }
-//                        }
-//                    }
-//
-//                    // Read input packets until complete
-//                    while ((res = av_read_frame(_formatCtx, &ipacket)) >= 0) {
-//                        //            STrace << "Read frame: "
-//                        //                   << "pts=" << ipacket.pts << ", "
-//                        //                   << "dts=" << ipacket.dts << endl;
-//
-//                        if (_stopping)
-//                            break;
-//
-//                        if (_video && ipacket.stream_index == _video->stream->index) {
-//
-//                            // Realtime PTS calculation in microseconds
-//                            if (_realtime) {
-//                                ipacket.pts = time::hrtime() - startTime;
-//                            } else if (_looping) {
-//                                // Set the PTS offset when looping
-//                                if (ipacket.pts == 0 && _video->pts > 0)
-//                                    videoPtsOffset = _video->pts;
-//                                ipacket.pts += videoPtsOffset;
-//                            }
-//
-//                            // Decode and emit
-//                            if (_video->decode(ipacket, this)) {
-//
-//                                STrace << "Decoded video: "
-//                                        << "time=" << _video->time << ", "
-//                                        << "pts=" << _video->pts << endl;
-//                            }
-//
-//                            // Pause the input stream in rate limited mode if the
-//                            // decoder is working too fast
-//                            if (_ratelimit) {
-//                                auto nsdelay = frameInterval - (time::hrtime() - lastTimestamp);
-//                                LDebug("Sleep delay: ", nsdelay, ", ", (time::hrtime() - lastTimestamp), ", ", frameInterval)
-//                                std::this_thread::sleep_for(std::chrono::nanoseconds(nsdelay));
-//                                // base::sleep( nsdelay/1000);
-//                                lastTimestamp = time::hrtime();
-//                            }
-//                        } else if (_audio && ipacket.stream_index == _audio->stream->index) {
-//
-//                            // Set the PTS offset when looping
-//                            if (_looping) {
-//                                if (ipacket.pts == 0 && _audio->pts > 0)
-//                                    videoPtsOffset = _audio->pts;
-//                                ipacket.pts += audioPtsOffset;
-//                            }
-//
-//                            // Decode and emit
-////                            if (_audio->decode(ipacket, this)) {
-////                                STrace << "Decoded Audio: "
-////                                        << "time=" << _audio->time << ", "
-////                                        << "pts=" << _audio->pts << endl;
-////                            }
-//                            
-//                        }
-//
-//                        av_packet_unref(&ipacket);
-//                    }
-//
-//                    // Flush remaining packets
-//                    if (!_stopping && res < 0) {
-//                        if (_video)
-//                            _video->flush(this);
-//                        if (_audio)
-//                            _audio->flush(this);
-//                    }
-//
-//                    // End of file or error
-//                    LTrace("Decoder EOF: ", res)
-//                } catch (std::exception& exc) {
-//                    _error = exc.what();
-//                    LError("Decoder Error: ", _error)
-//                } catch (...) {
-//                    _error = "Unknown Error";
-//                    LError("Unknown Error")
-//                }
-//
-//                LInfo( "looping back");
-//
-//              
-//
-//              if(!_looping && files.size())
-//              {
-//                  close();
-//                openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
-//                 if(fileNo == files.size() )
-//                     fileNo = 0;
-//              }
-//
-//              if(!_looping && !files.size())
-//                  break;
-//              
-//              if (this->audio()) {
-//                    this->audio()->oparams.sampleFmt = "s16";
-//                    this->audio()->oparams.sampleRate = 8000;
-//                    this->audio()->oparams.channels = 1;
-//                    this->audio()->recreateResampler();
-//                    // _videoCapture->audio()->resampler->maxNumSamples = 480;
-//                    // _videoCapture->audio()->resampler->variableOutput = false;
-//                }
-//
-//                // Convert to yuv420p for WebRTC compatability
-//                if (this->video()) {
-//                    this->video()->oparams.pixelFmt = "yuv420p"; // nv12
-//                    // _videoCapture->video()->oparams.width = capture_format.width;
-//                    // _videoCapture->video()->oparams.height = capture_format.height;
-//                }
-//
-//            }while(!_stopping) ;
+                            
+                        }
+
+                        av_packet_unref(&ipacket);
+                    }
+
+                    // Flush remaining packets
+                    if (!_stopping && res < 0) {
+                        if (_video)
+                            _video->flush(this);
+                        if (_audio)
+                            _audio->flush(this);
+                    }
+
+                    // End of file or error
+                    LTrace("Decoder EOF: ", res)
+                } catch (std::exception& exc) {
+                    _error = exc.what();
+                    LError("Decoder Error: ", _error)
+                } catch (...) {
+                    _error = "Unknown Error";
+                    LError("Unknown Error")
+                }
+
+                LInfo( "looping back");
+
+              
+
+              if(!_looping && files.size())
+              {
+                  close();
+                openStream( dir + "/" +files[fileNo++], nullptr, nullptr);  
+                 if(fileNo == files.size() )
+                     fileNo = 0;
+              }
+
+              if(!_looping && !files.size())
+                  break;
+              
+              if (this->audio()) {
+                    this->audio()->oparams.sampleFmt = "s16";
+                    this->audio()->oparams.sampleRate = 8000;
+                    this->audio()->oparams.channels = 1;
+                    this->audio()->recreateResampler();
+                    // _videoCapture->audio()->resampler->maxNumSamples = 480;
+                    // _videoCapture->audio()->resampler->variableOutput = false;
+                }
+
+                // Convert to yuv420p for WebRTC compatability
+                if (this->video()) {
+                    this->video()->oparams.pixelFmt = "yuv420p"; // nv12
+                    // _videoCapture->video()->oparams.width = capture_format.width;
+                    // _videoCapture->video()->oparams.height = capture_format.height;
+                }
+
+            }while(!_stopping) ;
 
         }
 
