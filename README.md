@@ -1,4 +1,4 @@
-# Very high performing mediaserver. It is the only mediaserver which support both webrtc and ortc.
+# High performing mediaserver. It is the only mediaserver which support both webrtc and ortc.
 
 Live media streaming
 
