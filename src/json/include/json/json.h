@@ -13,16 +13,6 @@
 #include <fstream>
 
 
-// Shared library exports
-#if defined(base_WIN) && defined(base_SHARED_LIBRARY)
-    #if defined(JSON_EXPORTS)
-        #define JSON_API __declspec(dllexport)
-    #else
-        #define JSON_API __declspec(dllimport)
-    #endif
-#else
-    #define JSON_API // nothing
-#endif
 
 using namespace nlohmann;
 using value = nlohmann::json;

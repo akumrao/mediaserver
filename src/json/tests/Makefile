@@ -1,24 +1,23 @@
 ################################################################################
 ### CUSTOMIZE BELOW HERE #######################################################
+TARGET_ARCH = mips
 
-CC	= clang
-CXX     = clang++
 TARGET=runConfTest # define the name of the executable
-SOURCES=$(wildcard *.cpp ../src/*.cpp  ../../base/src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp )
 
-CXXFLAGS   := -g  -stdlib=libc++ -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized
+SOURCES=$(wildcard *.cpp ../src/*.cpp ../../base/src/*.cpp ../../libuv/src/*.cpp ../../libuv/src/unix/*.cpp )
+
+CXXFLAGS   +=  -g -uClibc++ -std=c++11 -uClibc++ -std=c++11  -Wl,-Bstatic -lm -Wl,-Bdynamic -Wl,--dynamic-linker=/lib/ld-uClibc.so.0  
+
+CPPFLAGS   += -I../../json/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser -I../xailient-sdk/include/ 
+
+LDFLAGS   += -L../xailient-sdk/lib/ -L/experiment/mediaserver/src/json/xailient-sdk/lib/
+
+LDLIBS    += -lpthread -ldl -lxailient-fi
 
 
-CPPFLAGS   := -I../../json/include/ -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ \
-              -DWEBRTC_POSIX -D_GLIBCXX_USE_CXX11_ABI=0 \
-              
-LDFLAGS   := -L/data/sound/lib -L/usr/lib/x86_64-linux-gnu
+# /workspace/adappt/T31/ISVP-T31-1.1.6-20221229/software/Ingenic-SDK-T31-1.1.6-20221229/resource/toolchain/gcc_540/mips-gcc540-glibc222-64bit-r3.3.0/mips-linux-gnu/libc/uclibc/usr/lib/libm.a 
 
-
-
-LDLIBS    := -lpthread -lm -ldl  
-
-#SLIBS     := /data/mozilla/webrtc-builds/out/webrtc-22215-d8831bb-linux-x64/lib/x64/Debug/libwebrtc_full.a
+#-uClibc++ -std=c++11  -Wl,-Bstatic -lm -Wl,-Bdynamic -Wl,--dynamic-linker=/lib/ld-uClibc.so.0 
 
 
 ################################################################################
