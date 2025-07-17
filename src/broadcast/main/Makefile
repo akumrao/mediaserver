@@ -4,7 +4,7 @@
 LIVE555_ROOT = /workspace/live
 FFMPEG_ROOT = /workspace/ffmpeg
 #WEBRTC_PATH = /data/delete/mediaserverdocker/webrtc_android/src/
-WEBRTC_PATH = /workspace/webrtc_android/src/
+WEBRTC_PATH = /workspace/webrtc_working/src
 
 CC	= gcc
 CXX     = g++
