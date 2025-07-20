@@ -27,7 +27,7 @@ apt-get install libssl-dev -y
 apt install libsdl2-dev libsdl2-2.0-0 -y
 
 apt install libfdk-aac-dev -y
-install -y  nasm
+apt install -y  nasm
 cd /workspace
 
 git clone git@github.com:FFmpeg/FFmpeg.git ffmpeg
@@ -36,7 +36,7 @@ cd ffmpeg
 
 git checkout release/4.2
 
- ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --disable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma --disable-vaapi  --disable-libxcb 
+ ./configure --pkg-config-flags="--static" --libdir=/usr/local/lib --disable-shared --enable-static --enable-gpl --enable-pthreads --enable-nonfree  --disable-libfdk-aac    --enable-libx264 --enable-filters --enable-runtime-cpudetect --disable-lzma --disable-vaapi  --disable-libxcb --disable-libmfx
 
 
 
