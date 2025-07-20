@@ -151,8 +151,8 @@ async function runSocketServer() {
 
 
 
-	socket.on('CreateSFU', function() {
-		log('Received request to create CreateSFU');
+	socket.on('WebrtcSocket', function() {
+		log('Received request to create WebrtcSocket');
 		
 		if (serverSocketid !== null && io.sockets.connected[serverSocketid] ) {
 			io.sockets.connected[serverSocketid].disconnect();

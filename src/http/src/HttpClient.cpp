@@ -312,8 +312,8 @@ namespace base {
             if (!_complete)
                 onComplete();
             
-          //  if(fnClose)
-           // fnClose(this);
+            if(fnClose)
+            fnClose(this, "on_close");
 
         }
 

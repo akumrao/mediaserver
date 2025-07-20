@@ -1,5 +1,8 @@
 #include "H264_Decoder.h"
 
+
+#define FF_INPUT_BUFFER_PADDING_SIZE 32
+
 H264_Decoder::H264_Decoder(h264_decoder_callback frameCallback, void* user) 
   :codec(NULL)
   ,codec_context(NULL)
@@ -76,8 +79,8 @@ bool H264_Decoder::load(std::string filepath, float fps) {
 
   codec_context = avcodec_alloc_context3(codec);
 
-  if(codec->capabilities & CODEC_CAP_TRUNCATED) {
-    codec_context->flags |= CODEC_FLAG_TRUNCATED;
+  if(codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
+    codec_context->flags |= AV_CODEC_CAP_TRUNCATED;
   }
 
   if(avcodec_open2(codec_context, codec, NULL) < 0) {

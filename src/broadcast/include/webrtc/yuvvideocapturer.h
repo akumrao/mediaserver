@@ -85,7 +85,7 @@ public:
 
         SetCaptureFormat(&format);
         SetCaptureState(cricket::CS_RUNNING);
-        rtc::Thread::Start();
+       // rtc::Thread::Start();
         return cricket::CS_RUNNING;
     }
 

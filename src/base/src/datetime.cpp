@@ -942,7 +942,7 @@ const std::string DateTimeFormat::HTTP_FORMAT("%w, %d %b %Y %H:%M:%S %Z");
 const std::string DateTimeFormat::RFC850_FORMAT("%W, %e-%b-%y %H:%M:%S %Z");
 const std::string DateTimeFormat::RFC1036_FORMAT("%W, %e %b %y %H:%M:%S %Z");
 const std::string DateTimeFormat::ASCTIME_FORMAT("%w %b %f %H:%M:%S %Y");
-const std::string DateTimeFormat::SORTABLE_FORMAT("%Y-%m-%d %H:%M:%S");
+const std::string DateTimeFormat::SORTABLE_FORMAT("%Y-%m-%d-%H-%M-%S");
 
 
 const std::string DateTimeFormat::WEEKDAY_NAMES[] = {
@@ -1035,131 +1035,8 @@ void DateTimeFormatter::tzdRFC(std::string& str, int timeZoneDifferential)
 void DateTimeParser::parse(const std::string& fmt, const std::string& str,
                            DateTime& dateTime, int& timeZoneDifferential)
 {
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-    int millis = 0;
-    int micros = 0;
-    int tzd = 0;
-
-    std::string::const_iterator it = str.begin();
-    std::string::const_iterator end = str.end();
-    std::string::const_iterator itf = fmt.begin();
-    std::string::const_iterator endf = fmt.end();
-
-    while (itf != endf && it != end) {
-        if (*itf == '%') {
-            if (++itf != endf) {
-                switch (*itf) {
-                    case 'w':
-                    case 'W':
-                        while (it != end && ::isspace(*it))
-                            ++it;
-                        while (it != end && ::isalpha(*it))
-                            ++it;
-                        break;
-                    case 'b':
-                    case 'B':
-                        month = parseMonth(it, end);
-                        break;
-                    case 'd':
-                    case 'e':
-                    case 'f':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(day, 2);
-                        break;
-                    case 'm':
-                    case 'n':
-                    case 'o':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(month, 2);
-                        break;
-                    case 'y':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(year, 2);
-                        if (year >= 69)
-                            year += 1900;
-                        else
-                            year += 2000;
-                        break;
-                    case 'Y':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(year, 4);
-                        break;
-                    case 'r':
-                        SKIP_JUNK();
-                        PARSE_NUMBER(year);
-                        if (year < 1000) {
-                            if (year >= 69)
-                                year += 1900;
-                            else
-                                year += 2000;
-                        }
-                        break;
-                    case 'H':
-                    case 'h':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(hour, 2);
-                        break;
-                    case 'a':
-                    case 'A':
-                        hour = parseAMPM(it, end, hour);
-                        break;
-                    case 'M':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(minute, 2);
-                        break;
-                    case 'S':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(second, 2);
-                        break;
-                    case 's':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(second, 2);
-                        if (it != end && (*it == '.' || *it == ',')) {
-                            ++it;
-                            PARSE_FRACTIONAL_N(millis, 3);
-                            PARSE_FRACTIONAL_N(micros, 3);
-                            SKIP_DIGITS();
-                        }
-                        break;
-                    case 'i':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(millis, 3);
-                        break;
-                    case 'c':
-                        SKIP_JUNK();
-                        PARSE_NUMBER_N(millis, 1);
-                        millis *= 100;
-                        break;
-                    case 'F':
-                        SKIP_JUNK();
-                        PARSE_FRACTIONAL_N(millis, 3);
-                        PARSE_FRACTIONAL_N(micros, 3);
-                        SKIP_DIGITS();
-                        break;
-                    case 'z':
-                    case 'Z':
-                        tzd = parseTZD(it, end);
-                        break;
-                }
-                ++itf;
-            }
-        } else
-            ++itf;
-    }
-    if (month == 0)
-        month = 1;
-    if (day == 0)
-        day = 1;
-    if (DateTime::isValid(year, month, day, hour, minute, second, millis, micros))
-        dateTime.assign(year, month, day, hour, minute, second, millis, micros);
-    else
-        throw std::runtime_error("Syntax error: date/time component out of range");
-    timeZoneDifferential = tzd;
+    abort();
+    // use   if (strptime(buf, "%a %m/%d/%Y %r",&result) == NULL)
 }
 
 
@@ -1708,35 +1585,117 @@ void Stopwatch::restart()
 }
 
 
+
+//
+// DateTimeFormatter inlines
+//
+
+
+ std::string DateTimeFormatter::format(const Timestamp& timestamp,
+                                             const std::string& fmt,
+                                             int timeZoneDifferential)
+{
+    DateTime dateTime(timestamp);
+    return format(dateTime, fmt, timeZoneDifferential);
+}
+
+
+ std::string DateTimeFormatter::format(const DateTime& dateTime,
+                                             const std::string& fmt,
+                                             int timeZoneDifferential)
+{
+    
+    abort();
+    std::string result;
+    result.reserve(64);
+    //append(result, dateTime, fmt, timeZoneDifferential); //arvind
+    return result;
+}
+
+
+ std::string DateTimeFormatter::format(const LocalDateTime& dateTime,
+                                             const std::string& fmt)
+{
+    return format(dateTime._dateTime, fmt, dateTime._tzd);
+}
+
+
+ std::string DateTimeFormatter::format(const Timespan& timespan,
+                                             const std::string& fmt)
+{
+    std::string result;
+     abort();
+    //result.reserve(32);
+    //append(result, timespan, fmt);
+    return result;
+}
+
+/*
+ char buf[100];
+    time_t t;
+    struct tm *timeptr,result;
+
+    setlocale(LC_ALL,"/QSYS.LIB/EN_US.LOCALE");
+    t = time(NULL);
+    timeptr = localtime(&t);
+    strftime(buf,sizeof(buf), "%a %m/%d/%Y %r", timeptr);
+
+    if (strptime(buf, "%a %m/%d/%Y %r",&result) == NULL)
+          printf("\nstrptime failed\n");
+ */
+ void DateTimeFormatter::append(std::string& str,
+                                      const Timestamp& timestamp,
+                                      const std::string& fmt,
+                                      int timeZoneDifferential)
+{
+  // timeval curTime;
+    // gettimeofday(&curTime, NULL);
+    //  int milli = curTime.tv_usec / 1000;
+
+    Timestamp::TimeVal time = timestamp.epochMicroseconds();
+
+    int milli = int(time % 1000000) / 1000;
+
+    
+    std::time_t time1 = timestamp.epochTime();
+    struct std::tm* tms = std::localtime(&time1);
+    
+
+    char buf[100];
+    int len = std::strftime(buf, sizeof (buf), fmt.data(), tms);
+    
+    str = std::string(buf, len);
+
+    char currentTime[84] = "";
+    len = sprintf(currentTime, "%s_%d", buf, milli);
+    //  printf("current time: %s \n", currentTime);
+
+    str = std::string(currentTime, len);
+    
+}
+
+
+ std::string DateTimeFormatter::tzdISO(int timeZoneDifferential)
+{
+    std::string result;
+    result.reserve(8);
+     abort();
+///    tzdISO(result, timeZoneDifferential);
+    return result;
+}
+
+
+ std::string DateTimeFormatter::tzdRFC(int timeZoneDifferential)
+{
+    std::string result;
+    result.reserve(8);
+     abort();
+//    tzdRFC(result, timeZoneDifferential);
+    return result;
+}
+
+
 } // namespace base
 
 
-/// @\}
 
-
-//
-// Copyright (c) 2004-2006, Applied Informatics Software Engineering GmbH.
-// and Contributors.
-//
-// Permission is hereby granted, free of charge, to any person or organization
-// obtaining a copy of the software and accompanying documentation covered by
-// this license (the "Software") to use, reproduce, display, distribute,
-// execute, and transmit the Software, and to prepare derivative works of the
-// Software, and to permit third-parties to whom the Software is furnished to
-// do so, all subject to the following:
-//
-// The copyright notices in the Software and this entire statement, including
-// the above license grant, this restriction and the following disclaimer,
-// must be included in all copies of the Software, in whole or in part, and
-// all derivative works of the Software, unless such copies or derivative
-// works are solely in the form of machine-executable object code generated by
-// a source language processor.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
-// SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
-// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
-// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-//

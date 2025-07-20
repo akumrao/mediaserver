@@ -170,57 +170,80 @@ namespace base {
             
             if (m_con_state == con_closed) {
                 m_con_state = con_opening;
-                m_client->Close();
-                delete m_client;
+                //m_client->Close();
+                //delete m_client;
                 m_sid.clear();
                 m_packet_mgr.reset();
   
-                LTrace("Reconnecting...");
+                LInfo("Reconnecting...");
                 connect();
+                
                 //if (m_reconnecting_listener) m_reconnecting_listener();
                // m_client.get_io_service().dispatch(lib::bind(&client_impl::connect_impl, this, m_base_url, m_query_string));
             }
         }
         
         ////////////////////////////////////////////////////////////////////
-        
+
         void SocketioClient::close(int const& code, string const& reason) {
             LTrace("Close by reason: ", reason);
 
-            m_reconn_timer.Stop();
-            m_reconn_timer.Close();
-            
-            m_ping_timer.Stop();
-            m_ping_timer.Close();
-            
-            m_ping_timeout_timer.Stop();
-            m_ping_timeout_timer.Close();
-            
-            
-           /*  Do not do it here already done at onclose
-            *  lock_guard<mutex> guard(m_socket_mutex);
-            
-            for( auto it : m_sockets )
-            {
-                it.second->close();
-                it.second->on_close();
-                delete it.second;
-            }*/
-            
-            m_sockets.clear();
-            
-            m_client->Close();
+            if (bReconnec) {
+                m_con_state = con_closed;
+                m_ping_timeout_timer.Stop();
+                m_ping_timer.Stop();
+
+                {
+                    lock_guard<mutex> guard(m_socket_mutex);
+
+                    for (auto it : m_sockets) {
+                        it.second->on_disconnect();
+
+                    }
+
+                }
+
+                m_client->Close();
+                delete m_client;
+
+                m_reconn_timer.cb_timeout = std::bind(&SocketioClient::timeout_reconnect, this);
+                m_reconn_timer.Start(4000, 4000);
+            } else {
+                m_con_state = con_closed;
+                clear_timers();
+                /* Do not do it here already done at onclose*/
+                {
+                    lock_guard<mutex> guard(m_socket_mutex);
+
+                    for (auto it : m_sockets) {
+                        //                it.second->close();
+                        // it.second->on_close();
+                        delete it.second;
+                    }
+
+                    m_sockets.clear();
+                }
+
+
+                m_client->Close();
+                delete m_client;
+                m_reconn_timer.Stop();
+                m_reconn_timer.Close();
+
+            }
 
         }
         
-        void SocketioClient::on_close()
-        {
-            LTrace("SocketioClient Disconnected.");
-
-            m_con_state = con_closed;
-            this->clear_timers();
-
-        }
+//        void SocketioClient::on_close()
+//        {
+//            LInfo("SocketioClient Disconnected.");
+//
+//        
+//            
+//            // Close();
+//            //timeout_reconnect();
+//
+//        }
         Socket* SocketioClient::io(string const& nsp)
         {
                    
@@ -313,6 +336,7 @@ namespace base {
 
         SocketioClient::~SocketioClient() {
 
+            SInfo << "~SocketioClient()";
             //reset();
         }
 
@@ -325,7 +349,7 @@ namespace base {
         }
 
         void SocketioClient::connect() {
-            STrace << "SocketIO Connecting" ;
+            SInfo << "SocketIO Connecting" ;
             m_con_state = con_opening;
             if (_host.empty() || !_port)
                 throw std::runtime_error("The SocketIO server address is not set.");
@@ -381,7 +405,7 @@ namespace base {
             m_client->fnClose = [&](HttpBase * con, std::string str) {
                 STrace << "client->fnClose " << str ;
                 close(0,"exit");
-                on_close();
+                //on_close();
             };
             
             //  conn->_request.setKeepAlive(false);
@@ -412,7 +436,7 @@ namespace base {
         
         void SocketioClient::remove_socket(string const& nsp)
         {
-            STrace << "remove_socket "  << nsp ;
+            SInfo << "remove_socket "  << nsp ;
             lock_guard<mutex> guard(m_socket_mutex);
             auto it = m_sockets.find(nsp);
             if(it!= m_sockets.end())
@@ -426,9 +450,16 @@ namespace base {
         
         /***************************************************************************/
         Socket::Socket(SocketioClient* client, std::string const& nsp) : m_client(client), m_nsp(nsp) {
+            
+             SInfo << "Socket()";
         }
 
         Socket::~Socket() {
+            
+            m_connection_timer.Stop();
+            m_connection_timer.Close();
+            m_connected =false;
+            SInfo << "~Socket()";
 
         }
 
@@ -439,8 +470,12 @@ namespace base {
 
         void Socket::on(std::string const& event_name, event_listener_aux const& func) {
             //on(event_name, event_adapter::do_adapt(func));
-             std::lock_guard<std::mutex> guard(m_event_mutex);
-            m_event_binding[event_name] = func;
+            
+           // SInfo << "Socket::on " <<  event_name;
+            {
+               std::lock_guard<std::mutex> guard(m_event_mutex);
+               m_event_binding[event_name] = func;
+            }
         }
 
         void Socket::off(std::string const& event_name) {
@@ -596,13 +631,15 @@ namespace base {
         }
 
         void Socket::on_disconnect() {
-
+            
+            m_connection_timer.Stop();
+            m_connected = false;
         }
 
        
 
         void Socket::send_connect(const std::string & nsp) {
-            STrace << "send_connect " << nsp ;
+            SInfo << "send_connect " << nsp ;
             
             packet p(packet::type_connect, nsp);
             send_packet(p);
@@ -615,7 +652,7 @@ namespace base {
 
          void Socket::timeout_connection()
         {
-            STrace << "timeout_connection "  ;
+            SInfo << "timeout_connection "  ;
             m_connection_timer.Reset();
             //Should close socket if no connected message arrive.Otherwise we'll never ask for open again.
             this->on_close();
@@ -726,6 +763,8 @@ namespace base {
             if (it != m_event_binding.end()) {
                 return it->second;
             }
+           // SInfo << "get_bind_listener_locked failed "  << event;
+            
             return Socket::event_listener_aux();
         }
 

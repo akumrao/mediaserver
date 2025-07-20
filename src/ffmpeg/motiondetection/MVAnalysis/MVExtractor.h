@@ -1,9 +1,14 @@
 extern "C" {
 #include <libavutil/motion_vector.h>
 #include <libavformat/avformat.h>
+ //#ifdef _MV_DEBUG_
+  #include<libavutil/pixdesc.h>
+  //#include<libswscale/swscale.h>
+ // #endif
 }
 
 #include "MVDetector.h"
+#include "Contour.h"
 
 #ifndef H264_MVE_H
 #define H264_MVE_H
@@ -28,10 +33,14 @@ public:
     int dst_width{0};
     int dst_height{0};
     void extract();
+    
+    static void CallBackFunc(int event, int x, int y, int flags, void* userdata) ;
 
 private:
 
-    MVDetector *mv_detector{nullptr};
+    ContDetector *mv_detector{nullptr};
+    
+    
 
     int open_codec_context(AVFormatContext *fmt_ctx, enum AVMediaType type);
 
@@ -39,8 +48,12 @@ private:
 
     int read(const char *src_filename);
 
-
-
+ #ifdef _MV_DEBUG_
+   // SwsContext* swsctx;
+    //AVFrame* frameFill;
+    
+  // std::vector<uint8_t> framebuf;
+#endif
 
 };
 

@@ -84,7 +84,7 @@ public:
             LTrace( "onexit", status);
         };
         proc.spawn();
-        uv_run(Application::uvGetLoop(), UV_RUN_DEFAULT);
+      //  uv_run(Application::uvGetLoop(), UV_RUN_DEFAULT);
 
     }
 
@@ -106,12 +106,27 @@ int main(int argc, char** argv) {
 
     // Process proc{ "ls", "-a"};
     std::string host = "www.google.com";
+    
+    
+     Application app;
+
+       
+
+       
     //std::string host = "8.8.8.8";
      
     PingThread pingThread(host);
 
     pingThread.start();
     
+    app.run();
+    
+     app.waitForShutdown([&](void*) {
+
+           
+        });
+           
+        
     sleep(3);
     LTrace( "stop");
     

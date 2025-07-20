@@ -100,7 +100,7 @@ namespace base {
              void timeout_pong();
              void timeout_reconnect();
              con_state m_con_state;
-              void on_close();
+             //void on_close();
          
             //virtual const char* className() const { return "SocketIOClient"; }
             std::string const& get_sessionid();
@@ -110,6 +110,8 @@ namespace base {
             void send(packet& p);
 
             Socket* io(string const& nsp="");
+            
+            bool bReconnec{true};
 
         protected:
             // virtual void setError(const Errors& error);

@@ -95,9 +95,7 @@ public:
 
     static const char SECURITY_TOKEN_SEPARATOR = '^';
 
-    static string getSecurityToken(string &tokenH1);
-
-    static string calculateH2(const string& H1, uint32_t expirationTime);
+    static string calcH2(const string& H1, uint32_t expirationTime);
 
     bool parse();
 protected:

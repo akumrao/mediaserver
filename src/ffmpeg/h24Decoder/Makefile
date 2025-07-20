@@ -3,21 +3,22 @@
 FFMPEG_ROOT = /workspace/ffmpeg/
 
 CC	= gcc
-CXX     = g++
-TARGET=h264decoder # define the name of the executable
-SOURCES=$(wildcard *.cpp  )
+CXX  = g++
+TARGET=h264Decoder_sample # define the name of the executable
+SOURCES    = $(wildcard *.cpp  ../ffmpeg_cpp/*.cpp  ../ffmpeg_cpp/decoder/*.cpp   ../ffmpeg_cpp/decoder/x86/*.cpp  )
 
-CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized 
+CXXFLAGS   := -g -std=c++14  -Wno-reserved-user-defined-literal -Wno-inconsistent-missing-override -Wno-uninitialized -Wno-attributes -Wno-fpermissive -Wno-deprecated-declarations -fPIC 
+ 
 
-CPPFLAGS   := -I../../json/include/ -I../../ffmpeg/include -I../../signal/include -I../../crypto/include/ -I../../http/include/ -I../../base/include/ -I../../net/include/ -I../../libuv/include -I../../libuv/src -I../../../build/ -I../../http_parser/ 
-              
-LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
+CPPFLAGS   := -I./h264Decoder/ -I../ffmpeg_cpp/ -I../ffmpeg_cpp/compat/atomics/gcc/ -I../ffmpeg_cpp/decoder/ -I../ffmpeg_cpp/decoder/x86/
+#LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
+
+#/export/views/video/ffmpeg/libavutil/libavutil.a /export/views/video/ffmpeg/libavcodec/libavcodec.a
+LDLIBS    := -lpthread -lm -ldl  -lssl -lcrypto -lz -lfdk-aac -no-pie
 
 
-LDLIBS    := -lpthread -lm -ldl -lssl -lcrypto  -lm -ldl -lz -lfdk-aac 
-
-SLIBS     := ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a
-
+#SLIBS     := $(OUT_FILE_NAME)
+SLIBS     := $(OUT_FILE_NAME)  /usr/local/lib/libx264.a
 
 
 

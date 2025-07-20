@@ -224,6 +224,8 @@ namespace base {
                         << "Connection: close\r\n"
                         << "Content-Length: " << result.size() << "\r\n"
                         << "Access-Control-Allow-Origin: *" << "\r\n"
+                        << "Access-Control-Allow-Headers: *" << "\r\n"
+                        <<"Access-Control-Allow-Methods: POST, PUT, PATCH, GET, DELETE, OPTIONS"<< "\r\n"
                         << "\r\n";
                 rep << result;
                 std::string res = rep.str();
@@ -244,15 +246,15 @@ namespace base {
             connection()->tcpsend( res.c_str(), res.size(), cb );
         }
         
-        bool BasicResponder::authcheck(net::Request& request, std::string &ret, bool tokenOnly) 
+        bool BasicResponder::authcheck(net::Request& request, std::string &ret) 
         {
            // return true;
             
-            if(request.has("key"))
+            if(request.has("key") && request.has("exp") && request.has("perm"))
             {
                 std::string key =  request.get("key");
                
-                if(request.has("token"))
+                if(request.has("token") && request.has("uid"))
                 {
                     
                     std::string token =  request.get("token");
@@ -261,62 +263,89 @@ namespace base {
                     uint32_t statusCode;
 
 
-                     MS_SecurityToken obj(token);
-                     obj.validate(key, ret, perm, statusCode, false);
+                    H2_SecurityToken obj(token);
+                    obj.validateFromFile( ret,  statusCode);
                      
-                     if(statusCode == 200)
-                     return true;      
-                     else
-                     return false;
+                    SInfo  << "key validate  msg  "<<  ret <<   " code " <<   statusCode  ;
+                     
+                    if(statusCode != 200)
+                    return false;      
+                    
+                    std::string uid =  request.get("uid");
+                    std::string fileName = uid + "/" + uid;
+                    
+                    if(base::fs::exists(fileName))
+                    {
+                       base::fs::unlink(fileName);
+                    }
+        
+                    
                 }
-                else if( !tokenOnly && request.has("exp") && request.has("perm") )
+                
+
+                std::string uid;
+                if(request.has("uid"))
                 {
-                    std::string cam;
-                    if(request.has("cam"))
-                    {
-                       cam =  request.get("cam");
-                    }
-                    else
-                    {
-                        cam = uuid4::uuid();
-                    }
-                    
-                    std::string exp =  request.get("exp");
-                    
-                    
-                    unsigned long iexp = 450;
-                    
-                    try
-                    {
-                        iexp = std::stol(exp);
-                    }
-                    catch(...)
-                    {
-                        
-                    }
-                    
-                    std::string perm =  request.get("perm");
-                    
-                    
-                   ret= SecToken::createSecurityToken(cam, perm, key, iexp);
-                    
-                     return true;   
-                    
+                   uid =  request.get("uid");
                 }
                 else
                 {
-                   if( tokenOnly)
-                    ret = "token missing";
-                   else
-                   ret = "(expiring(secs) or permission missing. Please set exp as 360 and perm as w ";
-                   return false;
-                    
+                    uid = uuid4::uuid();
                 }
-               
+
+                std::string exp =  request.get("exp");
+
+                    
+                unsigned long iexp = 450;
+
+                try
+                {
+                    iexp = std::stol(exp);
+                }
+                catch(...)
+                {
+
+                }
+                    
+                std::string perm =  request.get("perm");
+
+
+
+                std::string h1Token = SecToken::createSecurityH1Token(uid, perm,key, 0,0,0 );
+
+                if( !SecToken::SaveAndValidate(uid, h1Token))
+                {
+                    ret = uid + " does not exist or password wrong";
+                     return false;   
+                }
+                else
+                {
+                    ret = SecToken::createSecurityH2Token(h1Token, iexp );
+                }
+                    
+                return true;   
+           }
+           else if (request.has("token"))
+           {
+                std::string token =  request.get("token");
+                    
+                std::string perm;
+                uint32_t statusCode;
+
+
+                H2_SecurityToken obj(token);
+                obj.validateFromFile( ret,  statusCode);
+
+                SInfo  << "key validate  msg  "<<  ret <<   " code " <<   statusCode  ;
+
+                if(statusCode != 200)
+                return false;   
+                
+                return true;
            }
            else
            {
-                ret = "key missing. Please set key as admin@passsword";
+                ret = " Key, tokken,  expiring(secs) or permission missing. Please set exp as 360 and perm as w ";
                 return false;
            }
           
@@ -336,8 +365,6 @@ namespace base {
             sendResponse(reponse, false);
             
         }
-        
-        
         
        HttpResponder::HttpResponder(net::HttpBase* conn) : ServerResponder(conn) 
        {

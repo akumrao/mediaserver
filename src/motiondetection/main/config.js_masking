@@ -1,0 +1,44 @@
+{
+  "dtlsCertificateFile": "/var/tmp/key/certificate.crt",
+  "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
+  "listenIps": [
+    {
+      "announcedIp": "52.5.6.245",
+      "ip": "0.0.0.0"
+    }
+  ],
+  "logLevel": "info",
+  "logTags": [
+    "info"
+  ],
+  "potentialID": "729795",
+  "rtcMaxPort": 12560,
+  "rtcMinPort": 11501,
+  "pre_clip": 5,
+  "rtsp": {
+    "CAM1": {
+      "rtsp": "rtsp://localhost/test1.264",
+      "state": "streaming",
+      "CLIPSIZE": 20,
+      "DEFAULT_WINDOW_SIZE": 3,
+      "DEFAULT_OCCUPANCY_THRESHOLD": 2,
+      "DEFAULT_LOCAL_OCCUPANCY_AVG_THRESHOLD": 0.6,
+      "DEFAULT_OCCUPANCY_AVG_THRESHOLD": 0.6,
+      "md": true,
+      "masking_coords" : [ [{"x" : 0,"y" : 0}, {"x" :1280,"y" : 0}, {"x" : 1280, "y" : 720}, {"x" : 0,"y" :720}]]
+    },
+    "CAM2": {
+      "rtsp": "rtsp://localhost/test2.264",
+      "state": "streaming",
+      "CLIPSIZE": 20,
+      "DEFAULT_WINDOW_SIZE": 3,
+      "DEFAULT_OCCUPANCY_THRESHOLD": 2,
+      "DEFAULT_LOCAL_OCCUPANCY_AVG_THRESHOLD": 0.6,
+      "DEFAULT_OCCUPANCY_AVG_THRESHOLD": 0.6,
+      "md": true
+    }
+    
+    
+  },
+  "stream_type": "webrtc"
+}

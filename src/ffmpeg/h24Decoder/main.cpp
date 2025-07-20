@@ -96,7 +96,7 @@ int main() {
   //player_ptr = &player;
   decoder_ptr = &decoder;
   
-  if(!decoder.load( "/var/tmp/test.264", 30.0f)) {
+  if(!decoder.load( "e:/test.264", 30.0f)) {
     ::exit(EXIT_FAILURE);
   }
 

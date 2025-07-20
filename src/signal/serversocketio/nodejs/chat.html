@@ -28,17 +28,9 @@
         socket.emit('joined', 'Hello World from client');
     });
     socket.on('acknowledge', function(data) {
-        alert(data);
+         document.write(data);
     });
-    $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
-        $('#messages').append($('<li>').text($('#m').val()));
-        $('#m').val('');
-        return false;
-    });
-    socket.on('response message', function(data) {
-        $('#messages').append($('<li>').text(data));
-    });
+    
 </script>
 </body>
 </html>

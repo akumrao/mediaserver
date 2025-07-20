@@ -16,6 +16,8 @@
 #include <string.h>
 #include "GenToken.h"
 #include "Encoders.h"
+#include "SecFile.h"
+#include "base/filesystem.h"
 #include <sys/time.h>
 #include <vector>
 #include <iostream>
@@ -31,14 +33,11 @@ string SecToken::createSecurityToken(
         uint8_t qosa)
 {
 
-   // string token;
-    char token[2048]={'\0'};
+
     string h1;
-    h1 = calculateH1(uid, permissions, ptz, qosl, qosa, key);
-
-    snprintf(token, sizeof(token), "%s^%s^%d^%d^%d^%s", uid.c_str(), permissions.c_str(), ptz, qosl, qosa, h1.c_str());
-
-    H1_SecurityToken obj(token);
+    h1 = createSecurityH1Token(uid, permissions,key, ptz, qosl, qosa);
+    
+    H1_SecurityToken obj(h1);
     obj.parse();
     string H1 = obj.getH1();
 
@@ -47,21 +46,47 @@ string SecToken::createSecurityToken(
 
     uint32_t expir = now.tv_sec + sec;
     string h2;
-    h2 = calculateH2(H1, expir);
+    h2 = calcH2(H1, expir);
 
+    char token[2048]={'\0'};
     snprintf(token, sizeof(token),"%s^%s^%d^%d^%d^%u^%s", obj.getCameraUID().c_str(), obj.getPermissions().c_str(), obj.getPTZPriority(), obj.getQosl(), obj.getQosa(), expir, h2.c_str());
 
     return token;
 }
 
+string SecToken::createSecurityH2Token(string& H1token, unsigned long expir)
+{
+    H1_SecurityToken obj(H1token);
+    obj.parse();
+    string H1 = obj.getH1();
 
-string SecToken::calculateH1(
-        string& uid,
-        string& permissions,
-        uint8_t ptz,
-        uint8_t qosl,
-        uint8_t qosa,
-        const string& key)
+    timeval now;
+    gettimeofday(&now, NULL);
+
+    string h2;
+    if( expir < 3600*12) // make sure expire time should not be bigger than one day.
+    {
+        expir = now.tv_sec + expir;
+        h2 = calcH2(H1, expir);
+    }
+    else // TOBD make separate  function for m_expire time found with token
+    {
+        h2 = calcH2(H1, expir);
+    }
+
+    char token[2048]={'\0'};
+    snprintf(token, sizeof(token),"%s^%s^%d^%d^%d^%u^%s", obj.getCameraUID().c_str(), obj.getPermissions().c_str(), obj.getPTZPriority(), obj.getQosl(), obj.getQosa(), expir, h2.c_str());
+
+    return token; 
+}
+
+string SecToken::createSecurityH1Token(string& uid,
+            string& permissions,
+            const string& key,
+            uint8_t ptz,
+            uint8_t qosl,
+            uint8_t qosa)
+
 {
     //calculate H1 
     uint8_t digest[SHA1_DIGESTSIZE];
@@ -83,63 +108,43 @@ string SecToken::calculateH1(
     string temp, temp2;
     temp.assign((const char*) digest, sizeof (digest));
     HexEncoder::encode(temp2, temp);
-    return temp2;
-}
-
-GenToken::GenToken()
-{
-}
-
-GenToken::~GenToken()
-{
-}
-
-/*
- * Obsolete function, will be deleted very soon
- * 
- 
-string GenToken::getToken(string &deviceUid)
-{
-    string permissions("VT");
     
-    std::string emsg;
-    emsg.clear();
-    CoolUMSConfigParam* key = CoolUMSConfigParam::load(emsg, "AppSecurityKey");
-    if (!emsg.empty())
-    {
-        gut_log(STR_ERROR, "Unable to get security key (%s)", emsg.c_str());
-        return "";
-    }
-
-    string appkey;
-    if (key != NULL)
-    {
-        appkey = key->getString().c_str();
-        delete key;
-    }
-
-    timeval now;
-    gettimeofday(&now, NULL);
-
-    string token = SecToken::createSecurityToken(deviceUid, permissions, appkey,
-            now.tv_sec +  5*60, 0, 0, 0);
     
-    if (token.empty())
-    {
-        gut_log(STR_ERROR, "Unable to get token for dev (%s)", deviceUid.c_str());
-    }
-   
-    //string perm;
-    //string msg;
-    //uint32_t statusCode;
-   
-    // MS_SecurityToken obj(token);
-    // obj.validate(appkey, msg, perm, statusCode, false );
-    //  validate(token, msg, perm, statusCode, false );
-    //gut_log(STR_ERROR, "key validate msg %s, perm %s code %u", msg.c_str(), perm.c_str(), statusCode);
-    
+    char token[2048]={'\0'};
+    snprintf(token, sizeof(token), "%s^%s^%d^%d^%d^%s", uid.c_str(), permissions.c_str(), ptz, qosl, qosa, temp2.c_str());
+        
     return token;
 }
-*/
-//#endif
 
+
+
+bool SecToken::SaveAndValidate(string& uid, string& token)
+{
+
+    std::string fileName = uid + "/" + uid;
+
+    if(  !base::fs::exists(uid) ||!base::fs::exists(fileName))
+    {
+        if(!base::fs::exists(uid))
+          base::fs::mkdir(uid);
+        SecFile::writeFile(fileName,  token);
+
+    }
+    else
+    {
+        std::string content;
+        SecFile::readFile(fileName,  content);
+
+        std::string msg;
+        uint32_t statusCode;
+
+
+        if(token != content)
+        {   
+            return false;      
+        }
+
+    }
+    
+    return true;      
+}

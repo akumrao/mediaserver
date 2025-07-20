@@ -4,7 +4,8 @@
 LIVE555_ROOT = /workspace/live
 FFMPEG_ROOT = /workspace/ffmpeg
 #WEBRTC_PATH = /data/delete/mediaserverdocker/webrtc_android/src/
-WEBRTC_PATH = /workspace/webrtc_working/src
+WEBRTC_PATH = /workspace/webrtc_android/src
+#/workspace/webrtc_working/src
 
 CC	= gcc
 CXX     = g++
@@ -17,7 +18,7 @@ CPPFLAGS   := -I../../json/include/ -I/workspace/ffmpeg/  -I../include -I../../s
                -I${WEBRTC_PATH} -I${WEBRTC_PATH}/third_party/abseil-cpp -DHTTPSSL
 #LDFLAGS   := -L/export/views/video/ffmpeg/Obj/
 
-LDLIBS    := -lpthread -lm -ldl -lz -lfdk-aac -lX11
+LDLIBS    := -lpthread -lm -ldl -lz -lfdk-aac -lbz2
 
 SLIBS     := ${WEBRTC_PATH}/out/m75/obj/libwebrtc.a  ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a ${FFMPEG_ROOT}/libswresample/libswresample.a ${LIVE555_ROOT}/liveMedia/libliveMedia.a  ${LIVE555_ROOT}/groupsock/libgroupsock.a   ${LIVE555_ROOT}/BasicUsageEnvironment/libBasicUsageEnvironment.a  ${LIVE555_ROOT}/UsageEnvironment/libUsageEnvironment.a /usr/local/lib/libx264.a
 

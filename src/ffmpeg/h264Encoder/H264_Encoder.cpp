@@ -1,7 +1,11 @@
 #include "H264_Encoder.h"
 
 
-
+/*
+extern "C" {
+#include <libavutil/hwcontext_d3d11va.h>
+}
+*/
 AVPixelFormat avcodec_hw_pix_fmt = AV_PIX_FMT_CUDA;
 AVPixelFormat avcodec_sw_pix_fmt  = AV_PIX_FMT_YUV420P;
 
@@ -39,7 +43,7 @@ static int test_device_type(enum AVHWDeviceType type)
 {
     enum AVHWDeviceType check;
     const char *name;
-    int i, j, found, err;
+    int found, err;
 
     name = av_hwdevice_get_type_name(type);
     if (!name) {
@@ -92,8 +96,7 @@ static int test_device_type(enum AVHWDeviceType type)
 }
 
 
-static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *device_ctx,
-			   int width, int height)
+int H264_Encoder::set_hwframe_ctx(AVCodecContext* ctx,  AVBufferRef* device_ctx,  int width, int height)
 {
 	AVBufferRef *hw_frames_ref;
 	AVHWFramesContext *frames_ctx = NULL;
@@ -118,7 +121,28 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *device_ctx,
 	frames_ctx->sw_format = avcodec_sw_pix_fmt   ;        
 	frames_ctx->width     = width;
 	frames_ctx->height    = height;
-	frames_ctx->initial_pool_size = 20;
+	frames_ctx->initial_pool_size = 20;  // for nvidia 
+
+    if (avcodec_hw_type == AV_HWDEVICE_TYPE_D3D11VA) {
+          frames_ctx->initial_pool_size = 1;
+       // AVD3D11VAFramesContext* hwctx1 = (AVD3D11VAFramesContext*) frames_ctx->hwctx;  // #include <libavutil/hwcontext_d3d11va.h>
+       //  hwct1x->MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+        // According to hwcontex_d3d11va.h, yuv420p means
+        // DXGI_FORMAT_420_OPAQUE, which has no shader support.
+       // if (frames_ctx->sw_format != AV_PIX_FMT_YUV420P)
+       //   hwct1x->BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+
+    }
+
+        /*
+        .ArraySize = 1, .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+        .MiscFlags = D3D11_RESOURCE_MISC_SHARED,
+
+
+        */
+	/// <summary>
+	
 
 	if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
 		printf("avcodec: encode:"
@@ -143,9 +167,9 @@ H264_Encoder::H264_Encoder(h264_encoder_callback frameCallback, void* user)
   :codec(NULL)
   ,c(NULL)
   ,fp(NULL)
-  ,sw_frame(nullptr)
   ,cb_frame(frameCallback)
   ,cb_user(user)
+  ,sw_frame(nullptr)
 
 {
    avcodec_register_all();
@@ -164,6 +188,7 @@ H264_Encoder::H264_Encoder(h264_encoder_callback frameCallback, void* user)
         if (err == 0) {
             ++pass;
             avcodec_hw_type = type;
+          //  break;
         } else if (err < 0)
             ++fail;
         else
@@ -173,12 +198,29 @@ H264_Encoder::H264_Encoder(h264_encoder_callback frameCallback, void* user)
     }
 
     if (pass)
-        ret = av_hwdevice_ctx_create(&avcodec_hw_device_ctx, avcodec_hw_type,
-            NULL, NULL, 0);
-    if (ret < 0) {
-        printf("avcodec: Failed to create HW device \n");
+    {
+      ret = av_hwdevice_ctx_create(&avcodec_hw_device_ctx, avcodec_hw_type,
+                                   NULL, NULL, 0);
 
-        return;
+      if (ret < 0) {
+        printf("avcodec: Failed to create HW device \n");
+      }
+
+     if (avcodec_hw_type == AV_HWDEVICE_TYPE_CUDA) {
+     
+         avcodec_hw_pix_fmt = AV_PIX_FMT_CUDA;
+     } else if (avcodec_hw_type == AV_HWDEVICE_TYPE_D3D11VA) {
+     
+         avcodec_hw_pix_fmt = AV_PIX_FMT_D3D11;
+       avcodec_sw_pix_fmt = AV_PIX_FMT_NV12;
+       //AV_PIX_FMT_0RGB32;   // if enabled change the #if(1) to #if(0) beneath, do not fill the the color
+       //AV_PIX_FMT_NV12;  //
+      // AV_PIX_FMT_YUV420P;
+        //AV_PIX_FMT_NV12;
+     }
+
+
+
     }
     
 
@@ -232,6 +274,10 @@ H264_Encoder::~H264_Encoder() {
 
 bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     
+
+    const AVCodec* audiocodec = NULL;
+    audiocodec = avcodec_find_encoder_by_name("libfdk_aac");  // Specify the use of file encoding type
+
 
     codec = avcodec_find_encoder_by_name("h264_nvenc");
        
@@ -299,7 +345,7 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     }
 
 
-    if (avcodec_hw_type == AV_HWDEVICE_TYPE_CUDA) {
+    if (avcodec_hw_type != AV_HWDEVICE_TYPE_NONE) {
         int err = set_hwframe_ctx(c, avcodec_hw_device_ctx,
                 width, height);
         if (err < 0) {
@@ -341,7 +387,7 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
     }
 
 
-    if (avcodec_hw_type == AV_HWDEVICE_TYPE_CUDA) {
+    if (avcodec_hw_type != AV_HWDEVICE_TYPE_NONE) {
         hw_frame = av_frame_alloc();
         if (!hw_frame) {
             return false;
@@ -387,7 +433,7 @@ bool H264_Encoder::load(std::string filename, int fps, int width, int height) {
 
   return true;
 }
-
+/*
 
 void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int usize, uint8_t* vdata, int vsize) {
 
@@ -397,13 +443,11 @@ void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int us
 
     fflush(stdout);
 
-    /* make sure the frame data is writable */
     ret = av_frame_make_writable(sw_frame);
     if (ret < 0)
         exit(1);
 
-    /* prepare a dummy image */
-    /* Y */
+
 
    sw_frame->data[0]  = ydata;
    
@@ -425,8 +469,10 @@ void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int us
 
                 
     
-
-    /* encode the image */
+    /// <summary>
+    ///  old code repalce it with send and receive
+    /// </summary>
+    /// <param name="ydata"></param>
     ret = avcodec_encode_video2(c, pkt, sw_frame, &got_output);
     if (ret < 0) {
         fprintf(stderr, "Error encoding frame\n");
@@ -440,10 +486,10 @@ void H264_Encoder::encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int us
     }
     
 
-    /* get the delayed frames */
+ 
     
 }
-
+*/
 
 
 
@@ -462,6 +508,7 @@ void H264_Encoder::encodeFrame() {
     if (ret < 0)
         exit(1);
 
+    #if 1
     sw_frame->pts = ++frameCount;
     /* prepare a dummy image */
     /* Y */
@@ -475,13 +522,14 @@ void H264_Encoder::encodeFrame() {
     for (int y = 0; y < c->height / 2; y++) {
         for (x = 0; x < c->width / 2; x++) {
             sw_frame->data[1][y * sw_frame->linesize[1] + x] = 128 + y + frameCount * 2;
-            sw_frame->data[2][y * sw_frame->linesize[2] + x] = 64 + x + frameCount * 5;
+            if(avcodec_sw_pix_fmt == AV_PIX_FMT_YUV420P)
+               sw_frame->data[2][y * sw_frame->linesize[2] + x] = 64 + x + frameCount * 5;
         }
     }
 
+     
 
-
-    if (avcodec_hw_type == AV_HWDEVICE_TYPE_CUDA) {
+    if (avcodec_hw_type != AV_HWDEVICE_TYPE_NONE) {
 
         int err;
 
@@ -495,6 +543,7 @@ void H264_Encoder::encodeFrame() {
         av_frame_copy_props(hw_frame, sw_frame);
     }
 
+     #endif
 
     /* encode the image */
     /* ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
@@ -509,7 +558,7 @@ if (got_output) {
     av_packet_unref(&pkt);
 }*/
 
-    if (avcodec_hw_type == AV_HWDEVICE_TYPE_CUDA) {
+    if (avcodec_hw_type != AV_HWDEVICE_TYPE_NONE) {
         ret = avcodec_send_frame(c, hw_frame);
     } else {
         ret = avcodec_send_frame(c, sw_frame);

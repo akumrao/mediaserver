@@ -3,55 +3,48 @@
 //#include<opencv2/videoio.hpp>
 #include<opencv2/imgproc.hpp>
 #include<opencv2/imgcodecs.hpp>
-//#include<opencv2/highgui.hpp>
+#ifdef _MV_DEBUG_
+#include<opencv2/highgui.hpp>
+#endif
 #include<opencv2/photo.hpp>
 
 #include "MVDetector.h"
 #define MV_DIST_THRESHOLD2 (0.00001)
 
-MVFrame&
-        MVFrame::operator=(MVFrame&& other) {
-    if (this != &other) {
-        _frame_index = other._frame_index;
-        _pts = other._pts;
-        _pict_type = other._pict_type;
-        _origin = other._origin;
-        _grid_step = other._grid_step;
-        _rows = other._rows;
-        _cols = other._cols;
-        _mv = other._mv; // Mat is ref counted
-        _is_empty = other._is_empty;
-        _occupancy = other._occupancy;
-        other._mv.release();
-    }
-    return *this;
-}
+#include "opencv2/highgui.hpp"
+
+#include "MVDraw.h"
 
 bool
 MVDetector::process_frame(int64_t pts, int frame_index, char pict_type, const std::vector<AVMotionVector>& motion_vectors) {
-    MVFrame cur(frame_index, pts, pict_type, 'v', _grid_step, _grid_shape, motion_vectors);
+   
+    std::unique_ptr< MVFrame> cur( new MVFrame(frame_index, pts, pict_type, 'v', _grid_step, _grid_shape, motion_vectors, xmask, ymask));
 
-    if (cur._grid_step == 8)
-        cur.fill_in_mvs_grid8();
+    if (cur->_grid_step == 8)
+        cur->fill_in_mvs_grid8();
 
-    if (_cb.size() > 1 && _cb.back().empty() && !cur.empty()) {
-        _cb.back().interpolate_flow(_cb[_window_size - 2], cur);
+    if (_cb.size() > 1 && _cb.back()->empty() && !cur->empty()) {
+        _cb.back()->interpolate_flow(_cb[_window_size - 2], cur);
     }
 
-    if (_cb.size() > 1 && !_cb.back().empty()) {
+    if (_cb.size() > 1 && !_cb.back()->empty())
+    {
         const int &rows = _grid_shape.second,
                 &cols = _grid_shape.first;
         _mv = cv::Scalar(0.0); // reset to zero
         _occupancy = cv::Scalar(0.0);
 
         // add up individual vector components (avg.)
-        for (const MVFrame& fi : _cb) {
-            if (!fi.empty()) {
+        for (const auto& fi : _cb) 
+        {
+            if (!fi->empty()) {
                 //NOTE: _mv is not used for detecting motion anymore
-                _mv += fi._mv;
-                _occupancy += fi._occupancy;
+                _mv += fi->_mv;
+                _occupancy += fi->_occupancy;
             }
         }
+        
+       // int n =  _cb.size();
 
         // get avg of vector components
         _occupancy /= _cb.size();
@@ -143,13 +136,16 @@ MVFrame::MVFrame(
         char origin,
         size_t grid_step,
         const std::pair<size_t, size_t>& shape, /* (cols, rows) */
-        const std::vector<AVMotionVector>& motion_vectors) :
+        const std::vector<AVMotionVector>& motion_vectors , std::vector< float> &xmask, std::vector< float>& ymask) :
 _frame_index(frame_index), _pts(pts), _pict_type(pict_type), _origin(origin),
 _grid_step(grid_step),
 _rows(size_t(shape.second)),
 _cols(size_t(shape.first)),
 _occupancy(cv::Mat(_rows, _cols, CV_32F, cv::Scalar(0.0))),
-_is_empty(motion_vectors.empty()) {
+_is_empty(motion_vectors.empty()),
+xmask(xmask),
+ymask(ymask)        
+{
     const int sizes[] = {(int) _rows, (int) _cols, 2};
     _mv.create(3, sizes, CV_32F);
     _mv = cv::Scalar(0.0);
@@ -157,29 +153,47 @@ _is_empty(motion_vectors.empty()) {
     set_motion_vectors(motion_vectors);
 }
 
+
+MVFrame::~MVFrame()
+{
+    //std::cout << "~MVFrame" << std::endl;
+}
+   
+
 // place motion vector on Matrix for x & y dims
 
 void
 MVFrame::set_motion_vectors(const std::vector<AVMotionVector>& motion_vectors) {
     // motion_vectors are on image dimension
-    for (const auto &mv : motion_vectors) {
-        int mvx = mv.dst_x - mv.src_x,
-                mvy = mv.dst_y - mv.src_y;
+     for (const auto &mv : motion_vectors) {
+        int mvx =  (mv.motion_x >> 2)* mv.source,
+                mvy = (mv.motion_y >> 2)*mv.source;
 
         // clipped
         size_t i = std::max(size_t(0), std::min(mv.dst_y / _grid_step, _rows - 1));
         size_t j = std::max(size_t(0), std::min(mv.dst_x / _grid_step, _cols - 1));
+        
+        if(xmask.size() && ymask.size())
+        {
+            int ret =   pnpoly (xmask.size(),  &xmask[0], &ymask[0],  j, i);
+            if(ret)
+             continue;
+        }
 
-        _mv.at<float>(i, j, 0) = float(mvx);
-        _mv.at<float>(i, j, 1) = float(mvy);
+        if( mvx* mvx +  mvy * mvy >  9 )
+        {    
+            _mv.at<float>(i, j, 0) = mvx;
+            _mv.at<float>(i, j, 1) = mvy;
+            _occupancy.at<float>(i, j) = float(mvx != 0 || mvy != 0);
+        }
 
-        _occupancy.at<float>(i, j) = float(mvx != 0 || mvy != 0);
+        
     }
 }
 
 void
-MVFrame::interpolate_flow(const MVFrame& prev, const MVFrame& next) {
-    cv::addWeighted(prev._mv, 0.5, next._mv, 0.5, 0.0, _mv);
+MVFrame::interpolate_flow(const  std::unique_ptr< MVFrame>& prev, const  std::unique_ptr< MVFrame>& next) {
+    cv::addWeighted(prev->_mv, 0.5, next->_mv, 0.5, 0.0, _mv);
     _origin = 'i'; // interpolated origin
 }
 
@@ -188,17 +202,21 @@ MVFrame::fill_in_mvs_grid8() {
     for (int k = 0; k < 2; k++) {
         for (int i = 1; i < (int) _rows - 1; i++) {
             for (int j = 1; j < (int) _cols - 1; j++) {
-                if (_occupancy.at<float>(i, j) == 0) {
+                if (_occupancy.at<float>(i, j) == 0) 
+                {
                     if (_occupancy.at<float>(i, j - 1) != 0 &&
                             _occupancy.at<float>(i, j + 1) != 0) {
                         _mv.at<float>(i, j, 0) = (_mv.at<float>(i, j - 1, 0) + _mv.at<float>(i, j + 1, 0)) / 2;
                         _mv.at<float>(i, j, 1) = (_mv.at<float>(i, j - 1, 1) + _mv.at<float>(i, j + 1, 1)) / 2;
+                       
                         _occupancy.at<float>(i, j) = 1;
+                        
                     } else if (_occupancy.at<float>(i - 1, j) != 0 &&
                             _occupancy.at<float>(i + 1, j) != 0) {
                         _mv.at<float>(i, j, 0) = (_mv.at<float>(i - 1, j, 0) + _mv.at<float>(i + 1, j, 0)) / 2;
                         _mv.at<float>(i, j, 1) = (_mv.at<float>(i - 1, j, 1) + _mv.at<float>(i + 1, j, 1)) / 2;
                         _occupancy.at<float>(i, j) = 1;
+                        
                     }
                 }
             }
@@ -206,25 +224,60 @@ MVFrame::fill_in_mvs_grid8() {
     }
 }
 
+// place motion vector on Matrix for x & y dims
+
+
+//The following code is by Randolph Franklin, it returns 1 for interior points and 0 for exterior points.
+// If there is only one connected component, then it is optional to repeat the first vertex at the end. It's also optional to surround the component with zero vertices.
+
+
+int MVFrame::pnpoly(int npol, float *mask, float *ymask, float x, float y)
+{
+      int i, j, c = 0;
+      for (i = 0, j = npol-1; i < npol; j = i++) {
+        if ((((ymask[i] <= y) && (y < ymask[j])) ||
+             ((ymask[j] <= y) && (y < ymask[i]))) &&
+            (x < (mask[j] - mask[i]) * (y - ymask[i]) / (ymask[j] - ymask[i]) + mask[i]))
+          c = !c;
+      }
+      return c;
+}
+
+
+
+ MVDetector::MVDetector(
+            const std::pair<size_t, size_t>& frame_shape,
+            size_t window_size ,
+            float motion_occupancy_threshold ,
+            float occupancy_local_avg_threshold ,
+            float occupancy_avg_threshold ,
+            bool force_grid_8 ) :
+    _frame_shape(frame_shape),
+    _grid_step(force_grid_8 ? 8 : 16),
+    _grid_shape(std::pair<size_t, size_t>(_frame_shape.first / _grid_step, _frame_shape.second / _grid_step)),
+    _window_size(window_size),
+    _cb(_window_size),
+    _mcb(_window_size * 2), // TODO
+    _square_dist(float(_frame_shape.first*_frame_shape.first + _frame_shape.second*_frame_shape.second)),
+    _motion_occupancy_threshold(motion_occupancy_threshold),
+    _occupancy_pct(std::min(1.0, _motion_occupancy_threshold + 0.1)),
+    _avg_movement(false),
+    _occupancy(cv::Mat((int) _grid_shape.second, (int) _grid_shape.first, CV_32F, cv::Scalar(0.0))),
+    _occupancy_local_avg_threshold(occupancy_local_avg_threshold),
+    _occupancy_avg_threshold(occupancy_avg_threshold) 
+{
+    const int sizes[] = {(int) _grid_shape.second, (int) _grid_shape.first, 2};
+    _mv.create(3, sizes, CV_32F);
+
+    
+        //std::cout << "frame_shape=" << _frame_shape.first <<","<<_frame_shape.second << std::endl;
+        //std::cout << "_grid_shape=" << _grid_shape.first <<"," << _grid_shape.second << std::endl;
+ }
+
+
 #ifdef _MV_DEBUG_
 
-void draw_single_arrow(cv::Mat& img, const cv::Point& pStart, const cv::Point& pEnd, cv::Scalar startColor) {
-    static const double PI = acos(-1);
-    static const int lineThickness = 1;
-    static const int lineType = CV_AA;
-    static const cv::Scalar lineColor = CV_RGB(255, 0, 0);
-    static const double alphaDegrees = 20.0;
-    static const int arrowHeadLen = 2.0;
 
-    double angle = atan2((double) (pStart.y - pEnd.y), (double) (pStart.x - pEnd.x));
-    cv::line(img, pStart, pEnd, lineColor, lineThickness, lineType);
-    img.at<cv::Vec3b>(pStart) = cv::Vec3b(startColor[0], startColor[1], startColor[2]);
-    for (int k = 0; k < 2; k++) {
-        int sign = k == 1 ? 1 : -1;
-        cv::Point arrow(pEnd.x + arrowHeadLen * cos(angle + sign * PI * alphaDegrees / 180), pEnd.y + arrowHeadLen * sin(angle + sign * PI * alphaDegrees / 180));
-        cv::line(img, pEnd, arrow, lineColor, lineThickness, lineType);
-    }
-}
 
 void
 MVFrame::draw_occupancy(cv::Mat& img) {

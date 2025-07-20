@@ -16,6 +16,7 @@
 #include "http/HttpServer.h"
 #include "http/packetizers.h"
 #include "base/queue.h"
+#include "http/HTTPResponder.h"
 
 
 using namespace std;
@@ -26,7 +27,10 @@ using namespace base::test;
 #include "opencv2/opencv.hpp"
 /// apt-get install libopencv-dev
 
-//browse http://localhost:8888/
+//browse http://localhost:8888/  // chunked data , it is not moving jpeg
+// alsways use multipart for testing
+//http://localhost:8888/multipart
+
 
 using namespace cv;
 
@@ -46,7 +50,7 @@ public:
     void run() {
         LTrace("MediaCapture:Run")
 
-      /* cap.open(0);
+       cap.open(0);
 
         if (!cap.isOpened()) {
             printf("no cam found ;(.\n");
@@ -60,26 +64,39 @@ public:
         while (cap.isOpened() && !stopped()) {
             
          LTrace("Captured Jpg Image")
-       */               
-         while ( !stopped()) {
+                      
+       //  while ( !stopped()) {
              
-           std::ifstream f("/var/tmp/red1.jpg", std::ios::binary | std::ifstream::in);
-           std::vector<uint8_t> v{std::istreambuf_iterator<char>{f}, {}};
-           std::cout << "Read complete, got " << v.size() << " bytes\n";
-           std::string buf =  std::string(v.begin(), v.end()); 
+           // std::ifstream f("/var/tmp/red1.jpg", std::ios::binary | std::ifstream::in);
+           // std::vector<uint8_t> v{std::istreambuf_iterator<char>{f}, {}};
+           // std::cout << "Read complete, got " << v.size() << " bytes\n";
+           // std::string buf =  std::string(v.begin(), v.end()); 
            
-            std::vector<uchar> *outbuf = new std::vector<uchar>;
-            std::copy(buf.begin(), buf.end(), std::back_inserter(*outbuf));
-            test1.push(outbuf);
-            base::sleep(40);
+           //  std::vector<uchar> *outbuf = new std::vector<uchar>;
+           //  std::copy(buf.begin(), buf.end(), std::back_inserter(*outbuf));
+           //  test1.push(outbuf);
+           //  base::sleep(40);
             
-            /*
-            cap >> frame;
+            
+           // cap >> frame;
+            
+             
+            if (!cap.read(frame))             
+            break;
+
+
+            //cv::imshow("windowA", frame);
+            //cv::waitKey(33);  // two see windows do not forget to enable this line
+
+              
             std::vector<uchar> *outbuf = new std::vector<uchar>;
             std::vector<int> params;
-            params.push_back(CV_IMWRITE_JPEG_QUALITY);
+            //params.push_back(CV_IMWRITE_JPEG_QUALITY);
+            params.push_back( cv::IMWRITE_JPEG_QUALITY);
+           
             params.push_back(50);
-            if (frame.data) {
+            //if (frame.data)
+            {
                 imencode(".jpg", frame, *outbuf, params);
 
                 int outlen = outbuf->size();
@@ -87,17 +104,12 @@ public:
                 cout << "Cam buffer len " << outlen << std::endl << std::flush;
 
                 test1.push(outbuf);
+                 base::sleep(40);
             }
-     
-
-       
-
-    
-
-          frame.release();
-             */
-
+           
+             frame.release();
         }
+         
 
     }
 
@@ -126,8 +138,8 @@ public:
     virtual void onClose() {
         
         LDebug("ServerResponder::On close")
-        test1.stop();
-        gVideoCapture->stop();
+       // test1.stop();
+        //gVideoCapture->stop();
         // delete gVideoCapture;
         //stream.stop();
     }
@@ -176,8 +188,8 @@ public:
     virtual void onClose() {
         
         LDebug("ServerResponder::On close")
-        test1.stop();
-        gVideoCapture->stop();
+        //test1.stop();
+       // gVideoCapture->stop();
         // delete gVideoCapture;
         //stream.stop();
     }
@@ -208,7 +220,7 @@ public:
     ChunkedAdapter* packetizer;
 };
 
-class StreamingResponderFactory : public ServerConnectionFactory {
+class StreamingResponderFactory1 : public ServerConnectionFactory {
 public:
 
     ServerResponder* createResponder(net::HttpBase* conn) {
@@ -228,7 +240,7 @@ public:
         SDebug << "Incoming connection from: " << request.getHost() << " method: " << request.getMethod() << " uri: <<  " << request.getURI() << std::endl;
 
 
-        if( request.getURI() == "multipart")
+        if( request.getURI() == "/multipart") // makes ure your code ends here, otherwise you will not see moving jpeg
             return new MultiPartResponder(conn);
         else
         
@@ -250,7 +262,7 @@ int main(int argc, char** argv) {
 
 
     Application app;
-    net::HttpServer socket("0.0.0.0", 8888, new StreamingResponderFactory);
+    net::HttpServer socket("0.0.0.0", 8888, new StreamingResponderFactory1);
     socket.start();
 
     //base::sleep(45000);

@@ -1,0 +1,20 @@
+[Unit]
+Description=mdserver
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/workspace/mediaserver/src/motiondetection/main/mdserver
+WorkingDirectory=/workspace/mediaserver/src/motiondetection/main
+#ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+LimitNOFILE=20000
+LimitCORE=infinity
+
+
+[Install]
+WantedBy=multi-user.target

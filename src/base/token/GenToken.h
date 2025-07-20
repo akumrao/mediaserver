@@ -14,10 +14,11 @@
 
 
 #include "H1_SecurityToken.h"
+#include "H2_SecurityToken.h"
 
 //#ifdef H1SECURITY_CODE
 
-class SecToken : public H1_SecurityToken
+class SecToken : public H1_SecurityToken, H2_SecurityToken
 {
 public:
 
@@ -28,25 +29,19 @@ public:
             uint8_t qosl = 0,
             uint8_t qosa = 0);
 
-    static string calculateH1(string& uid,
+    static string createSecurityH2Token(string& H1token, unsigned long sec);
+
+    static string createSecurityH1Token(string& uid,
             string& permissions,
-            uint8_t ptz,
-            uint8_t qosl,
-            uint8_t qosa,
-            const string& key);
+            const string& key,
+            uint8_t ptz = 0,
+            uint8_t qosl = 0,
+            uint8_t qosa = 0);
+            
+    static bool SaveAndValidate(string& uid, string& token);
+      
 };
 
-class GenToken
-{
-public:
-    GenToken();
-  //  static string getToken(string &deviceUid);
-    virtual ~GenToken();
-private:
-
-};
-
-//#endif
 
 #endif	/* GenToken_HPP */
 

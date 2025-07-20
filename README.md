@@ -103,3 +103,18 @@ make
 ./runStreamer
 
 before compilation, get webrtc and ffmpeg as mentioned at mediaserver/src/broadcast/Readme.md
+
+
+#to compile code at Ubuntu22.04
+
+
+sudo apt-get install libtool
+
+
+git clone git@github.com:mstorsjo/fdk-aac.git
+git tag
+git checkout tags/v0.1.5
+Note: switching to 'tags/v0.1.5'.
+
+
+

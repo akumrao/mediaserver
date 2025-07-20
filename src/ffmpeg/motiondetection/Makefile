@@ -3,39 +3,41 @@
 #
 FFMPEG_ROOT = /workspace/ffmpeg
 CC:=g++
-INCLUDES:=$(shell pkg-config --cflags sdl)
-# CFLAGS:=-Wall -ggdb
-# LDFLAGS:=$(shell pkg-config --libs libavformat libavcodec libswresample libswscale libavutil sdl) -lm
-# EXE:=tutorial01.out tutorial02.out tutorial03.out tutorial04.out\
-# 	tutorial05.out tutorial06.out tutorial07.out
 
-#
-# This is here to prevent Make from deleting secondary files.
-#
 
-	
+CC	= gcc
+CXX     = g++
+TARGET=runMD # define the name of the executable
+SOURCES=$(wildcard *.cpp ./MVAnalysis/*.cpp  )
 
-#
-# $< is the first dependency in the dependency list
-# $@ is the target name
-#
-all: 
-	g++ -g -o runMD *.cpp  ./MVAnalysis/*.cpp   ${FFMPEG_ROOT}/libavformat/libavformat.a   ${FFMPEG_ROOT}/libavfilter/libavfilter.a  ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a  ${FFMPEG_ROOT}/libswscale/libswscale.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a -I./MVAnalysis/ -I${FFMPEG_ROOT}/  -lpthread -lz -lm -ldl -lfdk-aac -lopencv_imgproc -lopencv_imgcodecs  -lopencv_core `sdl2-config --cflags --libs`
+CXXFLAGS   := -g -std=c++14 -Wno-inconsistent-missing-override -Wno-uninitialized -Wno-deprecated-declarations
 
-# dirs:
-# 	mkdir -p obj
-# 	mkdir -p bin
+CPPFLAGS   := -I./MVAnalysis/ -I${FFMPEG_ROOT}/ -I/usr/include/opencv4 
+              
+LDFLAGS   := -L/usr/lib/x86_64-linux-gnu
 
-# tags: *.c
-# 	ctags *.c
 
-# bin/%.out: obj/%.o
-# 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+LDLIBS    := -lpthread -lz -lm -ldl -lfdk-aac -lopencv_highgui -lopencv_videoio -lopencv_imgproc -lopencv_imgcodecs -lopencv_core -lpng -lopencv_calib3d -lopencv_photo `sdl2-config --cflags --libs`
 
-# obj/%.o : %.c
-# 	$(CC) $(CFLAGS) $< $(INCLUDES) -c -o $@
+SLIBS     :=  ${FFMPEG_ROOT}/libavformat/libavformat.a  ${FFMPEG_ROOT}/libavfilter/libavfilter.a  ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a  ${FFMPEG_ROOT}/libswscale/libswscale.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a 
+
+
+################################################################################
+### DO NOT EDIT THE FOLLOWING LINES ############################################
+
+
+# define list of objects
+OBJSC=$(SOURCES:.cpp=.o)
+OBJS=$(OBJSC:.cpp=.o)
+
+# the target is obtained linking all .o files
+all: $(SOURCES) $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(SLIBS) $(LDLIBS) -o $(TARGET)
+
+purge: clean
+	rm -f $(TARGET)
 
 clean:
-	rm -f runMD
-
-
+	rm -f  $(OBJS)

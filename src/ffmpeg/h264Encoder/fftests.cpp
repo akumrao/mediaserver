@@ -29,10 +29,12 @@ void initialize_playback(AVFrame* frame, AVPacket* pkt);
 
 H264_Encoder encoder(NULL, NULL);
 
+H264_Encoder encoder2(NULL, NULL);
+
 int main(int argc, char **argv)
 {
    
-
+     encoder2.load(std::string("e:/test9.264"), 25, 1920, 1080);
     //H264_Decoder decoder(frame_callback, NULL);
 
    // YUV420P_Player player;
@@ -60,15 +62,40 @@ int main(int argc, char **argv)
 //   
     
 #ifdef __linux__ 
-    encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
+    
+    std::string fileName("/tmp/test2.264");
+    if (argc > 1) {
+      fileName = argv[1];
+    }
+
+    encoder.load(fileName, 25, 800, 600);
 #elif _WIN32
-   encoder.load( std::string("e:/test2.264") , 25,  800, 600);
+    int w = 800;
+    int h = 600;
+    std::string fileName("e:/test2.264");
+    if (argc > 3) {
+      fileName = argv[1];
+      w = atoi(argv[2]);
+      h = atoi(argv[3]);
+    }
+    else if (argc > 1) 
+    {
+      fileName = argv[1];
+    
+    }
+    encoder.load(fileName, 25, w, h);
 #else
      encoder.load( std::string("/tmp/test2.264") , 25,  800, 600);
 #endif
      
-     for(int x=0; x < 100 ;++x )
-     encoder.encodeFrame();
+     for (int x = 0; x < 100000; ++x) {
+      encoder.encodeFrame();
+       encoder2.encodeFrame();
+       _sleep(1);
+    }
+
+
+       
      
 }
     
@@ -80,8 +107,8 @@ void frame_callback(AVFrame* frame, AVPacket* pkt, void* user) {
     playback_initialized = true;
   }
 
-  
-    encoder.encodeFrame(frame->data[0], frame->linesize[0] , frame->data[1], frame->linesize[1], frame->data[2], frame->linesize[2] );
+   // very old TODONE
+    //encoder.encodeFrame(frame->data[0], frame->linesize[0] , frame->data[1], frame->linesize[1], frame->data[2], frame->linesize[2] );
     
 //  if(player_ptr) {
 //    player_ptr->setYPixels(frame->data[0], frame->linesize[0]);

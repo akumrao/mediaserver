@@ -224,7 +224,33 @@ void mkdirr(const std::string& path, int mode)
 
 void rmdir(const std::string& path)
 {
-    internal::FSapi(rmdir, path.c_str())
+   internal::FSapi(rmdir, path.c_str())
+
+
+}
+
+void rmdirr(const std::string& path)
+{
+
+   
+    internal::FSapi(scandir, path.c_str(), 0)
+
+    uv_dirent_t dent;
+    while (UV_EOF != uv_fs_scandir_next(&wrap.req, &dent)) 
+    {
+        
+        std::string tmpPath(path + '/' + dent.name);
+        if (dent.type == UV_DIRENT_DIR) {
+            
+            rmdirr( tmpPath );
+
+        }
+        else
+        {
+            unlink( tmpPath);
+        }
+    }
+    rmdir(path);
 }
 
 

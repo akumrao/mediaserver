@@ -1,48 +1,225 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Live Camera</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <link rel='shortcut icon' type='image/png' href='/favicon.ico' />
-    <link href="/css/videostyle.css" rel="stylesheet" type="text/css" />
-    <link href="/css/jquery-spinner.min.css" rel="stylesheet" type="text/css" />
-    
-  </head>
-  <body>
-      <script>
-          log = function () {
-            var args = Array.prototype.slice.call(arguments);
-            $('#webrtc-logs').append(JSON.stringify(args)).append('\n');
-            console.log.apply(console, arguments);
-          }
-      </script>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-      <div id="videoLoader" class="videoLoader">
-      </div>
-      <div id="boundary">
-        <div id="hlsStreamSection">
-          <video id="remoteVideo" autoplay playsinline muted></video>
-        </div>
-        <div id="controls"></div>
-      </div>
-      
-      <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-      <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>  
-      <script src="/socket.io/socket.io.js"></script>
-      <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-      <script src="js/jquery-spinner.min.js"></script>
-      <script src="js/main.js"></script>
-      <script>
-        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-            var myobj = document.getElementById("controls");
-            myobj.remove();
-          }
-      </script>
-      
-  </body>
+</head>
+<body>
+
+<h2> Open NVR 0.1 </h2>
+
+
+<button id='bt01'  class="greenbutton" onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
+<button id='bt02' disabled class="greenbutton"  onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Account</button>
+<button id='bt03' disabled class="greenbutton"  onclick="setting()" style="width:auto;">Settings</button>
+<button id='bt04' disabled class="greenbutton"  onclick="getRecordingCam()" style="width:auto;">Recording</button>
+<button disabled class="greenbutton" style="width:auto;">$-Event</button>
+<button disabled class="greenbutton" style="width:auto;">$-Monitor</button>
+<button id='bt05' class="greenbutton" onclick="document.getElementById('id05').style.display='block'" style="width:auto;">About</button>
+
+<div id="id01" class="modal">
+  
+  <form class="modal-content animate"  id="loginform" > 
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+
+    </div>
+
+    <div class="container">
+      <label for="uname"><b>Username</b></label>
+      <input type="text" value="admin" placeholder="Enter Username" class="logininput" name="uname" required>
+
+      <label for="psw"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password"  value="admin" class="logininput" name="psw" required>
+        
+      <button type="submit" class="greenbutton">Login</button>
+  <!--     <label>
+        <input type="checkbox" checked="checked" name="remember"> Remember me
+      </label> -->
+    </div>
+
+    <div class="container" style="background-color:#f1f1f1">
+<!--       <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+ -->      <p id='forget'>Forgot password. Email to arvind.umrao@pro-vigil.com. </p>
+    </div>
+  </form>
+</div>
+
+
+<div id="id02" class="modal">
+
+  <form class="modal-content animate"  id="accountform" > 
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+
+    </div>
+
+    <div class="container">
+      <label for="uname"><b>Username</b></label>
+      <input type="text" value="admin" placeholder="Enter Username" class="logininput" name="uname" required>
+
+      <label for="psw"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" class="logininput" name="psw" required>
+
+      <label for="cfmpsw"><b>Confirm Password</b></label>
+      <input type="password" placeholder="Enter Password" class="logininput" name="cfmpsw" required>
+        
+      <button type="submit" class="greenbutton">Save</button>
+       <label>
+        <input type="checkbox" checked="checked" name="admin"> Administrator
+      </label>
+    </div>
+
+    <div class="container" style="background-color:#f1f1f1">
+      <button type="button" onclick="document.getElementById('id02').style.display='none'" class="cancelbtn">Cancel</button>
+      <p id='frmerr'>Change password or add new user </p>
+    </div>
+  </form>  
+
+</div>
+
+
+<div id="id03" class="modal">
+  <form class="modal-content animate" style="border:6px solid green" onsubmit="return false;">
+    <div class="imgcontainer">
+      <span onclick="close_setting()" class="close" title="Close Modal">&times;</span>
+    </div>
+    <div>
+    <p id="msgCam"> List of Camera.</p>
+
+    <select id="streamType" onchange="onStreamTypeChange()">
+    <option value="Video"  selected="selected">Video</option>
+    <option value="Audio">Audio</option>
+    <option value="Analytics">Analytics</option>
+    </select>
+    <button onClick='cb_add()'>Add </button>
+    
+    <p id="camlist"></p>
+
+    </div>
+  </form>
+</div>
+
+
+<div id="id04" class="modal">
+  <form class="modal-content animate" style="border:6px solid green"  onsubmit="return false;" >
+    <div class="imgcontainer">
+      <span onclick="close_recording()" class="close" title="Close Modal">&times;</span>
+    </div>
+    <div>
+      <table border='1' width=100%>
+        <tr>
+          <td>
+            <label for="camera">Camera</label>
+            <select name="camera" id="cameraSel" onchange="doSomething(this);">
+            </select>
+          </td>
+
+          <td>
+            <button onClick='stop_recording()'>Stop </button> 
+            <button disabled onClick='downloadMp4()'>$-Download </button> 
+            <span id="msgRecord"> Drag the Tree node to see the recording.</span>
+          </td>
+        </tr>
+        <tr>
+          <td width="180px">
+            <ul id="myUL">
+              <li><span id='RecRoot' class="caret">Recordings</span>
+              </li>
+            </ul>
+          </td>
+          <td style="text-align: center"> 
+         <div id="reccontainer" ></div>
+            </td>
+          </tr>
+          <tr style="background-color: #ffff00;">
+           <td >
+            <div id="statsEnc" class="statsEnc"></div>
+          </td >
+
+          <td>
+            <div id="qualityStatus" class="greyStatus">&#9679</div>
+            <div id="stats" class="stats"></div>
+          </td >
+        </tr>  
+      </table>
+    </div>
+  </form>
+</div>
+
+
+<div id="id05" class="modal">
+  <form class="modal-content animate" style="border:12px solid green" >
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id05').style.display='none'" class="close" title="Close Modal">&times;</span>
+
+    </div>
+    <div >
+    <h4> Record and Stream Live Camera. </h4>
+    <h4> Auth token for authentication. Does not store login password. </h4>
+    <h4> Hardware encdoer supported Quick Sync and Nvidia. Software Encdoer supported x264 and VP8 </h4>
+    <h4> It uses webrtc for streaming from NVR to Browser. </h4>
+    <h4> NVR could be hosted on AWS cloud, Edge machine or Android Mobile device. We can add 8 to 64 cameras to AWS cloud machines or 128- 255 cameras to 4 core Edge machine.</h4>
+    <h4> Video Storage is highly compressed,  H264 frames are stored after purging redundant data. We have filed two patents on the same.</h4> 
+    </div>
+  </form>
+</div>
+
+<table border='1' width=100%>
+
+<tr>
+<td width="180px">
+<ul id="myUL">
+  <li><span id='rootLiveCam' class="caret">Camera</span>
+  </li>
+</ul>
+
+</td>
+
+<td style="text-align: center"> 
+  <div >
+      <form >
+          <input type="text" value=2 maxlength="8" size="10" onkeypress="return isNumberKey(event);"  id="row" placeholder="Type the number of row" />
+          <input type="text" value=2 maxlength="8" size="10" onkeypress="return isNumberKey(event);" id="column" placeholder="Type the number of column" />
+          <button type="button" id="submit" >XxY</button>
+      </form>
+  </div>
+   <br />
+  <div id="container" ></div>
+</td>
+
+
+</tr>
+
+
+  <tr style="background-color: #ffff00;">
+   <td>
+      <div id="statsEnc" class="statsEnc"></div>
+  </td>
+  
+  <td>
+  <div id="qualityStatus" class="greyStatus">&#9679</div>
+  <div id="stats" class="stats"></div>
+  </td >
+  </tr>  
+
+</table>
+
+<link href="/jsonTree/jsonTree.css" rel="stylesheet" />
+<script src="/jsonTree/jsonTree.js"></script>
+<script src="/jsonTree/liveCamTree.js"></script>
+<script src="/js/recording.js"></script>
+<script src="/jsonTree/recordingTree.js"></script>
+<script src="/js/login.js"></script>
+<script src="/js/setting.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="/js/adapter-latest.js"></script>
+<script src="/js/camgrid.js"></script>
+<link href="/css/main.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/js/webRtcPlayer.js"></script>
+<script type="text/javascript" src="/js/app.js"></script>
+
+
+
+</body>
 </html>

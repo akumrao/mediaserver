@@ -1,6 +1,7 @@
 {
-  "name": "webrtc-codelab",
+  "name": "webrtc-streaming",
   "version": "0.0.1",
+  "license": "Pro-vigil Proprietary",
   "description": "WebRTC streaming",
   "main": "index.js",
   "scripts": {

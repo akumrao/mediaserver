@@ -27,7 +27,14 @@ the frame is finally decided to contain a `movement`.
 In order to reduce flickering effect where a continus sequence of frame 
 
 
+to install opencv 
+apt install  libopencv-dev libopencv-core-dev python3-opencv
 
+
+
+to compile opencv
+
+https://github.com/Itseez/opencv.git 
 
 
 

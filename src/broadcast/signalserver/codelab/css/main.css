@@ -1,26 +1,124 @@
+/* (c) 2023 Johnson Controls. All rights reserved. */
 body {
-  font-family: sans-serif;
+  font: .9rem arial, serif;
+}
+table {
+  /* For use with mobile devices */
+  /* max-width: 1024px; */
+}
+table td {
+  /* For use with mobile devices */
+  /* width: 33.33%; */
+  vertical-align: top;
+}
+fieldset {
+  /* For use with mobile devices */
+  /* min-height: 100%; */
+  border: 1px solid silver;
+  padding: 2px;
+}
+button {
+  padding: 1px;
+  margin: 1px;
+}
+.videoBg {
+    overflow: hidden;
+}
+.videoBg video{
+    min-width: 100%;
+    min-height: 100%;
 }
 
-/*video {
-  max-width: 100%;
-  width: 320px;
+video{
+  width:100%;
+  height:100%;
 }
-*/
+span {
+  font-family: monospace;
+}
+.row {
+  display: flex;
+  margin-left:-5px;
+  margin-right:-5px;
+}
 
-div.a {
-  font-size: 15px;
+.column {
+  flex: 50%;
+  padding: 5px;
 }
 
-div.b {
-  font-size: large;
+div.scroll {
+  margin: 4px, 4px;
+  padding: 4px;
+  max-width: 1024px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 
-div.c {
-  font-size: 150%;
+hr.new4 {
+  border: 1px solid red;
+  width: 1px;
 }
-pre {
-   font-family: "courier new", courier, monospace;
-   font-size: 11px; 
-   font-weight: bold;
+    
+.centerTable { 
+  margin: 0px auto; 
+  border: 0;
+  cellpadding: 0;
+}
+
+.greyStatus {
+  color: grey;
+}
+
+.limeStatus {
+  color: lime;
+}
+
+.orangeStatus {
+  color: orange;
+}
+
+.redStatus {
+  color: red;
+}
+
+.stats {
+  font-size: 14px;
+  /* font-weight: bold; */
+  padding: 6px;
+  color: black;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-content: flex-start;
+}
+
+.box {
+  background-color: lightblue;
+  margin: 1px;
+  text-align: left;
+  top: 0;
+}
+
+/* DivTable.com */
+.divTable{
+  display: table;
+}
+.divTableRow {
+  display: table-row;
+}
+
+.divTableCell {
+  border: 1px solid #999999;
+  display: table-cell;
+}
+
+.canvas {
+  position: absolute;
+  z-index: 1;
+  /* background-color:rgba(255,0,0,0.5); */
 }

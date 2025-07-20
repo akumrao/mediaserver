@@ -3,7 +3,7 @@
     "dtlsPrivateKeyFile": "/var/tmp/key/private_key.pem",
     "listenIps": [
         {
-            "announcedIp": "52.5.6.245",
+            "announcedIp": "192.168.0.19",
             "ip": "0.0.0.0"
         }
     ],

@@ -35,7 +35,7 @@ namespace base {
     namespace sockio {
 
 
-#define SERVER_HOST "arvindubuntu"
+#define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 8080 //443
 #define USE_SSL     0 //1
 

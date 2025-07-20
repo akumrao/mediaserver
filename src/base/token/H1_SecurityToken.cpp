@@ -79,7 +79,7 @@ bool H1_SecurityToken::parse()
 
 }
 
-string H1_SecurityToken::calculateH2(
+string H1_SecurityToken::calcH2(
         const string& H1,
         uint32_t expirationTime)
 {
@@ -114,23 +114,5 @@ string H1_SecurityToken::calculateH2(
     return comp_h2;
 }
 
-string H1_SecurityToken::getSecurityToken(string &tokenH1)
-{
-   // string token;
-     char tmpToken[2048]={'\0'};
-    H1_SecurityToken obj(tokenH1);
-    if (obj.parse())
-    {
-        string H1 = obj.getH1();
 
-        timeval now;
-        gettimeofday(&now, NULL);
-
-        uint32_t expir = now.tv_sec + 5 * 60;
-        string h2;
-        h2 = calculateH2(H1, expir);
-         snprintf(tmpToken,  sizeof(tmpToken),"%s^%s^%d^%d^%d^%u^%s", obj.getCameraUID().c_str(), obj.getPermissions().c_str(), obj.getPTZPriority(), obj.getQosl(), obj.getQosa(), expir, h2.c_str());
-    }
-    return tmpToken;
-}
 

@@ -66,6 +66,9 @@ Base_API void mkdirr(const std::string& path, int mode = 0755);
 /// Creates a directory.
 Base_API void rmdir(const std::string& path);
 
+// Creates a directory.
+Base_API void rmdirr(const std::string& path);  //removed recursively
+
 /// Deletes a file.
 Base_API void unlink(const std::string& path);
 

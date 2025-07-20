@@ -42,7 +42,6 @@ extern "C" {
 #include <libavutil/channel_layout.h>
 #include <libavutil/common.h>
 #include <libavutil/frame.h>
-
 }
 
 typedef void(*h264_encoder_callback)(AVFrame* frame, AVPacket* pkt, void* user);         /* the decoder callback, which will be called when we have decoded a frame */
@@ -56,7 +55,7 @@ class H264_Encoder {
   /* load a video file which is encoded with x264 */
   ///bool readFrame();                                                                      /* read a frame if necessary */
 
-   void encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int usize, uint8_t* vdata, int vsize);
+  // void encodeFrame(uint8_t* ydata, int ysize, uint8_t* udata, int usize, uint8_t* vdata, int vsize);
    
    void encodeFrame();
     
@@ -93,6 +92,12 @@ class H264_Encoder {
     AVPacket* pkt{NULL};
   /* buffer we use to keep track of read/unused bitstream data */
     
+
+
+    int set_hwframe_ctx(AVCodecContext* ctx,
+                        AVBufferRef* device_ctx,
+                        int width,
+                        int height);
     
     AVFrame *hw_frame{ NULL};
     //hardware 

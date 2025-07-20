@@ -6,11 +6,19 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/chat.html');
 });
 
+app.get('/loop', function(req, res) {
+     res.sendFile(__dirname + '/loop.html');
+});
+
+
 io.on('connection', function(socket){
     console.log('a user connected');
     socket.on('joined', function(data) {
         console.log(data);
-        socket.emit('acknowledge', 'Acknowledged');
+       
+        console.log("connected: " + socket.client.conn.server.clientsCount  + " id: " + socket.id);
+
+        socket.emit('acknowledge', socket.client.conn.server.clientsCount );
     });
     socket.on('chat message', function(msg){
         console.log('message: ' + msg);
@@ -19,16 +27,10 @@ io.on('connection', function(socket){
     });
 
 
-/**********************Acknowletement testing*************************************/
- console.log("ack");
-   socket.emit('ferret', 'tobi', function (data) {
-       console.log("ack"); // data will be 'woot'
-       console.log(data); // data will be 'woot'
-	});
+     socket.on('disconnect', function() {
+      console.log("disconnected: " + socket.client.conn.server.clientsCount + " id: " + socket.id);
+     });
 
-  socket.on('ferret', function (name, fn) {
-    fn(name + ' says woot');
-  });
 
 
 /***********************Acknowletement testing end*************************************/
