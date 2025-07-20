@@ -1,57 +1,34 @@
 
 
 #include "webrtc/videopacketsource.h"
-#include "webrtc/rawVideoFrame.h"
+
+#include "VideoEncoder.h"
+
 #include "webrtc/peermanager.h"
 
-#ifdef HAVE_FFMPEG
-#if MP4File
-#include "ff/ffmpeg.h"
-#include "ff/videocontext.h"
-#include "ff/videodecoder.h"
-#include "ff/fpscounter.h"
- #endif
-#include "api/video/i420_buffer.h"
-#include "rtc_base/ref_counted_object.h"
-#include "rtc_base/atomic_ops.h"
-#include <chrono>
-#include "base/platform.h"
-
-extern "C"
-{
-//#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/parseutils.h>
-}
+#include "webrtc/rawVideoFrame.h"
 
 
-#include "muxer.h"
 #include "Settings.h"
 
 using std::endl;
 
-
-
 namespace base {
     
- extern fmp4::ReadMp4 *self;
-    
-namespace wrtc {
-    
-#define tcprequest true
+   
+namespace web_rtc {
     
 
-VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::FrameFilter *next):cam(cam),fmp4::FrameFilter(name, next)
+
+VideoPacketSource::VideoPacketSource( const char *name, st_track &trackInfo , web_rtc::FrameFilter *next):trackInfo(trackInfo),web_rtc::FrameFilter(name, next)
     , _rotation(webrtc::kVideoRotation_0)
     , _timestampOffset(0)
-    , _nextTimestamp(0)
+
 //    , _source(nullptr)
 {
     // Default supported formats. Use SetSupportedFormats to over write.
-    std::vector<cricket::VideoFormat> formats;
-    formats.push_back(_captureFormat);
+    //std::vector<cricket::VideoFormat> formats;
+   // formats.push_back(_captureFormat);
    // SetSupportedFormats(formats);
     
     SInfo << " VideoPacketSource " << this;
@@ -59,215 +36,548 @@ VideoPacketSource::VideoPacketSource( const char *name,  std::string cam, fmp4::
     #if BYPASSGAME
     StartParser();
     #else
-     StartParser(); 
-     StartLive(); 
+//     StartParser(); 
+//     StartLive(); 
     #endif
+    
  
 }
 
-void VideoPacketSource::StopLive()
-{
-    if(ffparser)
-    {
-        if(ffparser)
-        {
-            
-            SInfo << "Stopping cam "  << ctx->cam; 
-            
-            if( !Settings::setNodeState(ctx->cam , "stopped" ) )
-            {
-                 SError << "Could not find camera at Json Repository "  << ctx->cam; 
-            }
-            
-          //  Settings::configuration.rtsp[ctx->cam]["state"]= "stopped";
-              
-            ffparser->stopStreamCall(*ctx);
-
-            ffparser->deregisterStreamCall(*ctx);
-            ffparser->stop();
-            ffparser->join();
 
 
-            delete ffparser;
-            ffparser =nullptr;
-            
-            if(ctx)
-            delete ctx;
-            ctx = nullptr;
-            
-            if(fragmp4_filter)        
-             delete fragmp4_filter;
-            fragmp4_filter = nullptr;
-            
-            //if(fragmp4_muxer)
-            //delete fragmp4_muxer;
-            //fragmp4_muxer = nullptr;
-            
-            if(info)
-            delete info;
-            info = nullptr;
-            
-            if(txt)
-            delete txt;
-            txt = nullptr;
-        }
-    }
-    
-}
-
-void VideoPacketSource::StartParser()
-{
- 
-     
-             
-    //ffmpeg -decoders
-    
-    /*
-        VFS..D h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
-        V....D libopenh264          OpenH264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
-        V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
-    */            
-     //   codec = avcodec_find_decoder_by_name("h264_cuvid");
-
-       // if(!codec)
-      //     codec = avcodec_find_decoder_by_name("libopenh264");
-
-    if(!codec)
-      codec = avcodec_find_decoder_by_name("h264");
-
-    if(!codec)
-    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-
-    if (codec == NULL)
-    {
-            SError<<  "avcodec_find_decoder failed";
-
-    }
-
-    if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL)
-    {
-            SError<<  "avcodec_alloc_context3 failed";
-
-    }
-
-    if(codec->capabilities & CODEC_CAP_TRUNCATED) {
-        cdc_ctx->flags |= CODEC_FLAG_TRUNCATED;
-    }
-
-    int ret ;
-    if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0)
-    {
-            SError<<  "avcodec_open2 failed";
-
-    }
-
-    if ((avframe = av_frame_alloc()) == NULL)
-    {
-            SError<<  "av_frame_alloc failed";
-    }
-
-
-    if ((parser = av_parser_init(codec->id)) == NULL)
-    {
-
-        SError<<  "av_parser_init failed";
-    }
+void VideoPacketSource::StartParser(AVCodecID codeID) {
 
   
-}
+
+     if (!codec)
+         codec = avcodec_find_decoder(codeID);
+
+     if (codec == NULL) {
+         SError << "avcodec_find_decoder failed";
+
+     }
+
+     if ((cdc_ctx = avcodec_alloc_context3(codec)) == NULL) {
+         SError << "avcodec_alloc_context3 failed";
+
+     }
+
+     if (codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
+         cdc_ctx->flags |= AV_CODEC_CAP_TRUNCATED;
+     }
+
+     int ret;
+     if ((ret = avcodec_open2(cdc_ctx, codec, NULL)) < 0) {
+         SError << "avcodec_open2 failed";
+
+     }
+
+     if ((avframe = av_frame_alloc()) == NULL) {
+         SError << "av_frame_alloc failed";
+     }
 
 
-void VideoPacketSource::StartLive()
-{
-     fragmp4_filter = new fmp4::DummyFrameFilter("fragmp4", cam, nullptr);
-       // fragmp4_muxer = new fmp4::FragMP4MuxFrameFilter("fragmp4muxer", fragmp4_filter);
+     if ((parser = av_parser_init(codec->id)) == NULL) {
 
-    info = new fmp4::InfoFrameFilter("info", nullptr);
-
-    txt = new fmp4::TextFrameFilter("txt", cam, self);
+         SError << "av_parser_init failed";
+     }
 
 
-    ffparser = new fmp4::LiveThread("live");
+ }
 
-    ffparser->start();
-
-   // fmp4::FrameFilter *tmpVc =(fmp4::FrameFilter *) VideoCapturer.get();
-
-   // std::string  cam = peer->getCam();
-
-    std::string add;
+ void VideoPacketSource::StopParser() {
+//     SInfo << "stopParser for cam:"  << camID;
 
 
-    if( Settings::getNodeState(cam, "rtsp" , add ))
-    {
-   // std::string &add =  Settings::configuration.rtsp[cam]["rtsp"].get<std::string>();
+     if (parser) {
+         av_parser_close(parser);
+         parser = NULL;
+     }
 
-        ctx = new fmp4::LiveConnectionContext(fmp4::LiveConnectionType::rtsp, add, slot, cam, tcprequest, this , info, txt); // Request livethread to write into filter info
-        ffparser->registerStreamCall(*ctx);
-        ffparser->playStreamCall(*ctx);
+     if (cdc_ctx) {
+         avcodec_close(cdc_ctx);
+         avcodec_free_context(&cdc_ctx);
+         av_free(cdc_ctx);
+         cdc_ctx = NULL;
+     }
 
-     //   Settings::configuration.rtsp[cam]["state"]="streaming";
-        Settings::setNodeState(cam , "streaming" );
+     if (avframe) {
+         av_frame_free(&avframe);
+         av_free(avframe);
+         avframe = NULL;
+     }
 
-        SInfo  <<   cam  << " " <<    "streaming";
-    }
-    else
-    {
-        SError << "Could not find camera at Json Repository "  << cam; 
-    }   
     
-}
+
+
+#if BYPASSGAME
+     if (fp) {
+         fclose(fp);
+         fp = NULL;
+     }
+#endif
+//            if (!dst_data[0])
+//                av_freep(&dst_data[0]);
+//            sws_freeContext(sws_ctx);
+
+     SInfo << "stoppedParser";
+ }
+        
+
+
+
+
+
 
 
 VideoPacketSource::~VideoPacketSource()
 {
-    SInfo << "~VideoPacketSource " << this;
-    
-
+    SInfo <<  "~VideoPacketSource() "  << trackInfo.getTrackId()  ;
+            
     #if BYPASSGAME
     StopParser();
     #else
-    StopLive();
+//    StopLive();
     StopParser();
     #endif
 
+    
+    if(decoder)
+    {
+        delete decoder;
+        decoder = nullptr;
+    }
+    
+
+    if(nullDecoder)
+    {
+        delete nullDecoder;
+        nullDecoder = nullptr;
+    }
+    
+    
+    
+    #if BYPASSGAME
+    if(fp) {
+    fclose(fp);
+    fp = NULL;
+    }
+    #endif
+    if(!dst_data[0])
+    av_freep(&dst_data[0]);
+    sws_freeContext(sws_ctx);
+
+
 }
 
-void VideoPacketSource::StopParser()
-{
-    SInfo << "stopParser";
  
+
+
+void VideoPacketSource::oncommand( std::string & cmd , int first,  int second)
+{
+    if(cmd == "apply")
+    {
+        reset_sws_cts= true;  // arvind
+///        ffparser->reverse();  
+    }
+    else if( cmd == "mute")
+    {
+       // ffparser->paused(first);  // arvind
+    }
+    
+    if(decoder)
+    decoder->resetTimer();
+    
+    
+    if(nullDecoder)
+    nullDecoder->resetTimer();
+    
+    
+}
+
+void VideoPacketSource::onAnswer()
+{
+  //  this->trackInfo.encType = encType;
+            
+
         
-    if(parser) {
-        av_parser_close(parser);
-        parser = NULL;
-    }
+    //ffparser->registerStream(ctx);  // arvind
+    //ffparser->playStream(ctx);  
+}
 
-    if(cdc_ctx) {
-      avcodec_close(cdc_ctx);
-       avcodec_free_context(&cdc_ctx);
-      av_free(cdc_ctx);
-      cdc_ctx = NULL;
-    }
 
-    if(avframe) {
-      av_frame_free(&avframe);
-      av_free(avframe);
-      avframe = NULL;
-    }
 
-    #if BYPASSGAME
-      if(fp) {
-        fclose(fp);
-        fp = NULL;
-      }
+
+
+void VideoPacketSource::run(web_rtc::Frame *frame)
+{
+//    if(trackInfo.ai &&  frame->type() ==  "txt") // this code is for video analysis
+//    {
+//        web_rtc::TextFrame *txt_frame = static_cast<web_rtc::TextFrame *> (frame);
+//        
+//        mutextxt.lock();
+//        
+//        metaData = txt_frame->txt;
+//                
+//        mutextxt.unlock();
+//        
+//        return;
+//    }
+    
+    #if LOCALTEST
+    if(cam.ai)
+    {
+         mutextxt.lock();
+    //metaData = "<Frame Time='1678121202.56409'><Objects InputStream='2'><Object><BoundingBox X0='0.681' Y0='0.019' X1='1.000' Y1='0.816'/><Classification Label='person' Confidence='0.629999995'/><Attributes><Attribute Name='LowerClothingColor' Value='Black' Confidence='0.340000004'/><Attribute Name='UpperClothingColor' Value='Black' Confidence='0.230000004'/></Attributes><Tracking Id='20'/></Object></Objects></Frame>";
+
+         metaData =  "<Frame Time='1678354650.48074'><Objects InputStream='2'><Object><BoundingBox X0='0.714' Y0='0.085' X1='0.998' Y1='0.960'/><Classification Label='person' Confidence='0.819999993'/><Tracking Id='1539'/></Object><Object><BoundingBox X0='0.411' Y0='0.208' X1='0.729' Y1='0.988'/><Classification Label='person' Confidence='0.74000001'/><Tracking Id='1542'/></Object></Objects></Frame>";
+    //metaData =  "<Frame Time='1678441838.53494'><Alarms><ObjectAlert><Rule Name='AI' Type='Detection'/><BoundingBox X0='0.496' Y0='0.084' X1='0.806' Y1='0.767'/><HitTime Time='1678441838.53223'/></ObjectAlert></Alarms><Objects InputStream='2'><Object><BoundingBox X0='0.496' Y0='0.084' X1='0.806' Y1='0.767'/><Classification Label='person' Confidence='0.400000006'/><Attributes><Attribute Name='LowerClothingColor' Value='Blue' Confidence='0.460000008'/><Attribute Name='UpperClothingColor' Value='Blue' Confidence='0.819999993'/></Attributes><Tracking Id='26'/></Object></Objects></Frame>";
+
+         mutextxt.unlock();
+    }
     #endif
     
+    web_rtc::BasicFrame *basic_frame = static_cast<web_rtc::BasicFrame *> (frame);
     
+    if (!codec) {
+        StartParser(basic_frame->codec_id);
+    }
 
-    SInfo << "stoppedParser";
+    uint8_t* data = NULL;
+    int size = 0;
+
+    std::copy(basic_frame->payload.data(), basic_frame->payload.data() +basic_frame->payload.size(), std::back_inserter(buffer));
+
+
+    while (buffer.size() > 0)
+    {
+        int len = av_parser_parse2(parser, cdc_ctx, &data, &size, &buffer[0], buffer.size(), 0, 0, AV_NOPTS_VALUE);
+
+        if (size == 0 && len >= 0) {
+            return;
+        }
+
+  // Iterate through the map and print the elements
+        if (len )
+        {   
+            if(trackInfo.encType == EN_NATIVE)
+            {
+                ///runNULLEnc(frame);
+
+
+                if(!nullDecoder)
+                {
+                    nullDecoder = new NULLDecoder( trackInfo );
+
+                    nullDecoder->cb_frame = [&](stFrame* frame) {
+
+                     std::string txtCpy;// // this code is for video analysis
+//                    
+//                    mutextxt.lock();
+//        
+//                    txtCpy = metaData;
+//		    metaData.clear();
+//                    mutextxt.unlock();
+//        
+                                
+                    rtc::scoped_refptr<NULLEncBuffer> Buffer = new rtc::RefCountedObject<NULLEncBuffer>( frame ,nullDecoder->width, nullDecoder->height, nullDecoder->fps , txtCpy);
+
+                    int64_t TimestampUs = rtc::TimeMicros();
+                      
+                    webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+                             set_video_frame_buffer(Buffer).
+                             set_rotation(webrtc::kVideoRotation_0).
+                             set_timestamp_us(TimestampUs).
+                             build();
+
+                     // SDebug << "ideoPacketSource::OnFrame";
+
+                     OnFrame(Frame); //arvind
+
+                      // std::this_thread::sleep_for(std::chrono::microseconds(40000));
+
+
+
+                    };
+               }
+
+
+
+
+              // web_rtc::BasicFrame *basic_frame = static_cast<web_rtc::BasicFrame *>(frame);
+
+               nullDecoder->runNULLEnc( (uint8_t*) &buffer[0], size, (AVPictureType)parser->pict_type);
+
+
+               // runNative(frame);
+               // return;
+            }
+
+
+
+
+
+            if(trackInfo.encType >= EN_X264  && trackInfo.encType <= EN_QUICKSYNC  )
+            {
+                if(!decoder)
+                {
+                    if( trackInfo.encType == EN_NVIDIA )
+                      decoder = new NV_Decoder( trackInfo , codec->id );
+                    else
+                      decoder = new H264_Decoder( trackInfo, codec->id);   
+
+                    decoder->cb_frame = [&](AVCodecContext *dec_ctx, AVFrame* frame) {
+
+                    int adapted_width;
+                    int adapted_height;
+                    int crop_width;
+                    int crop_height;
+                    int crop_x;
+                    int crop_y;
+
+                    if( !trackInfo.width )
+                    trackInfo.width =  frame->width;
+
+
+                    if( !trackInfo.height )
+                    trackInfo.height =  frame->height;
+
+                    int64_t TimestampUs = rtc::TimeMicros();
+
+
+                    if ( decoder->decode->NVSurface > 5  || !AdaptFrame(trackInfo.width, trackInfo.height,
+                            TimestampUs, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+                            &adapted_width, &adapted_height,
+                            &crop_width, &crop_height,
+                            &crop_x, &crop_y)) {
+
+                       // SInfo << "~AdaptFrame " << frame->pts;
+
+                       // delayFrame();
+                         av_frame_free(&frame);
+                        return;
+                    }
+
+
+                    std::string txtCpy;
+//                    mutextxt.lock();
+//                    txtCpy = metaData;
+//		    metaData.clear();
+//                    mutextxt.unlock();
+                    
+                    
+                    rtc::scoped_refptr<H264FrameBuffer> Buffer = new rtc::RefCountedObject<H264FrameBuffer>( dec_ctx, frame ,trackInfo.width, trackInfo.height, txtCpy);
+
+
+                     webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+                             set_video_frame_buffer(Buffer).
+                             set_rotation(webrtc::kVideoRotation_0).
+                             set_timestamp_us(TimestampUs).
+                             build();
+
+                     // SDebug << "ideoPacketSource::OnFrame";
+
+                     OnFrame(Frame); //arvind
+
+                      // std::this_thread::sleep_for(std::chrono::microseconds(40000));
+
+
+
+                    };
+               }
+
+
+
+
+           //    web_rtc::BasicFrame *basic_frame = static_cast<web_rtc::BasicFrame *>(frame);
+
+               decoder->update( (uint8_t*) &buffer[0], size, (AVPictureType)parser->pict_type);
+
+
+               // runNative(frame);
+               // return;
+            }
+
+
+
+            if(trackInfo.encType == EN_VP9   )
+            {
+                if(!decoder)
+                {
+                    decoder = new H264_Decoder( trackInfo,codec->id);
+
+                    decoder->cb_frame = [&](AVCodecContext *dec_ctx, AVFrame* frame) {
+
+                    int adapted_width;
+                    int adapted_height;
+                    int crop_width;
+                    int crop_height;
+                    int crop_x;
+                    int crop_y;
+
+                   int64_t TimestampUs = rtc::TimeMicros();
+
+                   if( !trackInfo.width )
+                   trackInfo.width =  frame->width;
+
+
+                   if( !trackInfo.height )
+                   trackInfo.height =  frame->height;
+                   
+                   
+                  // if(ffparser->m_paused) // arvind
+                  //       return;
+
+                    if (!AdaptFrame(trackInfo.width, trackInfo.height,
+                            TimestampUs, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
+                            &adapted_width, &adapted_height,
+                            &crop_width, &crop_height,
+                            &crop_x, &crop_y)) {
+
+                       // delayFrame();
+
+                          return;
+                    }
+
+                   /*
+                     avframe->width, avframe->height,
+                        avframe->data[0], avframe->linesize[0],
+                        avframe->data[1], avframe->linesize[1],
+                        avframe->data[2], avframe->linesize[2]);
+                    */
+
+                   rtc::scoped_refptr<webrtc::I420Buffer> Buffer;
+
+                   if(   trackInfo.width == frame->width && trackInfo.height == frame->height)
+                       Buffer = webrtc::I420Buffer::Copy( frame->width, frame->height,  frame->data[0], frame->linesize[0], frame->data[1], frame->linesize[1], frame->data[2], frame->linesize[2] );
+                   else
+                   {
+
+                       if( reset_sws_cts &&  sws_ctx)
+                       {
+                             av_freep(&dst_data[0]);
+                             sws_freeContext(sws_ctx);
+                             sws_ctx= nullptr;
+                             reset_sws_cts = false;
+                       } 
+
+                       if (!sws_ctx)
+                       {
+
+
+                            sws_ctx = sws_getContext(dec_ctx->width, dec_ctx->height,
+                                    AV_PIX_FMT_YUV420P,
+                                    trackInfo.width, trackInfo.height,
+                                    AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+
+
+                            if (!sws_ctx) {
+                                SError << "Could not initialize the conversion context";
+                                 exit(1);
+                            }
+
+
+
+                            if (av_image_alloc(dst_data, dst_linesize,trackInfo.width, trackInfo.height,  AV_PIX_FMT_YUV420P, 1) < 0) {
+                                 SError << "Could not allocate destination image";
+                                 exit(1);
+                            }
+
+                        }
+
+
+
+
+                        sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, dst_data, dst_linesize);
+                        Buffer = webrtc::I420Buffer::Copy( trackInfo.width, trackInfo.height,   dst_data[0], dst_linesize[0],  dst_data[1], dst_linesize[1], dst_data[2], dst_linesize[2] );
+                   }
+
+
+                    webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+                             set_video_frame_buffer(Buffer).
+                             set_rotation(webrtc::kVideoRotation_0).
+                             set_timestamp_us(TimestampUs).
+                             build();
+
+                     // SDebug << "ideoPacketSource::OnFrame";
+
+                     OnFrame(Frame); //arvind
+
+                      // std::this_thread::sleep_for(std::chrono::microseconds(40000));
+
+                    av_frame_free(&frame);
+
+                    frame = nullptr;       
+
+                    };
+               }
+
+
+
+
+
+               decoder->update(  (uint8_t*) &buffer[0], size, (AVPictureType)parser->pict_type );
+
+
+               // runNative(frame);
+                //return;
+            }
+            
+        
+           
+             
+        } // len
+        if(len)
+        buffer.erase(buffer.begin(), buffer.begin() + len);
+        
+    }// while buffer
+    
+   
+    
+    return ;
 }
 
+
+
+
+
+
+
+
+
+
+
+// void VideoPacketSource::reset(  std::set< st_track> & trackids )  {
+//    
+//    std::set< std::string> tmp;
+//    mtPeerId.lock();
+//   
+//    peeerids =    setPeerId;
+//    
+//    setPeerId.clear();
+//    
+//    mtPeerId.unlock();
+//    
+//} 
+// 
+////////////
+webrtc::MediaSourceInterface::SourceState VideoPacketSource::state() const {
+  return kLive;
+}
+
+bool VideoPacketSource::remote() const {
+  return false;
+}
+
+bool VideoPacketSource::is_screencast() const {
+  return false;
+}
+
+absl::optional<bool> VideoPacketSource::needs_denoising() const {
+  return false;
+}
+
+} } // namespace web_rtc
 
 
 
@@ -422,228 +732,162 @@ bool VideoPacketSource::update(bool& needsMoreBytes) {
 #endif
 
 
-
-
-void VideoPacketSource::decodeFrame(uint8_t* data, int size) {
-
-        int adapted_width;
-        int adapted_height;
-        int crop_width;
-        int crop_height;
-        int crop_x;
-        int crop_y;
-
-
-        AVPacket pkt;
-        int got_picture = 0;
-        int len = 0;
-
-        av_init_packet(&pkt);
-
-        pkt.data = data;
-        pkt.size = size;
-
-        len = avcodec_decode_video2(cdc_ctx, avframe, &got_picture, &pkt);
-        if (len < 0) {
-            SWarn <<" Error while decoding a frame for cam " <<  cam;
-        }
-
-        if (got_picture == 0) {
-            return;
-        }
-        
-        
-         int64_t TimestampUs = rtc::TimeMicros();
-
-
-        if (!AdaptFrame(avframe->width, avframe->height,
-                TimestampUs, //rtc::TimeNanos() / rtc::kNumNanosecsPerMicrosec,
-                &adapted_width, &adapted_height,
-                &crop_width, &crop_height,
-                &crop_x, &crop_y)) {
-            //LWarn("Adapt frame failed", packet.time)
-            return;
-        }
-
-
-
-       
-
-        rtc::scoped_refptr<webrtc::I420Buffer> Buffer = webrtc::I420Buffer::Copy(
-                avframe->width, avframe->height,
-                avframe->data[0], avframe->linesize[0],
-                avframe->data[1], avframe->linesize[1],
-                avframe->data[2], avframe->linesize[2]);
-
-
-        webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
-                set_video_frame_buffer(Buffer).
-                set_rotation(webrtc::kVideoRotation_0).
-                set_timestamp_us(TimestampUs).
-                build();
-
-        // SDebug << "ideoPacketSource::OnFrame";
-
-        OnFrame(Frame); 
-
-
-            //  ++frame;
-
-            //  if(cb_frame) {
-            //    cb_frame(picture, &pkt, cb_user);
-            //  }
-}
-
+/*
+#define h24SoftEnc 1
 void VideoPacketSource::run(fmp4::Frame *frame)
 {
-    
-  
-    static uint frameNo = 0;
-    
-
-       
     fmp4::BasicFrame *basic_frame = static_cast<fmp4::BasicFrame *>(frame);
-     
-   // fragmp4_filter->run(basic_frame);   // arvind create /tmp/test.h264 files 
-   
-
- 
- 
-
-
-	//rtc::scoped_refptr<webrtc::I420Buffer> Buffer =
-	//	webrtc::I420Buffer::Create(720,576);
-        
-
-            // basic_frame->fillAVPacket(videopkt);
-             
-//             if ((ret = av_parser_parse2(parser, cdc_ctx, &videopkt->data, &videopkt->size,
-//                  basic_frame->payload.data(), basic_frame->payload.size(), AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0)) < 0) {
-//                        SError << "av_parser_parse2 failed" ;;
-//                        //goto ret8;
-//               }
-             
-//                printf("[Packet]Size:%6d\t", videopkt->size);
-//                    switch (parser->pict_type) {
-//                        case AV_PICTURE_TYPE_I: printf("Type:I\t");
-//                            break;
-//                        case AV_PICTURE_TYPE_P: printf("Type:P\t");
-//                            break;
-//                        case AV_PICTURE_TYPE_B: printf("Type:B\t");
-//                            break;
-//                        default: printf("Type:Other\t");
-//                            break;
-//                    };
-//                    printf("Number:%4d\n", parser->output_picture_number);
-//                    
-//		
-            // basic_frame->fillAVPacket(videopkt);
-
-        uint8_t* data = NULL;
-        int size = 0;
-            
-        std::copy(basic_frame->payload.data(), basic_frame->payload.data() +  basic_frame->payload.size(), std::back_inserter(buffer));
+  
     
-           // int len = av_parser_parse2(parser, cdc_ctx, &data, &size, 
-            //                           basic_frame->payload.data(),  basic_frame->payload.size(), 0, 0, AV_NOPTS_VALUE);
-            
-        int len = av_parser_parse2(parser, cdc_ctx, &data, &size,  &buffer[0], buffer.size(), 0, 0, AV_NOPTS_VALUE);
+#if h24SoftEnc
+    
+    uint8_t* data = NULL;
+    int size = 0;
 
-        if(size == 0 && len >= 0) {
-          return ;
-        }
+    std::copy(basic_frame->payload.data(), basic_frame->payload.data() +  basic_frame->payload.size(), std::back_inserter(buffer));
+
+       // int len = av_parser_parse2(parser, cdc_ctx, &data, &size, 
+        //                           basic_frame->payload.data(),  basic_frame->payload.size(), 0, 0, AV_NOPTS_VALUE);
+
+    int len = av_parser_parse2(parser, cdc_ctx, &data, &size,  &buffer[0], buffer.size(), 0, 0, AV_NOPTS_VALUE);
+
+    if(size == 0 && len >= 0) {
+      return ;
+    }
+
+    if(len) 
+    {
+        decodeFrame(&buffer[0], size);
+        buffer.erase(buffer.begin(), buffer.begin() + len);
+        return ;
+    }
+#else
+    
+
+            int64_t TimestampUs = rtc::TimeMicros();
+          
+            unsigned char* buffer = basic_frame->payload.data();
+            int frameSize =  basic_frame->payload.size();
+
+             bool idr = false;
+
+             bool slice = false;
+
+             int cfg = 0;
+              std::vector<webrtc::H264::NaluIndex> naluIndexes = webrtc::H264::FindNaluIndices((uint8_t*) buffer, frameSize);
+
+             for (webrtc::H264::NaluIndex index : naluIndexes) {
+                 webrtc::H264::NaluType nalu_type = webrtc::H264::ParseNaluType(buffer[index.payload_start_offset]);
+                // SInfo << __FUNCTION__ << " nalu:" << nalu_type << " payload_start_offset:" << index.payload_start_offset << " start_offset:" << index.start_offset << " size:" << index.payload_size;
+                 if (nalu_type == webrtc::H264::NaluType::kSps) {
+
+                     m_sps.resize(index.payload_size + index.payload_start_offset - index.start_offset);
+
+                     memcpy( &m_sps[0],   &buffer[index.start_offset], index.payload_size + index.payload_start_offset - index.start_offset);
+
+                     unsigned char *tmp = m_sps.data() + 4;
 
 
 
+                     unsigned num_units_in_tick, time_scale;
 
-        if(len) 
-        {
-            decodeFrame(&buffer[0], size);
-            buffer.erase(buffer.begin(), buffer.begin() + len);
-            return ;
-        }
-            
-       
+
+                     H264Framer obj;  
+                     obj.analyze_seq_parameter_set_data(&buffer[index.start_offset + index.payload_start_offset], index.payload_size, num_units_in_tick, time_scale);
+
+
+                     //SInfo <<  " Got SPS fps "  << obj.fps << " width "  << obj.width  <<  " height " << obj.height ;
+
+                     absl::optional<webrtc::SpsParser::SpsState> sps_;
+                     static_cast<bool>(sps_ = webrtc::SpsParser::ParseSps(&buffer[index.start_offset + index.payload_start_offset +  webrtc::H264::kNaluTypeSize], index.payload_size -  webrtc::H264::kNaluTypeSize));
+
+                     width =  sps_->width;
+                     height = sps_->height;
+
+                     width =  obj.width;
+                     height = obj.height;
+
+                     fps = obj.fps;
+
+                     cfg++;
+                 } else if (nalu_type == webrtc::H264::NaluType::kPps) {
+
+                      m_pps.resize(index.payload_size + index.payload_start_offset - index.start_offset);
+                    // m_pps = webrtc::EncodedImageBuffer::Create((uint8_t*) & buffer[index.start_offset], index.payload_size + index.payload_start_offset - index.start_offset);
+                      memcpy( &m_pps[0],   &buffer[index.start_offset], index.payload_size + index.payload_start_offset - index.start_offset);
+                     cfg++;
+                 } else if (nalu_type == webrtc::H264::NaluType::kIdr) {
+                     idr = true;
+                 }
+
+                 else if (nalu_type == webrtc::H264::NaluType::kSlice) {
+                     slice = true;
+                 }
+             }
+            // SInfo << __FUNCTION__ << " idr:" << idr << " cfg:" << cfg << " " << m_sps.size() << " " << m_pps.size() << " " << frameSize;
+
+            //                rtc::scoped_refptr<webrtc::EncodedImageBufferInterface> encodedData = webrtc::EncodedImageBuffer::Create((uint8_t*) buffer, frameSize);
+            //                delete [] buffer;
+             // add last SPS/PPS if not present before an IDR
+             if (idr &&   (m_sps.size() != 0) && (m_pps.size() != 0)) {
+                 //char * newBuffer = new char[frameSize + m_sps.size() + m_pps.size()];
+                // memcpy(newBuffer, &m_sps[0], m_sps.size());
+                // memcpy(newBuffer + m_sps.size(), &m_pps[0], m_pps.size());
+                 //memcpy(newBuffer + m_sps.size() + m_pps.size(), buffer, frameSize);
+                // encodedData = webrtc::EncodedImageBuffer::Create((uint8_t*) newBuffer, encodedData->size() + m_sps->size() + m_pps->size());
+                // delete [] newBuffer;
+                // if(!frameNo)
+                 {
+                     //std::cout << " payload size " <<   basic_frame->payload.size()  << std::endl << std::flush;
+
+                     basic_frame->payload.insert(  basic_frame->payload.begin() , m_pps.begin() , m_pps.end() );
+
+                   //  std::cout << " payload size " <<   basic_frame->payload.size()  << std::endl << std::flush;
+
+                     basic_frame->payload.insert(  basic_frame->payload.begin() , m_sps.begin() , m_sps.end() );
+
+                    frameNo++;
+
+                 }
+
+
+             }
+             else if(slice && frameNo)
+             {
+                 frameNo++;
+             }
+             else
+             {
+                 return ;
+                 int y= 0;
+             }
+
+            //
+
+
+
+        if(!frameNo)
+        return ;         
+
+       // SInfo <<  " VideoPacketSource frame no"  <<   frameNo  <<  " frame size "  << basic_frame->payload.size() << " idr " << idr << " width " << width  << " height " << height ;
+
+        rtc::scoped_refptr<FRawFrameBuffer> Buffer = new rtc::RefCountedObject<FRawFrameBuffer>( basic_frame->payload ,width, height, frameNo, idr, fps);
+                      
+
+
+         webrtc::VideoFrame Frame = webrtc::VideoFrame::Builder().
+                 set_video_frame_buffer(Buffer).
+                 set_rotation(webrtc::kVideoRotation_0).
+                 set_timestamp_us(TimestampUs).
+                 build();
+
+         // SDebug << "ideoPacketSource::OnFrame";
+
+         OnFrame(Frame); //arvind
+
     
     return ;
+    
+    #endif
 }
-
-
-
-void VideoPacketSource::myAddRef(  std::string peerid)  {
-   
-    mutexVideoSoure.lock();
-    
-    setPeerid.insert(peerid);
-    
-    mutexVideoSoure.unlock();
- // const int count =   rtc::AtomicOps::Increment(&ref_count_);  //arvind
- // SInfo << "VideoPacketSource::AddRef()" << count;
-  
-}
-
-rtc::RefCountReleaseStatus VideoPacketSource::myRelease(  std::string peerid )  {
-    
-    std::set< std::string> ::iterator itr;
-    int count =1;
-    
-    mutexVideoSoure.lock();
-    itr = setPeerid.find(peerid);
-    
-    if( itr != setPeerid.end())
-    {
-        setPeerid.erase(itr);
-    }
-    
-    count = setPeerid.size();
-    mutexVideoSoure.unlock();
-    
-    
-  
-  
-    SInfo << "VideoPacketSource::Release()" << count;
-    
-   if (count == 0) {
-     
-     return rtc::RefCountReleaseStatus::kDroppedLastRef;
-   }
-  return rtc::RefCountReleaseStatus::kOtherRefsRemained;
-}
-
-
-
-
- void VideoPacketSource::reset(  std::set< std::string> & peeerids )  {
-    
-    std::set< std::string> tmp;
-    mutexVideoSoure.lock();
-   
-    peeerids =    setPeerid;
-    
-    setPeerid.clear();
-    
-    mutexVideoSoure.unlock();
-    
-}
-
-
-webrtc::MediaSourceInterface::SourceState VideoPacketSource::state() const {
-  return kLive;
-}
-
-bool VideoPacketSource::remote() const {
-  return false;
-}
-
-bool VideoPacketSource::is_screencast() const {
-  return false;
-}
-
-absl::optional<bool> VideoPacketSource::needs_denoising() const {
-  return false;
-}
-
-} } // namespace wrtc
-
-
-#endif // HAVE_FFMPEG
+*/

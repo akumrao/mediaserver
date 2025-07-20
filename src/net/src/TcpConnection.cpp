@@ -61,10 +61,12 @@ namespace base {
             
            
             if (obj)
+            {
                 obj->on_close();
             
-             if(obj->listenerClose)
-             obj->listenerClose->OnTcpConnectionClosed(obj);
+                if(obj->listenerClose)
+                obj->listenerClose->OnTcpConnectionClosed(obj);
+            }
                     
             
 //            delete handle;
@@ -204,10 +206,18 @@ namespace base {
             this->localPort = localPort;
         }
 
-        inline void onconnect(uv_connect_t* req, int /*status*/) {
+        inline void onconnect(uv_connect_t* req, int status) {
             TcpConnectionBase *obj = (TcpConnectionBase *) req->data;
-            obj->Start();
-            obj->on_connect();
+            if(!status)
+            {
+                obj->Start();
+                obj->on_connect();
+                
+            }else
+            {
+                SWarn << "onconnect failed ";
+                obj->Close();
+            }
 
             delete req;
         }

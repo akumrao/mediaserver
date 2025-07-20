@@ -4,8 +4,10 @@
 #include "webrtc/util.h"
 
 
-namespace base {
-namespace wrtc {
+namespace base
+{
+namespace web_rtc
+{
 
 
 std::vector<std::string> getVideoCaptureDevices()
@@ -13,18 +15,15 @@ std::vector<std::string> getVideoCaptureDevices()
     std::vector<std::string> deviceNames;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
-    if (!info) {
-        return deviceNames;
-    }
+    if (!info) { return deviceNames; }
     int numDevicess = info->NumberOfDevices();
     assert(numDevicess > 0);
-    for (int i = 0; i < numDevicess; ++i) {
+    for (int i = 0; i < numDevicess; ++i)
+    {
         const uint32_t kSize = 256;
-        char name[kSize] = { 0 };
-        char id[kSize] = { 0 };
-        if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
-            deviceNames.push_back(name);
-        }
+        char name[kSize] = {0};
+        char id[kSize] = {0};
+        if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) { deviceNames.push_back(name); }
     }
     return deviceNames;
 }
@@ -51,8 +50,8 @@ std::vector<std::string> getVideoCaptureDevices()
 // }
 
 
-
-} } // namespace :wrtc
+}  // namespace web_rtc
+}  // namespace base
 
 
 /// @\}

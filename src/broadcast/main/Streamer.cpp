@@ -16,7 +16,7 @@
 #include "base/idler.h"
 #include "base/logger.h"
 #include "Settings.h"
-#include "fmp4.h"
+#include "restApi.h"
 #include "json/configuration.h"
 #include "rtc_base/ssl_adapter.h"
 #include "webrtc/signaler.h"
@@ -35,9 +35,7 @@ CMemLeakDetect memLeakDetect;
  */
 
 #define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 9093
-#define JOIN_ROOM  "foo"        
-
+#define SERVER_PORT 443
 
 
 //std::string sampleDataDir(const std::string& file) {
@@ -122,7 +120,35 @@ int main(int argc, char** argv) {
        Settings::exit();
         std::_Exit(-1);
     } 
+    
+    
+    base::cnfg::Configuration encconfig;
+    encconfig.load("./webrtcStats.js");
+    Settings::SetEncoderConf(encconfig.root);
 
+
+    if (Settings::configuration.haswell)
+    {
+        if (-1 == putenv((char *) "LIBVA_DRIVER_NAME=i965"))
+        {
+            printf((char *) "putenv LIBVA_DRIVER_NAME failed \n");
+            return EXIT_FAILURE;
+        }
+    }
+    else
+    {
+        if (-1 == putenv((char *) "LIBVA_DRIVER_NAME=iHD"))
+        {
+            printf((char *) "putenv LIBVA_DRIVER_NAME failed \n");
+            return EXIT_FAILURE;
+        }
+
+        if (-1 == putenv((char *) "LIBVA_DRIVERS_PATH=/opt/intel/mediasdk/lib64"))
+        {
+            printf("putenv failed \n");
+            return EXIT_FAILURE;
+        }
+    }
 
     // Setup WebRTC environment
     rtc::LogMessage::LogToDebug(rtc::LS_ERROR); // LS_VERBOSE, LS_INFO, LS_ERROR
@@ -136,22 +162,25 @@ int main(int argc, char** argv) {
 
     //std::string sourceFile(sampleDataDir("test.mp3"));
 
-    base::wrtc::Signaler sig;
+    base::web_rtc::Signaler sig;
 
-   // sig.startStreaming("/var/tmp/songs", "", "mp3",  false);
+//    sig.startStreaming("/var/tmp/songs", "", "ul",  false);
     
     //sig.startStreaming("/var/tmp/videos", "", "mp4",  false);
     
     //sig.startStreaming("", "/var/tmp/test.mp4", "mp4", true); // single file play in loop, this feauture migt be broken.
+     
+     
+
     
 
     sig.connect(SERVER_HOST, SERVER_PORT, JOIN_ROOM);
     
     
     
-    fmp4::ReadMp4 *readmp4 = new  fmp4::ReadMp4("0.0.0.0", 8080, sig,  new fmp4::StreamingResponderFactory1( sig)  );
+    web_rtc::RestApi *restApi = new  web_rtc::RestApi("0.0.0.0", 8080, sig,  new web_rtc::StreamingResponderFactory1( sig)  );
      
-    
+    sig.startStreaming("/var/tmp/", "", "fmp4", true);
 
     // test._capturer.start();
 
@@ -176,9 +205,9 @@ int main(int argc, char** argv) {
     rtc::CleanupSSL();
     Logger::destroy();
     
-    readmp4->stop();
+//    restApi->stop();
         
-    readmp4->shutdown();
+    restApi->shutdown();
     
    });
 

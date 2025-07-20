@@ -1,7 +1,6 @@
 # Realtime communication with WebRTC
 
-This code has the resources you need for the codelab [Realtime communication with WebRTC](https://codelabs.developers.google.com/codelabs/webrtc-web/#0).
-
+[Realtime communication with WebRTC](https://codelabs.developers.google.com/codelabs/webrtc-web/#0).
 
 ## What it uses
 * Get video from your webcam
@@ -9,31 +8,31 @@ This code has the resources you need for the codelab [Realtime communication wit
 * Stream data with RTCDataChannel
 * Set up a signaling service to exchange messages
 * Combine peer connection and signaling
-* Take a photo and share it via a data channel
 
-
-## What it needs need
-* Chrome 47 or above.
+## What it needs
+* Chrome 90 or above. Or Latest Edge browser on Windows
 * Web Server for Chrome, or use your own web server of choice.
 * The sample code.
 * A text editor.
 * Basic knowledge of HTML, CSS and JavaScript, Node.JS.
 
+# Components provided by webrtc (in NVR/3rdParty/rtc/web)
+* adapter-latest.js
+* sdp.js
+* package.json
 
-Right now this code will only work with /src/webrtc/tests/runStreamer
+# Components developed by  (NVR/xStore/rtc/web)
+* index.js (server side code)
+* index.html
+* app.js
+* main.js
+* config.js for ssl certificates
 
+# Step To test
+`cd NVR/xStore/rtc/web`
 
 Run `npm install` before running the code.
 
-To Run 
+To Run: `node index.js`
 
-node index.js
-
-
-
-how to run complete sample
-
-node src/webrtc/signalserver/codelab/index.js
-/src/webrtc/tests/runStreamer
-
-chrome and firefox http://localhost:8080/
+To view with Chrome or Firefox browser, view: https://localhost:9093/

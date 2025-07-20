@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes">
+
+</head>
+
+    <style>
+    body {
+      font: .9rem arial, serif;
+    }
+    table {
+/*      max-width: 1024px;*/
+    }
+    table td {
+  /*    width: 33.33%;*/
+      vertical-align: top;
+    }
+    fieldset {
+  /*    min-height: 100%;*/
+      border: 1px solid silver;
+      padding: 2px;
+    }
+    button {
+      padding: 1px;
+      margin: 1px;
+    }
+    video {
+/*      max-width: 1024px;*/
+      width: 100%;
+    }
+    span {
+      font-family: monospace;
+    }
+
+  
+
+    .row {
+      display: flex;
+      margin-left:-5px;
+      margin-right:-5px;
+    }
+
+    .column {
+      flex: 50%;
+      padding: 5px;
+    }
+
+
+  div.scroll {
+          margin: 4px, 4px;
+          padding: 4px;
+          max-width: 1024px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          white-space: nowrap;
+      }
+
+  hr.new4 {
+    border: 1px solid red;
+    width: 1px;
+  }
+      
+   
+  .centerTable { 
+
+    margin: 0px auto; 
+    border: 0;
+    cellpadding: 0;
+/*    max-width: 1024px;*/
+  }
+
+
+.greyStatus {
+  color: grey;
+}
+
+.limeStatus {
+  color: lime;
+}
+
+.orangeStatus {
+  color: orange;
+}
+
+.redStatus {
+  color: red;
+}
+
+.stats {
+  font-size: 14px;
+/*  font-weight: bold;*/
+  padding: 6px;
+  color: black;
+}
+
+
+
+.container {
+  margin: 0 auto;
+  position: relative;
+}
+
+.video {
+  /*width: 100%;*/
+/*  height: auto; */
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+/*  background-color:rgba(255,0,0,0.5);*/
+}
+
+
+
+</style>
+<body>
+
+
+
+<div class="container">
+<!--   <video class="video" id="remoteVideo" autoPlay playsinline muted onplay="resize_canvas(this)"></video> -->
+  <video id="remoteVideo" autoplay playsinline muted ></video>
+  <canvas class="canvas" id="cv1"></canvas>
+</div>
+
+  <div class="row">Mute: <input type="checkbox" id="checkmute" checked onclick="onMuteClick()"> </div>
+<div class="container">
+  <div id="qualityStatus" class="greyStatus">&#9679</div>
+  <div id="stats" class="stats"></div>
+  <div id="statsEnc" class="statsEnc"></div>
+</div>
+
+
+ 
+<script>
+
+
+
+
+window.addEventListener("resize", resize_win);
+function resize_win()
+{
+
+    var elm =   document.getElementById("remoteVideo");
+
+    resize_canvas(elm);
+}
+
+function resize_canvas(element)
+{
+  var w = element.offsetWidth;
+  var h = element.offsetHeight;
+
+  var cv = document.getElementById("cv1");
+  cv.width = w;
+  cv.height =h;
+  
+
+}
+
+
+  // Intercept Simple log messages
+  log = function () {
+      var args = Array.prototype.slice.call(arguments);
+      //$('#webrtc-logs').append(JSON.stringify(args)).append('\n');
+      console.log.apply(console, arguments);
+       
+
+  }
+
+ 
+</script>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+<script type="text/javascript" src="/js/adapter-latest.js"></script>
+<script src="/js/ai.js"></script>
+
+<script type="text/javascript" src="/js/webRtcPlayer.js"></script>
+<script type="text/javascript" src="/js/app.js"></script>
+<script type="text/javascript" src="/js/sdp.js"></script>
+
+     
+</body>
+</html>

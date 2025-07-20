@@ -21,18 +21,19 @@
 
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
-#include "VideoEncoder.h"
+#include "EncoderFactory.h"
 
-namespace base {
-namespace wrtc {
+
+namespace base
+{
+namespace web_rtc
+{
 
 
 class PeerFactoryContext
 {
 public:
-    PeerFactoryContext(
-        webrtc::AudioDeviceModule* default_adm = nullptr
-     );
+    PeerFactoryContext(webrtc::AudioDeviceModule *default_adm = nullptr);
 
 private:
     void initCustomNetworkManager();
@@ -40,18 +41,18 @@ private:
     std::unique_ptr<rtc::Thread> networkThread;
     std::unique_ptr<rtc::Thread> workerThread;
     std::unique_ptr<rtc::Thread> g_signaling_thread;
-    std::unique_ptr<FVideoEncoderFactory> VideoEncoderFactoryStrong;
-    
- public:
-    //std::unique_ptr<rtc::NetworkManager> networkManager;
-    //std::unique_ptr<rtc::PacketSocketFactory> socketFactory;
+    std::unique_ptr<EncoderFactory> VideoEncoderFactoryStrong;
+
+public:
+    // std::unique_ptr<rtc::NetworkManager> networkManager;
+    // std::unique_ptr<rtc::PacketSocketFactory> socketFactory;
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
     // rtc::scoped_refptr<webrtc::AudioDeviceModule> audioDeviceManager;
 };
 
 
-} } // namespace wrtc
+}  // namespace web_rtc
+}  // namespace base
 
 
 #endif
-

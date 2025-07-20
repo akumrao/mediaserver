@@ -27,22 +27,23 @@
 
 #include <functional>
 
-namespace base {
-    
-using onSendCallback =  std::function<void(bool sent)>;
-    
-namespace net {
+namespace base
+{
 
+using onSendCallback = std::function<void(bool sent)>;
+
+namespace net
+{
 
 
 /// A wrapper for the OpenSSL SSL connection context
 ///
 /// TODO: Decouple from SSLSocket implementation
-class  SslConnection;
-class  SSLAdapter
+class SslConnection;
+class SSLAdapter
 {
 public:
-    SSLAdapter(SslConnection* socket);
+    SSLAdapter(SslConnection *socket);
     ~SSLAdapter();
 
     /// Initializes the SSL context as a client.
@@ -70,11 +71,11 @@ public:
     /// Flushes the SSL read/write buffers.
     void flush();
 
-    void addIncomingData(const char* data, size_t len);
-    void addOutgoingData(const std::string& data);
-    void addOutgoingData(const char* data, size_t len);
-    
-    onSendCallback  cb{nullptr};
+    void addIncomingData(const char *data, size_t len);
+    void addOutgoingData(const std::string &data);
+    void addOutgoingData(const char *data, size_t len);
+
+    onSendCallback cb{nullptr};
 
 protected:
     void handleError(int rc);
@@ -85,17 +86,16 @@ protected:
 protected:
     friend class SslConnection;
 
-    SslConnection* _socket;
-     
-    SSL* _ssl;
-    BIO* _readBIO;  ///< The incoming buffer we write encrypted SSL data into
-    BIO* _writeBIO; ///<  The outgoing buffer we write to the socket
-    std::vector<char> _bufferOut; ///<  The outgoing payload to be encrypted and sent
+    SslConnection *_socket;
+
+    SSL *_ssl;
+    BIO *_readBIO;  ///< The incoming buffer we write encrypted SSL data into
+    BIO *_writeBIO;  ///<  The outgoing buffer we write to the socket
+    std::vector<char> _bufferOut;  ///<  The outgoing payload to be encrypted and sent
 };
 
+}  // namespace net
+}  // namespace base
 
-} // namespace net
-} // namespace base
 
-
-#endif // Net_SSLAdapter_H
+#endif  // Net_SSLAdapter_H

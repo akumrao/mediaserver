@@ -4,8 +4,10 @@
 #define WebRTC_WEBRTC_H
 
 
-namespace base {
-namespace wrtc {
+namespace base
+{
+namespace web_rtc
+{
 // namespace webrtc {
 
 
@@ -27,8 +29,8 @@ const char kStreamLabel[] = "stream_label";
 const char kGoogleStunServerUri[] = "stun:stun.l.google.com:19302";
 
 
-} } // namespace:wrtc
+}  // namespace web_rtc
+}  // namespace base
 
 
-#endif // WebRTC_WEBRTC_H
-
+#endif  // WebRTC_WEBRTC_H

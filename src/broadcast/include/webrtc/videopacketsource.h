@@ -4,9 +4,9 @@
 
 
 #include "base/base.h"
-//#include "base/packetsignal.h"
+#include "NULLDecoder.h"
 
-#ifdef HAVE_FFMPEG
+
 
 #if MP4File
 #include "ff/packet.h"
@@ -17,20 +17,29 @@
 #include "webrtc/peer.h"
 #include "media/base/adapted_video_track_source.h"
 #include "rtc_base/timestamp_aligner.h"
-#include "framefilter.h"
 
-//#define BYPASSGAME 1
+#include "api/video/i420_buffer.h"
+
+#include "framefilter.h"
+#include "NV_Decoder.h"
+#include "livethread.h"
+
+
+extern "C"
+{
+
+  #include <libswscale/swscale.h>
+}
 
 #if BYPASSGAME
 #include "base/thread.h"
 #endif
-#include "livethread.h"
-
-
+//#include "pipelinethread.h"
+#include "webrtc/rawVideoFrame.h"
 
 
 namespace base {
-namespace wrtc {
+namespace web_rtc {
 
 
 /// VideoPacketSource implements a simple `cricket::VideoCapturer` that
@@ -38,7 +47,7 @@ namespace wrtc {
 /// It's used as the remote video source's `VideoCapturer` so that the remote
 /// video can be used as a `cricket::VideoCapturer` and in that way a remote
 /// video stream can implement the `MediaStreamSourceInterface`.
-class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public fmp4::FrameFilter
+class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public web_rtc::FrameFilter
 #if BYPASSGAME
 , public base::Thread
 #endif
@@ -46,39 +55,23 @@ class VideoPacketSource : public rtc::AdaptedVideoTrackSource, public fmp4::Fram
 { 
 
 public:                                                                
-      VideoPacketSource(const char *name,  std::string cam, fmp4::FrameFilter *next = NULL);
+      VideoPacketSource(const char *name, st_track &trackInfo, web_rtc::FrameFilter *next = NULL);
 
 protected:
-    void go(fmp4::Frame *frame)
+    void go(web_rtc::Frame *frame)
     {
         
     }
 
 public:
-#if BYPASSGAME  
+  
+  //  void run();
+    void run(web_rtc::Frame  *frame);
     
-    #define H264_INBUF_SIZE 16384  
-
-    void run();
-    
-    bool load(std::string filepath, float fps);
-    bool readFrame();
-    int readBuffer();
-    bool update(bool& needsMoreBytes);
-    uint8_t inbuf[H264_INBUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE]; 
-    FILE* fp;                                                                              /* file pointer to the file from which we read the h264 data */
-   // int frame;                                                                             /* the number of decoded frames */
-  //  h264_decoder_callback cb_frame;                                                        /* the callback function which will receive the frame/packet data */
-  //  void* cb_user;                                                                         /* the void* with user data that is passed into the set callback */
-    uint64_t frame_timeout;                                                                /* timeout when we need to parse a new frame */
-    uint64_t frame_delay;  
-    
-    
- #endif   
-    void run(fmp4::Frame  *frame);
+    void runNULLEnc(web_rtc::Frame  *frame);
    
 public:
-      std::string  cam;
+    st_track trackInfo;
    
    // VideoPacketSource(const cricket::VideoFormat& captureFormat);
     virtual ~VideoPacketSource();
@@ -88,82 +81,81 @@ public:
     //arvind
 //    void setPacketSource(PacketSignal* source);
 
-    /// Callback that fired when an `av::PlanarVideoPacket`
-    /// is ready for processing.
-    int onVideoCaptured(IPacket& pac);
 
     /// cricket::VideoCapturer implementation.
 
-    void myAddRef(std::string peerid);
-    rtc::RefCountReleaseStatus myRelease( std::string peerid);
+//    void myAddPeerRef(std::string peerid);
+//    rtc::RefCountReleaseStatus myReleasePeer( std::string peerid);
+//    void resetPeer(  std::set< std::string> & peerids ); 
     SourceState state() const override;
     bool remote() const override;
     bool is_screencast() const override;
     absl::optional<bool> needs_denoising() const override;
     
     
-    void reset(  std::set< std::string> & peerids ); 
     
+    
+    void oncommand( std::string & cmd, int arg1,  int arg2);
+    
+    void onAnswer();
+    
+    
+    NULLDecoder *nullDecoder{nullptr};
+
+//    std::set< std::string> setPeerId;
+//    std::mutex mtPeerId;  
 private:
     
-    std::set< std::string> setPeerid;
+   // std::mutex mutextxt;
+  //  std::string metaData;
+      
     
-    std::mutex mutexVideoSoure;
     
-    std::vector<uint8_t> buffer;
+    std::mutex mtTrackId;
     
-    void StartParser();
-    void StopParser();
-    void StartLive();
-    void StopLive();
+    bool reset_sws_cts{false};
+
+
+    //void decodeFrame(uint8_t* data, int size);
     
-    void decodeFrame(uint8_t* data, int size);
+   // std::string res{"HD"};
+    
+    struct SwsContext *sws_ctx{nullptr};
+    
+    uint8_t *dst_data[4];
+    int dst_linesize[4];
     
    // mutable volatile int ref_count_;
    // std::string playerId;
 
 protected:
-    cricket::VideoFormat _captureFormat;
     webrtc::VideoRotation _rotation;
     int64_t _timestampOffset;
-    int64_t _nextTimestamp;
-   // std::function<void(ff::PlanarVideoPacket& packet)>   _source;
+
+    H264_Decoder *decoder{nullptr};
     
+         
+
+private:
     
     AVCodec *codec{nullptr};
-    AVCodecContext *cdc_ctx;
+    AVCodecContext *cdc_ctx{nullptr};
    // AVPacket *videopkt{nullptr};   
-    AVFrame *avframe;
-    AVCodecParserContext *parser;
+    AVFrame *avframe{nullptr};
+    AVCodecParserContext *parser{nullptr};
+    void StartParser(AVCodecID codeID);
+    void StopParser(); 
     
-  
-         
-     fmp4::LiveThread  *ffparser{nullptr};
-    
-     fmp4::DummyFrameFilter *fragmp4_filter{nullptr};
-     fmp4::FrameFilter *fragmp4_muxer{nullptr};;
-     fmp4::FrameFilter *info{nullptr};;
-     fmp4::FrameFilter *txt{nullptr};;
-     fmp4::LiveConnectionContext *ctx{nullptr};;
-     int slot{1};    
+    std::vector<uint8_t> buffer;
+
 };
 
 
-// class VideoPacketSourceFactory : public cricket::VideoDeviceCapturerFactory {
-// public:
-//     VideoPacketSourceFactory() {}
-//     virtual ~VideoPacketSourceFactory() {}
-//
-//     virtual cricket::VideoCapturer* Create(const cricket::Device& device) {
-//         return new VideoPacketSource(device.name);
-//     }
-// };
 
 
-} } // namespace :wrtc
+} } // namespace :web_rtc
 
 
-#endif // HAVE_FFMPEG
 #endif
 
 

@@ -17,28 +17,31 @@
 #include "api/audio_codecs/opus/audio_decoder_opus.h"
 #include "api/audio_codecs/opus/audio_encoder_opus.h"
 
+#include "webrtc/G711.h"
 
 using std::endl;
 
-#define BYPASSGAME 1
-namespace base {
-namespace wrtc {
+//#define BYPASSGAME 1
+namespace base
+{
+namespace web_rtc
+{
 
 
-PeerFactoryContext::PeerFactoryContext(
-    webrtc::AudioDeviceModule* default_adm)
+PeerFactoryContext::PeerFactoryContext(webrtc::AudioDeviceModule *default_adm)
 {
     LInfo("PeerFactoryContext")
-            
-    // Setup threads
-   // networkThread = rtc::Thread::CreateWithSocketServer();
-    //workerThread = rtc::Thread::Create();
-  //  if (!networkThread->Start() || !workerThread->Start())
-  //      throw std::runtime_error("Failed to start WebRTC threads");
+
+        // Setup threads
+        // networkThread = rtc::Thread::CreateWithSocketServer();
+        // workerThread = rtc::Thread::Create();
+        //  if (!networkThread->Start() || !workerThread->Start())
+        //      throw std::runtime_error("Failed to start WebRTC threads");
 
 
-      g_signaling_thread = rtc::Thread::Create();
-      g_signaling_thread->Start();
+        g_signaling_thread
+        = rtc::Thread::Create();
+    g_signaling_thread->Start();
 
 
     // Init required builtin factories if not provided
@@ -47,7 +50,7 @@ PeerFactoryContext::PeerFactoryContext(
     // if (!audio_decoder_factory)
     //     audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
 
-   // Create the factory
+    // Create the factory
     // factory = webrtc::CreatePeerConnectionFactory(
     //     networkThread.get(), workerThread.get(), rtc::Thread::Current(),
     //     default_adm, audio_encoder_factory, audio_decoder_factory,
@@ -65,42 +68,43 @@ PeerFactoryContext::PeerFactoryContext(
     //         default_adm, video_encoder_factory, video_decoder_factory);
     // }
 
-      #if !BYPASSGAME
-      
-     VideoEncoderFactoryStrong = std::make_unique<FVideoEncoderFactory>();
-    #endif  
+#if !BYPASSGAME
+
+    VideoEncoderFactoryStrong = std::make_unique<EncoderFactory>();
+#endif
 
     factory = webrtc::CreatePeerConnectionFactory(
-              nullptr,nullptr, g_signaling_thread.get(),
-              nullptr, 
+        nullptr,
+        nullptr,
+        g_signaling_thread.get(),
+        default_adm,
 
-              webrtc::CreateAudioEncoderFactory<webrtc::AudioEncoderOpus>(),
-              webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
-            
-              #if BYPASSGAME
-              webrtc::CreateBuiltinVideoEncoderFactory(), 
-              #else
-                std::move(VideoEncoderFactoryStrong),
-              #endif 
-          
-              //
+        webrtc::CreateAudioEncoderFactory<AudioEncoderG711_Cam>(),
+        webrtc::CreateAudioDecoderFactory<webrtc::AudioDecoderOpus>(),
 
-              webrtc::CreateBuiltinVideoDecoderFactory(),
+#if BYPASSGAME
+        webrtc::CreateBuiltinVideoEncoderFactory(),
+#else
+        std::move(VideoEncoderFactoryStrong),
+#endif
 
-              nullptr, nullptr);
+        //
 
-    if (!factory)
-        throw std::runtime_error("Failed to create WebRTC factory");
+        webrtc::CreateBuiltinVideoDecoderFactory(),
+
+        nullptr,
+        nullptr);
+
+    if (!factory) throw std::runtime_error("Failed to create WebRTC factory");
 }
 
 
 void PeerFactoryContext::initCustomNetworkManager()
 {
-   // networkManager.reset(new rtc::BasicNetworkManager());
-    //socketFactory.reset(new rtc::BasicPacketSocketFactory(networkThread.get()));
+    // networkManager.reset(new rtc::BasicNetworkManager());
+    // socketFactory.reset(new rtc::BasicPacketSocketFactory(networkThread.get()));
 }
 
 
-} } // namespace wrtc
-
-
+}  // namespace web_rtc
+}  // namespace base

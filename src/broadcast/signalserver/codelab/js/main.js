@@ -1,27 +1,21 @@
+// (c) 2023 Johnson Controls.  All Rights reserved.
+
 'use strict';
 
 var isChannelReady = true;
 var isInitiator = false;
 var isStarted = false;
-//var localStream;
 var pc;
 var remoteStream;
 var turnReady;
 
-var roomId = 'foo'; /*think as a group  peerName@room */
-//var  remotePeerID;
-var  peerID;
-//var  remotePeerName;
-var  peerName;
+var roomId = 'VideoEdgeWebRTC'; /*think as a group  peerName@room */
+var peerID;
+var peerName;
 
-var spinner = new jQuerySpinner({
-  parentId: 'videoLoader'
-});
-// //showLoadSpinner();
-// function showLoadSpinner() {
-  //spinner.show();
-  //spinner.hide();
-//}
+var encType;
+
+let ai = false;
 
 var pcConfig = {
   'iceServers': [{
@@ -29,538 +23,766 @@ var pcConfig = {
   }]
 };
 
-// Set up audio and video regardless of what devices are present.
-/*var sdpConstraints = {
-  offerToReceiveAudio: true,
-  offerToReceiveVideo: true
-};*/
+var browserName = (function(agent) {
+    switch (true) {
+        case agent.indexOf("edge") > -1:
+            return "Edge";
+        case agent.indexOf("edg/") > -1:
+            return "Edge ( chromium based)";
+        case agent.indexOf("opr") > -1 && !!window.opr:
+            return "Opera";
+        case agent.indexOf("chrome") > -1 && !!window.chrome:
+            return "Chrome";
+        case agent.indexOf("trident") > -1:
+            return "MS IE";
+        case agent.indexOf("firefox") > -1:
+            return "Firefox";
+        case agent.indexOf("safari") > -1:
+            return "Safari";
+        default:
+            return "other";
+    }
+})(window.navigator.userAgent.toLowerCase());
 
-/////////////////////////////////////////////
+if (browserName == "Firefox")
+    document.getElementById("encoder").value = "VP9"
 
-
-// Could prompt for room name:
-// room = prompt('Enter room name:');
-
+let trackarr = [];
 var socket = io.connect();
-
-
 socket.on('created', function(room) {
-  console.log('Created room ' + room);
-  isInitiator = true;
+    console.log('Created room ' + room);
+    isInitiator = true;
 });
 
-
-
-socket.on('join', function (room, id, numClients){
-  console.log('New peer joins room ' + room + '!' +" client id " + id);
-  isChannelReady = true;
+socket.on('join', function(room, id, numClients) {
+    console.log('New peer, room: ' + room + ', ' + " client id: " + id);
+    isChannelReady = true;
 });
+
 socket.on('joined', function(room, id, numClients) {
- console.log('joined: ' + room + ' with peerID: ' + id);
-  log('joined: ' + room + ' with peerID: ' + id);
-  isChannelReady = true;
-  peerID = id;
+    console.log('joined: ' + room + ' with peerID: ' + id);
+    log('joined: ' + room + ' with peerID: ' + id);
+    isChannelReady = true;
+    peerID = id;
 
+    let urlVars = getQueryParameters();
 
-  let number = getUrlVars()["cam"];
-   if ( !number ) {
-     number =0;
+    let camid = urlVars["camera"];
+    if (!camid) {
+        return;
     }
 
-  if (isInitiator) {
-
-    // when working with web enable bellow line
-    // doCall();
-    // disable  send message 
-     sendMessage ({
-      room: roomId,
-       cam: number.toString(),
-      type: 'offer',
-      desc:'sessionDescription'
-    });
-
-  }
-
+    let startTime = urlVars["start"] ?? 0;
+    let endTime = urlVars["end"]?? 0;
+    let width = urlVars["width"]?? 0;
+    let height = urlVars["height"]?? 0;
+    let scale = urlVars["scale"]?? 1;
+    let speed = urlVars["speed"]?? 1;
+    let encoder = urlVars["encoder"]?? "NVIDIA";
+    
+    if (isInitiator) {
+        offermsg(camid, startTime, endTime, width, height, speed, scale, encoder, ai);
+    }
 });
 
 socket.on('log', function(array) {
-  console.log.apply(console, array);
+    console.log.apply(console, array);
 });
 
-////////////////////////////////////////////////
-function getUrlVars() {
-    var vars = {};
-    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-        vars[key] = value;
-    });
-    return vars;
+
+function getQueryParameters() {
+    var queryParameters = {};
+
+    function captureQueryParam(match, name, value)
+    {
+        queryParameters[name] = value;
+    }
+
+    window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, captureQueryParam);
+    return queryParameters;
 }
+
 
 function sendMessage(message) {
-  console.log('Client sending message: ', message);
-  log('Client sending message: ', message);
-  //socket.emit('message', message);
-  socket.emit('sfu-message', message);
+    console.log('Client sending message: ', message);
+    log('Client sending message: ', message);
+    socket.emit('messageToWebrtc', message);
 }
 
-// This client receives a message
-socket.on('message', function(message) {
-  console.log('Client received message:', message);
-  log('Client received message:', message);
+var text, parser, xmlDoc;
+parser = new DOMParser();
 
-  if (typeof message.type !== 'undefined' && message.type == 'error') {
-    document.getElementById("hlsStreamSection").innerHTML = '<div class="liveview_col text-center">We are having trouble connecting to this camera. Please try again. If issue persists, please report to <a target="_blank" href="mailto: customer.support@pro-vigil.com">customer.support@pro-vigil.com</a></div>';
-    spinner.hide();
-    var removeControls = document.getElementById("controls");
-    removeControls.remove();
-  }
+function draw(text, cv, ctx) {
+    xmlDoc = parser.parseFromString(text, "text/xml");
 
-  if (message === 'got user media') {
-    maybeStart();
-  } else if (message.type === 'offer') {
-    if (!isInitiator && !isStarted) {
-      maybeStart();
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    let ObjectBox = xmlDoc.getElementsByTagName("Object");
+    if (!ObjectBox) {
+        return;
     }
-   // remotePeerID=message.from;
-   // log('got offfer from remotePeerID: ' + remotePeerID);
 
-    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
-    doAnswer();
-  } else if (message.type === 'answer' && isStarted) {
-    pc.setRemoteDescription(new RTCSessionDescription(message.desc));
-  } else if (message.type === 'candidate' && isStarted) {
-    var candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.candidate.sdpMLineIndex,
-      sdpMid: message.candidate.sdpMid,
-      candidate: message.candidate.candidate
-    });
-    pc.addIceCandidate(candidate);
-  } else if (message.type === 'bye' && isStarted) {
-    handleRemoteHangup();
-  }
-  else if(message.type === 'error') {
-   
-    console.log('Camera state', message.desc);
-    log('Camera state:', message.desc);
-    hangup();
+    for (var ncount = 0; ncount < ObjectBox.length; ++ncount) {
 
-  }
+        let boundingBox = ObjectBox[ncount].getElementsByTagName("BoundingBox")[0];
 
+        if (!boundingBox) {
+            continue;
+        }
+
+        var x0 = parseFloat(boundingBox.attributes["X0"].nodeValue);
+        var y0 = parseFloat(boundingBox.attributes["Y0"].nodeValue);
+        var x1 = parseFloat(boundingBox.attributes["X1"].nodeValue);
+        var y1 = parseFloat(boundingBox.attributes["Y1"].nodeValue);
+
+        let label = ObjectBox[ncount].getElementsByTagName("Classification")[0];
+        if (label) {
+            name = label.attributes["Label"].nodeValue;
+        }
+
+        let attrbute = ObjectBox[ncount].getElementsByTagName("Attribute")[0];
+        if (attrbute) {
+            var colorName = attrbute.attributes["Name"].nodeValue;
+            var colorValue = attrbute.attributes["Value"].nodeValue;
+            name += " " + colorName + " " + colorValue;
+        }
+
+        x0 = x0 * cv.width;
+        y0 = y0 * cv.height;
+
+        x1 = x1 * cv.width;
+        y1 = y1 * cv.height;
+
+        var w = x1 - x0;
+        var h = y1 - y0;
+
+        ctx.beginPath();
+        ctx.rect(x0, y0, w, h);
+
+        if (label) {
+            ctx.fillText(name, x0 + 2, y0 + 10);
+        }
+
+        ctx.stroke();
+    }
+}
+
+let SDPUtils;
+socket.on('message', function(message) {
+    console.log('Client received message:', message);
+    log('Client received message:', message);
+
+    if (message === 'got user media') {
+        maybeStart();
+    } else if (message.type === 'offer') {
+        if (!isInitiator && !isStarted) {
+            maybeStart();
+        }
+
+        var des = new RTCSessionDescription(message.desc);
+        let mediaSections = SDPUtils.getMediaSections(des.sdp);
+        const mediaSection = mediaSections[mediaSections.length - 1];
+        const rtpParameters = SDPUtils.parseRtpParameters(mediaSection);
+
+        let statsText = '';
+        for (var i = 0; i < rtpParameters.codecs.length; i++) {
+            var codecName = rtpParameters.codecs[i].name;
+            var tmpObj = {};
+
+            tmpObj["MaxEnc"] = rtpParameters.codecs[i].parameters["MaxEnc"];
+            if (codecName == "VP9")
+                tmpObj["SwEnc"] = rtpParameters.codecs[i].parameters["PresentEncIns"];
+            else if (codecName == "H264") {
+                encType = rtpParameters.codecs[i].parameters["Enc"];
+                tmpObj[encType] = rtpParameters.codecs[i].parameters["PresentEncIns"];
+            }
+            if (codecName == "VP9" || codecName == "H264") {
+                statsText += `<div>Encoder: ${ JSON.stringify(tmpObj)}</div>`;
+            }
+        }
+
+        let statsDiv = document.getElementById("statsEnc");
+        statsDiv.innerHTML = statsText;
+
+        pc.setRemoteDescription(des);
+        doAnswer();
+    } else if (message.type === 'answer' && isStarted) {
+        pc.setRemoteDescription(new RTCSessionDescription(message.desc));
+    } else if (message.type === 'candidate' && isStarted) {
+        var candidate = new RTCIceCandidate({
+            sdpMLineIndex: message.candidate.sdpMLineIndex,
+            sdpMid: message.candidate.sdpMid,
+            candidate: message.candidate.candidate
+        });
+        pc.addIceCandidate(candidate);
+    } else if (message.type === 'bye' && isStarted) {
+        console.log('Camera state', message.desc);
+        log('Camera state:', message.desc);
+
+        handleRemoteHangup();
+    } else if (message.type === 'error') {
+        console.log('Camera state', message.desc);
+        log('Camera state:', message.desc);
+        hangup();
+    }
 });
 
-////////////////////////////////////////////////////
-
-// var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
-// navigator.mediaDevices.getUserMedia({
-//   audio: true,
-//   video: true
-// })
-// .then(gotStream)
-// .catch(function(e) {
-//   alert('getUserMedia() error: ' + e.name);
-// });
-
-// function gotStream(stream) {
-//   console.log('Adding local stream.');
-//   localStream = stream;
-//   localVideo.srcObject = stream;
-//   sendMessage('got user media');
-//     isInitiator = true;
-//   if (isInitiator) {
-//     maybeStart();
-//   }
-// }
-
-//arvind else  if no gotStream
 isInitiator = true;
-if (isInitiator) {
-     maybeStart();
-   }
-
-// if (location.hostname !== 'localhost') {
-//   requestTurn(
-//     'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
-//   );
-// }
 
 function maybeStart() {
-  spinner.show();
-  console.log('>>>>>>> maybeStart() ', isStarted, isChannelReady);
-  if (!isStarted  && isChannelReady) {
-    console.log('>>>>>> creating peer connection');
-    createPeerConnection();
-   // pc.addStream(localStream);
-    isStarted = true;
-    console.log('isInitiator', isInitiator);
-   // if (isInitiator) {
-     // doCall();
-   // }
-      if (roomId !== '') {
-        socket.emit('create or join', roomId);
-        console.log('Attempted to create or  join room', roomId);
-      }
+    console.log('>>>>>>> maybeStart() ', isStarted, isChannelReady);
+    if (!isStarted && isChannelReady) {
+        console.log('>>>>>> creating peer connection');
+        createPeerConnection();
+        isStarted = true;
+        console.log('isInitiator', isInitiator);
 
-
-  }
+        if (roomId !== '') {
+            socket.emit('create or join', roomId);
+            console.log('Attempted to create or  join room', roomId);
+        }
+    }
 }
 
 window.onbeforeunload = function() {
     sendMessage({
-      room: roomId,
-      //to: remotePeerID,
-      type: 'bye'
+        room: roomId,
+        type: 'bye'
     });
 };
 
-/////////////////////////////////////////////////////////
+var enc = new TextDecoder("utf-8");
+if (!("TextDecoder" in window))
+    alert("Sorry, this browser does not support TextDecoder...");
 
-function createPeerConnection() {
-  try {
-    //pc = new RTCPeerConnection(null);
+function videoAnalyzer(encodedFrame, controller, cv, ctx) {
+    const view = new DataView(encodedFrame.data);
+    const metasize = view.getUint32(encodedFrame.data.byteLength - 4);
+    if (metasize < encodedFrame.data.byteLength && metasize < 2000) {
+        const tag = view.getUint32(encodedFrame.data.byteLength - 8 - metasize);
+        const metaData = encodedFrame.data.slice(encodedFrame.data.byteLength - 4 - metasize, encodedFrame.data.byteLength - 4);
 
-     pc = new RTCPeerConnection(
-        {
-            iceServers         : [{'urls': 'stun:stun.l.google.com:19302'}],
-            iceTransportPolicy : 'all',
-            bundlePolicy       : 'max-bundle',
-            rtcpMuxPolicy      : 'require',
-            sdpSemantics       : 'unified-plan'
-        });
+        if (view.getUint32(0) == 1) { //  h264 start code '0001' 
+            encodedFrame.data = encodedFrame.data.slice(0, encodedFrame.data.byteLength - 8 - metasize);
 
+            var xmlDec = enc.decode(metaData);
 
+            try {
+                var xmlFrame = atob(xmlDec);
+            } catch (err) {
+                console.log("Metadata xml parser fails." + err);
+                return;
+            }
 
-    pc.onicecandidate = handleIceCandidate;
-    // pc.onaddstream = handleRemoteStreamAdded;
-    // pc.onremovestream = handleRemoteStreamRemoved;
-    console.log('Created RTCPeerConnnection');
-  } catch (e) {
-    console.log('Failed to create PeerConnection, exception: ' + e.message);
-    alert('Cannot create RTCPeerConnection object.');
-    return;
-  }
+            draw(xmlFrame, cv, ctx);
+        }
+    }
+
+    controller.enqueue(encodedFrame);
+}
+
+function gotRemoteTrack(receiver, cv) {
+    console.log('pc2 received remote stream');
+
+    var ctx = cv.getContext("2d");
+
+    const frameStreams = receiver.createEncodedStreams();
+    frameStreams.readable.pipeThrough(new TransformStream({
+            transform: async function(encodedFrame, controller) {
+                videoAnalyzer(encodedFrame, controller, cv, ctx);
+            }
+        }))
+        .pipeTo(frameStreams.writable);
+}
+
+async function createPeerConnection() {
+    try {
+        // For debug, you can create a peer connection as follows.
+        // pc = new RTCPeerConnection(null);
+        if (ai)
+            pc = new RTCPeerConnection({
+                encodedInsertableStreams: true,
+                iceServers: [{'urls': 'stun:stun.l.google.com:19302'}],
+                iceTransportPolicy: 'all',
+                bundlePolicy: 'max-bundle',
+                rtcpMuxPolicy: 'require',
+                sdpSemantics: 'unified-plan'
+            });
+        else
+            pc = new RTCPeerConnection({
+                iceServers: [{'urls': 'stun:stun.l.google.com:19302'}],
+                iceTransportPolicy: 'all',
+                bundlePolicy: 'max-bundle',
+                rtcpMuxPolicy: 'require',
+                sdpSemantics: 'unified-plan'
+            });
+
+        pc.onicecandidate = handleIceCandidate;
+        pc.ontrack = ontrack;
+        pc.addEventListener('iceconnectionstatechange', e => onIceStateChange(pc, e));
+        console.log('Created RTCPeerConnnection');
+    } catch (e) {
+        console.log('Failed to create PeerConnection, exception: ' + e.message);
+        alert('Cannot create RTCPeerConnection object.');
+    }
 }
 
 function handleIceCandidate(event) {
-  console.log('icecandidate event: ', event);
-  if (event.candidate) {
-    sendMessage({
-      room: roomId,
-      //to: remotePeerID,
-      type: 'candidate',
-      candidate: event.candidate
-    });
-  } else {
-    console.log('End of candidates.');
-  }
+    console.log('icecandidate event: ', event);
+    if (event.candidate) {
+        sendMessage({
+            room: roomId,
+            type: 'candidate',
+            candidate: event.candidate
+        });
+    } else {
+        console.log('End of candidates.');
+    }
 }
 
 function handleCreateOfferError(event) {
-  console.log('createOffer() error: ', event);
+    console.log('createOffer() error: ', event);
 }
 
 function doCall() {
-  console.log('Sending offer to peer');
-  pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+    console.log('Sending offer to peer');
+    pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
 }
 
 function doAnswer() {
-  console.log('Sending answer to peer.');
-  pc.createAnswer().then(
-    setLocalAndSendMessage,
-    onCreateSessionDescriptionError
-  );
+    console.log('Sending answer to peer.');
+    pc.createAnswer().then(
+        setLocalAndSendMessage,
+        onCreateSessionDescriptionError
+    );
 }
 
 function setLocalAndSendMessage(sessionDescription) {
+    // for changing bandwidth,bitrate and audio stereo/mono
+    // sessionDescription.sdp = sessionDescription.sdp.replace("useinbandfec=1", "useinbandfec=1; minptime=10; cbr=1; stereo=1; sprop-stereo=1; maxaveragebitrate=510000");
+    // sessionDescription.sdp = sessionDescription.sdp.replace("useinbandfec=1", "useinbandfec=1; minptime=10; stereo=1; maxaveragebitrate=510000");
 
- // sessionDescription.sdp = sessionDescription.sdp.replace("useinbandfec=1", "useinbandfec=1; minptime=10; cbr=1; stereo=1; sprop-stereo=1; maxaveragebitrate=510000");
-  sessionDescription.sdp = sessionDescription.sdp.replace("useinbandfec=1", "useinbandfec=1; minptime=10; stereo=1; maxaveragebitrate=510000");
-  pc.setLocalDescription(sessionDescription);
-  console.log('setLocalAndSendMessage sending message', sessionDescription);
+    sessionDescription.sdp = sessionDescription.sdp.replaceAll("level-asymmetry-allowed=1", "level-asymmetry-allowed=1; Enc=" + encType);
+    pc.setLocalDescription(sessionDescription);
+    console.log('setLocalAndSendMessage sending message', sessionDescription);
 
-   sendMessage ({
-      room: roomId,
-      //to: remotePeerID,
-      type: sessionDescription.type,
-      desc:sessionDescription
+    sendMessage({
+        room: roomId,
+        type: sessionDescription.type,
+        desc: sessionDescription
     });
 }
 
 function onCreateSessionDescriptionError(error) {
-  log('Failed to create session description: ' + error.toString());
-  console.log('Failed to create session description: ' + error.toString());
-  
+    log('Failed to create session description: ' + error.toString());
+    console.log('Failed to create session description: ' + error.toString());
 }
 
-// function requestTurn(turnURL) {
-//   var turnExists = false;
-//   for (var i in pcConfig.iceServers) {
-//     if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
-//       turnExists = true;
-//       turnReady = true;
-//       break;
-//     }
-//   }
-//   if (!turnExists) {
-//     console.log('Getting TURN server from ', turnURL);
-//     // No TURN server. Get one from computeengineondemand.appspot.com:
-//     var xhr = new XMLHttpRequest();
-//     xhr.onreadystatechange = function() {
-//       if (xhr.readyState === 4 && xhr.status === 200) {
-//         var turnServer = JSON.parse(xhr.responseText);
-//         console.log('Got TURN server: ', turnServer);
-//         pcConfig.iceServers.push({
-//           'urls': 'turn:' + turnServer.username + '@' + turnServer.turn,
-//           'credential': turnServer.password
-//         });
-//         turnReady = true;
-//       }
-//     };
-//     xhr.open('GET', turnURL, true);
-//     xhr.send();
-//   }
-// }
-
 function handleRemoteStreamAdded(event) {
-  console.log('Remote stream added.');
-  remoteStream = event.stream;
-  remoteVideo.srcObject = remoteStream;
+    console.log('Remote stream added.');
+    remoteStream = event.stream;
+    remoteVideo.srcObject = remoteStream;
 }
 
 function handleRemoteStreamRemoved(event) {
-  console.log('Remote stream removed. Event: ', event);
+    console.log('Remote stream removed. Event: ', event);
 }
 
 function hangup() {
-  console.log('Hanging up.');
-  stop();
-  sendMessage({
-      room: roomId,
-      //to: remotePeerID,
-      type: 'bye'
+    console.log('Hanging up.');
+    stop();
+    sendMessage({
+        room: roomId,
+        type: 'bye'
     });
 }
 
 function handleRemoteHangup() {
-  console.log('Session terminated.');
-  stop();
-  //isInitiator = false;
+    console.log('Session terminated.');
+    stop();
 }
 
 function stop() {
-  isStarted = false;
-  pc.close();
-  pc = null;
-  //localStream=null;
+    isStarted = false;
+    pc.close();
+    pc = null;
 }
 
+let streamV = new Map();
 
-
-   
-
-
-pc.ontrack = ({transceiver, streams: [stream]}) => {
-  //log("pc.ontrack with transceiver and streams");
-
-  if(transceiver.direction != 'inactive' && transceiver.currentDirection != 'inactive')
-  {   
+function ontrack({
+    transceiver,
+    receiver,
+    streams: [stream]
+}) {
     var track = transceiver.receiver.track;
-    console.log("pc.ontrack with transceiver and streams " + track.kind);
-  }
+    var trackid = stream.id;
+    var tns =  transceiver;
 
-  stream.onaddtrack = () => console.log("stream.onaddtrack");
-  stream.onremovetrack = () => console.log("stream.onremovetrack");
-  transceiver.receiver.track.onmute = () => console.log("transceiver.receiver.track.onmute " + track.id);
-  transceiver.receiver.track.onended = () => console.log("transceiver.receiver.track.onended " + track.id);
-  transceiver.receiver.track.onunmute = () => {
-  console.log("transceiver.receiver.track.onunmute " + track.id);
-  remoteVideo.srcObject = stream;
+    if (transceiver.direction != 'inactive' && transceiver.currentDirection != 'inactive' && track.kind == "video") {
+        console.log("transceiver.receiver.track.onunmute " + trackid);
+        var divtd = document.createElement('div');
+        divtd.className = "box";
 
-     // var atracks =  streams.getAudioTracks();
+        var divStore = document.createElement('div');
+        divStore.className = "divTableRow";
 
-     //  for (var tsn in atracks) 
-     //  {
-     //         var trc = atracks[tsn];
-     //          trc.enable = false;
+        let el = document.createElement("video");
 
-     //         var x = 1;
-     //  }
-            
+        el.setAttribute('playsinline', true);
+        el.setAttribute('autoplay', true);
+        el.muted = true;
+        el.id = `vd-${trackid}`;
+
+        var width = document.getElementById("widthVideo").value;
+
+        el.style.maxWidth = width + 'px';
+        el.width = width + 'px';
+        el.controls = false;
+
+        var div = document.createElement('div');
+        var name = document.createElement("label");
+
+        name.innerHTML = "<span> <small> videotrackid:" + trackid + "<br>" + "peerID:" + peerID + "<br>" + "</small> </span>";
+
+        var camid = document.getElementById("camId").value;
+
+        let cv;
+        if (ai) {
+            cv = document.createElement("canvas");
+            cv.id = "cv1";
+            gotRemoteTrack(receiver, cv);
+            cv.className = "canvas";
+            div.appendChild(cv);
+        }
+
+        div.appendChild(el);
+
+        divtd.onclick = async function() {
+            if (divtd.style.backgroundColor == "red") {
+                divtd.style.backgroundColor = "";
+
+                const index = trackarr.indexOf(trackid);
+                if (index > -1) { 
+                    trackarr.splice(index, 1); 
+                }
+            } else {
+                divtd.style.backgroundColor = "red";
+                trackarr.push(trackid);
+            }
+        };
+
+        divStore.appendChild(div);
+
+        var closeButton = document.createElement('button');
+        closeButton.innerHTML += 'close';
+        closeButton.id = trackid;
+        closeButton.onclick = async function() {
+
+            streamV.delete(trackid);
+
+            sendMessage({
+                room: roomId,
+                type: 'command',
+                desc: 'close',
+                trackids: [trackid],
+                act: true
+            });
+
+            document.getElementById("traddCtrl1").removeChild(divtd);
+            return false;
+        };
+
+        divStore.appendChild(name);
+
+        let pause = document.createElement('span'),
+            checkbox = document.createElement('input'),
+            label = document.createElement('label');
+        pause.classList = 'nowrap';
+        checkbox.type = 'checkbox';
+        checkbox.id = trackid;
+        checkbox.checked = false;
+        checkbox.onchange = async () => {
+            sendMessage({
+                room: roomId,
+                type: 'command',
+                desc: 'mute',
+                trackids: [trackid],
+                act: checkbox.checked
+            });
+        }
+        label.id = `video-check-${trackid}`;
+        label.innerHTML = "Pause " + track.kind;
+
+        divtd.appendChild(divStore);
+        divtd.appendChild(closeButton);
+        divtd.appendChild(checkbox);
+        divtd.appendChild(label);
+        divtd.appendChild(pause);
+
+        var trackk = streamV.get(trackid);
+        // var audt = trackk.getAudioTracks();  // enable when both audio and vidoeo present
+
+        // if (audt.length) {
+        //     let pause1 = document.createElement('span'),
+        //         checkbox1 = document.createElement('input'),
+        //         label1 = document.createElement('label');
+        //     pause1.classList = 'nowrap';
+        //     checkbox1.type = 'checkbox';
+        //     checkbox1.id = trackid + "_aud";
+        //     checkbox1.checked = true;
+        //     checkbox1.onchange = async () => {
+
+        //         el.muted = (checkbox1.checked == true);
+
+        //         sendMessage({
+        //             room: roomId,
+        //             type: 'command',
+        //             desc: 'muteaudio',
+        //             trackids: [trackid + "_aud"],
+        //             act: checkbox1.checked
+        //         });
+        //     }
+        //     label1.id = `audio-check-${trackid}`;
+        //     label1.innerHTML = "Pause " + "audio";
+
+        //     divtd.appendChild(checkbox1);
+        //     divtd.appendChild(label1);
+        //     divtd.appendChild(pause1);
+        // }
+
+        if (!streamV.has(trackid)) {
+            streamV.set(trackid, new MediaStream());
+        }
+
+        streamV.get(trackid).addTrack(track);
+        el.srcObject = streamV.get(trackid);
+
+        el.play()
+            .then(() => {
+                if (cv) {
+                    cv.width = el.offsetWidth;;
+                    cv.height = el.offsetHeight
+                }
+            })
+            .catch((e) => {
+                console.log("play eror %o ", e);
+            });
+
+        divtd.id = 'td' + trackid;
+
+        document.getElementById("traddCtrl1").append(divtd);
+
+    } else if (transceiver.direction != 'inactive' && transceiver.currentDirection != 'inactive' && track.kind == "audio") {
+        if (!streamV.has(trackid)) {
+            streamV.set(trackid, new MediaStream());
+        }
+        streamV.get(trackid).addTrack(track);
+    }
+
+    stream.onaddtrack = () => console.log("stream.onaddtrack");
+    stream.onremovetrack = () => console.log("stream.onremovetrack");
+    transceiver.receiver.track.onmute = () => {
+
+        console.log("transceiver.receiver.track.onmute " + trackid);
+
+    }
+    transceiver.receiver.track.onended = () => console.log("transceiver.receiver.track.onended " + trackid);
+    transceiver.receiver.track.onunmute = () => {
 
 
-  };
-};
+        console.log("transceiver.receiver.track.onunmute " + trackid)
 
 
- pc.addEventListener('iceconnectionstatechange', () =>
-  {
-    
-      switch (pc.iceConnectionState)
-      {
-          case 'checking':
-              console.log( 'subscribing...');
-              break;
-          case 'connected':
-          case 'completed':
+    };
+}
 
+function onIceStateChange(pc, event) {
+    switch (pc.iceConnectionState) {
+        case 'checking': {
+            start();
+            setupWebRtcPlayer(pc);
+            onWebRtcAnswer();
 
-              console.log( 'subscribed...');
-              spinner.hide();
-              break;
-          case 'failed':
-             // pc2.close();
-
-              console.log( 'failed...');
-              break;
-          case 'disconnected':
-             // pc2.close();
-              console.log( 'Peerconnection disconnected...');
-              break;
-          case 'closed':
-              //pc2.close();
-              console.log( 'failed...');
-              break;
-      }
-  });
-
-
+            console.log('checking...');
+        }
+        break;
+        case 'connected':
+            console.log('connected...');
+            break;
+        case 'completed':
+            console.log('completed...');
+            break;
+        case 'failed':
+            console.log('failed...');
+            break;
+        case 'disconnected':
+            console.log('Peerconnection disconnected...');
+            break;
+        case 'closed':
+            console.log('failed...');
+            break;
+    }
+}
 
 function onMuteClick() {
-  // Get the checkbox
-  var checkBox = document.getElementById("checkmute");
-  // Get the output text
-  // If the checkbox is checked, display the output text
-  if (checkBox.checked == true){
-    //text.style.display = "block";
-  } else {
-    //text.style.display = "none";
-  }
+    // we  might enable this code in future
+    // var checkBox = document.getElementById("checkmute");
+    // if (checkBox.checked == true) {
+    //     text.style.display = "block";
+    // } else {
+    //     text.style.display = "none";
+    // }
 
+    var camids = document.getElementById("camId").value;
 
-  sendMessage ({
-      room: roomId,
-      //to: remotePeerID,
-      type: 'mute',
-      desc: checkBox.checked
+    if (!trackarr.length) {
+        checkBox.checked = false;
+        alert("Please click and select elements to pause");
+        return;
+    }
+
+    sendMessage({
+        room: roomId,
+        type: 'command',
+        desc: 'mute',
+        trackids: trackarr,
+        act: checkBox.checked
     });
-
 }
 
+function addAICamera() {
+    let aiTmp = getQueryParameters()["ai"];
+    if (aiTmp) {
+        ai = true;
+    }
 
-actionButtons();
-function actionButtons() {
-	/* predefine zoom and rotate */
-	var zoom = 1,
-		rotate = 0;
-	/* Grab the necessary DOM elements */
-	var hlsStreamSection = document.getElementById('hlsStreamSection'),
-		v = document.getElementsByTagName('video')[0],
-		controls = document.getElementById('controls');
-	/* Array of possible browser specific settings for transformation */
-	var properties = ['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform'],
-		prop = properties[0];
-	/* Iterators and stuff */
-	var i, j, t;
-	/* Find out which CSS transform the browser supports */
-	/*   for(i=0,j=properties.length;i<j;i++){
-	    if (properties[i] in v.style) {
-	      prop = properties[i];
-	      break;
-	    }
-	  } */
-	/* Position video */
-	v.style.left = 0;
-	v.style.top = 0;
-	/* If there is a controls element, add the player buttons */
-	if(controls) {
-		controls.innerHTML = '<div id="change">' + '<button title="Reset" class="reset"><svg class="reset" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  width="45" height="45" viewBox="0 0 512 512" xml:space="preserve"><g class="reset" transform="matrix(1.48 0 0 1.48 256 256)"><path class="reset" style="stroke: rgb(0,0,0); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(77,77,79); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-256, -244.27)" d="M 256 121.07 L 122.88 234.35 L 170.70999999999998 234.35 L 170.70999999999998 347.81 C 170.7980015432894 358.71166102152233 179.6780348828916 367.4933749180086 190.57999999999998 367.46 L 230.27999999999997 367.46 L 230.27999999999997 298.08 L 283.18999999999994 298.08 L 283.18999999999994 367.46 L 321.42999999999995 367.46 C 332.3297231322432 367.4878975083077 341.2065463470775 358.7093581941913 341.29999999999995 347.81 L 341.29999999999995 234.35 L 389.12999999999994 234.35 Z" stroke-linecap="round" /></g></svg></button>'+'<button title="Zoom In" class="zoomin"><svg class="zoomin" viewBox="0 0 512 512"><path class="zoomin" d="M505.75,475.58,378.42,348.25a212.3,212.3,0,0,0,48.25-134.92C426.67,95.7,331,0,213.33,0S0,95.7,0,213.33,95.7,426.67,213.33,426.67a212.3,212.3,0,0,0,134.92-48.25L475.58,505.75a21.33,21.33,0,1,0,30.17-30.17ZM277.33,234.67H234.67v42.67a21.33,21.33,0,1,1-42.67,0V234.67H149.33a21.33,21.33,0,0,1,0-42.67H192V149.33a21.33,21.33,0,0,1,42.67,0V192h42.67a21.33,21.33,0,1,1,0,42.67Z" fill="#5b5b5f"/></svg></button>' + '<button title="Zoom Out" class="zoomout"><svg class="zoomout" viewBox="0 0 512 512"><path class="zoomout" d="M505.75,475.58,378.42,348.25a212.3,212.3,0,0,0,48.25-134.92C426.67,95.7,331,0,213.33,0S0,95.7,0,213.33,95.7,426.67,213.33,426.67a212.3,212.3,0,0,0,134.92-48.25L475.58,505.75a21.33,21.33,0,1,0,30.17-30.17ZM277.33,234.67h-128a21.33,21.33,0,0,1,0-42.67h128a21.33,21.33,0,1,1,0,42.67Z" fill="#5b5b5f"/></svg></button>' + '<button title="Move Left" class="right"><svg class="right" viewBox="0 0 512 512"><polygon class="right" points="91.13 256 255.42 382.35 255.42 302.45 405.63 302.45 405.63 209.56 255.44 209.56 255.44 129.65 91.13 256" fill="#5b5b5f"/></svg></button>' + '<button title="Move Right" class="left"><svg class="left" viewBox="0 0 512 512"><polygon class="left" points="420.88 256 256.57 129.66 256.57 209.57 106.37 209.57 106.37 302.45 256.57 302.45 256.57 382.35 420.88 256" fill="#5b5b5f"/></svg></button>' + '<button title="Move Down" class="up"><svg class="up" viewBox="0 0 512 512"><polygon class="up" points="256 420.89 382.35 256.58 302.44 256.58 302.44 106.38 209.55 106.38 209.55 256.57 129.65 256.57 256 420.89" fill="#5b5b5f"/></svg></button>' + '<button title="Move Up" class="down"><svg class="down" viewBox="0 0 512 512"><polygon class="down" points="256.02 91.13 129.66 255.43 209.57 255.43 209.57 405.62 302.45 405.62 302.45 255.43 382.36 255.43 256.02 91.13" fill="#5b5b5f"/></svg></button>' + '</div>';
-	}
-	/* If a button was clicked (uses event delegation)...*/
-	controls.addEventListener('click', function(e) {
-		t = e.target;
-		if(t.nodeName.toLowerCase() === 'button' || t.nodeName.toLowerCase() == 'svg' || t.nodeName.toLowerCase() == 'polygon' || t.nodeName.toLowerCase() == 'path') {
-			
-			var classValue = typeof t.className.baseVal === "undefined" ? t.className : t.className.baseVal;
-			/* Check the class name of the button and act accordingly */
-			switch (classValue) {
-				/* Increase zoom and set the transformation */
-				case 'zoomin':
-					if(zoom < 6) {
-						zoom = zoom + 0.5;
-						v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-					}
-					break;
-					/* Decrease zoom and set the transformation */
-				case 'zoomout':
-					if(zoom > 1) {
-						zoom = zoom - 0.5;
-						v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-					}
-					break;
-				case 'left':
-					if(zoom > 1) {
-						v.style.left = (parseInt(v.style.left, 10) - 25) + 'px';
-					}
-					break;
-				case 'right':
-					if(zoom > 1) {
-						v.style.left = (parseInt(v.style.left, 10) + 25) + 'px';
-					}
-					break;
-				case 'up':
-					if(zoom > 1) {
-						v.style.top = (parseInt(v.style.top, 10) - 25) + 'px';
-					}
-					break;
-				case 'down':
-					if(zoom > 1) {
-						v.style.top = (parseInt(v.style.top, 10) + 25) + 'px';
-					}
-					break;
-					/* Reset all to default */
-				case 'reset':
-					zoom = 1;
-					rotate = 0;
-					v.style.top = 0 + 'px';
-					v.style.left = 0 + 'px';
-					v.style.transform = 'rotate(' + rotate + 'deg) scale(' + zoom + ')';
-					break;
-			}
-			e.preventDefault();
-		}
-	}, false);
-	document.addEventListener("keydown", function(event) {
-		if ((event.keyCode == 187 || event.keyCode == 61) && zoom < 6) {
-			zoom = zoom + 0.5;
-			v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-		}
-		if ((event.keyCode == 189 || event.keyCode == 173) && zoom > 1) {
-			zoom = zoom - 0.5;
-			v.style.transform = 'scale(' + zoom + ') rotate(' + rotate + 'deg)';
-		}
-		if (event.keyCode == 39 && zoom > 1) {
-			v.style.left = (parseInt(v.style.left, 10) - 25) + 'px';
-		}
-		if (event.keyCode == 37 && zoom > 1) {
-			v.style.left = (parseInt(v.style.left, 10) + 25) + 'px';
-		}
-		if (event.keyCode == 40 && zoom > 1) {
-			v.style.top = (parseInt(v.style.top, 10) - 25) + 'px';
-		}
-		if (event.keyCode == 38 && zoom > 1) {
-			v.style.top = (parseInt(v.style.top, 10) + 25) + 'px';
-		}
-		if (event.keyCode == 27) {
-			zoom = 1;
-			rotate = 0;
-			v.style.top = 0 + 'px';
-			v.style.left = 0 + 'px';
-			v.style.transform = 'rotate(' + rotate + 'deg) scale(' + zoom + ')';
-		}
-	});
-};
+    if (!ai) {
+        alert("please add ?ai=true \n https://localhost:9093/?ai=true ");
+        return;
+    }
 
+    if (isInitiator) {
+        maybeStart();
+    }
 
- 
+    var camid = document.getElementById("camId").value;
+    var startTime = document.getElementById("startTime").value;
+
+    var endTime = 0;
+
+    var width = document.getElementById("widthVideo").value;
+    var height = document.getElementById("heightVideo").value;
+    var speed = document.getElementById("speed").value;
+
+    if (startTime == "0" && speed != "1") {
+        alert("Please enter start time for Speed > 1")
+        document.getElementById("speed").value = 1;
+        return;
+    }
+
+    var scale = document.getElementById("scale").value;
+    var encoder = document.getElementById("encoder").value;
+
+    offermsg(camid, startTime, endTime, width, height, speed, scale, encoder, ai);
+}
+
+function addCamera() {
+    if (isInitiator) {
+        maybeStart();
+    }
+
+    var camid = document.getElementById("camId").value;
+    var startTime = document.getElementById("startTime").value;
+
+    var endTime = 0;
+
+    var width = document.getElementById("widthVideo").value;
+    var height = document.getElementById("heightVideo").value;
+    var speed = document.getElementById("speed").value;
+
+    if (startTime == "0" && speed != "1") {
+        alert("Please enter start time for Speed > 1")
+        document.getElementById("speed").value = 1;
+        return;
+    }
+
+    var scale = document.getElementById("scale").value;
+    var encoder = document.getElementById("encoder").value;
+
+    offermsg(camid, startTime, endTime, width, height, speed, scale, encoder, ai);
+}
+
+function applyCamera() {
+    var camids = document.getElementById("camId").value;
+
+    var endTime = 0;
+
+    var width = document.getElementById("widthVideo").value;
+    var height = document.getElementById("heightVideo").value;
+
+    var speed = document.getElementById("speed").value;
+    var scale = document.getElementById("scale").value;
+
+    var startTime = document.getElementById("startTime").value;
+
+    if (!trackarr.length) {
+        alert("Please click and select elements to reverseplay or change resolution");
+        return;
+    }
+
+    for (var x = 0; x < trackarr.length; ++x) {
+        let el = document.getElementById(`vd-${trackarr[x]}`);
+
+        el.style.maxWidth = width + 'px';
+        el.width = width + 'px';
+    }
+
+    if (startTime == "0" && speed != "1") {
+        alert("Please enter starttime for Speed > 1")
+        document.getElementById("speed").value = 1;
+        return;
+    }
+
+    sendMessage({
+        room: roomId,
+        start: startTime.toString(),
+        end: endTime.toString(),
+        width: width.toString(),
+        height: height.toString(),
+        speed: speed.toString(),
+        scale: scale.toString(),
+        type: 'command',
+        trackids: trackarr,
+        desc: 'apply',
+        act: true
+    });
+}
+
+function forward() {
+    document.getElementById("scale").value = 1;
+    applyCamera();
+}
+
+function backward() {
+    document.getElementById("scale").value = -1;
+    applyCamera();
+}
+
+function offermsg(camid, startTime, endTime, width, height, speed, scale, encoder, ai) {
+    sendMessage({
+        room: roomId,
+        cam: camid.toString(),
+        start: startTime.toString(),
+        end: endTime.toString(),
+        width: width.toString(),
+        height: height.toString(),
+        speed: speed.toString(),
+        scale: scale.toString(),
+        encoder: encoder.toString(),
+        ai: ai,
+        type: 'offer',
+    });
+}

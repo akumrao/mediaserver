@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <title>Camera video feed for webrtcstreamer</title>
+</head>
+
+<body>
+
+  <div class="row">
+    <table class="centerTable">
+      <tbody>
+        <tr style="background-color: #ffff01;">
+          <th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;Add Camera</th>
+        </tr>
+        <tr style="background-color: #ffff01;">
+         <td style="background-color: #b3d1ff;" colspan="3">
+           <div>
+             <label for="camId">camId:</label>
+             <input id="camId" name="camId" type="text" value=2 />
+             <label for="startTime">startTime:</label>
+             <input id="startTime" name="startTime" type="text" value=0 />
+             <label for="widthVideo">width:</label>
+             <input id="widthVideo" name="widthVideo" type="text" value=720 />
+             <label for="heightVideo">height:</label>
+             <input id="heightVideo" name="heightVideo" type="text" value=576 />
+           </div>
+         </td>
+        </tr>
+        <tr style="background-color: #ffff01;">
+          <td style="background-color: #b3d1ff;" colspan="3">
+            <div>
+              <label for="scale">scale:</label>
+              <input id="scale" name="scale" type="text" value=1 />
+              <label for="speed">speed:</label>
+              <input id="speed" name="speed" type="text" value=1 />
+              <label for="encoder">RES:</label>
+              <select name="encoder" id="encoder" >
+                <option value="QUICKSYNC" >QUICKSYNC</option>
+                <option value="NVIDIA" >NVIDIA</option>
+                <option value="X264">X264</option>
+                <option value="VP9"  selected >VP9</option>
+                <option value="NATIVE" >NATIVE</option>
+              </select>
+              <button onclick="addCamera()">Add Camera</button>
+              <button onclick="addAICamera()">Add Analytic</button>
+              <button onclick="forward()"> >> </button>
+              <button onclick="backward()"> << </button>
+              <input type="checkbox" id="checkmute" onclick="onMuteClick()"> Pause</input>
+              <button onclick="applyCamera()"> Apply </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row">
+    <table class="centerTable">
+      <tbody>
+        <tr style="background-color: #1ffff0;">
+          <th style="text-align: center; vertical-align: middle;" colspan="3">&nbsp; &nbsp;Camera video feed for webrtcstreamer</th>
+        </tr>
+
+        <tr style="background-color: #00ff00;">
+        </tr>
+
+        <tr style="background-color: #f9ecf2;">
+          <td colspan="3">
+
+            <div class="container" id="traddCtrl1">
+             <!--   <video id="remoteVideo" autoplay playsinline muted></video> -->
+           </div>
+          </td>
+        </tr>
+
+        <tr style="background-color: #ffff00;">
+          <td>
+            <div id="qualityStatus" class="greyStatus">&#9679</div>
+            <div id="stats" class="stats"></div>
+          </td >
+          <td colspan="2">
+            <div id="statsEnc" class="statsEnc"></div>
+          </td >
+        </tr>
+
+        <tr style="background-color: #00ff00;">
+          <td>
+           <span onClick="show()">Show Log</span>
+          </td>
+          <td colspan="2">
+          <span onClick="hide()">Hide Log</span>
+          </td>
+        </tr>
+        <tr id="used">
+          <td style="background-color: #b3d1ff;" colspan="3">
+            <div  class="scroll">
+              <label>log</label>
+              <pre id="webrtc-logs"></pre>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  function show() { 
+    document.getElementById("used").style.display = '';
+  }
+
+  function hide() { 
+    document.getElementById("used").style.display = 'none';
+  }
+
+  // Intercept Simple log messages
+  log = function () {
+    var args = Array.prototype.slice.call(arguments);
+      //$('#webrtc-logs').append(JSON.stringify(args)).append('\n');
+      console.log.apply(console, arguments);
+      var logger = document.getElementById('webrtc-logs');
+      logger.innerHTML += JSON.stringify(args) + '<br />';
+    }
+
+    hide();
+  </script>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="/js/adapter-latest.js"></script>
+  <script src="/js/main.js"></script>
+  <link href="/css/main.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="/js/webRtcPlayer.js"></script>
+  <script type="text/javascript" src="/js/app.js"></script>
+
+</body>
+</html>

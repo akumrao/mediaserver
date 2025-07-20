@@ -1,0 +1,36 @@
+<h1>
+    Web Socket Example
+</h1>
+<p>
+    open console to see connection.
+</p>
+<script>
+    
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+    if (!window.WebSocket) {
+        alert('Your browser doesn\'t support WebSocket');
+    }
+
+    ws = new WebSocket(window.location.href.replace('http://', 'ws://').replace('https://', 'wss://'));
+
+    ws.onopen = function () {
+        console.log('websocket is connected ...')
+        ws.send('connected')
+    }
+
+    ws.onmessage = function (ev) {
+        console.log(ev.data);
+
+        document.open();
+        document.write(ev.data);
+        document.close();
+    }
+
+
+    ws.onerror = function (event) {
+        console.log(`WS error: event}`);
+    };
+
+
+</script>

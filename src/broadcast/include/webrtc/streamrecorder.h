@@ -14,7 +14,7 @@
 
 
 namespace base {
-namespace wrtc {
+namespace web_rtc {
 
 
 class StreamRecorder : public rtc::VideoSinkInterface<webrtc::VideoFrame>,
@@ -44,7 +44,7 @@ protected:
 };
 
 
-} } // namespace wrtc
+} } // namespace web_rtc
 
 
 #endif // HAVE_FFMPEG

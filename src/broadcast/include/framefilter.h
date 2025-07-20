@@ -8,9 +8,11 @@
 #include <deque>
 #include <atomic>
 #include <condition_variable>
+#include "json/configuration.h"
+
 // #include "net/netInterface.h"
 // #include "http/HttpsClient.h"
-
+//#include "webrtc/signaler.h"
 
 /** The mother class of all frame filters!  
  * FrameFilters are used to create "filter chains".  These chains can be used to manipulate the frames, feed them to fifo's, copy them, etc.
@@ -18,12 +20,68 @@
  * @ingroup filters_tag
  */
 
+
+
+enum  en_EncType{
+    EN_NONE = -1,
+    EN_X264 = 0,
+    EN_NVIDIA,
+    EN_QUICKSYNC,
+    EN_VP9,
+    EN_NATIVE,
+
+};
+
+
+  
+    
+
                                                 
 namespace base {
-namespace fmp4 {
+namespace web_rtc {
 
-class ReadMp4;    
+class Signaler;
+class RestApi;
+
+struct st_track
+{
+    std::string camid;
+    std::string start;
+    std::string end;
+    int width{0};
+    int height{0};
+    int scale{1};
+    int speed{1};
+    bool ai{false};
+    bool audio{false};
     
+    std::string encoder;
+    
+    en_EncType encType;  // 0 hw , 1 s/w , 2 native
+    
+    
+    std::string getTrackId(){ 
+        
+        if(!trackid.size())
+        trackid = camid+ "_" + start+ "_" + end +"_" + std::to_string(width)+std::to_string(height)+std::to_string(scale)+std::to_string(speed)+encoder;
+        return trackid;
+    
+    }
+    
+    st_track():encType(EN_NONE)
+    {
+        
+    }
+
+    std::string from;
+    std::string room;
+    
+    Signaler *signaler{nullptr};
+private:
+     std::string trackid;
+    
+}; 
+
 struct FrameFifoContext {                                                                                                                                       // <pyapi>
                                                                                                                    // <pyapi>
   int n_basic;     ///< data at payload                                                                                                                         // <pyapi>
@@ -55,14 +113,14 @@ public:
  // ban_copy_asm(FrameFifo);
   
 protected:
-  std::string      name;
+  std::string name;
   FrameFifoContext ctx;   ///< Parameters defining the stack and overflow behaviour
   
 protected: // reservoir, stack & fifo queue
  // std::map<FrameClass,Reservoir>  reservoirs;   ///< The actual frames
  // std::map<FrameClass,Stack>      stacks;       ///< Pointers to the actual frames, sorted by FrameClass
    typedef std::deque<Frame *> Fifo;
-  Fifo                            fifo;         ///< The fifo queue
+  Fifo fifo;         ///< The fifo queue
   
   
 protected: // mutex synchro
@@ -122,27 +180,21 @@ public: // API
     virtual void deActivate(){};
     virtual void sendMeta(){};
     //std::atomic< bool > resetParser { false };
+    
+    bool init{false};
 }; 
 
-/** A "hello world" demo class: prints its own name if verbose is set to true.
- * @ingroup filters_tag
- */
-//namespace base {
-//namespace fmp4 {
-//    class ReadMp4;
-//    
-//}
-//}
+
 
 
 class DummyFrameFilter : public FrameFilter { 
 
 public:                                                                                
-    DummyFrameFilter(const char *name, std::string &cam ,base::fmp4::ReadMp4 *conn, bool verbose = true, FrameFilter *next = NULL); 
+    DummyFrameFilter(const char *name, std::string &cam , RestApi *conn, bool verbose = true, FrameFilter *next = NULL); 
      ~DummyFrameFilter();
 
-     std::string cam;
-     base::fmp4::ReadMp4 *conn; 
+    std::string cam;
+    RestApi *conn; 
 protected:
     bool verbose;
    
@@ -150,20 +202,30 @@ protected:
 protected:
     void go(Frame *frame);
     
-    FILE* fp_out;
-    long  tolalMp4Size;
+    base::cnfg::Configuration mf;
+    
+    std::string camera;
+//    std::string metadata;
+    std::string dayDate;
+    
+    std::string HR;
+    std::string HRFullPath;
+    
+    FILE *in_file{nullptr};
+    int keycount{0};
+    std::string activeFileName;
 }; 
 
 
 class TextFrameFilter: public FrameFilter  { 
 
 public:                                                                                
-    TextFrameFilter(const char *name, std::string &cam, base::fmp4::ReadMp4 *conn, FrameFilter *next = NULL ); 
+    TextFrameFilter(const char *name, std::string &cam, RestApi *conn, FrameFilter *next = NULL ); 
      ~TextFrameFilter();
 
     std::string cam;
-    base::fmp4::ReadMp4 *conn; 
-  
+    RestApi *conn; 
+
 public:
     
     protected:

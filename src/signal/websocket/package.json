@@ -1,0 +1,29 @@
+{
+  "name": "websoket-performance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js "
+  },
+  "repository": {
+    "type": "git",
+    "url": " https://github.com/Adappt-Intelligence-Inc/libra"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": " https://github.com/Adappt-Intelligence-Inc/libra/issues"
+  },
+  "homepage": " https://github.com/Adappt-Intelligence-Inc/libra",
+  "dependencies": {
+    "ws": "^3.2.0",
+    "express": "^4.17.1",
+    "node-static": "^0.7.11",
+    "random-number": "0.0.9",
+    "socket.io": "^2.3.0",
+    "uuid": "^7.0.3",
+    "uuidv4": "^6.0.7"
+  }
+}

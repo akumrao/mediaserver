@@ -21,7 +21,7 @@ INCLUDES:=$(shell pkg-config --cflags sdl)
 # $@ is the target name
 #
 all: 
-	gcc -g -o ffmpegPlayer ffmpegPlayer.c ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a  ${FFMPEG_ROOT}/libswscale/libswscale.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a   -I${FFMPEG_ROOT}/ -lpthread -lz -lm -ldl -lfdk-aac `sdl2-config --cflags --libs`
+	gcc -g -o ffmpegPlayer ffmpegPlayer.c ${FFMPEG_ROOT}/libavformat/libavformat.a ${FFMPEG_ROOT}/libavcodec/libavcodec.a ${FFMPEG_ROOT}/libavutil/libavutil.a  ${FFMPEG_ROOT}/libswscale/libswscale.a ${FFMPEG_ROOT}/libswresample/libswresample.a /usr/local/lib/libx264.a   -I${FFMPEG_ROOT}/ -lpthread -lz -lbz2 -lm -ldl -lfdk-aac `sdl2-config --cflags --libs`
 
 # dirs:
 # 	mkdir -p obj

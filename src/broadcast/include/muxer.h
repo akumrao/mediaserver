@@ -15,7 +15,7 @@
 
 
 namespace base {
-namespace fmp4 {
+namespace web_rtc {
     
 
 class MuxFrameFilter:  public FrameFilter {      
@@ -153,6 +153,6 @@ if strcmp(name, "moof") == 0 {
 */
 
 bool moofHasFirstSampleFlag(uint8_t* data);
-    }
+}
 }
 #endif

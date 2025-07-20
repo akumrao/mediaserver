@@ -18,16 +18,7 @@ extern "C"
 #include "constant.h"
 
 namespace base {
-namespace fmp4 {
-    
-//#include <algorithm>
-//#include <iterator>
-//#include  <vector>
-
-// #include "ff/ff.h"
- //#include "ff/mediacapture.h"
-
-//#include <libavutil/timestamp.h>
+namespace web_rtc {
 
 
 /** Enumeration of Frame classes 
@@ -109,7 +100,7 @@ struct FragMP4Meta {
     bool is_first;                                    
     std::size_t size; ///< Actual size copied         
     SlotNumber slot;                                  
-    long int mstimestamp;                             
+    long int mstimestamp;
 };    
 
 enum class AbstractFileState
@@ -184,6 +175,16 @@ public: // frame essentials
   virtual FrameClass getFrameClass();         ///< Returns the subclass frame type.  See Frame::frameclass
   virtual void copyFrom(Frame *f);            ///< Copies data to this frame from a frame of the same type
   */
+    
+    
+    BasicFrame& operator= ( const BasicFrame &cpy )
+    {
+        
+       this->codec_id = cpy.codec_id;
+       this->payload.resize(cpy.payload.size());
+       memcpy(this->payload.data(), cpy.payload.data(), cpy.payload.size());
+    }
+
 
    virtual std::string type(){return "BasicFrame";}
 public:                                         // redefined virtual
@@ -203,11 +204,14 @@ public:                           // frame variables
     AVCodecID codec_id;           ///< AVCodeCID of the media
 
 public:                 // codec-dependent parameters
+    H265Pars h265_pars; ///< H265 parameters, extracted from the payload
+
     H264Pars h264_pars; ///< H264 parameters, extracted from the payload
 
 public:                  // codec-dependent functions
     void fillPars();     ///< Fill codec-dependent parameters based on the payload
     void fillH264Pars(); ///< Inspects payload and fills BasicFrame::h264_pars;
+    void fillH265Pars(); ///< Inspects payload and fills BasicFrame::h265_pars;
     
     void copyBuf( uint8_t* buf  ,unsigned size );
 
@@ -222,6 +226,9 @@ public:                                                  // frame serialization
     int fps{0};
     int width{0};
     int height{0};
+    
+    unsigned char *data;
+    int sz{0};
     
     ///< How much this frame occupies in bytes when serialized
    // bool dump(IdNumber device_id, RaWriter &raw_writer); ///< Write the frame to filestream with a certain device id
@@ -268,7 +275,9 @@ public:
 public:
     std::vector<uint8_t> meta_blob; ///< Byte blob that is casted to correct metadata struct
     MuxMetaType          meta_type; ///< Mux type that mandates how meta_blob is casted
-    bool is_first;
+    int frametype;   // 1 ftype, 2 moov , 3 first moof & mdat ( for idr frame), 4  moof & mdat ( for P or B frames) cane be dropped 
+    int fps{0};
+    
 };
 
 
@@ -433,6 +442,15 @@ public:
 };
 
 
+enum FRAMETYPE{
+    
+    BINARY =1,
+    TEXT=0,
+    TEXTDEL=2 // 
+};
+
+
+
 /** Custom TextFrame Frame
  * 
  * Includes codec info and the payload.  Received typically from LiveThread or FileThread.
@@ -448,7 +466,36 @@ public:
     
 public:                                                
     std::string txt;
+    
+    FRAMETYPE frameType{FRAMETYPE::TEXT};
+    
 };
 
 }}
 #endif
+
+/*
+[ftyp] size=8+16
+[moov] size=8+833
+[moof] size=8+5112
+[mdat] size=8+538271
+[moof] size=8+2964
+[mdat] size=8+296190
+[moof] size=8+5112
+[mdat] size=8+484946
+[moof] size=8+2964
+[mdat] size=8+305615
+[moof] size=8+5112
+[mdat] size=8+482052
+[moof] size=8+2964
+[mdat] size=8+298039
+[moof] size=8+5112
+[mdat] size=8+478313
+[moof] size=8+2964
+[mdat] size=8+294548
+[moof] size=8+5112
+[mdat] size=8+483575
+[moof] size=8+2964
+[mdat] size=8+303894
+ 
+ */

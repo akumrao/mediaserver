@@ -59,7 +59,7 @@ The IDR frames are introduced to avoid any distortions in the video when you wan
 
 
 namespace base {
-namespace fmp4 {
+namespace web_rtc {
 
 //#define logger filterlogger //TODO: create a new logger for muxers
 
@@ -513,6 +513,7 @@ void MuxFrameFilter::go(Frame* frame) {
                     fps = basicframe->fps;
                     width= basicframe->width;
                     height = basicframe->height;
+                    internal_frame.fps = fps;
                     
                     extradata_videoframe.payload.insert(
                             extradata_videoframe.payload.end(),
@@ -815,7 +816,9 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
     uint32_t buf_size = uint32_t(buf_size_); // size of the current byte buffer to be consumed
 //    int i;
     uint32_t boxlen;
-    char boxname[4];
+    char boxname[5] = {'\0'};
+
+    static int frametype =0;
 
 #ifdef MUXPARSE
     std::cout << "\n====>buf_size: " << buf_size << std::endl;
@@ -902,11 +905,27 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             if (strncmp(boxname, "moof", 4) == 0) {
                 metap->is_first = moofHasFirstSampleFlag(internal_frame.payload.data());
                 //#ifdef MUXPARSE
-                
-               internal_frame.is_first =  metap->is_first;
-                STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
+               
+                if (metap->is_first)
+                {
+                    frametype = 3;
+                    internal_frame.frametype = 3;
+                }
+                else
+                {
+                    frametype = 4;
+                    internal_frame.frametype = 4;
+                }
+
+               if(metap->is_first)
+               STrace << "FragMP4MuxFrameFilter: moof first sample flag: " << int(metap->is_first) ;
                 // #endif
+            }if (strncmp(boxname, "mdat", 4) == 0) {
+
+                internal_frame.frametype = frametype;
             }
+
+
             //*/
             memcpy(&metap->name[0], boxname, 4);
 
@@ -920,17 +939,20 @@ int FragMP4MuxFrameFilter::write_packet(void *opaque, uint8_t *buf, int buf_size
             metap->slot = internal_frame.n_slot;
 
             if (strncmp(boxname, "ftyp", 4) == 0) {
-                internal_frame.is_first = true;
+                internal_frame.frametype = 1;
+                frametype = 1;
                 me->ftyp_frame = internal_frame;
                 me->got_ftyp = true;
                 std::cout << "FragMP4MuxFrameFilter: got ftyp" << std::endl;
             } else if (strncmp(boxname, "moov",4) == 0) {
-                internal_frame.is_first = true;
+                internal_frame.frametype = 2;
+                frametype = 2;
                 me->moov_frame= internal_frame;
                 me->got_moov = true;
                 std::cout << "FragMP4MuxFrameFilter: got moov" << std::endl;
                 // std::cout << "FragMP4MuxFrameFilter: metadata cached" << std::endl;
             }
+
 
 #ifdef MUXPARSE
             std::cout << "FragMP4MuxFrameFilter: sending frame downstream " << std::endl;

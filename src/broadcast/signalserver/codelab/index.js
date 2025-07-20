@@ -82,7 +82,7 @@ async function runWebServer() {
         } = config;
         webServer.listen(listenPort, listenIp, () => {
             console.log('server is running');
-            console.log(`open http://127.0.0.1:${listenPort} in your web browser`);
+            console.log(`open https://127.0.0.1:${listenPort} in your web browser`);
             resolve();
         });
     });

@@ -6,7 +6,7 @@
 #include <thread>
 #include <iterator>
 #include "base/logger.h"
-
+#include "Settings.h"
 // #define RECONNECT_VERBOSE   // by default, disable
 // #define LIVE_SIGNAL_FRAMES // experimental
 
@@ -14,21 +14,12 @@ using namespace std::chrono_literals;
 using std::this_thread::sleep_for; 
 
 namespace base {
-namespace fmp4 {
+namespace web_rtc {
     
     
   namespace Timeout { ///< Various thread timeouts in milliseconds
-  const static long unsigned thread       =250; // Timeout::thread
   const static long unsigned livethread   =250; // Timeout::livethread
-  const static long unsigned avthread     =250; // Timeout::avthread
-  const static long unsigned openglthread =250; // Timeout::openglthread
-  const static long unsigned fswriterthread = 250; // Timeout::fswriterthread
-  const static long unsigned fsreaderthread = 250; // Timeout::fswriterthread
-  const static long unsigned filecachethread = 1000; // Timeout::cachethread
-  // const static long unsigned filecachethread = 500; // Timeout::cachethread
-  const static long unsigned usbthread    =250; // Timeout::usbthread
-  const static long int filethread        =2000; // Timeout::filethread
-  const static long int fdwritethread        =250; // Timeout::filethread
+
 }
 
     
@@ -116,28 +107,20 @@ Connection::Connection(UsageEnvironment& env, LiveConnectionContext& ctx) : env(
     if       (ctx.time_correction==TimeCorrectionType::none) {
         // no timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> ctx.framefilter
 //        timestampfilter    = new TimestampFrameFilter2("timestampfilter", NULL); // dummy
-
-          fragmp4_muxer        = ctx.framefilter;
-          info = ctx.info;
-          txt = ctx.txt;
     }
     else if  (ctx.time_correction==TimeCorrectionType::dummy) {
         // smart timestamp correction:  LiveThread --> {SlotFrameFilter: inputfilter} --> {TimestampFrameFilter2: timestampfilter} --> ctx.framefilter
         //timestampfilter    = new DummyTimestampFrameFilter("dummy_timestamp_filter", ctx.framefilter);
         //repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
       //  inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
-          fragmp4_muxer        = ctx.framefilter;
-          info = ctx.info;
-           txt = ctx.txt;
+
     }
     else { // smart corrector
         // brute-force timestamp correction: LiveThread --> {SlotFrameFilter: inputfilter} --> {DummyTimestampFrameFilter: timestampfilter} --> ctx.framefilter
       //  timestampfilter    = new TimestampFrameFilter2("smart_timestamp_filter", ctx.framefilter);
       //  repeat_sps_filter  = new RepeatH264ParsFrameFilter("repeat_sps_filter", timestampfilter);
        // inputfilter        = new SlotFrameFilter("input_filter", ctx.slot, repeat_sps_filter);
-          fragmp4_muxer        = ctx.framefilter;
-          info = ctx.info;
-           txt = ctx.txt;
+
     }
 }
 
@@ -277,7 +260,7 @@ void RTSPConnection::playStream() {
         livestatus=LiveStatus::pending;
         frametimer=0;
         SInfo<< "RTSPConnection : playStream " << ctx.address;
-        client = MSRTSPClient::createNew(env, ctx.address, fragmp4_muxer, info, txt, &livestatus);
+        client = MSRTSPClient::createNew(env, ctx.address, ctx , &livestatus);
         if (ctx.request_multicast)   { client->requestMulticast();      }
         if (ctx.request_tcp)         { client->requestTCP(); SInfo<< " TCP RTP "; }
         if (ctx.recv_buffer_size>0)  { client->setRecvBufferSize(ctx.recv_buffer_size); }
@@ -309,8 +292,26 @@ void RTSPConnection::stopStream() {
             // TODO: add counter for pending events .. wait for pending events, etc .. ?
             // better idea: allow only one play/stop command per stream per handleSignals interval
             // possible to wait until handleSignals has been called
+            
+            if(!Settings::configuration.cam_reconnect)
+            {
+                TextFrame txtFrame;
+                txtFrame.frameType = FRAMETYPE::TEXTDEL;
+                txtFrame.txt =  std::string("Attempts to reconnect failed many time");
+                ctx.txt->run(&txtFrame);
+            }
+            
         }
-        else {
+        else
+        {
+            if(!Settings::configuration.cam_reconnect)
+            {
+                TextFrame txtFrame;
+                txtFrame.frameType = FRAMETYPE::TEXTDEL;
+                txtFrame.txt =  std::string("Attempts to reconnect failed many time");
+                ctx.txt->run(&txtFrame);
+            }
+            
             MSRTSPClient::shutdownStream(client, 1); // sets LiveStatus to closed
             SDebug << "RTSPConnection : stopStream: shut down" ;
         }
@@ -341,6 +342,21 @@ void RTSPConnection::reStartStreamIf() {
             SDebug << "RTSPConnection: restartStreamIf: pending: sending signal frame for slot " << ctx.slot ;
             ctx.framefilter->run(&signalframe);
             #endif
+            
+            if(!Settings::configuration.cam_reconnect)
+            {
+                TextFrame txtFrame;
+                txtFrame.frameType = FRAMETYPE::TEXTDEL;
+                txtFrame.txt =  std::string("Attempts to reconnect failed many time");
+                ctx.txt->run(&txtFrame);
+            }
+            else if (livestatus==LiveStatus::closed)
+            {
+                SDebug << "RePlay stream playStream()"  ;
+                is_playing=false; // just to get playStream running ..
+                playStream();
+            } // so, the stream might be left to the pending state
+             
             pendingtimer=0;
         }
         return;
@@ -389,6 +405,7 @@ void RTSPConnection::reStartStreamIf() {
             stopStream();
         }
         if (livestatus==LiveStatus::closed) {
+            SDebug << "RePlay stream playStream()"  ;
             is_playing=false; // just to get playStream running ..
             playStream();
         } // so, the stream might be left to the pending state
@@ -469,7 +486,7 @@ void SDPConnection :: playStream() {
             // subsession->sink = DummySink::createNew(*env, *subsession, filename);
             env << "SDPConnection: Creating data sink for subsession \"" << *scs->subsession << "\" \n";
             // subsession->sink= FrameSink::createNew(env, *subsession, inputfilter, cc, ctx.address.c_str());
-            scs->subsession->sink= FrameSink::createNew(env, *scs, fragmp4_muxer, info , txt, ctx.address.c_str());
+            scs->subsession->sink= FrameSink::createNew(env, *scs, ctx, ctx.address.c_str());
             if (scs->subsession->sink == NULL)
             {
                 env << "SDPConnection: Failed to create a data sink for the \"" << *scs->subsession << "\" subsession: " << env.getResultMsg() << "\n";
@@ -969,7 +986,6 @@ void LiveThread::handleFrame(Frame *f) { // handle an incoming frame ..
 
 void LiveThread::stop(bool flag)
 {
-    exit_requested=true;
     eventLoopWatchVariable = 1;
 
     Thread::stop(flag);
@@ -1057,6 +1073,10 @@ void LiveThread::registerStream(LiveConnectionContext &connection_ctx) {
     // play       : create RTSPClient object in the Connection object .. start the callback chain describe => play, etc.
     // stop       : start shutting down by calling shutDownStream .. destruct the RTSPClient object
     // deregister : stop (if playing), and destruct RTSP/SDPConnection object from the slots_ vector
+    
+    if( Settings::configuration.cam_reconnect )
+        connection_ctx.msreconnect = (long unsigned int)Settings::configuration.cam_reconnect * 1000;
+            
     Connection* connection;
     SInfo<< "LiveThread: registerStream" ;
     switch (safeGetSlot(connection_ctx.slot,connection)) {

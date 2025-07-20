@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body onload='setting()'>
+
+<p id="msgCam"> List of Camera.</p>
+
+<select id="streamType" onchange="onStreamTypeChange()">
+<option value="Video"  selected="selected">Video</option>
+<option value="Audio">Audio</option>
+<option value="Analytics">Analytics</option>
+</select>
+
+
+<button onClick='cb_add()'>Add </button>
+<p id="camlist"></p>
+
+<script src="/js/setting.js"></script>
+
+</body>
+</html>
