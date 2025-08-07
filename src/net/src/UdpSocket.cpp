@@ -195,6 +195,8 @@ namespace base {
             auto* sendData = new UvSendData(len);
 
             sendData->req.data = static_cast<void*>(sendData);
+   
+            
             std::memcpy(sendData->store, data, len);
             sendData->cb = cb;
 
@@ -392,6 +394,9 @@ namespace base {
         void UdpSocket::connect() {
 
             uvHandle = new uv_udp_t;
+            
+            this->uvHandle->data = (void*) this;
+            
             struct sockaddr_in6 addr6;
             struct sockaddr_in addr;
 
