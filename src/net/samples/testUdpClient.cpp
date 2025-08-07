@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     testUdpClient socket("127.0.0.1", 6000);
     socket.start();
-    while (true)
+    //while (true)
     {
     socket.send("arvind testing");
     socket.send("arvind testing1");
