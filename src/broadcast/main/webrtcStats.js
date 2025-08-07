@@ -1,7 +1,7 @@
 {
     "rtsp": {
         "1": {
-            "recording": "off",
+            "recording": "on",
             "rtsp": "rtsp://localhost/test.264",
             "state": "streaming"
         },
@@ -9,14 +9,14 @@
             "rtsp": "rtsp://root:60056005@166.145.206.221:553/axis-media/media.amp?videocodec=h264&resolution=1280x720&fps=5"
         },
         "2": {
-            "recording": "off",
+            "recording": "on",
             "rtsp": "rtsp://localhost/test2.264",
             "state": "streaming"
         },
         "234731": {
-            "recording": "off",
+            "recording": "on",
             "rtsp": "rtsp://root:P%40ssw0rd@10.86.9.44:556/axis-media/media.amp?camera=4&videocodec=h264&resolution=1280x720&fps=5",
-            "state": "stopped"
+            "state": "Attempts to reconnect failed many time"
         },
         "3": {
             "rtsp": "rtsp://localhost/test1.264",

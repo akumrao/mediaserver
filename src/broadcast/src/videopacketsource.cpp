@@ -62,7 +62,7 @@ void VideoPacketSource::StartParser(AVCodecID codeID) {
 
      }
 
-     if (codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
+     if (codec && codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
          cdc_ctx->flags |= AV_CODEC_CAP_TRUNCATED;
      }
 

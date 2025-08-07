@@ -21,6 +21,45 @@ namespace base
 	
 
 	/* Inline static methods. */
+    
+        
+        
+         bool IP::addr_is_equal(const struct sockaddr *a, const struct sockaddr *b, bool compare_ports)
+         {
+                if (a->sa_family != b->sa_family)
+                        return false;
+
+                switch (a->sa_family) {
+                case AF_INET: {
+                        const struct sockaddr_in *ain = (const struct sockaddr_in *)a;
+                        const struct sockaddr_in *bin = (const struct sockaddr_in *)b;
+                        if (memcmp(&ain->sin_addr, &bin->sin_addr, 4) != 0)
+                                return false;
+                        if (compare_ports && ain->sin_port != bin->sin_port)
+                                return false;
+                        break;
+                }
+                case AF_INET6: {
+                        const struct sockaddr_in6 *ain6 = (const struct sockaddr_in6 *)a;
+                        const struct sockaddr_in6 *bin6 = (const struct sockaddr_in6 *)b;
+                        if (memcmp(&ain6->sin6_addr, &bin6->sin6_addr, 16) != 0)
+                                return false;
+                        if (compare_ports && ain6->sin6_port != bin6->sin6_port)
+                                return false;
+                        break;
+                }
+                default:
+                        return false;
+                }
+
+                return true;
+        }
+         
+        bool IP::addr_record_is_equal(const addr_record_t *a, const addr_record_t *b, bool compare_ports) 
+        {
+            return addr_is_equal((const struct sockaddr *)&a->addr, (const struct sockaddr *)&b->addr,
+	                     compare_ports);
+        } 
 
 	
 	bool IP::CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2)
@@ -84,6 +123,22 @@ namespace base
 
 		return copiedAddr;
 	}
+        
+        void IP::CopyAddress(const struct sockaddr* addr, addr_record_t &mapped)
+        {
+            switch (addr->sa_family)
+	    {
+                    case AF_INET:
+                            std::memcpy(&mapped.addr, addr, sizeof(struct sockaddr_in));
+                            mapped.len = sizeof(struct sockaddr_in);
+                            break;
+
+                    case AF_INET6:
+                            std::memcpy(&mapped.addr, addr, sizeof(struct sockaddr_in6));
+                            mapped.len = sizeof(struct sockaddr_in6);
+                            break;
+	    }
+        }
 
 	void IP::NormalizeIp(std::string& ip)
 	{
@@ -147,7 +202,7 @@ namespace base
 		}
 	}
         
-
+    // dunplicate funtion need to be remvoed
         void IP::GetAddressInfo(struct sockaddr* addr, int& family, std::string& ip, uint16_t& port) {
 
 
@@ -194,6 +249,49 @@ namespace base
             ip.assign(ipBuffer);
         }
 
+
+        //          char ip[40];  uint16_t port;
+        //          IP::AddressToString(mapped, ip, port) ;
+        //     
+        void IP::AddressToString( addr_record_t &mapped,  char *ip,  uint16_t &port)
+        {
+
+              if(mapped.addr.ss_family == AF_INET6)
+              {
+                  uv_ip6_name((sockaddr_in6* )&mapped.addr, ip, 39);
+                  port = ntohs( ((sockaddr_in6 *)&mapped.addr)->sin6_port);
+
+              }
+              else if(mapped.addr.ss_family  == AF_INET )
+              {
+                   uv_ip4_name((sockaddr_in*)&mapped.addr, ip, 16);
+                   port =  ntohs( ((sockaddr_in *)&mapped.addr)->sin_port); 
+              }
+
+              //STrace << " address: "<<  ip  << " port: " << port;
+        }
+        
+        
+        
+        
+        
+        
+        void IP::StringToAddress(const char *ip,  uint16_t port, addr_record_t &mapped)
+        {
+
+            if (IP::GetFamily(ip) == AF_INET6) {
+          
+                ASSERT(0 == uv_ip6_addr(ip, port, (struct sockaddr_in6 *)&mapped.addr));
+                mapped.len = sizeof(struct sockaddr_in6);
+            }
+            else {
+                ASSERT(0 == uv_ip4_addr(ip, port, (struct sockaddr_in *)&mapped.addr));
+                  mapped.len = sizeof(struct sockaddr_in);
+            }
+            
+        }
+        
+        
         int IP::GetFamily(const std::string& ip) {
 
             char ia[sizeof (struct in6_addr)];
@@ -203,9 +301,76 @@ namespace base
             else if (uv_inet_pton(AF_INET6, ip.c_str(), &ia) == 0)
                 return AF_INET6;
             else
-                throw std::runtime_error("Invalid IP address format: " + ip);
+            {
+                SError << "Invalid IP address format: "<<   ip;
+                return PF_UNSPEC;  // It mean hostname need be resolved . check  how to find if it ip4 ipv6 or hostname
+            }
         }
+        
+        
+        bool IP::addr_unmap_inet6_v4mapped(struct sockaddr *sa, socklen_t *len) 
+        {
+            if (sa->sa_family != AF_INET6)
+                    return false;
+
+            const struct sockaddr_in6 *sin6 = (const struct sockaddr_in6 *)sa;
+            if (!IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr))
+                    return false;
+
+            struct sockaddr_in6 copy = *sin6;
+            sin6 = &copy;
+
+            struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+            memset(sin, 0, sizeof(*sin));
+            sin->sin_family = AF_INET;
+            sin->sin_port = sin6->sin6_port;
+            memcpy(&sin->sin_addr, ((const uint8_t *)&sin6->sin6_addr) + 12, 4);
+            *len = sizeof(*sin);
+            return true;
+        }
+
+        
 
 
     } // namespace net
 }//base
+
+
+/*
+ how to find if it ip4 ipv6 or hostname
+ 
+ #include <stdio.h>
+   #include <string.h>
+   #include <arpa/inet.h>
+   #include <stdbool.h>
+   
+   bool is_ip_address(const char *str) {
+       struct in_addr addr;
+       struct in6_addr addr6;
+       if (inet_pton(AF_INET, str, &addr) == 1) {
+           return true; // Valid IPv4 address
+       } else if (inet_pton(AF_INET6, str, &addr6) == 1) {
+           return true; // Valid IPv6 address
+       }
+       return false; // Not a valid IP address
+   }
+   
+   int main() {
+       const char *test_strings[] = {
+           "192.168.1.1",
+           "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+           "example.com",
+           "not an ip or hostname",
+           "127.0.0.1",
+           "10.0.0.256", // Invalid octet
+           "192.168.1", // Missing octet
+           "192.168.1.1.1" // Extra octet
+       };
+   
+       for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
+           printf("'%s' is %s IP address.\n", test_strings[i], is_ip_address(test_strings[i]) ? "a valid" : "NOT a valid");
+       }
+       return 0;
+   }
+ 
+ */

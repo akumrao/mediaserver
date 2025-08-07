@@ -56,9 +56,8 @@ namespace base {
             
             
             TcpConnectionBase *obj = (TcpConnectionBase *) handle->data;
-            
-            SDebug << "onClose ";
-            
+                   
+           // SInfo << "onClose " <<  obj->IsClosed(); // this will not fix the close crash problem. This issue only happens when you are debugging browser
            
             if (obj)
             {
@@ -254,18 +253,26 @@ namespace base {
             req->data = this;
 
             if (!addrs) {
-                if (IP::GetFamily(ip) == AF_INET6) {
+                int ipret = IP::GetFamily(ip); 
+                if (ipret == AF_INET6)
+                {
                     ASSERT(0 == uv_ip6_addr(ip.c_str(), port, &addr6));
 
                     // this->localAddr = (sockaddr_storage *) addr6;
                     err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr6), static_cast<uv_connect_cb> (onconnect));
 
 
-                } else {
+                } else if (ipret == AF_INET)
+                {  
                     ASSERT(0 == uv_ip4_addr(ip.c_str(), port, &addr));
 
                     err = uv_tcp_connect(req, this->uvHandle, reinterpret_cast<struct sockaddr*> (&addr), static_cast<uv_connect_cb> (onconnect));
 
+                }
+                else
+                {
+                    Close();
+                    return;
                 }
             } else {
 
@@ -304,11 +311,11 @@ namespace base {
 
         }
 
-        void TcpConnectionBase::Start() {
+        bool TcpConnectionBase::Start() {
 
 
             if (this->closed)
-                return;
+                return false;
 
             int err = uv_read_start(
                     reinterpret_cast<uv_stream_t*> (this->uvHandle),
@@ -316,11 +323,19 @@ namespace base {
                     static_cast<uv_read_cb> (onRead));
 
             if (err != 0)
+            {
                 LError("uv_read_start() failed: %s", uv_strerror(err));
+                return false;
+            }
 
             // Get the peer address.
             if (!SetPeerAddress())
+            {
                 LError("error setting peer IP and port");
+                return false;
+            }
+            
+            return true;
         }
 
         int TcpConnectionBase::Write(const char* data, size_t len, onSendCallback cb) {
@@ -586,12 +601,15 @@ namespace base {
 
                 // Notify the subclass.
                 if (tls)
+                {
                     on_tls_read((const char*) buf->base, nread);
+                }
                 else
-                    on_read((const char*) buf->base, nread);
+                {    on_read((const char*) buf->base, nread);
                 
-                if(listener)
-                listener->on_read(this, (const char*) buf->base, nread); //arvind
+                    if(listener)
+                    listener->on_read(this, (const char*) buf->base, nread); //arvind
+                }
 
             }// Client disconneted.
             else if (nread == UV_EOF || nread == UV_ECONNRESET) {

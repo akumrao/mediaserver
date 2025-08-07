@@ -30,61 +30,48 @@ namespace base {
 
         struct GetAddrInfoReq {
 
-            virtual void cbDnsResolve(addrinfo* res, std::string ip) {
-                LTrace("GetAddrInfoReq::cbDnsResolve");
+//            virtual void cbDnsResolve(addrinfo* res, std::string ip, int port,  void* ptr) {
+//               // LTrace("GetAddrInfoReq::cbDnsResolve");
+//            }
+            
+            
+            virtual void cbDnsResolve(addrinfo* res) {
+               // LTrace("GetAddrInfoReq::cbDnsResolve");
             }
 
     
-            static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) {
-                //struct getaddrinfo_req* req;
-                
-                GetAddrInfoReq *obj = (GetAddrInfoReq*) handle->data;
-                
-                if (status < 0 || !res) {
-                LTrace(  "getaddrinfo callback error ", uv_err_name(status));
-                obj->cbDnsResolve(nullptr, "");
-                return;
-            }
-                
-                char addr[17] = {'\0'};
-                uv_ip4_name((struct sockaddr_in*) res->ai_addr, addr, 16);
-                LTrace("address ",  addr);
-                
-                // uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
+            static void on_resolved(uv_getaddrinfo_t* handle, int status, struct addrinfo* res) ;
 
+            void resolve(const std::string& host, int port, uv_loop_t * loop = Application::uvGetLoop(), void* ptr=nullptr) ;
 
-          
-                obj->cbDnsResolve(res, addr);
+            uv_getaddrinfo_t *req;
+            
+             //void* clsPtr{nullptr}; 
 
-                uv_freeaddrinfo(res);
-
-            }
-
-            void resolve(const std::string& host, int port, uv_loop_t * loop = Application::uvGetLoop()) {
-
-                req.data = this;
-                int r;
-
-             //   struct addrinfo hints;
-                //hints.ai_family = PF_INET;
-                //hints.ai_socktype = SOCK_STREAM;
-                //hints.ai_protocol = IPPROTO_TCP;
-               // hints.ai_flags = 0;
-
-                r = uv_getaddrinfo(loop,
-                        &req,
-                        on_resolved,
-                        host.c_str(),
-                        util::itostr(port).c_str(),
-                                   nullptr);
-                assert(r == 0);
-                
-                
-                
-            }
-
-            uv_getaddrinfo_t req;
         };
+        
+        
+        struct GetNameInfoReq {
+
+            virtual void cbNameResolve(  const char* hostname, const char* service,  void* data) {
+               // LTrace("GetAddrInfoReq::cbDnsResolve");
+            }
+
+            static void on_resolvedIP(uv_getnameinfo_t* handle, int status, const char* hostname, const char* service); 
+
+            void resolveIP(sockaddr_storage &addrStorage,  uv_loop_t * loop, void* ptr=nullptr) ;
+
+            uv_getnameinfo_t *req{nullptr};
+            
+            struct stTmp
+            {
+                void* clsPtr{nullptr}; 
+                void* data{nullptr}; 
+            };
+
+        };
+        
+        
 
     } // namespace net
 } // base

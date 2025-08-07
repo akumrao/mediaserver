@@ -187,7 +187,7 @@ namespace base {
             }
             // Error,
             if (sent != UV_EAGAIN) {
-                 SWarn << "uv_udp_try_send() failed trying uv_udp_send()"<< uv_strerror(sent); // will cause recursion lock
+                 SWarn << "uv_udp_try_send() failed trying uv_udp_send()"<< uv_strerror(sent) <<  "  "  << sent; // will cause recursion lock
                 //SWarn << "uv_udp_try_send() failed UV_EAGAIN: " << uv_strerror(sent);
                 //return -1; // arvind do not return
             }
@@ -195,8 +195,6 @@ namespace base {
             auto* sendData = new UvSendData(len);
 
             sendData->req.data = static_cast<void*>(sendData);
-   
-            
             std::memcpy(sendData->store, data, len);
             sendData->cb = cb;
 
@@ -374,7 +372,7 @@ namespace base {
             ASSERT(r == 0);
 
             if (IP::GetFamily(localIp) == AF_INET6) {
-                bind_flags = UV_UDP_IPV6ONLY;
+              //  bind_flags = UV_UDP_IPV6ONLY;
                 ASSERT(0 == uv_ip6_addr(localIp.c_str(), localPort, &addr6));
                 r = uv_udp_bind(uvHandle, (const struct sockaddr*) &addr6, bind_flags);
                 ASSERT(r == 0);

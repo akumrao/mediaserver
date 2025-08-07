@@ -60,8 +60,9 @@ DummyFrameFilter::~DummyFrameFilter()
     {
         fclose(in_file);
         in_file = nullptr;
+        mf.save();
     }
-    mf.save();
+
 }
 
 void DummyFrameFilter::go(Frame *frame)
