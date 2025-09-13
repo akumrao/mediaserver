@@ -96,7 +96,9 @@ namespace base {
         }
          
         HttpsClient::~HttpsClient() {
-            SInfo <<  "wsAdapter delete connection " << wsAdapter;  
+            SInfo <<  "wsAdapter delete connection " << wsAdapter; 
+          
+            if(wsAdapter)
             delete wsAdapter;
             wsAdapter = nullptr;
             

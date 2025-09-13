@@ -403,7 +403,7 @@ namespace base {
         }
 
         void WebSocketConnection::onClose() {
-            LTrace("On close")
+            SInfo << "WebSocketConnection::onClose()";
 
             // Reset state so the connection can be reused
             _request.clear();

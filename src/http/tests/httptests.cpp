@@ -28,7 +28,7 @@ public:
          
      }
     
-    void on_read(Listener* connection, const char* msg, size_t len) {
+    void on_wsread(Listener* connection, const char* msg, size_t len) {
       
         //connection->send("arvind", 6 );
         SInfo << "msg " << std::string(msg,len);
@@ -70,7 +70,7 @@ public:
 
 int main(int argc, char** argv) {
 
-   ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Info);
+   ConsoleChannel *ch =  new ConsoleChannel("debug", Level::Trace);
             
    Logger::instance().add(ch);
     //test::init();
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
    StreamingResponderFactory *stream =   new StreamingResponderFactory();
             
    Application app;
-   testwebscoket  *socket = new testwebscoket("0.0.0.0", 1111, stream , true  );
+   testwebscoket  *socket = new testwebscoket("0.0.0.0", 8000, stream , true  );
     //socket.start();
 
    app.waitForShutdown([&](void*)

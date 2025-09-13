@@ -73,7 +73,7 @@ static std::string byteTohex(unsigned char *data, int len)
 
 static std::string uuid()
 {
-    char uuid[maxchars];
+    char uuid[maxchars+1];
 
     //                                           12345678 9012 3456 7890 123456789012
     // Returns a 36-character string in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
